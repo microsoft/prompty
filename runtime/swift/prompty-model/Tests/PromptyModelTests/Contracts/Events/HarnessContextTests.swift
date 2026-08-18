@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class HarnessContextTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "cwd": "/workspace/project",
-        "gitRoot": "/workspace/project"
-      }
-      """
+{
+  "cwd": "/workspace/project",
+  "gitRoot": "/workspace/project"
+}
+"""
     let instance = try HarnessContext.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.cwd)), "/workspace/project")
     XCTAssertEqual((try XCTUnwrap(instance.gitRoot)), "/workspace/project")
@@ -24,10 +23,10 @@ final class HarnessContextTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      cwd: /workspace/project
-      gitRoot: /workspace/project
+cwd: /workspace/project
+gitRoot: /workspace/project
 
-      """
+"""
     let instance = try HarnessContext.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.cwd)), "/workspace/project")
     XCTAssertEqual((try XCTUnwrap(instance.gitRoot)), "/workspace/project")

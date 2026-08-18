@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ContextRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sample",
-        "turnId": "sample",
-        "invocationId": "sample",
-        "iteration": 1,
-        "messages": [],
-        "contextState": {}
-      }
-      """
+{
+  "sessionId": "sample",
+  "turnId": "sample",
+  "invocationId": "sample",
+  "iteration": 1,
+  "messages": [],
+  "contextState": {}
+}
+"""
     let instance = try ContextRequest.fromJSON(json)
     XCTAssertEqual(instance.sessionId, "sample")
     XCTAssertEqual(instance.turnId, "sample")
@@ -34,14 +33,14 @@ final class ContextRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sample
-      turnId: sample
-      invocationId: sample
-      iteration: 1
-      messages: []
-      contextState: {}
+sessionId: sample
+turnId: sample
+invocationId: sample
+iteration: 1
+messages: []
+contextState: {}
 
-      """
+"""
     let instance = try ContextRequest.fromYAML(yaml)
     XCTAssertEqual(instance.sessionId, "sample")
     XCTAssertEqual(instance.turnId, "sample")

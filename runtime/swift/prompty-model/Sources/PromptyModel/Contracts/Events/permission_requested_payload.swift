@@ -15,11 +15,7 @@ public struct PermissionRequestedPayload: TypraModel {
   public var policy: [String: Any]? = nil
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    requestId: String? = nil, toolCallId: String? = nil, permission: String = "",
-    target: String? = nil, details: [String: Any]? = nil, promptRequest: String? = nil,
-    policy: [String: Any]? = nil, redaction: RedactionMetadata? = nil
-  ) {
+  public init(requestId: String? = nil, toolCallId: String? = nil, permission: String = "", target: String? = nil, details: [String: Any]? = nil, promptRequest: String? = nil, policy: [String: Any]? = nil, redaction: RedactionMetadata? = nil) {
     self.requestId = requestId
     self.toolCallId = toolCallId
     self.permission = permission
@@ -30,9 +26,7 @@ public struct PermissionRequestedPayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> PermissionRequestedPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
     let object = try TypraRuntime.object(data, typeName: "PermissionRequestedPayload")
     var instance = PermissionRequestedPayload()
     if let value = object["requestId"] {
@@ -89,22 +83,16 @@ public struct PermissionRequestedPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> PermissionRequestedPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "PermissionRequestedPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "PermissionRequestedPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> PermissionRequestedPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "PermissionRequestedPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PermissionRequestedPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

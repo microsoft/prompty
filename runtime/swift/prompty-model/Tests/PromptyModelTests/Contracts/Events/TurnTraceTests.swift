@@ -3,30 +3,29 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnTraceTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "version": "1",
-        "runtime": "typescript",
-        "promptyVersion": "2.0.0",
-        "events": [
-          {
-            "id": "evt_abc123",
-            "type": "turn_start",
-            "timestamp": "2026-06-09T20:00:00Z",
-            "turnId": "turn_001",
-            "iteration": 0,
-            "parentId": "evt_parent",
-            "spanId": "span_tool_001",
-            "payload": {}
-          }
-        ]
-      }
-      """
+{
+  "version": "1",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "turn_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "turnId": "turn_001",
+      "iteration": 0,
+      "parentId": "evt_parent",
+      "spanId": "span_tool_001",
+      "payload": {}
+    }
+  ]
+}
+"""
     let instance = try TurnTrace.fromJSON(json)
     XCTAssertEqual(instance.version, "1")
     XCTAssertEqual((try XCTUnwrap(instance.runtime)), "typescript")
@@ -41,20 +40,20 @@ final class TurnTraceTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      version: "1"
-      runtime: typescript
-      promptyVersion: 2.0.0
-      events:
-        - id: evt_abc123
-          type: turn_start
-          timestamp: "2026-06-09T20:00:00Z"
-          turnId: turn_001
-          iteration: 0
-          parentId: evt_parent
-          spanId: span_tool_001
-          payload: {}
+version: "1"
+runtime: typescript
+promptyVersion: 2.0.0
+events:
+  - id: evt_abc123
+    type: turn_start
+    timestamp: "2026-06-09T20:00:00Z"
+    turnId: turn_001
+    iteration: 0
+    parentId: evt_parent
+    spanId: span_tool_001
+    payload: {}
 
-      """
+"""
     let instance = try TurnTrace.fromYAML(yaml)
     XCTAssertEqual(instance.version, "1")
     XCTAssertEqual((try XCTUnwrap(instance.runtime)), "typescript")

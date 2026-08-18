@@ -16,14 +16,13 @@ public struct AnthropicImageSource: TypraModel {
     self.data = data
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicImageSource
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicImageSource {
     let object = try TypraRuntime.object(data, typeName: "AnthropicImageSource")
     var instance = AnthropicImageSource()
     if let value = object["type"] {
       instance.type = try TypraRuntime.string(value, field: "type")
-    } else {
+    }
+    else {
       instance.type = "base64"
     }
     if let value = object["media_type"] {
@@ -43,22 +42,16 @@ public struct AnthropicImageSource: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicImageSource
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicImageSource"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicImageSource {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicImageSource"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicImageSource
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicImageSource"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicImageSource {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicImageSource"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -14,8 +14,7 @@ public struct ParserConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ParserConfig
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ParserConfig {
     if let scalar = data as? String {
       var instance = ParserConfig()
       instance.kind = try TypraRuntime.string(scalar, field: "kind")
@@ -25,7 +24,8 @@ public struct ParserConfig: TypraModel {
     var instance = ParserConfig()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "*"
     }
     if let value = object["options"] {
@@ -43,9 +43,7 @@ public struct ParserConfig: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ParserConfig
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ParserConfig"), context: context)
   }
 
@@ -53,9 +51,7 @@ public struct ParserConfig: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ParserConfig
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ParserConfig"), context: context)
   }
 

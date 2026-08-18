@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class DeviceAuthorizationTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "deviceCode": "sample",
-        "userCode": "sample",
-        "verificationUri": "sample",
-        "expiresIn": 1,
-        "interval": 1
-      }
-      """
+{
+  "deviceCode": "sample",
+  "userCode": "sample",
+  "verificationUri": "sample",
+  "expiresIn": 1,
+  "interval": 1
+}
+"""
     let instance = try DeviceAuthorization.fromJSON(json)
     XCTAssertEqual(instance.deviceCode, "sample")
     XCTAssertEqual(instance.userCode, "sample")
@@ -33,13 +32,13 @@ final class DeviceAuthorizationTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      deviceCode: sample
-      userCode: sample
-      verificationUri: sample
-      expiresIn: 1
-      interval: 1
+deviceCode: sample
+userCode: sample
+verificationUri: sample
+expiresIn: 1
+interval: 1
 
-      """
+"""
     let instance = try DeviceAuthorization.fromYAML(yaml)
     XCTAssertEqual(instance.deviceCode, "sample")
     XCTAssertEqual(instance.userCode, "sample")

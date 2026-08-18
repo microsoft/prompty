@@ -15,8 +15,7 @@ public enum StreamChunk: TypraModel {
     let object = try TypraRuntime.object(normalizedData, typeName: "StreamChunk")
     let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
     if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(
-        field: context.at("kind").path, expected: "non-blank string")
+      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
     }
     switch discriminator {
     case "text": return .textChunk(try TextChunk.load(normalizedData, context: context))
@@ -24,9 +23,7 @@ public enum StreamChunk: TypraModel {
     case "tool": return .toolChunk(try ToolChunk.load(normalizedData, context: context))
     case "usage": return .usageChunk(try UsageChunk.load(normalizedData, context: context))
     case "error": return .errorChunk(try ErrorChunk.load(normalizedData, context: context))
-    default:
-      throw TypraRuntimeError.unknownDiscriminator(
-        type: "StreamChunk", field: "kind", value: discriminator)
+    default: throw TypraRuntimeError.unknownDiscriminator(type: "StreamChunk", field: "kind", value: discriminator)
     }
   }
 
@@ -40,9 +37,7 @@ public enum StreamChunk: TypraModel {
     }
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> StreamChunk
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> StreamChunk {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "StreamChunk"), context: context)
   }
 
@@ -50,9 +45,7 @@ public enum StreamChunk: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> StreamChunk
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> StreamChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "StreamChunk"), context: context)
   }
 
@@ -77,7 +70,8 @@ public struct TextChunk: TypraModel {
     var instance = TextChunk()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "text"
     }
     if let value = object["value"] {
@@ -93,9 +87,7 @@ public struct TextChunk: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TextChunk
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TextChunk {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TextChunk"), context: context)
   }
 
@@ -103,9 +95,7 @@ public struct TextChunk: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TextChunk
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TextChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TextChunk"), context: context)
   }
 
@@ -125,13 +115,13 @@ public struct ThinkingChunk: TypraModel {
     self.value = value
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ThinkingChunk
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ThinkingChunk {
     let object = try TypraRuntime.object(data, typeName: "ThinkingChunk")
     var instance = ThinkingChunk()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "thinking"
     }
     if let value = object["value"] {
@@ -147,22 +137,16 @@ public struct ThinkingChunk: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ThinkingChunk
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ThinkingChunk"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ThinkingChunk {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ThinkingChunk"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ThinkingChunk
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ThinkingChunk"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ThinkingChunk {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ThinkingChunk"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -186,7 +170,8 @@ public struct ToolChunk: TypraModel {
     var instance = ToolChunk()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "tool"
     }
     if object["toolCall"] == nil || object["toolCall"] is NSNull {
@@ -205,9 +190,7 @@ public struct ToolChunk: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolChunk
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolChunk {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolChunk"), context: context)
   }
 
@@ -215,9 +198,7 @@ public struct ToolChunk: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolChunk
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolChunk"), context: context)
   }
 
@@ -242,7 +223,8 @@ public struct UsageChunk: TypraModel {
     var instance = UsageChunk()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "usage"
     }
     if object["usage"] == nil || object["usage"] is NSNull {
@@ -261,9 +243,7 @@ public struct UsageChunk: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> UsageChunk
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> UsageChunk {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "UsageChunk"), context: context)
   }
 
@@ -271,9 +251,7 @@ public struct UsageChunk: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> UsageChunk
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> UsageChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "UsageChunk"), context: context)
   }
 
@@ -298,7 +276,8 @@ public struct ErrorChunk: TypraModel {
     var instance = ErrorChunk()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "error"
     }
     if let value = object["message"] {
@@ -314,9 +293,7 @@ public struct ErrorChunk: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ErrorChunk
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ErrorChunk {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ErrorChunk"), context: context)
   }
 
@@ -324,9 +301,7 @@ public struct ErrorChunk: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ErrorChunk
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ErrorChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ErrorChunk"), context: context)
   }
 

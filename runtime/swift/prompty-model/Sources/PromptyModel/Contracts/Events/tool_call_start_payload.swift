@@ -16,9 +16,7 @@ public struct ToolCallStartPayload: TypraModel {
     self.arguments = arguments
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ToolCallStartPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolCallStartPayload {
     let object = try TypraRuntime.object(data, typeName: "ToolCallStartPayload")
     var instance = ToolCallStartPayload()
     if let value = object["id"] {
@@ -43,22 +41,16 @@ public struct ToolCallStartPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolCallStartPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ToolCallStartPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolCallStartPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolCallStartPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolCallStartPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ToolCallStartPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolCallStartPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolCallStartPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

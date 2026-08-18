@@ -39,9 +39,7 @@ public struct TraceTime: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TraceTime
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TraceTime {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TraceTime"), context: context)
   }
 
@@ -49,9 +47,7 @@ public struct TraceTime: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TraceTime
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TraceTime {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TraceTime"), context: context)
   }
 

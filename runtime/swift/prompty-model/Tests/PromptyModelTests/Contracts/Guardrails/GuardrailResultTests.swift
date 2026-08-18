@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class GuardrailResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "allowed": true,
-        "reason": "Content is safe"
-      }
-      """
+{
+  "allowed": true,
+  "reason": "Content is safe"
+}
+"""
     let instance = try GuardrailResult.fromJSON(json)
     XCTAssertEqual(instance.allowed, true)
     XCTAssertEqual((try XCTUnwrap(instance.reason)), "Content is safe")
@@ -24,10 +23,10 @@ final class GuardrailResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      allowed: true
-      reason: Content is safe
+allowed: true
+reason: Content is safe
 
-      """
+"""
     let instance = try GuardrailResult.fromYAML(yaml)
     XCTAssertEqual(instance.allowed, true)
     XCTAssertEqual((try XCTUnwrap(instance.reason)), "Content is safe")

@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class InvocationContextDecisionTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "candidateId": "memory:project-plan",
-        "reason": "included by relevance ranking"
-      }
-      """
+{
+  "candidateId": "memory:project-plan",
+  "reason": "included by relevance ranking"
+}
+"""
     let instance = try InvocationContextDecision.fromJSON(json)
     XCTAssertEqual(instance.candidateId, "memory:project-plan")
     XCTAssertEqual(instance.reason, "included by relevance ranking")
@@ -24,10 +23,10 @@ final class InvocationContextDecisionTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      candidateId: "memory:project-plan"
-      reason: included by relevance ranking
+candidateId: "memory:project-plan"
+reason: included by relevance ranking
 
-      """
+"""
     let instance = try InvocationContextDecision.fromYAML(yaml)
     XCTAssertEqual(instance.candidateId, "memory:project-plan")
     XCTAssertEqual(instance.reason, "included by relevance ranking")

@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class LlmCompletePayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "req_abc123",
-        "serviceRequestId": "srv_abc123",
-        "durationMs": 820
-      }
-      """
+{
+  "requestId": "req_abc123",
+  "serviceRequestId": "srv_abc123",
+  "durationMs": 820
+}
+"""
     let instance = try LlmCompletePayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "req_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.serviceRequestId)), "srv_abc123")
@@ -27,11 +26,11 @@ final class LlmCompletePayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: req_abc123
-      serviceRequestId: srv_abc123
-      durationMs: 820
+requestId: req_abc123
+serviceRequestId: srv_abc123
+durationMs: 820
 
-      """
+"""
     let instance = try LlmCompletePayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "req_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.serviceRequestId)), "srv_abc123")

@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionRefTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sess_abc123",
-        "refType": "issue",
-        "refValue": "owner/repo#123",
-        "turnIndex": 2,
-        "createdAt": "2026-06-09T20:00:00Z"
-      }
-      """
+{
+  "sessionId": "sess_abc123",
+  "refType": "issue",
+  "refValue": "owner/repo#123",
+  "turnIndex": 2,
+  "createdAt": "2026-06-09T20:00:00Z"
+}
+"""
     let instance = try SessionRef.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")
     XCTAssertEqual(instance.refType, "issue")
@@ -33,13 +32,13 @@ final class SessionRefTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sess_abc123
-      refType: issue
-      refValue: "owner/repo#123"
-      turnIndex: 2
-      createdAt: "2026-06-09T20:00:00Z"
+sessionId: sess_abc123
+refType: issue
+refValue: "owner/repo#123"
+turnIndex: 2
+createdAt: "2026-06-09T20:00:00Z"
 
-      """
+"""
     let instance = try SessionRef.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")
     XCTAssertEqual(instance.refType, "issue")

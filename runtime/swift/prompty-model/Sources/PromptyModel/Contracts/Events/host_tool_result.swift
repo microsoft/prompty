@@ -16,11 +16,7 @@ public struct HostToolResult: TypraModel {
   public var errorKind: String? = nil
   public var telemetry: [String: Any]? = nil
 
-  public init(
-    requestId: String? = nil, toolCallId: String? = nil, toolName: String = "",
-    success: Bool = false, result: Any? = nil, exitCode: Int32? = nil, durationMs: Double? = nil,
-    errorKind: String? = nil, telemetry: [String: Any]? = nil
-  ) {
+  public init(requestId: String? = nil, toolCallId: String? = nil, toolName: String = "", success: Bool = false, result: Any? = nil, exitCode: Int32? = nil, durationMs: Double? = nil, errorKind: String? = nil, telemetry: [String: Any]? = nil) {
     self.requestId = requestId
     self.toolCallId = toolCallId
     self.toolName = toolName
@@ -32,9 +28,7 @@ public struct HostToolResult: TypraModel {
     self.telemetry = telemetry
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> HostToolResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> HostToolResult {
     let object = try TypraRuntime.object(data, typeName: "HostToolResult")
     var instance = HostToolResult()
     if let value = object["requestId"] {
@@ -95,22 +89,16 @@ public struct HostToolResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> HostToolResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "HostToolResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> HostToolResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "HostToolResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> HostToolResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "HostToolResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> HostToolResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "HostToolResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicMessagesResponseTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
-        "model": "claude-sonnet-4-20250514",
-        "stop_reason": "end_turn",
-        "usage": {
-          "input_tokens": 150,
-          "output_tokens": 42
-        }
-      }
-      """
+{
+  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
+  "model": "claude-sonnet-4-20250514",
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 42
+  }
+}
+"""
     let instance = try AnthropicMessagesResponse.fromJSON(json)
     XCTAssertEqual(instance.id, "msg_01XFDUDYJgAACzvnptvVoYEL")
     XCTAssertEqual(instance.model, "claude-sonnet-4-20250514")
@@ -35,14 +34,14 @@ final class AnthropicMessagesResponseTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: msg_01XFDUDYJgAACzvnptvVoYEL
-      model: claude-sonnet-4-20250514
-      stop_reason: end_turn
-      usage:
-        input_tokens: 150
-        output_tokens: 42
+id: msg_01XFDUDYJgAACzvnptvVoYEL
+model: claude-sonnet-4-20250514
+stop_reason: end_turn
+usage:
+  input_tokens: 150
+  output_tokens: 42
 
-      """
+"""
     let instance = try AnthropicMessagesResponse.fromYAML(yaml)
     XCTAssertEqual(instance.id, "msg_01XFDUDYJgAACzvnptvVoYEL")
     XCTAssertEqual(instance.model, "claude-sonnet-4-20250514")

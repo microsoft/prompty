@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ValidationErrorTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "Missing required input: firstName",
-        "property": "firstName",
-        "constraint": "required"
-      }
-      """
+{
+  "message": "Missing required input: firstName",
+  "property": "firstName",
+  "constraint": "required"
+}
+"""
     let instance = try ValidationError.fromJSON(json)
     XCTAssertEqual(instance.message, "Missing required input: firstName")
     XCTAssertEqual(instance.property, "firstName")
@@ -27,11 +26,11 @@ final class ValidationErrorTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: "Missing required input: firstName"
-      property: firstName
-      constraint: required
+message: "Missing required input: firstName"
+property: firstName
+constraint: required
 
-      """
+"""
     let instance = try ValidationError.fromYAML(yaml)
     XCTAssertEqual(instance.message, "Missing required input: firstName")
     XCTAssertEqual(instance.property, "firstName")

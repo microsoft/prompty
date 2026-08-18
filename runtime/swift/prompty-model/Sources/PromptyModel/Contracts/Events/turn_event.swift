@@ -71,11 +71,7 @@ public struct TurnEvent: TypraModel {
   public var spanId: String? = nil
   public var payload: [String: Any] = [:]
 
-  public init(
-    id: String = "", type: TurnEventType = (try! TurnEventType.parse("turn_start")),
-    timestamp: String = "", turnId: String? = nil, iteration: Int32? = nil, parentId: String? = nil,
-    spanId: String? = nil, payload: [String: Any] = [:]
-  ) {
+  public init(id: String = "", type: TurnEventType = (try! TurnEventType.parse("turn_start")), timestamp: String = "", turnId: String? = nil, iteration: Int32? = nil, parentId: String? = nil, spanId: String? = nil, payload: [String: Any] = [:]) {
     self.id = id
     self.type = type
     self.timestamp = timestamp
@@ -137,9 +133,7 @@ public struct TurnEvent: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnEvent
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnEvent {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnEvent"), context: context)
   }
 
@@ -147,9 +141,7 @@ public struct TurnEvent: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnEvent
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnEvent {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnEvent"), context: context)
   }
 

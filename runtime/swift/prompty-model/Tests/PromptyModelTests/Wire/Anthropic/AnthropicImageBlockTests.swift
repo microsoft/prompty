@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicImageBlockTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "type": "image",
-        "source": {
-          "type": "base64",
-          "media_type": "image/png",
-          "data": "iVBORw0KGgo..."
-        }
-      }
-      """
+{
+  "type": "image",
+  "source": {
+    "type": "base64",
+    "media_type": "image/png",
+    "data": "iVBORw0KGgo..."
+  }
+}
+"""
     let instance = try AnthropicImageBlock.fromJSON(json)
     XCTAssertEqual(instance.type, "image")
     XCTAssertEqual(instance.source.type, "base64")
@@ -32,13 +31,13 @@ final class AnthropicImageBlockTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      type: image
-      source:
-        type: base64
-        media_type: image/png
-        data: iVBORw0KGgo...
+type: image
+source:
+  type: base64
+  media_type: image/png
+  data: iVBORw0KGgo...
 
-      """
+"""
     let instance = try AnthropicImageBlock.fromYAML(yaml)
     XCTAssertEqual(instance.type, "image")
     XCTAssertEqual(instance.source.type, "base64")

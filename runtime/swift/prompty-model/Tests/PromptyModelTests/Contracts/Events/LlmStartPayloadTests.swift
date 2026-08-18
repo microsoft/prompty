@@ -3,19 +3,18 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class LlmStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "provider": "openai",
-        "modelId": "gpt-4o-mini",
-        "messageCount": 4,
-        "attempt": 0
-      }
-      """
+{
+  "provider": "openai",
+  "modelId": "gpt-4o-mini",
+  "messageCount": 4,
+  "attempt": 0
+}
+"""
     let instance = try LlmStartPayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.provider)), "openai")
     XCTAssertEqual((try XCTUnwrap(instance.modelId)), "gpt-4o-mini")
@@ -30,12 +29,12 @@ final class LlmStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      provider: openai
-      modelId: gpt-4o-mini
-      messageCount: 4
-      attempt: 0
+provider: openai
+modelId: gpt-4o-mini
+messageCount: 4
+attempt: 0
 
-      """
+"""
     let instance = try LlmStartPayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.provider)), "openai")
     XCTAssertEqual((try XCTUnwrap(instance.modelId)), "gpt-4o-mini")

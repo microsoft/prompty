@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicUsageTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "input_tokens": 150,
-        "output_tokens": 42
-      }
-      """
+{
+  "input_tokens": 150,
+  "output_tokens": 42
+}
+"""
     let instance = try AnthropicUsage.fromJSON(json)
     XCTAssertEqual(instance.inputTokens, 150)
     XCTAssertEqual(instance.outputTokens, 42)
@@ -24,10 +23,10 @@ final class AnthropicUsageTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      input_tokens: 150
-      output_tokens: 42
+input_tokens: 150
+output_tokens: 42
 
-      """
+"""
     let instance = try AnthropicUsage.fromYAML(yaml)
     XCTAssertEqual(instance.inputTokens, 150)
     XCTAssertEqual(instance.outputTokens, 42)

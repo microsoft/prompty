@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class RedactedFieldTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "path": "$.arguments.apiKey",
-        "mode": "redacted",
-        "reason": "secret"
-      }
-      """
+{
+  "path": "$.arguments.apiKey",
+  "mode": "redacted",
+  "reason": "secret"
+}
+"""
     let instance = try RedactedField.fromJSON(json)
     XCTAssertEqual(instance.path, "$.arguments.apiKey")
     XCTAssertEqual(instance.mode, RedactionMode.redacted)
@@ -27,11 +26,11 @@ final class RedactedFieldTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      path: $.arguments.apiKey
-      mode: redacted
-      reason: secret
+path: $.arguments.apiKey
+mode: redacted
+reason: secret
 
-      """
+"""
     let instance = try RedactedField.fromYAML(yaml)
     XCTAssertEqual(instance.path, "$.arguments.apiKey")
     XCTAssertEqual(instance.mode, RedactionMode.redacted)

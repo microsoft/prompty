@@ -17,11 +17,7 @@ public struct ToolExecutionCompletePayload: TypraModel {
   public var telemetry: [String: Any]? = nil
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    requestId: String? = nil, toolCallId: String? = nil, toolName: String = "",
-    success: Bool = false, result: Any? = nil, exitCode: Int32? = nil, durationMs: Double? = nil,
-    errorKind: String? = nil, telemetry: [String: Any]? = nil, redaction: RedactionMetadata? = nil
-  ) {
+  public init(requestId: String? = nil, toolCallId: String? = nil, toolName: String = "", success: Bool = false, result: Any? = nil, exitCode: Int32? = nil, durationMs: Double? = nil, errorKind: String? = nil, telemetry: [String: Any]? = nil, redaction: RedactionMetadata? = nil) {
     self.requestId = requestId
     self.toolCallId = toolCallId
     self.toolName = toolName
@@ -34,9 +30,7 @@ public struct ToolExecutionCompletePayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ToolExecutionCompletePayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
     let object = try TypraRuntime.object(data, typeName: "ToolExecutionCompletePayload")
     var instance = ToolExecutionCompletePayload()
     if let value = object["requestId"] {
@@ -103,24 +97,16 @@ public struct ToolExecutionCompletePayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolExecutionCompletePayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ToolExecutionCompletePayload"),
-      context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolExecutionCompletePayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolExecutionCompletePayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ToolExecutionCompletePayload"),
-      context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolExecutionCompletePayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

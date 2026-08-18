@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TemplateTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "format": {
-          "kind": "mustache"
-        },
-        "parser": {
-          "kind": "mustache"
-        }
-      }
-      """
+{
+  "format": {
+    "kind": "mustache"
+  },
+  "parser": {
+    "kind": "mustache"
+  }
+}
+"""
     let instance = try Template.fromJSON(json)
     XCTAssertEqual(instance.format.kind, "mustache")
     XCTAssertEqual(instance.parser.kind, "mustache")
@@ -28,12 +27,12 @@ final class TemplateTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      format:
-        kind: mustache
-      parser:
-        kind: mustache
+format:
+  kind: mustache
+parser:
+  kind: mustache
 
-      """
+"""
     let instance = try Template.fromYAML(yaml)
     XCTAssertEqual(instance.format.kind, "mustache")
     XCTAssertEqual(instance.parser.kind, "mustache")

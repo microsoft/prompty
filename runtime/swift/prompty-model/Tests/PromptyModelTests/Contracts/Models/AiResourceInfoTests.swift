@@ -3,35 +3,30 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AiResourceInfoTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "serviceUrl": "https://my-resource.services.ai.azure.com"
-      }
-      """
+{
+  "serviceUrl": "https://my-resource.services.ai.azure.com"
+}
+"""
     let instance = try AiResourceInfo.fromJSON(json)
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.serviceUrl)), "https://my-resource.services.ai.azure.com")
+    XCTAssertEqual((try XCTUnwrap(instance.serviceUrl)), "https://my-resource.services.ai.azure.com")
     let reloaded = try AiResourceInfo.fromJSON(try instance.toJSON())
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.serviceUrl)), "https://my-resource.services.ai.azure.com")
+    XCTAssertEqual((try XCTUnwrap(reloaded.serviceUrl)), "https://my-resource.services.ai.azure.com")
   }
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      serviceUrl: "https://my-resource.services.ai.azure.com"
+serviceUrl: "https://my-resource.services.ai.azure.com"
 
-      """
+"""
     let instance = try AiResourceInfo.fromYAML(yaml)
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.serviceUrl)), "https://my-resource.services.ai.azure.com")
+    XCTAssertEqual((try XCTUnwrap(instance.serviceUrl)), "https://my-resource.services.ai.azure.com")
     let reloaded = try AiResourceInfo.fromYAML(try instance.toYAML())
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.serviceUrl)), "https://my-resource.services.ai.azure.com")
+    XCTAssertEqual((try XCTUnwrap(reloaded.serviceUrl)), "https://my-resource.services.ai.azure.com")
   }
 
 }

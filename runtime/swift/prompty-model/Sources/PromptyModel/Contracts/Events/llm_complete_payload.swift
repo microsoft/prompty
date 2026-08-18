@@ -11,19 +11,14 @@ public struct LlmCompletePayload: TypraModel {
   public var usage: TokenUsage? = nil
   public var durationMs: Double? = nil
 
-  public init(
-    requestId: String? = nil, serviceRequestId: String? = nil, usage: TokenUsage? = nil,
-    durationMs: Double? = nil
-  ) {
+  public init(requestId: String? = nil, serviceRequestId: String? = nil, usage: TokenUsage? = nil, durationMs: Double? = nil) {
     self.requestId = requestId
     self.serviceRequestId = serviceRequestId
     self.usage = usage
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> LlmCompletePayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> LlmCompletePayload {
     let object = try TypraRuntime.object(data, typeName: "LlmCompletePayload")
     var instance = LlmCompletePayload()
     if let value = object["requestId"] {
@@ -58,22 +53,16 @@ public struct LlmCompletePayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> LlmCompletePayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "LlmCompletePayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> LlmCompletePayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "LlmCompletePayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> LlmCompletePayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "LlmCompletePayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> LlmCompletePayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "LlmCompletePayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

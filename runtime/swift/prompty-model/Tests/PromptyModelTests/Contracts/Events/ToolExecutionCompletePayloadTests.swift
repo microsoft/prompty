@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolExecutionCompletePayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "exec_abc123",
-        "toolCallId": "call_abc123",
-        "toolName": "powershell",
-        "success": true,
-        "exitCode": 0,
-        "durationMs": 250,
-        "errorKind": "timeout"
-      }
-      """
+{
+  "requestId": "exec_abc123",
+  "toolCallId": "call_abc123",
+  "toolName": "powershell",
+  "success": true,
+  "exitCode": 0,
+  "durationMs": 250,
+  "errorKind": "timeout"
+}
+"""
     let instance = try ToolExecutionCompletePayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "exec_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")
@@ -39,15 +38,15 @@ final class ToolExecutionCompletePayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: exec_abc123
-      toolCallId: call_abc123
-      toolName: powershell
-      success: true
-      exitCode: 0
-      durationMs: 250
-      errorKind: timeout
+requestId: exec_abc123
+toolCallId: call_abc123
+toolName: powershell
+success: true
+exitCode: 0
+durationMs: 250
+errorKind: timeout
 
-      """
+"""
     let instance = try ToolExecutionCompletePayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "exec_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")

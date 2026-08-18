@@ -16,9 +16,7 @@ public struct ValidationError: TypraModel {
     self.constraint = constraint
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ValidationError
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ValidationError {
     let object = try TypraRuntime.object(data, typeName: "ValidationError")
     var instance = ValidationError()
     if let value = object["message"] {
@@ -41,22 +39,16 @@ public struct ValidationError: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ValidationError
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ValidationError"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ValidationError {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ValidationError"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ValidationError
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ValidationError"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ValidationError {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ValidationError"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -6,7 +6,5 @@ import Foundation
 public protocol Executor: Sendable {
   func execute(agent: Agent, messages: [Message]) async throws -> Any
   func executeStream(agent: Agent, messages: [Message]) async throws -> Any
-  func formatToolMessages(
-    rawResponse: Any, toolCalls: [ToolCall], toolResults: [String], textContent: String?
-  ) throws -> [Message]
+  func formatToolMessages(rawResponse: Any, toolCalls: [ToolCall], toolResults: [String], textContent: String?) throws -> [Message]
 }

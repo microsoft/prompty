@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ThreadMarkerTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "thread",
-        "kind": "thread"
-      }
-      """
+{
+  "name": "thread",
+  "kind": "thread"
+}
+"""
     let instance = try ThreadMarker.fromJSON(json)
     XCTAssertEqual(instance.name, "thread")
     XCTAssertEqual(instance.kind, "thread")
@@ -24,10 +23,10 @@ final class ThreadMarkerTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: thread
-      kind: thread
+name: thread
+kind: thread
 
-      """
+"""
     let instance = try ThreadMarker.fromYAML(yaml)
     XCTAssertEqual(instance.name, "thread")
     XCTAssertEqual(instance.kind, "thread")

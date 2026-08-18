@@ -28,9 +28,7 @@ public struct Message: TypraModel {
   public var parts: [ContentPart] = []
   public var metadata: [String: Any] = [:]
 
-  public init(
-    role: Role = (try! Role.parse("user")), parts: [ContentPart] = [], metadata: [String: Any] = [:]
-  ) {
+  public init(role: Role = (try! Role.parse("user")), parts: [ContentPart] = [], metadata: [String: Any] = [:]) {
     self.role = role
     self.parts = parts
     self.metadata = metadata
@@ -41,13 +39,12 @@ public struct Message: TypraModel {
     var instance = Message()
     if let value = object["role"] {
       instance.role = try Role.parse(try TypraRuntime.string(value, field: "role"))
-    } else {
+    }
+    else {
       instance.role = (try! Role.parse("user"))
     }
     if let value = object["parts"] {
-      instance.parts = try TypraRuntime.array(value, field: "parts").enumerated().map {
-        try ContentPart.load($1, context: context.at("parts").atIndex($0))
-      }
+      instance.parts = try TypraRuntime.array(value, field: "parts").enumerated().map { try ContentPart.load($1, context: context.at("parts").atIndex($0)) }
     }
     if let value = object["metadata"] {
       instance.metadata = try TypraRuntime.dictionary(value, field: "metadata")
@@ -63,9 +60,7 @@ public struct Message: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Message
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Message {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Message"), context: context)
   }
 
@@ -73,9 +68,7 @@ public struct Message: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Message
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Message {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Message"), context: context)
   }
 

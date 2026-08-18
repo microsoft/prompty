@@ -27,19 +27,14 @@ public struct SessionEndPayload: TypraModel {
   public var reason: String? = nil
   public var durationMs: Double? = nil
 
-  public init(
-    sessionId: String? = nil, status: SessionEndStatus? = nil, reason: String? = nil,
-    durationMs: Double? = nil
-  ) {
+  public init(sessionId: String? = nil, status: SessionEndStatus? = nil, reason: String? = nil, durationMs: Double? = nil) {
     self.sessionId = sessionId
     self.status = status
     self.reason = reason
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> SessionEndPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
     let object = try TypraRuntime.object(data, typeName: "SessionEndPayload")
     var instance = SessionEndPayload()
     if let value = object["sessionId"] {
@@ -74,22 +69,16 @@ public struct SessionEndPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionEndPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "SessionEndPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionEndPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionEndPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "SessionEndPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionEndPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class InvokerErrorTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "No renderer registered for key: jinja2",
-        "component": "renderer",
-        "key": "jinja2"
-      }
-      """
+{
+  "message": "No renderer registered for key: jinja2",
+  "component": "renderer",
+  "key": "jinja2"
+}
+"""
     let instance = try InvokerError.fromJSON(json)
     XCTAssertEqual(instance.message, "No renderer registered for key: jinja2")
     XCTAssertEqual(instance.component, "renderer")
@@ -27,11 +26,11 @@ final class InvokerErrorTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: "No renderer registered for key: jinja2"
-      component: renderer
-      key: jinja2
+message: "No renderer registered for key: jinja2"
+component: renderer
+key: jinja2
 
-      """
+"""
     let instance = try InvokerError.fromYAML(yaml)
     XCTAssertEqual(instance.message, "No renderer registered for key: jinja2")
     XCTAssertEqual(instance.component, "renderer")

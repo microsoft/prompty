@@ -12,9 +12,7 @@ public struct ThinkingEventPayload: TypraModel {
     self.token = token
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ThinkingEventPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ThinkingEventPayload {
     let object = try TypraRuntime.object(data, typeName: "ThinkingEventPayload")
     var instance = ThinkingEventPayload()
     if let value = object["token"] {
@@ -29,22 +27,16 @@ public struct ThinkingEventPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ThinkingEventPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ThinkingEventPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ThinkingEventPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ThinkingEventPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ThinkingEventPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ThinkingEventPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ThinkingEventPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ThinkingEventPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

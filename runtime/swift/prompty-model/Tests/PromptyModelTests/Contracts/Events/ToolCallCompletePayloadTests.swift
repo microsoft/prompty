@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolCallCompletePayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "call_abc123",
-        "name": "get_weather",
-        "success": true,
-        "durationMs": 42,
-        "errorKind": "timeout"
-      }
-      """
+{
+  "id": "call_abc123",
+  "name": "get_weather",
+  "success": true,
+  "durationMs": 42,
+  "errorKind": "timeout"
+}
+"""
     let instance = try ToolCallCompletePayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "call_abc123")
     XCTAssertEqual(instance.name, "get_weather")
@@ -33,13 +32,13 @@ final class ToolCallCompletePayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: call_abc123
-      name: get_weather
-      success: true
-      durationMs: 42
-      errorKind: timeout
+id: call_abc123
+name: get_weather
+success: true
+durationMs: 42
+errorKind: timeout
 
-      """
+"""
     let instance = try ToolCallCompletePayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "call_abc123")
     XCTAssertEqual(instance.name, "get_weather")

@@ -3,29 +3,28 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelInfoTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "gpt-4o",
-        "displayName": "GPT-4o",
-        "ownedBy": "openai",
-        "contextWindow": 128000,
-        "inputModalities": [
-          "text",
-          "image"
-        ],
-        "outputModalities": [
-          "text"
-        ],
-        "additionalProperties": {
-          "supportsStreaming": true
-        }
-      }
-      """
+{
+  "id": "gpt-4o",
+  "displayName": "GPT-4o",
+  "ownedBy": "openai",
+  "contextWindow": 128000,
+  "inputModalities": [
+    "text",
+    "image"
+  ],
+  "outputModalities": [
+    "text"
+  ],
+  "additionalProperties": {
+    "supportsStreaming": true
+  }
+}
+"""
     let instance = try ModelInfo.fromJSON(json)
     XCTAssertEqual(instance.id, "gpt-4o")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "GPT-4o")
@@ -46,19 +45,19 @@ final class ModelInfoTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: gpt-4o
-      displayName: GPT-4o
-      ownedBy: openai
-      contextWindow: 128000
-      inputModalities:
-        - text
-        - image
-      outputModalities:
-        - text
-      additionalProperties:
-        supportsStreaming: true
+id: gpt-4o
+displayName: GPT-4o
+ownedBy: openai
+contextWindow: 128000
+inputModalities:
+  - text
+  - image
+outputModalities:
+  - text
+additionalProperties:
+  supportsStreaming: true
 
-      """
+"""
     let instance = try ModelInfo.fromYAML(yaml)
     XCTAssertEqual(instance.id, "gpt-4o")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "GPT-4o")

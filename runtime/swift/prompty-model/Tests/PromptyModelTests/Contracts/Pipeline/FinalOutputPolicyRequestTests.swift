@@ -3,19 +3,18 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class FinalOutputPolicyRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sample",
-        "turnId": "sample",
-        "iteration": 1,
-        "messages": []
-      }
-      """
+{
+  "sessionId": "sample",
+  "turnId": "sample",
+  "iteration": 1,
+  "messages": []
+}
+"""
     let instance = try FinalOutputPolicyRequest.fromJSON(json)
     XCTAssertEqual(instance.sessionId, "sample")
     XCTAssertEqual(instance.turnId, "sample")
@@ -30,12 +29,12 @@ final class FinalOutputPolicyRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sample
-      turnId: sample
-      iteration: 1
-      messages: []
+sessionId: sample
+turnId: sample
+iteration: 1
+messages: []
 
-      """
+"""
     let instance = try FinalOutputPolicyRequest.fromYAML(yaml)
     XCTAssertEqual(instance.sessionId, "sample")
     XCTAssertEqual(instance.turnId, "sample")

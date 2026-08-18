@@ -12,10 +12,7 @@ public struct SessionFileRef: TypraModel {
   public var turnIndex: Int32? = nil
   public var firstSeenAt: String? = nil
 
-  public init(
-    sessionId: String? = nil, path: String = "", toolName: String? = nil, turnIndex: Int32? = nil,
-    firstSeenAt: String? = nil
-  ) {
+  public init(sessionId: String? = nil, path: String = "", toolName: String? = nil, turnIndex: Int32? = nil, firstSeenAt: String? = nil) {
     self.sessionId = sessionId
     self.path = path
     self.toolName = toolName
@@ -23,9 +20,7 @@ public struct SessionFileRef: TypraModel {
     self.firstSeenAt = firstSeenAt
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> SessionFileRef
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionFileRef {
     let object = try TypraRuntime.object(data, typeName: "SessionFileRef")
     var instance = SessionFileRef()
     if let value = object["sessionId"] {
@@ -64,22 +59,16 @@ public struct SessionFileRef: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionFileRef
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "SessionFileRef"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionFileRef {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionFileRef"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionFileRef
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "SessionFileRef"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionFileRef {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionFileRef"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

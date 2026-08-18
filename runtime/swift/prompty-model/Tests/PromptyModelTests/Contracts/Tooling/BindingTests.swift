@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class BindingTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "my-tool",
-        "input": "input-variable"
-      }
-      """
+{
+  "name": "my-tool",
+  "input": "input-variable"
+}
+"""
     let instance = try Binding.fromJSON(json)
     XCTAssertEqual(instance.name, "my-tool")
     XCTAssertEqual(instance.input, "input-variable")
@@ -24,10 +23,10 @@ final class BindingTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: my-tool
-      input: input-variable
+name: my-tool
+input: input-variable
 
-      """
+"""
     let instance = try Binding.fromYAML(yaml)
     XCTAssertEqual(instance.name, "my-tool")
     XCTAssertEqual(instance.input, "input-variable")

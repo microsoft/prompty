@@ -19,19 +19,13 @@ public enum InvocationContextDisposition: String, Codable, CaseIterable {
 public struct InvocationContextDecision: TypraModel {
   public static let shorthandProperty: String? = nil
   public var candidateId: String = ""
-  public var disposition: InvocationContextDisposition =
-    (try! InvocationContextDisposition.parse("included"))
+  public var disposition: InvocationContextDisposition = (try! InvocationContextDisposition.parse("included"))
   public var reason: String = ""
   public var rank: Int32? = nil
   public var estimatedTokens: Int32? = nil
   public var metadata: [String: Any]? = nil
 
-  public init(
-    candidateId: String = "",
-    disposition: InvocationContextDisposition =
-      (try! InvocationContextDisposition.parse("included")), reason: String = "",
-    rank: Int32? = nil, estimatedTokens: Int32? = nil, metadata: [String: Any]? = nil
-  ) {
+  public init(candidateId: String = "", disposition: InvocationContextDisposition = (try! InvocationContextDisposition.parse("included")), reason: String = "", rank: Int32? = nil, estimatedTokens: Int32? = nil, metadata: [String: Any]? = nil) {
     self.candidateId = candidateId
     self.disposition = disposition
     self.reason = reason
@@ -40,17 +34,14 @@ public struct InvocationContextDecision: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> InvocationContextDecision
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> InvocationContextDecision {
     let object = try TypraRuntime.object(data, typeName: "InvocationContextDecision")
     var instance = InvocationContextDecision()
     if let value = object["candidateId"] {
       instance.candidateId = try TypraRuntime.string(value, field: "candidateId")
     }
     if let value = object["disposition"] {
-      instance.disposition = try InvocationContextDisposition.parse(
-        try TypraRuntime.string(value, field: "disposition"))
+      instance.disposition = try InvocationContextDisposition.parse(try TypraRuntime.string(value, field: "disposition"))
     }
     if let value = object["reason"] {
       instance.reason = try TypraRuntime.string(value, field: "reason")
@@ -84,22 +75,16 @@ public struct InvocationContextDecision: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> InvocationContextDecision
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "InvocationContextDecision"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> InvocationContextDecision {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "InvocationContextDecision"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> InvocationContextDecision
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "InvocationContextDecision"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> InvocationContextDecision {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "InvocationContextDecision"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

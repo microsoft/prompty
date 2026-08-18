@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AuthorizationCodeFlowTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "authUrl": "sample",
-        "codeVerifier": "sample"
-      }
-      """
+{
+  "authUrl": "sample",
+  "codeVerifier": "sample"
+}
+"""
     let instance = try AuthorizationCodeFlow.fromJSON(json)
     XCTAssertEqual(instance.authUrl, "sample")
     XCTAssertEqual(instance.codeVerifier, "sample")
@@ -24,10 +23,10 @@ final class AuthorizationCodeFlowTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      authUrl: sample
-      codeVerifier: sample
+authUrl: sample
+codeVerifier: sample
 
-      """
+"""
     let instance = try AuthorizationCodeFlow.fromYAML(yaml)
     XCTAssertEqual(instance.authUrl, "sample")
     XCTAssertEqual(instance.codeVerifier, "sample")

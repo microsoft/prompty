@@ -3,19 +3,18 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ParserConfigTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "prompty",
-        "options": {
-          "key": "value"
-        }
-      }
-      """
+{
+  "kind": "prompty",
+  "options": {
+    "key": "value"
+  }
+}
+"""
     let instance = try ParserConfig.fromJSON(json)
     XCTAssertEqual(instance.kind, "prompty")
     XCTAssertNotNil(instance.options)
@@ -26,11 +25,11 @@ final class ParserConfigTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: prompty
-      options:
-        key: value
+kind: prompty
+options:
+  key: value
 
-      """
+"""
     let instance = try ParserConfig.fromYAML(yaml)
     XCTAssertEqual(instance.kind, "prompty")
     XCTAssertNotNil(instance.options)

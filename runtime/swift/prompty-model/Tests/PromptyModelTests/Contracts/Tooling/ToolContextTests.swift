@@ -3,32 +3,31 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolContextTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "metadata": {
-          "userId": "user-123"
-        },
-        "messages": [
-          {
-            "role": "user",
-            "parts": [
-              {
-                "kind": "text",
-                "value": "Hello!"
-              }
-            ],
-            "metadata": {
-              "source": "user-input"
-            }
-          }
-        ]
+{
+  "metadata": {
+    "userId": "user-123"
+  },
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
       }
-      """
+    }
+  ]
+}
+"""
     let instance = try ToolContext.fromJSON(json)
     XCTAssertEqual(instance.messages.count, 1)
     XCTAssertNotNil(instance.metadata)
@@ -39,17 +38,17 @@ final class ToolContextTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      metadata:
-        userId: user-123
-      messages:
-        - role: user
-          parts:
-            - kind: text
-              value: Hello!
-          metadata:
-            source: user-input
+metadata:
+  userId: user-123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
-      """
+"""
     let instance = try ToolContext.fromYAML(yaml)
     XCTAssertEqual(instance.messages.count, 1)
     XCTAssertNotNil(instance.metadata)

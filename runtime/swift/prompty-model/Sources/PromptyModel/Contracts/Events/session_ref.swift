@@ -12,10 +12,7 @@ public struct SessionRef: TypraModel {
   public var turnIndex: Int32? = nil
   public var createdAt: String? = nil
 
-  public init(
-    sessionId: String? = nil, refType: String = "", refValue: String = "", turnIndex: Int32? = nil,
-    createdAt: String? = nil
-  ) {
+  public init(sessionId: String? = nil, refType: String = "", refValue: String = "", turnIndex: Int32? = nil, createdAt: String? = nil) {
     self.sessionId = sessionId
     self.refType = refType
     self.refValue = refValue
@@ -60,9 +57,7 @@ public struct SessionRef: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionRef
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionRef {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionRef"), context: context)
   }
 
@@ -70,9 +65,7 @@ public struct SessionRef: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionRef
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionRef {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionRef"), context: context)
   }
 

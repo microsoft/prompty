@@ -16,11 +16,7 @@ public struct TrajectoryEvent: TypraModel {
   public var createdAt: String? = nil
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    id: String? = nil, sessionId: String? = nil, turnId: String? = nil, toolCallId: String? = nil,
-    turnIndex: Int32? = nil, eventType: String = "", data: [String: Any]? = nil,
-    createdAt: String? = nil, redaction: RedactionMetadata? = nil
-  ) {
+  public init(id: String? = nil, sessionId: String? = nil, turnId: String? = nil, toolCallId: String? = nil, turnIndex: Int32? = nil, eventType: String = "", data: [String: Any]? = nil, createdAt: String? = nil, redaction: RedactionMetadata? = nil) {
     self.id = id
     self.sessionId = sessionId
     self.turnId = turnId
@@ -32,9 +28,7 @@ public struct TrajectoryEvent: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> TrajectoryEvent
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TrajectoryEvent {
     let object = try TypraRuntime.object(data, typeName: "TrajectoryEvent")
     var instance = TrajectoryEvent()
     if let value = object["id"] {
@@ -97,22 +91,16 @@ public struct TrajectoryEvent: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TrajectoryEvent
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "TrajectoryEvent"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TrajectoryEvent {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "TrajectoryEvent"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TrajectoryEvent
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "TrajectoryEvent"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TrajectoryEvent {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TrajectoryEvent"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class MemoryStoreTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "entries": []
-      }
-      """
+{
+  "entries": []
+}
+"""
     let instance = try MemoryStore.fromJSON(json)
     XCTAssertEqual(instance.entries.count, 0)
     let reloaded = try MemoryStore.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class MemoryStoreTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      entries: []
+entries: []
 
-      """
+"""
     let instance = try MemoryStore.fromYAML(yaml)
     XCTAssertEqual(instance.entries.count, 0)
     let reloaded = try MemoryStore.fromYAML(try instance.toYAML())

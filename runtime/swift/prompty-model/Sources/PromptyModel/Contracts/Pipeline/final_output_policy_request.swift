@@ -13,10 +13,7 @@ public struct FinalOutputPolicyRequest: TypraModel {
   public var output: Any? = nil
   public var inputs: Any? = nil
 
-  public init(
-    sessionId: String = "", turnId: String = "", iteration: Int32 = 0, messages: [Message] = [],
-    output: Any? = nil, inputs: Any? = nil
-  ) {
+  public init(sessionId: String = "", turnId: String = "", iteration: Int32 = 0, messages: [Message] = [], output: Any? = nil, inputs: Any? = nil) {
     self.sessionId = sessionId
     self.turnId = turnId
     self.iteration = iteration
@@ -25,9 +22,7 @@ public struct FinalOutputPolicyRequest: TypraModel {
     self.inputs = inputs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> FinalOutputPolicyRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FinalOutputPolicyRequest {
     let object = try TypraRuntime.object(data, typeName: "FinalOutputPolicyRequest")
     var instance = FinalOutputPolicyRequest()
     if let value = object["sessionId"] {
@@ -40,9 +35,7 @@ public struct FinalOutputPolicyRequest: TypraModel {
       instance.iteration = try TypraRuntime.int32(value, field: "iteration")
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["output"] {
       instance.output = value
@@ -68,22 +61,16 @@ public struct FinalOutputPolicyRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FinalOutputPolicyRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "FinalOutputPolicyRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FinalOutputPolicyRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "FinalOutputPolicyRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FinalOutputPolicyRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "FinalOutputPolicyRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FinalOutputPolicyRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FinalOutputPolicyRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

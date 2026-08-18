@@ -11,18 +11,14 @@ public struct DelegatedStateReference: TypraModel {
   public var id: String = ""
   public var metadata: [String: Any]? = nil
 
-  public init(
-    provider: String = "", kind: String = "", id: String = "", metadata: [String: Any]? = nil
-  ) {
+  public init(provider: String = "", kind: String = "", id: String = "", metadata: [String: Any]? = nil) {
     self.provider = provider
     self.kind = kind
     self.id = id
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> DelegatedStateReference
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> DelegatedStateReference {
     let object = try TypraRuntime.object(data, typeName: "DelegatedStateReference")
     var instance = DelegatedStateReference()
     if let value = object["provider"] {
@@ -51,22 +47,16 @@ public struct DelegatedStateReference: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> DelegatedStateReference
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "DelegatedStateReference"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> DelegatedStateReference {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "DelegatedStateReference"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> DelegatedStateReference
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "DelegatedStateReference"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> DelegatedStateReference {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "DelegatedStateReference"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -38,12 +38,7 @@ public struct SessionEvent: TypraModel {
   public var payload: [String: Any] = [:]
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    id: String = "", type: SessionEventType = (try! SessionEventType.parse("session_start")),
-    timestamp: String = "", sessionId: String? = nil, turnId: String? = nil,
-    parentId: String? = nil, spanId: String? = nil, payload: [String: Any] = [:],
-    redaction: RedactionMetadata? = nil
-  ) {
+  public init(id: String = "", type: SessionEventType = (try! SessionEventType.parse("session_start")), timestamp: String = "", sessionId: String? = nil, turnId: String? = nil, parentId: String? = nil, spanId: String? = nil, payload: [String: Any] = [:], redaction: RedactionMetadata? = nil) {
     self.id = id
     self.type = type
     self.timestamp = timestamp
@@ -55,8 +50,7 @@ public struct SessionEvent: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionEvent
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionEvent {
     let object = try TypraRuntime.object(data, typeName: "SessionEvent")
     var instance = SessionEvent()
     if let value = object["id"] {
@@ -113,9 +107,7 @@ public struct SessionEvent: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionEvent
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionEvent {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionEvent"), context: context)
   }
 
@@ -123,9 +115,7 @@ public struct SessionEvent: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionEvent
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionEvent {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionEvent"), context: context)
   }
 

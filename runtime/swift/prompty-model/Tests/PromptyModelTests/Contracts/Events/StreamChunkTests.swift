@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class StreamChunkTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "text",
-        "value": "Hello"
-      }
-      """
+{
+  "kind": "text",
+  "value": "Hello"
+}
+"""
     let instance = try StreamChunk.fromJSON(json)
     if case .textChunk(let concrete) = instance {
       XCTAssertEqual(concrete.value, "Hello")
@@ -30,10 +29,10 @@ final class StreamChunkTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: text
-      value: Hello
+kind: text
+value: Hello
 
-      """
+"""
     let instance = try StreamChunk.fromYAML(yaml)
     if case .textChunk(let concrete) = instance {
       XCTAssertEqual(concrete.value, "Hello")

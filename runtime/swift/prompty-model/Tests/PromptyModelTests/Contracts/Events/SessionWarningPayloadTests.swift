@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionWarningPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "warningType": "remote",
-        "message": "Remote session disabled"
-      }
-      """
+{
+  "warningType": "remote",
+  "message": "Remote session disabled"
+}
+"""
     let instance = try SessionWarningPayload.fromJSON(json)
     XCTAssertEqual(instance.warningType, "remote")
     XCTAssertEqual(instance.message, "Remote session disabled")
@@ -24,10 +23,10 @@ final class SessionWarningPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      warningType: remote
-      message: Remote session disabled
+warningType: remote
+message: Remote session disabled
 
-      """
+"""
     let instance = try SessionWarningPayload.fromYAML(yaml)
     XCTAssertEqual(instance.warningType, "remote")
     XCTAssertEqual(instance.message, "Remote session disabled")

@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ReplayJournalRecordTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "session"
-      }
-      """
+{
+  "kind": "session"
+}
+"""
     let instance = try ReplayJournalRecord.fromJSON(json)
     XCTAssertEqual(instance.kind, ReplayRecordKind.session)
     let reloaded = try ReplayJournalRecord.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class ReplayJournalRecordTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: session
+kind: session
 
-      """
+"""
     let instance = try ReplayJournalRecord.fromYAML(yaml)
     XCTAssertEqual(instance.kind, ReplayRecordKind.session)
     let reloaded = try ReplayJournalRecord.fromYAML(try instance.toYAML())

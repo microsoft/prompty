@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "agent": "weather-agent",
-        "maxIterations": 10
-      }
-      """
+{
+  "agent": "weather-agent",
+  "maxIterations": 10
+}
+"""
     let instance = try TurnStartPayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.agent)), "weather-agent")
     XCTAssertEqual((try XCTUnwrap(instance.maxIterations)), 10)
@@ -24,10 +23,10 @@ final class TurnStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      agent: weather-agent
-      maxIterations: 10
+agent: weather-agent
+maxIterations: 10
 
-      """
+"""
     let instance = try TurnStartPayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.agent)), "weather-agent")
     XCTAssertEqual((try XCTUnwrap(instance.maxIterations)), 10)

@@ -3,24 +3,23 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelInvocationRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "context": {
-          "id": "context:inv_abc123",
-          "sessionId": "sess_abc123",
-          "turnId": "turn_abc123",
-          "invocationId": "inv_abc123",
-          "iteration": 1,
-          "messages": [],
-          "contextState": {}
-        }
-      }
-      """
+{
+  "context": {
+    "id": "context:inv_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "invocationId": "inv_abc123",
+    "iteration": 1,
+    "messages": [],
+    "contextState": {}
+  }
+}
+"""
     let instance = try ModelInvocationRequest.fromJSON(json)
     XCTAssertEqual(instance.context.id, "context:inv_abc123")
     XCTAssertEqual(instance.context.sessionId, "sess_abc123")
@@ -37,16 +36,16 @@ final class ModelInvocationRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      context:
-        id: "context:inv_abc123"
-        sessionId: sess_abc123
-        turnId: turn_abc123
-        invocationId: inv_abc123
-        iteration: 1
-        messages: []
-        contextState: {}
+context:
+  id: "context:inv_abc123"
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  invocationId: inv_abc123
+  iteration: 1
+  messages: []
+  contextState: {}
 
-      """
+"""
     let instance = try ModelInvocationRequest.fromYAML(yaml)
     XCTAssertEqual(instance.context.id, "context:inv_abc123")
     XCTAssertEqual(instance.context.sessionId, "sess_abc123")

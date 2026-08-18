@@ -14,14 +14,13 @@ public struct AnthropicTextBlock: TypraModel {
     self.text = text
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicTextBlock
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicTextBlock {
     let object = try TypraRuntime.object(data, typeName: "AnthropicTextBlock")
     var instance = AnthropicTextBlock()
     if let value = object["type"] {
       instance.type = try TypraRuntime.string(value, field: "type")
-    } else {
+    }
+    else {
       instance.type = "text"
     }
     if let value = object["text"] {
@@ -37,22 +36,16 @@ public struct AnthropicTextBlock: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicTextBlock
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicTextBlock"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicTextBlock {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicTextBlock"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicTextBlock
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicTextBlock"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicTextBlock {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicTextBlock"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

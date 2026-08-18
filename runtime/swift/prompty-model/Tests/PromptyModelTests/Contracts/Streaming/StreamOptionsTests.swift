@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class StreamOptionsTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "includeUsage": true
-      }
-      """
+{
+  "includeUsage": true
+}
+"""
     let instance = try StreamOptions.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.includeUsage)), true)
     let reloaded = try StreamOptions.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class StreamOptionsTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      includeUsage: true
+includeUsage: true
 
-      """
+"""
     let instance = try StreamOptions.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.includeUsage)), true)
     let reloaded = try StreamOptions.fromYAML(try instance.toYAML())

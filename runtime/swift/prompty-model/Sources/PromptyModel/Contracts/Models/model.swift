@@ -30,10 +30,7 @@ public struct Model: TypraModel {
   public var connection: Connection? = nil
   public var options: ModelOptions? = nil
 
-  public init(
-    id: String = "", provider: String? = nil, apiType: ApiType? = nil,
-    connection: Connection? = nil, options: ModelOptions? = nil
-  ) {
+  public init(id: String = "", provider: String? = nil, apiType: ApiType? = nil, connection: Connection? = nil, options: ModelOptions? = nil) {
     self.id = id
     self.provider = provider
     self.apiType = apiType
@@ -51,7 +48,8 @@ public struct Model: TypraModel {
     var instance = Model()
     if let value = object["id"] {
       instance.id = try TypraRuntime.string(value, field: "id")
-    } else {
+    }
+    else {
       instance.id = ""
     }
     if let value = object["provider"] {
@@ -87,8 +85,7 @@ public struct Model: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Model
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Model {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Model"), context: context)
   }
 
@@ -96,8 +93,7 @@ public struct Model: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Model
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Model {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Model"), context: context)
   }
 

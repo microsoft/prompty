@@ -13,10 +13,7 @@ public struct DeviceAuthorization: TypraModel {
   public var interval: Int64 = 0
   public var message: String = ""
 
-  public init(
-    deviceCode: String = "", userCode: String = "", verificationUri: String = "",
-    expiresIn: Int64 = 0, interval: Int64 = 0, message: String = ""
-  ) {
+  public init(deviceCode: String = "", userCode: String = "", verificationUri: String = "", expiresIn: Int64 = 0, interval: Int64 = 0, message: String = "") {
     self.deviceCode = deviceCode
     self.userCode = userCode
     self.verificationUri = verificationUri
@@ -25,9 +22,7 @@ public struct DeviceAuthorization: TypraModel {
     self.message = message
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> DeviceAuthorization
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> DeviceAuthorization {
     let object = try TypraRuntime.object(data, typeName: "DeviceAuthorization")
     var instance = DeviceAuthorization()
     if let value = object["deviceCode"] {
@@ -47,7 +42,8 @@ public struct DeviceAuthorization: TypraModel {
     }
     if let value = object["message"] {
       instance.message = try TypraRuntime.string(value, field: "message")
-    } else {
+    }
+    else {
       instance.message = ""
     }
     return instance
@@ -64,9 +60,7 @@ public struct DeviceAuthorization: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameDeviceCode: String?
     switch provider {
@@ -107,22 +101,16 @@ public struct DeviceAuthorization: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> DeviceAuthorization
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "DeviceAuthorization"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> DeviceAuthorization {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "DeviceAuthorization"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> DeviceAuthorization
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "DeviceAuthorization"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> DeviceAuthorization {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "DeviceAuthorization"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

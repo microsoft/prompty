@@ -24,18 +24,13 @@ public struct McpApprovalMode: TypraModel {
   public var alwaysRequireApprovalTools: [String]? = nil
   public var neverRequireApprovalTools: [String]? = nil
 
-  public init(
-    kind: McpApprovalModeKind = (try! McpApprovalModeKind.parse("always")),
-    alwaysRequireApprovalTools: [String]? = nil, neverRequireApprovalTools: [String]? = nil
-  ) {
+  public init(kind: McpApprovalModeKind = (try! McpApprovalModeKind.parse("always")), alwaysRequireApprovalTools: [String]? = nil, neverRequireApprovalTools: [String]? = nil) {
     self.kind = kind
     self.alwaysRequireApprovalTools = alwaysRequireApprovalTools
     self.neverRequireApprovalTools = neverRequireApprovalTools
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> McpApprovalMode
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> McpApprovalMode {
     if let scalar = data as? String {
       var instance = McpApprovalMode()
       instance.kind = try McpApprovalModeKind.parse(try TypraRuntime.string(scalar, field: "kind"))
@@ -47,14 +42,10 @@ public struct McpApprovalMode: TypraModel {
       instance.kind = try McpApprovalModeKind.parse(try TypraRuntime.string(value, field: "kind"))
     }
     if let value = object["alwaysRequireApprovalTools"] {
-      instance.alwaysRequireApprovalTools = try TypraRuntime.array(
-        value, field: "alwaysRequireApprovalTools"
-      ).map { try TypraRuntime.string($0, field: "alwaysRequireApprovalTools") }
+      instance.alwaysRequireApprovalTools = try TypraRuntime.array(value, field: "alwaysRequireApprovalTools").map { try TypraRuntime.string($0, field: "alwaysRequireApprovalTools") }
     }
     if let value = object["neverRequireApprovalTools"] {
-      instance.neverRequireApprovalTools = try TypraRuntime.array(
-        value, field: "neverRequireApprovalTools"
-      ).map { try TypraRuntime.string($0, field: "neverRequireApprovalTools") }
+      instance.neverRequireApprovalTools = try TypraRuntime.array(value, field: "neverRequireApprovalTools").map { try TypraRuntime.string($0, field: "neverRequireApprovalTools") }
     }
     return instance
   }
@@ -71,22 +62,16 @@ public struct McpApprovalMode: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> McpApprovalMode
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "McpApprovalMode"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> McpApprovalMode {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "McpApprovalMode"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> McpApprovalMode
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "McpApprovalMode"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> McpApprovalMode {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "McpApprovalMode"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

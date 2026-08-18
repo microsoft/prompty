@@ -3,33 +3,28 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ConnectionTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "reference",
-        "authenticationMode": "system",
-        "usageDescription": "This will allow the agent to respond to an email on your behalf"
-      }
-      """
+{
+  "kind": "reference",
+  "authenticationMode": "system",
+  "usageDescription": "This will allow the agent to respond to an email on your behalf"
+}
+"""
     let instance = try Connection.fromJSON(json)
     if case .referenceConnection(let concrete) = instance {
       XCTAssertEqual((try XCTUnwrap(concrete.authenticationMode)).rawValue, "system")
-      XCTAssertEqual(
-        (try XCTUnwrap(concrete.usageDescription)),
-        "This will allow the agent to respond to an email on your behalf")
+      XCTAssertEqual((try XCTUnwrap(concrete.usageDescription)), "This will allow the agent to respond to an email on your behalf")
     } else {
       XCTFail("Expected ReferenceConnection")
     }
     let reloaded = try Connection.fromJSON(try instance.toJSON())
     if case .referenceConnection(let concrete) = reloaded {
       XCTAssertEqual((try XCTUnwrap(concrete.authenticationMode)).rawValue, "system")
-      XCTAssertEqual(
-        (try XCTUnwrap(concrete.usageDescription)),
-        "This will allow the agent to respond to an email on your behalf")
+      XCTAssertEqual((try XCTUnwrap(concrete.usageDescription)), "This will allow the agent to respond to an email on your behalf")
     } else {
       XCTFail("Expected ReferenceConnection")
     }
@@ -37,26 +32,22 @@ final class ConnectionTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: reference
-      authenticationMode: system
-      usageDescription: This will allow the agent to respond to an email on your behalf
+kind: reference
+authenticationMode: system
+usageDescription: This will allow the agent to respond to an email on your behalf
 
-      """
+"""
     let instance = try Connection.fromYAML(yaml)
     if case .referenceConnection(let concrete) = instance {
       XCTAssertEqual((try XCTUnwrap(concrete.authenticationMode)).rawValue, "system")
-      XCTAssertEqual(
-        (try XCTUnwrap(concrete.usageDescription)),
-        "This will allow the agent to respond to an email on your behalf")
+      XCTAssertEqual((try XCTUnwrap(concrete.usageDescription)), "This will allow the agent to respond to an email on your behalf")
     } else {
       XCTFail("Expected ReferenceConnection")
     }
     let reloaded = try Connection.fromYAML(try instance.toYAML())
     if case .referenceConnection(let concrete) = reloaded {
       XCTAssertEqual((try XCTUnwrap(concrete.authenticationMode)).rawValue, "system")
-      XCTAssertEqual(
-        (try XCTUnwrap(concrete.usageDescription)),
-        "This will allow the agent to respond to an email on your behalf")
+      XCTAssertEqual((try XCTUnwrap(concrete.usageDescription)), "This will allow the agent to respond to an email on your behalf")
     } else {
       XCTFail("Expected ReferenceConnection")
     }

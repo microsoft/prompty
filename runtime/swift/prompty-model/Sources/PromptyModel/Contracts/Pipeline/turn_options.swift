@@ -14,11 +14,7 @@ public struct TurnOptions: TypraModel {
   public var turn: Int32? = nil
   public var compaction: CompactionConfig? = nil
 
-  public init(
-    maxIterations: Int32? = nil, maxLlmRetries: Int32? = nil, contextBudget: Int32? = nil,
-    parallelToolCalls: Bool? = nil, raw: Bool? = nil, turn: Int32? = nil,
-    compaction: CompactionConfig? = nil
-  ) {
+  public init(maxIterations: Int32? = nil, maxLlmRetries: Int32? = nil, contextBudget: Int32? = nil, parallelToolCalls: Bool? = nil, raw: Bool? = nil, turn: Int32? = nil, compaction: CompactionConfig? = nil) {
     self.maxIterations = maxIterations
     self.maxLlmRetries = maxLlmRetries
     self.contextBudget = contextBudget
@@ -81,9 +77,7 @@ public struct TurnOptions: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnOptions
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnOptions {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnOptions"), context: context)
   }
 
@@ -91,9 +85,7 @@ public struct TurnOptions: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnOptions
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnOptions {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnOptions"), context: context)
   }
 

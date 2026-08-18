@@ -3,31 +3,30 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionTraceTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "version": "1",
-        "runtime": "typescript",
-        "promptyVersion": "2.0.0",
-        "sessionId": "sess_abc123",
-        "events": [
-          {
-            "id": "evt_abc123",
-            "type": "session_start",
-            "timestamp": "2026-06-09T20:00:00Z",
-            "sessionId": "sess_abc123",
-            "turnId": "turn_001",
-            "parentId": "evt_parent",
-            "spanId": "span_hook_001",
-            "payload": {}
-          }
-        ]
-      }
-      """
+{
+  "version": "1",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0",
+  "sessionId": "sess_abc123",
+  "events": [
+    {
+      "id": "evt_abc123",
+      "type": "session_start",
+      "timestamp": "2026-06-09T20:00:00Z",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_001",
+      "parentId": "evt_parent",
+      "spanId": "span_hook_001",
+      "payload": {}
+    }
+  ]
+}
+"""
     let instance = try SessionTrace.fromJSON(json)
     XCTAssertEqual(instance.version, "1")
     XCTAssertEqual((try XCTUnwrap(instance.runtime)), "typescript")
@@ -44,21 +43,21 @@ final class SessionTraceTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      version: "1"
-      runtime: typescript
-      promptyVersion: 2.0.0
-      sessionId: sess_abc123
-      events:
-        - id: evt_abc123
-          type: session_start
-          timestamp: "2026-06-09T20:00:00Z"
-          sessionId: sess_abc123
-          turnId: turn_001
-          parentId: evt_parent
-          spanId: span_hook_001
-          payload: {}
+version: "1"
+runtime: typescript
+promptyVersion: 2.0.0
+sessionId: sess_abc123
+events:
+  - id: evt_abc123
+    type: session_start
+    timestamp: "2026-06-09T20:00:00Z"
+    sessionId: sess_abc123
+    turnId: turn_001
+    parentId: evt_parent
+    spanId: span_hook_001
+    payload: {}
 
-      """
+"""
     let instance = try SessionTrace.fromYAML(yaml)
     XCTAssertEqual(instance.version, "1")
     XCTAssertEqual((try XCTUnwrap(instance.runtime)), "typescript")

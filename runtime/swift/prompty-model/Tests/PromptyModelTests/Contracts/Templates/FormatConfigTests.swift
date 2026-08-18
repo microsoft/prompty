@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class FormatConfigTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "mustache",
-        "strict": true,
-        "options": {
-          "key": "value"
-        }
-      }
-      """
+{
+  "kind": "mustache",
+  "strict": true,
+  "options": {
+    "key": "value"
+  }
+}
+"""
     let instance = try FormatConfig.fromJSON(json)
     XCTAssertEqual(instance.kind, "mustache")
     XCTAssertEqual((try XCTUnwrap(instance.strict)), true)
@@ -29,12 +28,12 @@ final class FormatConfigTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: mustache
-      strict: true
-      options:
-        key: value
+kind: mustache
+strict: true
+options:
+  key: value
 
-      """
+"""
     let instance = try FormatConfig.fromYAML(yaml)
     XCTAssertEqual(instance.kind, "mustache")
     XCTAssertEqual((try XCTUnwrap(instance.strict)), true)

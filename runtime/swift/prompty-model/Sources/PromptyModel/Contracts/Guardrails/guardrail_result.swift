@@ -16,9 +16,7 @@ public struct GuardrailResult: TypraModel {
     self.rewrite = rewrite
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> GuardrailResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> GuardrailResult {
     let object = try TypraRuntime.object(data, typeName: "GuardrailResult")
     var instance = GuardrailResult()
     if let value = object["allowed"] {
@@ -45,22 +43,16 @@ public struct GuardrailResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> GuardrailResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "GuardrailResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> GuardrailResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "GuardrailResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> GuardrailResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "GuardrailResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> GuardrailResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "GuardrailResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class CompactionFailedPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "Summarization prompt exceeded context window"
-      }
-      """
+{
+  "message": "Summarization prompt exceeded context window"
+}
+"""
     let instance = try CompactionFailedPayload.fromJSON(json)
     XCTAssertEqual(instance.message, "Summarization prompt exceeded context window")
     let reloaded = try CompactionFailedPayload.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class CompactionFailedPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: Summarization prompt exceeded context window
+message: Summarization prompt exceeded context window
 
-      """
+"""
     let instance = try CompactionFailedPayload.fromYAML(yaml)
     XCTAssertEqual(instance.message, "Summarization prompt exceeded context window")
     let reloaded = try CompactionFailedPayload.fromYAML(try instance.toYAML())

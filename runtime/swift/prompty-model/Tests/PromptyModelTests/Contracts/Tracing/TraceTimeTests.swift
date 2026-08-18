@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TraceTimeTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "start": "2026-04-04T12:00:00Z",
-        "end": "2026-04-04T12:00:01Z",
-        "duration": 1000
-      }
-      """
+{
+  "start": "2026-04-04T12:00:00Z",
+  "end": "2026-04-04T12:00:01Z",
+  "duration": 1000
+}
+"""
     let instance = try TraceTime.fromJSON(json)
     XCTAssertEqual(instance.start, "2026-04-04T12:00:00Z")
     XCTAssertEqual(instance.end, "2026-04-04T12:00:01Z")
@@ -27,11 +26,11 @@ final class TraceTimeTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      start: "2026-04-04T12:00:00Z"
-      end: "2026-04-04T12:00:01Z"
-      duration: 1000
+start: "2026-04-04T12:00:00Z"
+end: "2026-04-04T12:00:01Z"
+duration: 1000
 
-      """
+"""
     let instance = try TraceTime.fromYAML(yaml)
     XCTAssertEqual(instance.start, "2026-04-04T12:00:00Z")
     XCTAssertEqual(instance.end, "2026-04-04T12:00:01Z")

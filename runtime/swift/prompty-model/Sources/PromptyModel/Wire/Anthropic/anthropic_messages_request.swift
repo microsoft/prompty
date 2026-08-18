@@ -16,11 +16,7 @@ public struct AnthropicMessagesRequest: TypraModel {
   public var stopSequences: [String]? = nil
   public var tools: [AnthropicToolDefinition]? = nil
 
-  public init(
-    model: String = "", messages: [AnthropicWireMessage] = [], maxTokens: Int32 = 0,
-    system: String? = nil, temperature: Float? = nil, topP: Float? = nil, topK: Int32? = nil,
-    stopSequences: [String]? = nil, tools: [AnthropicToolDefinition]? = nil
-  ) {
+  public init(model: String = "", messages: [AnthropicWireMessage] = [], maxTokens: Int32 = 0, system: String? = nil, temperature: Float? = nil, topP: Float? = nil, topK: Int32? = nil, stopSequences: [String]? = nil, tools: [AnthropicToolDefinition]? = nil) {
     self.model = model
     self.messages = messages
     self.maxTokens = maxTokens
@@ -32,18 +28,14 @@ public struct AnthropicMessagesRequest: TypraModel {
     self.tools = tools
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
     let object = try TypraRuntime.object(data, typeName: "AnthropicMessagesRequest")
     var instance = AnthropicMessagesRequest()
     if let value = object["model"] {
       instance.model = try TypraRuntime.string(value, field: "model")
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try AnthropicWireMessage.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try AnthropicWireMessage.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["max_tokens"] {
       instance.maxTokens = try TypraRuntime.int32(value, field: "max_tokens")
@@ -61,14 +53,10 @@ public struct AnthropicMessagesRequest: TypraModel {
       instance.topK = try TypraRuntime.int32(value, field: "top_k")
     }
     if let value = object["stop_sequences"] {
-      instance.stopSequences = try TypraRuntime.array(value, field: "stop_sequences").map {
-        try TypraRuntime.string($0, field: "stop_sequences")
-      }
+      instance.stopSequences = try TypraRuntime.array(value, field: "stop_sequences").map { try TypraRuntime.string($0, field: "stop_sequences") }
     }
     if let value = object["tools"] {
-      instance.tools = try TypraRuntime.array(value, field: "tools").enumerated().map {
-        try AnthropicToolDefinition.load($1, context: context.at("tools").atIndex($0))
-      }
+      instance.tools = try TypraRuntime.array(value, field: "tools").enumerated().map { try AnthropicToolDefinition.load($1, context: context.at("tools").atIndex($0)) }
     }
     return instance
   }
@@ -99,22 +87,16 @@ public struct AnthropicMessagesRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

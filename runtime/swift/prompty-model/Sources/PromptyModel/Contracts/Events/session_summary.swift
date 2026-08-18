@@ -29,10 +29,7 @@ public struct SessionSummary: TypraModel {
   public var usage: TokenUsage? = nil
   public var durationMs: Double? = nil
 
-  public init(
-    sessionId: String = "", status: SessionSummaryStatus? = nil, turns: Int32? = nil,
-    checkpoints: Int32? = nil, usage: TokenUsage? = nil, durationMs: Double? = nil
-  ) {
+  public init(sessionId: String = "", status: SessionSummaryStatus? = nil, turns: Int32? = nil, checkpoints: Int32? = nil, usage: TokenUsage? = nil, durationMs: Double? = nil) {
     self.sessionId = sessionId
     self.status = status
     self.turns = turns
@@ -41,17 +38,14 @@ public struct SessionSummary: TypraModel {
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> SessionSummary
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionSummary {
     let object = try TypraRuntime.object(data, typeName: "SessionSummary")
     var instance = SessionSummary()
     if let value = object["sessionId"] {
       instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
     }
     if let value = object["status"] {
-      instance.status = try SessionSummaryStatus.parse(
-        try TypraRuntime.string(value, field: "status"))
+      instance.status = try SessionSummaryStatus.parse(try TypraRuntime.string(value, field: "status"))
     }
     if let value = object["turns"] {
       instance.turns = try TypraRuntime.int32(value, field: "turns")
@@ -89,22 +83,16 @@ public struct SessionSummary: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionSummary
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "SessionSummary"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionSummary {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionSummary"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionSummary
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "SessionSummary"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionSummary {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionSummary"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -14,11 +14,7 @@ public struct ModelInfo: TypraModel {
   public var outputModalities: [String]? = nil
   public var additionalProperties: [String: Any]? = nil
 
-  public init(
-    id: String = "", displayName: String? = nil, ownedBy: String? = nil,
-    contextWindow: Int32? = nil, inputModalities: [String]? = nil,
-    outputModalities: [String]? = nil, additionalProperties: [String: Any]? = nil
-  ) {
+  public init(id: String = "", displayName: String? = nil, ownedBy: String? = nil, contextWindow: Int32? = nil, inputModalities: [String]? = nil, outputModalities: [String]? = nil, additionalProperties: [String: Any]? = nil) {
     self.id = id
     self.displayName = displayName
     self.ownedBy = ownedBy
@@ -44,18 +40,13 @@ public struct ModelInfo: TypraModel {
       instance.contextWindow = try TypraRuntime.int32(value, field: "contextWindow")
     }
     if let value = object["inputModalities"] {
-      instance.inputModalities = try TypraRuntime.array(value, field: "inputModalities").map {
-        try TypraRuntime.string($0, field: "inputModalities")
-      }
+      instance.inputModalities = try TypraRuntime.array(value, field: "inputModalities").map { try TypraRuntime.string($0, field: "inputModalities") }
     }
     if let value = object["outputModalities"] {
-      instance.outputModalities = try TypraRuntime.array(value, field: "outputModalities").map {
-        try TypraRuntime.string($0, field: "outputModalities")
-      }
+      instance.outputModalities = try TypraRuntime.array(value, field: "outputModalities").map { try TypraRuntime.string($0, field: "outputModalities") }
     }
     if let value = object["additionalProperties"] {
-      instance.additionalProperties = try TypraRuntime.dictionary(
-        value, field: "additionalProperties")
+      instance.additionalProperties = try TypraRuntime.dictionary(value, field: "additionalProperties")
     }
     return instance
   }
@@ -84,9 +75,7 @@ public struct ModelInfo: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameId: String?
     switch provider {
@@ -112,31 +101,23 @@ public struct ModelInfo: TypraModel {
     case "anthropic": wireNameContextWindow = "context_length"
     default: wireNameContextWindow = nil
     }
-    if let wireKey = wireNameContextWindow, let value = self.contextWindow {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameContextWindow, let value = self.contextWindow { result[wireKey] = value }
     let wireNameInputModalities: String?
     switch provider {
     case "anthropic": wireNameInputModalities = "input_modalities"
     default: wireNameInputModalities = nil
     }
-    if let wireKey = wireNameInputModalities, let value = self.inputModalities {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameInputModalities, let value = self.inputModalities { result[wireKey] = value }
     let wireNameOutputModalities: String?
     switch provider {
     case "anthropic": wireNameOutputModalities = "output_modalities"
     default: wireNameOutputModalities = nil
     }
-    if let wireKey = wireNameOutputModalities, let value = self.outputModalities {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameOutputModalities, let value = self.outputModalities { result[wireKey] = value }
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelInfo
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelInfo {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelInfo"), context: context)
   }
 
@@ -144,9 +125,7 @@ public struct ModelInfo: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelInfo
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelInfo {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelInfo"), context: context)
   }
 

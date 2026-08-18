@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class McpApprovalModeTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "never",
-        "alwaysRequireApprovalTools": [
-          "operation1"
-        ],
-        "neverRequireApprovalTools": [
-          "operation2"
-        ]
-      }
-      """
+{
+  "kind": "never",
+  "alwaysRequireApprovalTools": [
+    "operation1"
+  ],
+  "neverRequireApprovalTools": [
+    "operation2"
+  ]
+}
+"""
     let instance = try McpApprovalMode.fromJSON(json)
     XCTAssertEqual(instance.kind, McpApprovalModeKind.never)
     XCTAssertEqual((try XCTUnwrap(instance.alwaysRequireApprovalTools)).count, 1)
@@ -31,13 +30,13 @@ final class McpApprovalModeTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: never
-      alwaysRequireApprovalTools:
-        - operation1
-      neverRequireApprovalTools:
-        - operation2
+kind: never
+alwaysRequireApprovalTools:
+  - operation1
+neverRequireApprovalTools:
+  - operation2
 
-      """
+"""
     let instance = try McpApprovalMode.fromYAML(yaml)
     XCTAssertEqual(instance.kind, McpApprovalModeKind.never)
     XCTAssertEqual((try XCTUnwrap(instance.alwaysRequireApprovalTools)).count, 1)

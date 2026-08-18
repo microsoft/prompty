@@ -16,9 +16,7 @@ public struct ErrorEventPayload: TypraModel {
     self.phase = phase
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ErrorEventPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ErrorEventPayload {
     let object = try TypraRuntime.object(data, typeName: "ErrorEventPayload")
     var instance = ErrorEventPayload()
     if let value = object["message"] {
@@ -45,22 +43,16 @@ public struct ErrorEventPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ErrorEventPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ErrorEventPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ErrorEventPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ErrorEventPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ErrorEventPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ErrorEventPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ErrorEventPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ErrorEventPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class HostPolicyResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "messages": []
-      }
-      """
+{
+  "messages": []
+}
+"""
     let instance = try HostPolicyResult.fromJSON(json)
     XCTAssertEqual(instance.messages.count, 0)
     let reloaded = try HostPolicyResult.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class HostPolicyResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      messages: []
+messages: []
 
-      """
+"""
     let instance = try HostPolicyResult.fromYAML(yaml)
     XCTAssertEqual(instance.messages.count, 0)
     let reloaded = try HostPolicyResult.fromYAML(try instance.toYAML())

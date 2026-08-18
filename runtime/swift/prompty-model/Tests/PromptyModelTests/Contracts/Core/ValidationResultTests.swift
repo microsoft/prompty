@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ValidationResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "valid": true,
-        "errors": []
-      }
-      """
+{
+  "valid": true,
+  "errors": []
+}
+"""
     let instance = try ValidationResult.fromJSON(json)
     XCTAssertEqual(instance.valid, true)
     XCTAssertEqual(instance.errors.count, 0)
@@ -24,10 +23,10 @@ final class ValidationResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      valid: true
-      errors: []
+valid: true
+errors: []
 
-      """
+"""
     let instance = try ValidationResult.fromYAML(yaml)
     XCTAssertEqual(instance.valid, true)
     XCTAssertEqual(instance.errors.count, 0)

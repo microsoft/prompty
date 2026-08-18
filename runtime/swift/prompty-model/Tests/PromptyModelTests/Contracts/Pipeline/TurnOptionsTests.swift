@@ -3,24 +3,23 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnOptionsTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "maxIterations": 10,
-        "maxLlmRetries": 3,
-        "contextBudget": 100000,
-        "parallelToolCalls": true,
-        "raw": false,
-        "turn": 1,
-        "compaction": {
-          "strategy": "summarize"
-        }
-      }
-      """
+{
+  "maxIterations": 10,
+  "maxLlmRetries": 3,
+  "contextBudget": 100000,
+  "parallelToolCalls": true,
+  "raw": false,
+  "turn": 1,
+  "compaction": {
+    "strategy": "summarize"
+  }
+}
+"""
     let instance = try TurnOptions.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.maxIterations)), 10)
     XCTAssertEqual((try XCTUnwrap(instance.maxLlmRetries)), 3)
@@ -41,16 +40,16 @@ final class TurnOptionsTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      maxIterations: 10
-      maxLlmRetries: 3
-      contextBudget: 100000
-      parallelToolCalls: true
-      raw: false
-      turn: 1
-      compaction:
-        strategy: summarize
+maxIterations: 10
+maxLlmRetries: 3
+contextBudget: 100000
+parallelToolCalls: true
+raw: false
+turn: 1
+compaction:
+  strategy: summarize
 
-      """
+"""
     let instance = try TurnOptions.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.maxIterations)), 10)
     XCTAssertEqual((try XCTUnwrap(instance.maxLlmRetries)), 3)

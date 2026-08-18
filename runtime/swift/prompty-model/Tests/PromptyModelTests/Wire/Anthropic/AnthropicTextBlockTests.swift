@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicTextBlockTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "text": "Hello, how can I help?"
-      }
-      """
+{
+  "text": "Hello, how can I help?"
+}
+"""
     let instance = try AnthropicTextBlock.fromJSON(json)
     XCTAssertEqual(instance.text, "Hello, how can I help?")
     let reloaded = try AnthropicTextBlock.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class AnthropicTextBlockTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      text: Hello, how can I help?
+text: Hello, how can I help?
 
-      """
+"""
     let instance = try AnthropicTextBlock.fromYAML(yaml)
     XCTAssertEqual(instance.text, "Hello, how can I help?")
     let reloaded = try AnthropicTextBlock.fromYAML(try instance.toYAML())

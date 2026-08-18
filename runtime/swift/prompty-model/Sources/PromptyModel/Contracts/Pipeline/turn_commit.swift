@@ -32,13 +32,7 @@ public struct TurnCommit: TypraModel {
   public var contextState: InvocationContextState = InvocationContextState()
   public var modelReconciliation: ModelReconciliationState? = nil
 
-  public init(
-    sessionId: String = "", turnId: String = "",
-    status: EngineTurnStatus = (try! EngineTurnStatus.parse("success")), output: Any? = nil,
-    messages: [Message] = [], iterations: Int32 = 0, lastSequence: Int64 = 0,
-    contextState: InvocationContextState = InvocationContextState(),
-    modelReconciliation: ModelReconciliationState? = nil
-  ) {
+  public init(sessionId: String = "", turnId: String = "", status: EngineTurnStatus = (try! EngineTurnStatus.parse("success")), output: Any? = nil, messages: [Message] = [], iterations: Int32 = 0, lastSequence: Int64 = 0, contextState: InvocationContextState = InvocationContextState(), modelReconciliation: ModelReconciliationState? = nil) {
     self.sessionId = sessionId
     self.turnId = turnId
     self.status = status
@@ -66,9 +60,7 @@ public struct TurnCommit: TypraModel {
       instance.output = value
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["iterations"] {
       instance.iterations = try TypraRuntime.int32(value, field: "iterations")
@@ -77,16 +69,13 @@ public struct TurnCommit: TypraModel {
       instance.lastSequence = try TypraRuntime.int64(value, field: "lastSequence")
     }
     if object["contextState"] == nil || object["contextState"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("contextState").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("contextState").path + ": missing required field")
     }
     if let value = object["contextState"] {
-      instance.contextState = try InvocationContextState.load(
-        value, context: context.at("contextState"))
+      instance.contextState = try InvocationContextState.load(value, context: context.at("contextState"))
     }
     if let value = object["modelReconciliation"] {
-      instance.modelReconciliation = try ModelReconciliationState.load(
-        value, context: context.at("modelReconciliation"))
+      instance.modelReconciliation = try ModelReconciliationState.load(value, context: context.at("modelReconciliation"))
     }
     return instance
   }
@@ -109,9 +98,7 @@ public struct TurnCommit: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnCommit
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnCommit {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnCommit"), context: context)
   }
 
@@ -119,9 +106,7 @@ public struct TurnCommit: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnCommit
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnCommit {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnCommit"), context: context)
   }
 

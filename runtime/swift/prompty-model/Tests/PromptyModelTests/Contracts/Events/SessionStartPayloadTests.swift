@@ -3,23 +3,22 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sess_abc123",
-        "schemaVersion": "1",
-        "producer": "prompty-agent",
-        "runtime": "typescript",
-        "promptyVersion": "2.0.0",
-        "startTime": "2026-06-09T20:00:00Z",
-        "selectedModel": "gpt-4o-mini",
-        "reasoningEffort": "medium"
-      }
-      """
+{
+  "sessionId": "sess_abc123",
+  "schemaVersion": "1",
+  "producer": "prompty-agent",
+  "runtime": "typescript",
+  "promptyVersion": "2.0.0",
+  "startTime": "2026-06-09T20:00:00Z",
+  "selectedModel": "gpt-4o-mini",
+  "reasoningEffort": "medium"
+}
+"""
     let instance = try SessionStartPayload.fromJSON(json)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.schemaVersion)), "1")
@@ -42,16 +41,16 @@ final class SessionStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sess_abc123
-      schemaVersion: "1"
-      producer: prompty-agent
-      runtime: typescript
-      promptyVersion: 2.0.0
-      startTime: "2026-06-09T20:00:00Z"
-      selectedModel: gpt-4o-mini
-      reasoningEffort: medium
+sessionId: sess_abc123
+schemaVersion: "1"
+producer: prompty-agent
+runtime: typescript
+promptyVersion: 2.0.0
+startTime: "2026-06-09T20:00:00Z"
+selectedModel: gpt-4o-mini
+reasoningEffort: medium
 
-      """
+"""
     let instance = try SessionStartPayload.fromYAML(yaml)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.schemaVersion)), "1")

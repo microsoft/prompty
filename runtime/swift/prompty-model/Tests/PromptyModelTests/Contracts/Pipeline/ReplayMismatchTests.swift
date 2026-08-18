@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ReplayMismatchTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "index": 1,
-        "message": "sample"
-      }
-      """
+{
+  "index": 1,
+  "message": "sample"
+}
+"""
     let instance = try ReplayMismatch.fromJSON(json)
     XCTAssertEqual(instance.index, 1)
     XCTAssertEqual(instance.message, "sample")
@@ -24,10 +23,10 @@ final class ReplayMismatchTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      index: 1
-      message: sample
+index: 1
+message: sample
 
-      """
+"""
     let instance = try ReplayMismatch.fromYAML(yaml)
     XCTAssertEqual(instance.index, 1)
     XCTAssertEqual(instance.message, "sample")

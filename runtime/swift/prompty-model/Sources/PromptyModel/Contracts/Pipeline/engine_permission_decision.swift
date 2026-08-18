@@ -16,9 +16,7 @@ public struct EnginePermissionDecision: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> EnginePermissionDecision
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> EnginePermissionDecision {
     let object = try TypraRuntime.object(data, typeName: "EnginePermissionDecision")
     var instance = EnginePermissionDecision()
     if let value = object["approved"] {
@@ -45,22 +43,16 @@ public struct EnginePermissionDecision: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> EnginePermissionDecision
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "EnginePermissionDecision"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> EnginePermissionDecision {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "EnginePermissionDecision"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> EnginePermissionDecision
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "EnginePermissionDecision"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> EnginePermissionDecision {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "EnginePermissionDecision"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

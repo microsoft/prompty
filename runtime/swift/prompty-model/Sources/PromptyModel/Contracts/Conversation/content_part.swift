@@ -14,17 +14,14 @@ public enum ContentPart: TypraModel {
     let object = try TypraRuntime.object(normalizedData, typeName: "ContentPart")
     let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
     if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(
-        field: context.at("kind").path, expected: "non-blank string")
+      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
     }
     switch discriminator {
     case "text": return .textPart(try TextPart.load(normalizedData, context: context))
     case "image": return .imagePart(try ImagePart.load(normalizedData, context: context))
     case "file": return .filePart(try FilePart.load(normalizedData, context: context))
     case "audio": return .audioPart(try AudioPart.load(normalizedData, context: context))
-    default:
-      throw TypraRuntimeError.unknownDiscriminator(
-        type: "ContentPart", field: "kind", value: discriminator)
+    default: throw TypraRuntimeError.unknownDiscriminator(type: "ContentPart", field: "kind", value: discriminator)
     }
   }
 
@@ -37,9 +34,7 @@ public enum ContentPart: TypraModel {
     }
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ContentPart
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ContentPart {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ContentPart"), context: context)
   }
 
@@ -47,9 +42,7 @@ public enum ContentPart: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ContentPart
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ContentPart {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ContentPart"), context: context)
   }
 
@@ -74,7 +67,8 @@ public struct TextPart: TypraModel {
     var instance = TextPart()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "text"
     }
     if let value = object["value"] {
@@ -90,9 +84,7 @@ public struct TextPart: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TextPart
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TextPart {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TextPart"), context: context)
   }
 
@@ -100,9 +92,7 @@ public struct TextPart: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TextPart
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TextPart {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TextPart"), context: context)
   }
 
@@ -119,9 +109,7 @@ public struct ImagePart: TypraModel {
   public var detail: String? = nil
   public var mediaType: String? = nil
 
-  public init(
-    kind: String = "image", source: String = "", detail: String? = nil, mediaType: String? = nil
-  ) {
+  public init(kind: String = "image", source: String = "", detail: String? = nil, mediaType: String? = nil) {
     self.kind = kind
     self.source = source
     self.detail = detail
@@ -133,7 +121,8 @@ public struct ImagePart: TypraModel {
     var instance = ImagePart()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "image"
     }
     if let value = object["source"] {
@@ -161,9 +150,7 @@ public struct ImagePart: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ImagePart
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ImagePart {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ImagePart"), context: context)
   }
 
@@ -171,9 +158,7 @@ public struct ImagePart: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ImagePart
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ImagePart {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ImagePart"), context: context)
   }
 
@@ -200,7 +185,8 @@ public struct FilePart: TypraModel {
     var instance = FilePart()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "file"
     }
     if let value = object["source"] {
@@ -222,9 +208,7 @@ public struct FilePart: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FilePart
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FilePart {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "FilePart"), context: context)
   }
 
@@ -232,9 +216,7 @@ public struct FilePart: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FilePart
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FilePart {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FilePart"), context: context)
   }
 
@@ -261,7 +243,8 @@ public struct AudioPart: TypraModel {
     var instance = AudioPart()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "audio"
     }
     if let value = object["source"] {
@@ -283,9 +266,7 @@ public struct AudioPart: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AudioPart
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AudioPart {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "AudioPart"), context: context)
   }
 
@@ -293,9 +274,7 @@ public struct AudioPart: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AudioPart
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AudioPart {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AudioPart"), context: context)
   }
 

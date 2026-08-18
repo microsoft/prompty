@@ -12,10 +12,7 @@ public struct ModelReconciliationState: TypraModel {
   public var message: String = ""
   public var metadata: [String: Any]? = nil
 
-  public init(
-    invocationId: String = "", request: ModelInvocationRequest = ModelInvocationRequest(),
-    failedAttempt: Int32 = 0, message: String = "", metadata: [String: Any]? = nil
-  ) {
+  public init(invocationId: String = "", request: ModelInvocationRequest = ModelInvocationRequest(), failedAttempt: Int32 = 0, message: String = "", metadata: [String: Any]? = nil) {
     self.invocationId = invocationId
     self.request = request
     self.failedAttempt = failedAttempt
@@ -23,9 +20,7 @@ public struct ModelReconciliationState: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelReconciliationState
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelReconciliationState {
     let object = try TypraRuntime.object(data, typeName: "ModelReconciliationState")
     var instance = ModelReconciliationState()
     if let value = object["invocationId"] {
@@ -61,22 +56,16 @@ public struct ModelReconciliationState: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelReconciliationState
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelReconciliationState"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelReconciliationState {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelReconciliationState"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelReconciliationState
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelReconciliationState"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelReconciliationState {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelReconciliationState"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

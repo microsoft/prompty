@@ -3,26 +3,25 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ResumeContextTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "lastJournalSequence": 12,
-        "checkpoint": {
-          "id": "ckpt_abc123",
-          "sessionId": "sess_abc123",
-          "turnId": "turn_abc123",
-          "runId": "run_abc123",
-          "iteration": 1,
-          "lastSequence": 1,
-          "messages": [],
-          "contextState": {}
-        }
-      }
-      """
+{
+  "lastJournalSequence": 12,
+  "checkpoint": {
+    "id": "ckpt_abc123",
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "runId": "run_abc123",
+    "iteration": 1,
+    "lastSequence": 1,
+    "messages": [],
+    "contextState": {}
+  }
+}
+"""
     let instance = try ResumeContext.fromJSON(json)
     XCTAssertEqual(instance.lastJournalSequence, 12)
     XCTAssertEqual(instance.checkpoint.id, "ckpt_abc123")
@@ -43,18 +42,18 @@ final class ResumeContextTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      lastJournalSequence: 12
-      checkpoint:
-        id: ckpt_abc123
-        sessionId: sess_abc123
-        turnId: turn_abc123
-        runId: run_abc123
-        iteration: 1
-        lastSequence: 1
-        messages: []
-        contextState: {}
+lastJournalSequence: 12
+checkpoint:
+  id: ckpt_abc123
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  runId: run_abc123
+  iteration: 1
+  lastSequence: 1
+  messages: []
+  contextState: {}
 
-      """
+"""
     let instance = try ResumeContext.fromYAML(yaml)
     XCTAssertEqual(instance.lastJournalSequence, 12)
     XCTAssertEqual(instance.checkpoint.id, "ckpt_abc123")

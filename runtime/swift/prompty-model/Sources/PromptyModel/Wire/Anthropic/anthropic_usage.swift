@@ -14,9 +14,7 @@ public struct AnthropicUsage: TypraModel {
     self.outputTokens = outputTokens
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicUsage
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicUsage {
     let object = try TypraRuntime.object(data, typeName: "AnthropicUsage")
     var instance = AnthropicUsage()
     if let value = object["input_tokens"] {
@@ -35,22 +33,16 @@ public struct AnthropicUsage: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicUsage
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicUsage"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicUsage {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicUsage"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicUsage
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicUsage"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicUsage {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicUsage"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

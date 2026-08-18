@@ -18,12 +18,7 @@ public struct Checkpoint: TypraModel {
   public var createdAt: String? = nil
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    id: String? = nil, sessionId: String? = nil, turnId: String? = nil,
-    checkpointNumber: Int32? = nil, title: String = "", overview: String? = nil,
-    state: [String: Any]? = nil, summary: String? = nil, metadata: [String: Any]? = nil,
-    createdAt: String? = nil, redaction: RedactionMetadata? = nil
-  ) {
+  public init(id: String? = nil, sessionId: String? = nil, turnId: String? = nil, checkpointNumber: Int32? = nil, title: String = "", overview: String? = nil, state: [String: Any]? = nil, summary: String? = nil, metadata: [String: Any]? = nil, createdAt: String? = nil, redaction: RedactionMetadata? = nil) {
     self.id = id
     self.sessionId = sessionId
     self.turnId = turnId
@@ -112,9 +107,7 @@ public struct Checkpoint: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Checkpoint
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Checkpoint {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Checkpoint"), context: context)
   }
 
@@ -122,9 +115,7 @@ public struct Checkpoint: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Checkpoint
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Checkpoint {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Checkpoint"), context: context)
   }
 

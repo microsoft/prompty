@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicWireMessageTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "role": "user"
-      }
-      """
+{
+  "role": "user"
+}
+"""
     let instance = try AnthropicWireMessage.fromJSON(json)
     XCTAssertEqual(instance.role, "user")
     let reloaded = try AnthropicWireMessage.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class AnthropicWireMessageTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      role: user
+role: user
 
-      """
+"""
     let instance = try AnthropicWireMessage.fromYAML(yaml)
     XCTAssertEqual(instance.role, "user")
     let reloaded = try AnthropicWireMessage.fromYAML(try instance.toYAML())

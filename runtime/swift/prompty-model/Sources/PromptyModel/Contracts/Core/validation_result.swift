@@ -14,18 +14,14 @@ public struct ValidationResult: TypraModel {
     self.errors = errors
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ValidationResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ValidationResult {
     let object = try TypraRuntime.object(data, typeName: "ValidationResult")
     var instance = ValidationResult()
     if let value = object["valid"] {
       instance.valid = try TypraRuntime.bool(value, field: "valid")
     }
     if let value = object["errors"] {
-      instance.errors = try TypraRuntime.array(value, field: "errors").enumerated().map {
-        try ValidationError.load($1, context: context.at("errors").atIndex($0))
-      }
+      instance.errors = try TypraRuntime.array(value, field: "errors").enumerated().map { try ValidationError.load($1, context: context.at("errors").atIndex($0)) }
     }
     return instance
   }
@@ -37,22 +33,16 @@ public struct ValidationResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ValidationResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ValidationResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ValidationResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ValidationResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ValidationResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ValidationResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ValidationResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ValidationResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -28,17 +28,13 @@ public struct RedactedField: TypraModel {
   public var mode: RedactionMode = (try! RedactionMode.parse("none"))
   public var reason: String? = nil
 
-  public init(
-    path: String = "", mode: RedactionMode = (try! RedactionMode.parse("none")),
-    reason: String? = nil
-  ) {
+  public init(path: String = "", mode: RedactionMode = (try! RedactionMode.parse("none")), reason: String? = nil) {
     self.path = path
     self.mode = mode
     self.reason = reason
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RedactedField
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RedactedField {
     let object = try TypraRuntime.object(data, typeName: "RedactedField")
     var instance = RedactedField()
     if let value = object["path"] {
@@ -63,22 +59,16 @@ public struct RedactedField: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RedactedField
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "RedactedField"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RedactedField {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "RedactedField"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RedactedField
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "RedactedField"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RedactedField {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RedactedField"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

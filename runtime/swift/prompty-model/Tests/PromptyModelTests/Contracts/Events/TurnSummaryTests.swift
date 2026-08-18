@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnSummaryTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "turnId": "turn_001",
-        "status": "success",
-        "iterations": 2,
-        "llmCalls": 3,
-        "toolCalls": 2,
-        "retries": 1,
-        "durationMs": 2500
-      }
-      """
+{
+  "turnId": "turn_001",
+  "status": "success",
+  "iterations": 2,
+  "llmCalls": 3,
+  "toolCalls": 2,
+  "retries": 1,
+  "durationMs": 2500
+}
+"""
     let instance = try TurnSummary.fromJSON(json)
     XCTAssertEqual(instance.turnId, "turn_001")
     XCTAssertEqual(instance.status, "success")
@@ -39,15 +38,15 @@ final class TurnSummaryTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      turnId: turn_001
-      status: success
-      iterations: 2
-      llmCalls: 3
-      toolCalls: 2
-      retries: 1
-      durationMs: 2500
+turnId: turn_001
+status: success
+iterations: 2
+llmCalls: 3
+toolCalls: 2
+retries: 1
+durationMs: 2500
 
-      """
+"""
     let instance = try TurnSummary.fromYAML(yaml)
     XCTAssertEqual(instance.turnId, "turn_001")
     XCTAssertEqual(instance.status, "success")

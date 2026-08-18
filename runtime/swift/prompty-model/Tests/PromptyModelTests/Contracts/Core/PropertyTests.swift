@@ -3,27 +3,26 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class PropertyTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "my-input",
-        "kind": "string",
-        "description": "A description of the input property",
-        "required": true,
-        "nullable": true,
-        "default": "default value",
-        "example": "example value",
-        "enumValues": [
-          "value1",
-          "value2",
-          "value3"
-        ]
-      }
-      """
+{
+  "name": "my-input",
+  "kind": "string",
+  "description": "A description of the input property",
+  "required": true,
+  "nullable": true,
+  "default": "default value",
+  "example": "example value",
+  "enumValues": [
+    "value1",
+    "value2",
+    "value3"
+  ]
+}
+"""
     let instance = try Property.fromJSON(json)
     if case .unknown(let concrete) = instance {
       XCTAssertEqual(concrete["name"] as? String, "my-input")
@@ -52,19 +51,19 @@ final class PropertyTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: my-input
-      kind: string
-      description: A description of the input property
-      required: true
-      nullable: true
-      default: default value
-      example: example value
-      enumValues:
-        - value1
-        - value2
-        - value3
+name: my-input
+kind: string
+description: A description of the input property
+required: true
+nullable: true
+default: default value
+example: example value
+enumValues:
+  - value1
+  - value2
+  - value3
 
-      """
+"""
     let instance = try Property.fromYAML(yaml)
     if case .unknown(let concrete) = instance {
       XCTAssertEqual(concrete["name"] as? String, "my-input")

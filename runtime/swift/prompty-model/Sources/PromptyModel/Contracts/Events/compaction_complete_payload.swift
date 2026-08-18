@@ -16,9 +16,7 @@ public struct CompactionCompletePayload: TypraModel {
     self.summaryLength = summaryLength
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> CompactionCompletePayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CompactionCompletePayload {
     let object = try TypraRuntime.object(data, typeName: "CompactionCompletePayload")
     var instance = CompactionCompletePayload()
     if let value = object["removed"] {
@@ -43,22 +41,16 @@ public struct CompactionCompletePayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> CompactionCompletePayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "CompactionCompletePayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CompactionCompletePayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "CompactionCompletePayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> CompactionCompletePayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "CompactionCompletePayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CompactionCompletePayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CompactionCompletePayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

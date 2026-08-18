@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelToolResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "call_abc123",
-        "name": "get_weather"
-      }
-      """
+{
+  "requestId": "call_abc123",
+  "name": "get_weather"
+}
+"""
     let instance = try ModelToolResult.fromJSON(json)
     XCTAssertEqual(instance.requestId, "call_abc123")
     XCTAssertEqual(instance.name, "get_weather")
@@ -24,10 +23,10 @@ final class ModelToolResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: call_abc123
-      name: get_weather
+requestId: call_abc123
+name: get_weather
 
-      """
+"""
     let instance = try ModelToolResult.fromYAML(yaml)
     XCTAssertEqual(instance.requestId, "call_abc123")
     XCTAssertEqual(instance.name, "get_weather")

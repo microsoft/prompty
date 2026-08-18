@@ -11,19 +11,14 @@ public struct TurnEngineResult: TypraModel {
   public var toolResults: [ModelToolResult]? = nil
   public var postCommitError: String? = nil
 
-  public init(
-    commit: TurnCommit = TurnCommit(), snapshots: [ModelInvocationContextSnapshot]? = nil,
-    toolResults: [ModelToolResult]? = nil, postCommitError: String? = nil
-  ) {
+  public init(commit: TurnCommit = TurnCommit(), snapshots: [ModelInvocationContextSnapshot]? = nil, toolResults: [ModelToolResult]? = nil, postCommitError: String? = nil) {
     self.commit = commit
     self.snapshots = snapshots
     self.toolResults = toolResults
     self.postCommitError = postCommitError
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> TurnEngineResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
     let object = try TypraRuntime.object(data, typeName: "TurnEngineResult")
     var instance = TurnEngineResult()
     if object["commit"] == nil || object["commit"] is NSNull {
@@ -33,14 +28,10 @@ public struct TurnEngineResult: TypraModel {
       instance.commit = try TurnCommit.load(value, context: context.at("commit"))
     }
     if let value = object["snapshots"] {
-      instance.snapshots = try TypraRuntime.array(value, field: "snapshots").enumerated().map {
-        try ModelInvocationContextSnapshot.load($1, context: context.at("snapshots").atIndex($0))
-      }
+      instance.snapshots = try TypraRuntime.array(value, field: "snapshots").enumerated().map { try ModelInvocationContextSnapshot.load($1, context: context.at("snapshots").atIndex($0)) }
     }
     if let value = object["toolResults"] {
-      instance.toolResults = try TypraRuntime.array(value, field: "toolResults").enumerated().map {
-        try ModelToolResult.load($1, context: context.at("toolResults").atIndex($0))
-      }
+      instance.toolResults = try TypraRuntime.array(value, field: "toolResults").enumerated().map { try ModelToolResult.load($1, context: context.at("toolResults").atIndex($0)) }
     }
     if let value = object["postCommitError"] {
       instance.postCommitError = try TypraRuntime.string(value, field: "postCommitError")
@@ -63,22 +54,16 @@ public struct TurnEngineResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnEngineResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "TurnEngineResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnEngineResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnEngineResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "TurnEngineResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnEngineResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

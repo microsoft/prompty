@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class MessagesUpdatedPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "reason": "tool_results",
-        "removed": 2
-      }
-      """
+{
+  "reason": "tool_results",
+  "removed": 2
+}
+"""
     let instance = try MessagesUpdatedPayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.reason)), "tool_results")
     XCTAssertEqual((try XCTUnwrap(instance.removed)), 2)
@@ -24,10 +23,10 @@ final class MessagesUpdatedPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      reason: tool_results
-      removed: 2
+reason: tool_results
+removed: 2
 
-      """
+"""
     let instance = try MessagesUpdatedPayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.reason)), "tool_results")
     XCTAssertEqual((try XCTUnwrap(instance.removed)), 2)

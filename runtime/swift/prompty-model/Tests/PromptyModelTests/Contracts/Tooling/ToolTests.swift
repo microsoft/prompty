@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "my-tool",
-        "kind": "function",
-        "description": "A description of the tool",
-        "bindings": {
-          "input": "value"
-        }
-      }
-      """
+{
+  "name": "my-tool",
+  "kind": "function",
+  "description": "A description of the tool",
+  "bindings": {
+    "input": "value"
+  }
+}
+"""
     let instance = try Tool.fromJSON(json)
     if case .functionTool(let concrete) = instance {
       XCTAssertEqual(concrete.name, "my-tool")
@@ -36,13 +35,13 @@ final class ToolTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: my-tool
-      kind: function
-      description: A description of the tool
-      bindings:
-        input: value
+name: my-tool
+kind: function
+description: A description of the tool
+bindings:
+  input: value
 
-      """
+"""
     let instance = try Tool.fromYAML(yaml)
     if case .functionTool(let concrete) = instance {
       XCTAssertEqual(concrete.name, "my-tool")

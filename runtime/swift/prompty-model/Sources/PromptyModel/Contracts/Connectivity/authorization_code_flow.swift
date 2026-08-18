@@ -14,9 +14,7 @@ public struct AuthorizationCodeFlow: TypraModel {
     self.codeVerifier = codeVerifier
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AuthorizationCodeFlow
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
     let object = try TypraRuntime.object(data, typeName: "AuthorizationCodeFlow")
     var instance = AuthorizationCodeFlow()
     if let value = object["authUrl"] {
@@ -35,9 +33,7 @@ public struct AuthorizationCodeFlow: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameAuthUrl: String?
     switch provider {
@@ -54,22 +50,16 @@ public struct AuthorizationCodeFlow: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AuthorizationCodeFlow
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AuthorizationCodeFlow"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AuthorizationCodeFlow"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AuthorizationCodeFlow
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AuthorizationCodeFlow"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AuthorizationCodeFlow"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

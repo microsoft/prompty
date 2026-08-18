@@ -3,28 +3,27 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelReconciliationStateTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "invocationId": "inv_abc123",
-        "message": "provider connection dropped after request was sent",
-        "request": {
-          "context": {
-            "id": "context:inv_abc123",
-            "sessionId": "sess_abc123",
-            "turnId": "turn_abc123",
-            "invocationId": "inv_abc123",
-            "iteration": 1,
-            "messages": [],
-            "contextState": {}
-          }
-        }
-      }
-      """
+{
+  "invocationId": "inv_abc123",
+  "message": "provider connection dropped after request was sent",
+  "request": {
+    "context": {
+      "id": "context:inv_abc123",
+      "sessionId": "sess_abc123",
+      "turnId": "turn_abc123",
+      "invocationId": "inv_abc123",
+      "iteration": 1,
+      "messages": [],
+      "contextState": {}
+    }
+  }
+}
+"""
     let instance = try ModelReconciliationState.fromJSON(json)
     XCTAssertEqual(instance.invocationId, "inv_abc123")
     XCTAssertEqual(instance.message, "provider connection dropped after request was sent")
@@ -35,19 +34,19 @@ final class ModelReconciliationStateTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      invocationId: inv_abc123
-      message: provider connection dropped after request was sent
-      request:
-        context:
-          id: "context:inv_abc123"
-          sessionId: sess_abc123
-          turnId: turn_abc123
-          invocationId: inv_abc123
-          iteration: 1
-          messages: []
-          contextState: {}
+invocationId: inv_abc123
+message: provider connection dropped after request was sent
+request:
+  context:
+    id: "context:inv_abc123"
+    sessionId: sess_abc123
+    turnId: turn_abc123
+    invocationId: inv_abc123
+    iteration: 1
+    messages: []
+    contextState: {}
 
-      """
+"""
     let instance = try ModelReconciliationState.fromYAML(yaml)
     XCTAssertEqual(instance.invocationId, "inv_abc123")
     XCTAssertEqual(instance.message, "provider connection dropped after request was sent")

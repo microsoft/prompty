@@ -31,18 +31,7 @@ public struct EngineCheckpoint: TypraModel {
   public var contextState: InvocationContextState = InvocationContextState()
   public var metadata: [String: Any]? = nil
 
-  public init(
-    id: String = "", sessionId: String = "", turnId: String = "", runId: String = "",
-    parentRunId: String? = nil, delegationDepth: Int32 = 0, iteration: Int32 = 0,
-    lastSequence: Int64 = 0, messages: [Message] = [], stablePrefixMessages: Int32 = 0,
-    inputs: Any? = nil, activeInvocationId: String? = nil,
-    pendingToolRequests: [ModelToolRequest]? = nil, completedToolResults: [ModelToolResult]? = nil,
-    completedModelIterations: Int32 = 0, reconciliationRequired: Bool = false,
-    modelReconciliation: ModelReconciliationState? = nil, pendingOutput: Any? = nil,
-    finalOutputReady: Bool = false, pendingModelResponse: ModelInvocationResponse? = nil,
-    resumeSameIteration: Bool = false, policyAppliedForIteration: Bool = false,
-    contextState: InvocationContextState = InvocationContextState(), metadata: [String: Any]? = nil
-  ) {
+  public init(id: String = "", sessionId: String = "", turnId: String = "", runId: String = "", parentRunId: String? = nil, delegationDepth: Int32 = 0, iteration: Int32 = 0, lastSequence: Int64 = 0, messages: [Message] = [], stablePrefixMessages: Int32 = 0, inputs: Any? = nil, activeInvocationId: String? = nil, pendingToolRequests: [ModelToolRequest]? = nil, completedToolResults: [ModelToolResult]? = nil, completedModelIterations: Int32 = 0, reconciliationRequired: Bool = false, modelReconciliation: ModelReconciliationState? = nil, pendingOutput: Any? = nil, finalOutputReady: Bool = false, pendingModelResponse: ModelInvocationResponse? = nil, resumeSameIteration: Bool = false, policyAppliedForIteration: Bool = false, contextState: InvocationContextState = InvocationContextState(), metadata: [String: Any]? = nil) {
     self.id = id
     self.sessionId = sessionId
     self.turnId = turnId
@@ -69,9 +58,7 @@ public struct EngineCheckpoint: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> EngineCheckpoint
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> EngineCheckpoint {
     let object = try TypraRuntime.object(data, typeName: "EngineCheckpoint")
     var instance = EngineCheckpoint()
     if let value = object["id"] {
@@ -91,7 +78,8 @@ public struct EngineCheckpoint: TypraModel {
     }
     if let value = object["delegationDepth"] {
       instance.delegationDepth = try TypraRuntime.int32(value, field: "delegationDepth")
-    } else {
+    }
+    else {
       instance.delegationDepth = 0
     }
     if let value = object["iteration"] {
@@ -101,13 +89,12 @@ public struct EngineCheckpoint: TypraModel {
       instance.lastSequence = try TypraRuntime.int64(value, field: "lastSequence")
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["stablePrefixMessages"] {
       instance.stablePrefixMessages = try TypraRuntime.int32(value, field: "stablePrefixMessages")
-    } else {
+    }
+    else {
       instance.stablePrefixMessages = 0
     }
     if let value = object["inputs"] {
@@ -117,63 +104,55 @@ public struct EngineCheckpoint: TypraModel {
       instance.activeInvocationId = try TypraRuntime.string(value, field: "activeInvocationId")
     }
     if let value = object["pendingToolRequests"] {
-      instance.pendingToolRequests = try TypraRuntime.array(value, field: "pendingToolRequests")
-        .enumerated().map {
-          try ModelToolRequest.load($1, context: context.at("pendingToolRequests").atIndex($0))
-        }
+      instance.pendingToolRequests = try TypraRuntime.array(value, field: "pendingToolRequests").enumerated().map { try ModelToolRequest.load($1, context: context.at("pendingToolRequests").atIndex($0)) }
     }
     if let value = object["completedToolResults"] {
-      instance.completedToolResults = try TypraRuntime.array(value, field: "completedToolResults")
-        .enumerated().map {
-          try ModelToolResult.load($1, context: context.at("completedToolResults").atIndex($0))
-        }
+      instance.completedToolResults = try TypraRuntime.array(value, field: "completedToolResults").enumerated().map { try ModelToolResult.load($1, context: context.at("completedToolResults").atIndex($0)) }
     }
     if let value = object["completedModelIterations"] {
-      instance.completedModelIterations = try TypraRuntime.int32(
-        value, field: "completedModelIterations")
-    } else {
+      instance.completedModelIterations = try TypraRuntime.int32(value, field: "completedModelIterations")
+    }
+    else {
       instance.completedModelIterations = 0
     }
     if let value = object["reconciliationRequired"] {
-      instance.reconciliationRequired = try TypraRuntime.bool(
-        value, field: "reconciliationRequired")
-    } else {
+      instance.reconciliationRequired = try TypraRuntime.bool(value, field: "reconciliationRequired")
+    }
+    else {
       instance.reconciliationRequired = false
     }
     if let value = object["modelReconciliation"] {
-      instance.modelReconciliation = try ModelReconciliationState.load(
-        value, context: context.at("modelReconciliation"))
+      instance.modelReconciliation = try ModelReconciliationState.load(value, context: context.at("modelReconciliation"))
     }
     if let value = object["pendingOutput"] {
       instance.pendingOutput = value
     }
     if let value = object["finalOutputReady"] {
       instance.finalOutputReady = try TypraRuntime.bool(value, field: "finalOutputReady")
-    } else {
+    }
+    else {
       instance.finalOutputReady = false
     }
     if let value = object["pendingModelResponse"] {
-      instance.pendingModelResponse = try ModelInvocationResponse.load(
-        value, context: context.at("pendingModelResponse"))
+      instance.pendingModelResponse = try ModelInvocationResponse.load(value, context: context.at("pendingModelResponse"))
     }
     if let value = object["resumeSameIteration"] {
       instance.resumeSameIteration = try TypraRuntime.bool(value, field: "resumeSameIteration")
-    } else {
+    }
+    else {
       instance.resumeSameIteration = false
     }
     if let value = object["policyAppliedForIteration"] {
-      instance.policyAppliedForIteration = try TypraRuntime.bool(
-        value, field: "policyAppliedForIteration")
-    } else {
+      instance.policyAppliedForIteration = try TypraRuntime.bool(value, field: "policyAppliedForIteration")
+    }
+    else {
       instance.policyAppliedForIteration = false
     }
     if object["contextState"] == nil || object["contextState"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("contextState").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("contextState").path + ": missing required field")
     }
     if let value = object["contextState"] {
-      instance.contextState = try InvocationContextState.load(
-        value, context: context.at("contextState"))
+      instance.contextState = try InvocationContextState.load(value, context: context.at("contextState"))
     }
     if let value = object["metadata"] {
       instance.metadata = try TypraRuntime.dictionary(value, field: "metadata")
@@ -228,22 +207,16 @@ public struct EngineCheckpoint: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> EngineCheckpoint
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "EngineCheckpoint"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> EngineCheckpoint {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "EngineCheckpoint"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> EngineCheckpoint
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "EngineCheckpoint"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> EngineCheckpoint {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "EngineCheckpoint"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

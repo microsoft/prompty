@@ -3,28 +3,27 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "gpt-35-turbo",
-        "provider": "foundry",
-        "apiType": "chat",
-        "connection": {
-          "kind": "key",
-          "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-          "key": "{your-api-key}"
-        },
-        "options": {
-          "type": "chat",
-          "temperature": 0.7,
-          "maxOutputTokens": 1000
-        }
-      }
-      """
+{
+  "id": "gpt-35-turbo",
+  "provider": "foundry",
+  "apiType": "chat",
+  "connection": {
+    "kind": "key",
+    "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+    "key": "{your-api-key}"
+  },
+  "options": {
+    "type": "chat",
+    "temperature": 0.7,
+    "maxOutputTokens": 1000
+  }
+}
+"""
     let instance = try Model.fromJSON(json)
     XCTAssertEqual(instance.id, "gpt-35-turbo")
     XCTAssertEqual((try XCTUnwrap(instance.provider)), "foundry")
@@ -51,19 +50,19 @@ final class ModelTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: gpt-35-turbo
-      provider: foundry
-      apiType: chat
-      connection:
-        kind: key
-        endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-        key: "{your-api-key}"
-      options:
-        type: chat
-        temperature: 0.7
-        maxOutputTokens: 1000
+id: gpt-35-turbo
+provider: foundry
+apiType: chat
+connection:
+  kind: key
+  endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+  key: "{your-api-key}"
+options:
+  type: chat
+  temperature: 0.7
+  maxOutputTokens: 1000
 
-      """
+"""
     let instance = try Model.fromYAML(yaml)
     XCTAssertEqual(instance.id, "gpt-35-turbo")
     XCTAssertEqual((try XCTUnwrap(instance.provider)), "foundry")

@@ -3,34 +3,33 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class EngineCheckpointTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "ckpt_abc123",
-        "sessionId": "sess_abc123",
-        "turnId": "turn_abc123",
-        "runId": "run_abc123",
-        "messages": [
-          {
-            "role": "user",
-            "parts": [
-              {
-                "kind": "text",
-                "value": "Hello!"
-              }
-            ],
-            "metadata": {
-              "source": "user-input"
-            }
-          }
-        ],
-        "contextState": {}
+{
+  "id": "ckpt_abc123",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_abc123",
+  "runId": "run_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
       }
-      """
+    }
+  ],
+  "contextState": {}
+}
+"""
     let instance = try EngineCheckpoint.fromJSON(json)
     XCTAssertEqual(instance.id, "ckpt_abc123")
     XCTAssertEqual(instance.sessionId, "sess_abc123")
@@ -47,20 +46,20 @@ final class EngineCheckpointTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: ckpt_abc123
-      sessionId: sess_abc123
-      turnId: turn_abc123
-      runId: run_abc123
-      messages:
-        - role: user
-          parts:
-            - kind: text
-              value: Hello!
-          metadata:
-            source: user-input
-      contextState: {}
+id: ckpt_abc123
+sessionId: sess_abc123
+turnId: turn_abc123
+runId: run_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
-      """
+"""
     let instance = try EngineCheckpoint.fromYAML(yaml)
     XCTAssertEqual(instance.id, "ckpt_abc123")
     XCTAssertEqual(instance.sessionId, "sess_abc123")

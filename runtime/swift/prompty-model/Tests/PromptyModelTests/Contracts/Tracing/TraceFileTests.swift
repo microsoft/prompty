@@ -3,27 +3,26 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TraceFileTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "runtime": "python",
-        "version": "2.0.0",
-        "trace": {
-          "name": "prompty.core.pipeline.run",
-          "__time": {
-            "start": "2026-04-04T12:00:00Z",
-            "end": "2026-04-04T12:00:01Z",
-            "duration": 1000
-          },
-          "signature": "prompty.core.pipeline.run",
-          "error": "Connection refused"
-        }
-      }
-      """
+{
+  "runtime": "python",
+  "version": "2.0.0",
+  "trace": {
+    "name": "prompty.core.pipeline.run",
+    "__time": {
+      "start": "2026-04-04T12:00:00Z",
+      "end": "2026-04-04T12:00:01Z",
+      "duration": 1000
+    },
+    "signature": "prompty.core.pipeline.run",
+    "error": "Connection refused"
+  }
+}
+"""
     let instance = try TraceFile.fromJSON(json)
     XCTAssertEqual(instance.runtime, "python")
     XCTAssertEqual(instance.version, "2.0.0")
@@ -40,18 +39,18 @@ final class TraceFileTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      runtime: python
-      version: 2.0.0
-      trace:
-        name: prompty.core.pipeline.run
-        __time:
-          start: "2026-04-04T12:00:00Z"
-          end: "2026-04-04T12:00:01Z"
-          duration: 1000
-        signature: prompty.core.pipeline.run
-        error: Connection refused
+runtime: python
+version: 2.0.0
+trace:
+  name: prompty.core.pipeline.run
+  __time:
+    start: "2026-04-04T12:00:00Z"
+    end: "2026-04-04T12:00:01Z"
+    duration: 1000
+  signature: prompty.core.pipeline.run
+  error: Connection refused
 
-      """
+"""
     let instance = try TraceFile.fromYAML(yaml)
     XCTAssertEqual(instance.runtime, "python")
     XCTAssertEqual(instance.version, "2.0.0")

@@ -24,10 +24,7 @@ public struct HookStartPayload: TypraModel {
   public var input: [String: Any]? = nil
   public var redaction: RedactionMetadata? = nil
 
-  public init(
-    hookInvocationId: String = "", hookType: String = "", scope: HookStartScope? = nil,
-    input: [String: Any]? = nil, redaction: RedactionMetadata? = nil
-  ) {
+  public init(hookInvocationId: String = "", hookType: String = "", scope: HookStartScope? = nil, input: [String: Any]? = nil, redaction: RedactionMetadata? = nil) {
     self.hookInvocationId = hookInvocationId
     self.hookType = hookType
     self.scope = scope
@@ -35,9 +32,7 @@ public struct HookStartPayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> HookStartPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> HookStartPayload {
     let object = try TypraRuntime.object(data, typeName: "HookStartPayload")
     var instance = HookStartPayload()
     if let value = object["hookInvocationId"] {
@@ -74,22 +69,16 @@ public struct HookStartPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> HookStartPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "HookStartPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> HookStartPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "HookStartPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> HookStartPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "HookStartPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> HookStartPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "HookStartPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

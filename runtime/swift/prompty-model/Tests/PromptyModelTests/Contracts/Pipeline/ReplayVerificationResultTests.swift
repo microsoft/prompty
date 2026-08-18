@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ReplayVerificationResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "status": "passed",
-        "expectedCount": 1,
-        "actualCount": 1
-      }
-      """
+{
+  "status": "passed",
+  "expectedCount": 1,
+  "actualCount": 1
+}
+"""
     let instance = try ReplayVerificationResult.fromJSON(json)
     XCTAssertEqual(instance.status, ReplayVerificationStatus.passed)
     XCTAssertEqual(instance.expectedCount, 1)
@@ -27,11 +26,11 @@ final class ReplayVerificationResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      status: passed
-      expectedCount: 1
-      actualCount: 1
+status: passed
+expectedCount: 1
+actualCount: 1
 
-      """
+"""
     let instance = try ReplayVerificationResult.fromYAML(yaml)
     XCTAssertEqual(instance.status, ReplayVerificationStatus.passed)
     XCTAssertEqual(instance.expectedCount, 1)

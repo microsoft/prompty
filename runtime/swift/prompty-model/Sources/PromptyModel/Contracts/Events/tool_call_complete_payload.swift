@@ -13,10 +13,7 @@ public struct ToolCallCompletePayload: TypraModel {
   public var durationMs: Double? = nil
   public var errorKind: String? = nil
 
-  public init(
-    id: String? = nil, name: String = "", success: Bool = false, result: ToolResult? = nil,
-    durationMs: Double? = nil, errorKind: String? = nil
-  ) {
+  public init(id: String? = nil, name: String = "", success: Bool = false, result: ToolResult? = nil, durationMs: Double? = nil, errorKind: String? = nil) {
     self.id = id
     self.name = name
     self.success = success
@@ -25,9 +22,7 @@ public struct ToolCallCompletePayload: TypraModel {
     self.errorKind = errorKind
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ToolCallCompletePayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolCallCompletePayload {
     let object = try TypraRuntime.object(data, typeName: "ToolCallCompletePayload")
     var instance = ToolCallCompletePayload()
     if let value = object["id"] {
@@ -70,22 +65,16 @@ public struct ToolCallCompletePayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolCallCompletePayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ToolCallCompletePayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolCallCompletePayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolCallCompletePayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolCallCompletePayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ToolCallCompletePayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolCallCompletePayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolCallCompletePayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

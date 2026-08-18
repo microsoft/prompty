@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TokenUsageTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "promptTokens": 150,
-        "completionTokens": 42,
-        "totalTokens": 192
-      }
-      """
+{
+  "promptTokens": 150,
+  "completionTokens": 42,
+  "totalTokens": 192
+}
+"""
     let instance = try TokenUsage.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.promptTokens)), 150)
     XCTAssertEqual((try XCTUnwrap(instance.completionTokens)), 42)
@@ -27,11 +26,11 @@ final class TokenUsageTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      promptTokens: 150
-      completionTokens: 42
-      totalTokens: 192
+promptTokens: 150
+completionTokens: 42
+totalTokens: 192
 
-      """
+"""
     let instance = try TokenUsage.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.promptTokens)), 150)
     XCTAssertEqual((try XCTUnwrap(instance.completionTokens)), 42)

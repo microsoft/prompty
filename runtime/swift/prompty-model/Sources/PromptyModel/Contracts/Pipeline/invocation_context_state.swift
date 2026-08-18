@@ -20,35 +20,25 @@ public enum InvocationContextPortability: String, Codable, CaseIterable {
 /// Provider-context state carried into or out of an invocation.
 public struct InvocationContextState: TypraModel {
   public static let shorthandProperty: String? = nil
-  public var portability: InvocationContextPortability =
-    (try! InvocationContextPortability.parse("portable"))
+  public var portability: InvocationContextPortability = (try! InvocationContextPortability.parse("portable"))
   public var delegatedState: [DelegatedStateReference]? = nil
 
-  public init(
-    portability: InvocationContextPortability =
-      (try! InvocationContextPortability.parse("portable")),
-    delegatedState: [DelegatedStateReference]? = nil
-  ) {
+  public init(portability: InvocationContextPortability = (try! InvocationContextPortability.parse("portable")), delegatedState: [DelegatedStateReference]? = nil) {
     self.portability = portability
     self.delegatedState = delegatedState
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> InvocationContextState
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> InvocationContextState {
     let object = try TypraRuntime.object(data, typeName: "InvocationContextState")
     var instance = InvocationContextState()
     if let value = object["portability"] {
-      instance.portability = try InvocationContextPortability.parse(
-        try TypraRuntime.string(value, field: "portability"))
-    } else {
+      instance.portability = try InvocationContextPortability.parse(try TypraRuntime.string(value, field: "portability"))
+    }
+    else {
       instance.portability = (try! InvocationContextPortability.parse("portable"))
     }
     if let value = object["delegatedState"] {
-      instance.delegatedState = try TypraRuntime.array(value, field: "delegatedState").enumerated()
-        .map {
-          try DelegatedStateReference.load($1, context: context.at("delegatedState").atIndex($0))
-        }
+      instance.delegatedState = try TypraRuntime.array(value, field: "delegatedState").enumerated().map { try DelegatedStateReference.load($1, context: context.at("delegatedState").atIndex($0)) }
     }
     return instance
   }
@@ -62,22 +52,16 @@ public struct InvocationContextState: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> InvocationContextState
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "InvocationContextState"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> InvocationContextState {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "InvocationContextState"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> InvocationContextState
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "InvocationContextState"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> InvocationContextState {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "InvocationContextState"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

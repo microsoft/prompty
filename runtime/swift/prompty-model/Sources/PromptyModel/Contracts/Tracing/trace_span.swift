@@ -16,11 +16,7 @@ public struct TraceSpan: TypraModel {
   public var attributes: [String: Any]? = nil
   public var frames: [Any]? = nil
 
-  public init(
-    name: String = "", time: TraceTime = TraceTime(), signature: String? = nil,
-    inputs: [String: Any]? = nil, output: Any? = nil, error: String? = nil,
-    usage: TokenUsage? = nil, attributes: [String: Any]? = nil, frames: [Any]? = nil
-  ) {
+  public init(name: String = "", time: TraceTime = TraceTime(), signature: String? = nil, inputs: [String: Any]? = nil, output: Any? = nil, error: String? = nil, usage: TokenUsage? = nil, attributes: [String: Any]? = nil, frames: [Any]? = nil) {
     self.name = name
     self.time = time
     self.signature = signature
@@ -96,9 +92,7 @@ public struct TraceSpan: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TraceSpan
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TraceSpan {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TraceSpan"), context: context)
   }
 
@@ -106,9 +100,7 @@ public struct TraceSpan: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TraceSpan
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TraceSpan {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TraceSpan"), context: context)
   }
 

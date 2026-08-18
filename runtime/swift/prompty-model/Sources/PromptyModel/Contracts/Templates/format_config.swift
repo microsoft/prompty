@@ -16,8 +16,7 @@ public struct FormatConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FormatConfig
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FormatConfig {
     if let scalar = data as? String {
       var instance = FormatConfig()
       instance.kind = try TypraRuntime.string(scalar, field: "kind")
@@ -27,7 +26,8 @@ public struct FormatConfig: TypraModel {
     var instance = FormatConfig()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "*"
     }
     if let value = object["strict"] {
@@ -51,9 +51,7 @@ public struct FormatConfig: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FormatConfig
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "FormatConfig"), context: context)
   }
 
@@ -61,9 +59,7 @@ public struct FormatConfig: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FormatConfig
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FormatConfig"), context: context)
   }
 

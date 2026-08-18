@@ -3,45 +3,36 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class OAuthTokenTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "refreshToken": "0.AXoAoffline-refresh-token-value",
-        "scope": "https://cognitiveservices.azure.com/.default offline_access"
-      }
-      """
+{
+  "refreshToken": "0.AXoAoffline-refresh-token-value",
+  "scope": "https://cognitiveservices.azure.com/.default offline_access"
+}
+"""
     let instance = try OAuthToken.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.refreshToken)), "0.AXoAoffline-refresh-token-value")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.scope)), "https://cognitiveservices.azure.com/.default offline_access"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.scope)), "https://cognitiveservices.azure.com/.default offline_access")
     let reloaded = try OAuthToken.fromJSON(try instance.toJSON())
     XCTAssertEqual((try XCTUnwrap(reloaded.refreshToken)), "0.AXoAoffline-refresh-token-value")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.scope)), "https://cognitiveservices.azure.com/.default offline_access"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.scope)), "https://cognitiveservices.azure.com/.default offline_access")
   }
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      refreshToken: 0.AXoAoffline-refresh-token-value
-      scope: "https://cognitiveservices.azure.com/.default offline_access"
+refreshToken: 0.AXoAoffline-refresh-token-value
+scope: "https://cognitiveservices.azure.com/.default offline_access"
 
-      """
+"""
     let instance = try OAuthToken.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.refreshToken)), "0.AXoAoffline-refresh-token-value")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.scope)), "https://cognitiveservices.azure.com/.default offline_access"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.scope)), "https://cognitiveservices.azure.com/.default offline_access")
     let reloaded = try OAuthToken.fromYAML(try instance.toYAML())
     XCTAssertEqual((try XCTUnwrap(reloaded.refreshToken)), "0.AXoAoffline-refresh-token-value")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.scope)), "https://cognitiveservices.azure.com/.default offline_access"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.scope)), "https://cognitiveservices.azure.com/.default offline_access")
   }
 
 }

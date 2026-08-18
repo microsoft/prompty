@@ -14,9 +14,7 @@ public struct FileNotFoundError: TypraModel {
     self.path = path
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> FileNotFoundError
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FileNotFoundError {
     let object = try TypraRuntime.object(data, typeName: "FileNotFoundError")
     var instance = FileNotFoundError()
     if let value = object["message"] {
@@ -35,22 +33,16 @@ public struct FileNotFoundError: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FileNotFoundError
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "FileNotFoundError"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FileNotFoundError {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "FileNotFoundError"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FileNotFoundError
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "FileNotFoundError"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FileNotFoundError {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FileNotFoundError"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

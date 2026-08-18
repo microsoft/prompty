@@ -14,20 +14,14 @@ public struct ReplayVerificationRequest: TypraModel {
     self.actual = actual
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ReplayVerificationRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReplayVerificationRequest {
     let object = try TypraRuntime.object(data, typeName: "ReplayVerificationRequest")
     var instance = ReplayVerificationRequest()
     if let value = object["expected"] {
-      instance.expected = try TypraRuntime.array(value, field: "expected").enumerated().map {
-        try ReplayJournalRecord.load($1, context: context.at("expected").atIndex($0))
-      }
+      instance.expected = try TypraRuntime.array(value, field: "expected").enumerated().map { try ReplayJournalRecord.load($1, context: context.at("expected").atIndex($0)) }
     }
     if let value = object["actual"] {
-      instance.actual = try TypraRuntime.array(value, field: "actual").enumerated().map {
-        try ReplayJournalRecord.load($1, context: context.at("actual").atIndex($0))
-      }
+      instance.actual = try TypraRuntime.array(value, field: "actual").enumerated().map { try ReplayJournalRecord.load($1, context: context.at("actual").atIndex($0)) }
     }
     return instance
   }
@@ -39,22 +33,16 @@ public struct ReplayVerificationRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ReplayVerificationRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ReplayVerificationRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReplayVerificationRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReplayVerificationRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ReplayVerificationRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ReplayVerificationRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReplayVerificationRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReplayVerificationRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

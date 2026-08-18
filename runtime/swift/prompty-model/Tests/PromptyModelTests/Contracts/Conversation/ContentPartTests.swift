@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ContentPartTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "kind": "text",
-        "value": "Hello, world!"
-      }
-      """
+{
+  "kind": "text",
+  "value": "Hello, world!"
+}
+"""
     let instance = try ContentPart.fromJSON(json)
     if case .textPart(let concrete) = instance {
       XCTAssertEqual(concrete.value, "Hello, world!")
@@ -30,10 +29,10 @@ final class ContentPartTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      kind: text
-      value: Hello, world!
+kind: text
+value: Hello, world!
 
-      """
+"""
     let instance = try ContentPart.fromYAML(yaml)
     if case .textPart(let concrete) = instance {
       XCTAssertEqual(concrete.value, "Hello, world!")

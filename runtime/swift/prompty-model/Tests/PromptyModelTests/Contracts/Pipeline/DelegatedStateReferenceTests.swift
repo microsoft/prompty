@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class DelegatedStateReferenceTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "provider": "openai",
-        "kind": "response",
-        "id": "resp_abc123"
-      }
-      """
+{
+  "provider": "openai",
+  "kind": "response",
+  "id": "resp_abc123"
+}
+"""
     let instance = try DelegatedStateReference.fromJSON(json)
     XCTAssertEqual(instance.provider, "openai")
     XCTAssertEqual(instance.kind, "response")
@@ -27,11 +26,11 @@ final class DelegatedStateReferenceTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      provider: openai
-      kind: response
-      id: resp_abc123
+provider: openai
+kind: response
+id: resp_abc123
 
-      """
+"""
     let instance = try DelegatedStateReference.fromYAML(yaml)
     XCTAssertEqual(instance.provider, "openai")
     XCTAssertEqual(instance.kind, "response")

@@ -12,10 +12,7 @@ public struct TurnTrace: TypraModel {
   public var events: [TurnEvent] = []
   public var summary: TurnSummary? = nil
 
-  public init(
-    version: String = "1", runtime: String? = nil, promptyVersion: String? = nil,
-    events: [TurnEvent] = [], summary: TurnSummary? = nil
-  ) {
+  public init(version: String = "1", runtime: String? = nil, promptyVersion: String? = nil, events: [TurnEvent] = [], summary: TurnSummary? = nil) {
     self.version = version
     self.runtime = runtime
     self.promptyVersion = promptyVersion
@@ -28,7 +25,8 @@ public struct TurnTrace: TypraModel {
     var instance = TurnTrace()
     if let value = object["version"] {
       instance.version = try TypraRuntime.string(value, field: "version")
-    } else {
+    }
+    else {
       instance.version = "1"
     }
     if let value = object["runtime"] {
@@ -38,9 +36,7 @@ public struct TurnTrace: TypraModel {
       instance.promptyVersion = try TypraRuntime.string(value, field: "promptyVersion")
     }
     if let value = object["events"] {
-      instance.events = try TypraRuntime.array(value, field: "events").enumerated().map {
-        try TurnEvent.load($1, context: context.at("events").atIndex($0))
-      }
+      instance.events = try TypraRuntime.array(value, field: "events").enumerated().map { try TurnEvent.load($1, context: context.at("events").atIndex($0)) }
     }
     if let value = object["summary"] {
       instance.summary = try TurnSummary.load(value, context: context.at("summary"))
@@ -64,9 +60,7 @@ public struct TurnTrace: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnTrace
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnTrace {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnTrace"), context: context)
   }
 
@@ -74,9 +68,7 @@ public struct TurnTrace: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnTrace
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnTrace {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnTrace"), context: context)
   }
 

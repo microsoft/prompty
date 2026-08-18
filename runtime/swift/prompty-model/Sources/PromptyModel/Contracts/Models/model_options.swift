@@ -17,12 +17,7 @@ public struct ModelOptions: TypraModel {
   public var allowMultipleToolCalls: Bool? = nil
   public var additionalProperties: [String: Any]? = nil
 
-  public init(
-    frequencyPenalty: Float? = nil, maxOutputTokens: Int32? = nil, presencePenalty: Float? = nil,
-    seed: Int32? = nil, temperature: Float? = nil, topK: Int32? = nil, topP: Float? = nil,
-    stopSequences: [String]? = nil, allowMultipleToolCalls: Bool? = nil,
-    additionalProperties: [String: Any]? = nil
-  ) {
+  public init(frequencyPenalty: Float? = nil, maxOutputTokens: Int32? = nil, presencePenalty: Float? = nil, seed: Int32? = nil, temperature: Float? = nil, topK: Int32? = nil, topP: Float? = nil, stopSequences: [String]? = nil, allowMultipleToolCalls: Bool? = nil, additionalProperties: [String: Any]? = nil) {
     self.frequencyPenalty = frequencyPenalty
     self.maxOutputTokens = maxOutputTokens
     self.presencePenalty = presencePenalty
@@ -35,8 +30,7 @@ public struct ModelOptions: TypraModel {
     self.additionalProperties = additionalProperties
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelOptions
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelOptions {
     let object = try TypraRuntime.object(data, typeName: "ModelOptions")
     var instance = ModelOptions()
     if let value = object["frequencyPenalty"] {
@@ -61,17 +55,13 @@ public struct ModelOptions: TypraModel {
       instance.topP = try TypraRuntime.float(value, field: "topP")
     }
     if let value = object["stopSequences"] {
-      instance.stopSequences = try TypraRuntime.array(value, field: "stopSequences").map {
-        try TypraRuntime.string($0, field: "stopSequences")
-      }
+      instance.stopSequences = try TypraRuntime.array(value, field: "stopSequences").map { try TypraRuntime.string($0, field: "stopSequences") }
     }
     if let value = object["allowMultipleToolCalls"] {
-      instance.allowMultipleToolCalls = try TypraRuntime.bool(
-        value, field: "allowMultipleToolCalls")
+      instance.allowMultipleToolCalls = try TypraRuntime.bool(value, field: "allowMultipleToolCalls")
     }
     if let value = object["additionalProperties"] {
-      instance.additionalProperties = try TypraRuntime.dictionary(
-        value, field: "additionalProperties")
+      instance.additionalProperties = try TypraRuntime.dictionary(value, field: "additionalProperties")
     }
     return instance
   }
@@ -111,18 +101,14 @@ public struct ModelOptions: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameFrequencyPenalty: String?
     switch provider {
     case "openai": wireNameFrequencyPenalty = "frequency_penalty"
     default: wireNameFrequencyPenalty = nil
     }
-    if let wireKey = wireNameFrequencyPenalty, let value = self.frequencyPenalty {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameFrequencyPenalty, let value = self.frequencyPenalty { result[wireKey] = value }
     let wireNameMaxOutputTokens: String?
     switch provider {
     case "openai": wireNameMaxOutputTokens = "max_completion_tokens"
@@ -130,17 +116,13 @@ public struct ModelOptions: TypraModel {
     case "anthropic": wireNameMaxOutputTokens = "max_tokens"
     default: wireNameMaxOutputTokens = nil
     }
-    if let wireKey = wireNameMaxOutputTokens, let value = self.maxOutputTokens {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameMaxOutputTokens, let value = self.maxOutputTokens { result[wireKey] = value }
     let wireNamePresencePenalty: String?
     switch provider {
     case "openai": wireNamePresencePenalty = "presence_penalty"
     default: wireNamePresencePenalty = nil
     }
-    if let wireKey = wireNamePresencePenalty, let value = self.presencePenalty {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNamePresencePenalty, let value = self.presencePenalty { result[wireKey] = value }
     let wireNameSeed: String?
     switch provider {
     case "openai": wireNameSeed = "seed"
@@ -176,23 +158,17 @@ public struct ModelOptions: TypraModel {
     case "anthropic": wireNameStopSequences = "stop_sequences"
     default: wireNameStopSequences = nil
     }
-    if let wireKey = wireNameStopSequences, let value = self.stopSequences {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameStopSequences, let value = self.stopSequences { result[wireKey] = value }
     let wireNameAllowMultipleToolCalls: String?
     switch provider {
     case "openai": wireNameAllowMultipleToolCalls = "parallel_tool_calls"
     default: wireNameAllowMultipleToolCalls = nil
     }
-    if let wireKey = wireNameAllowMultipleToolCalls, let value = self.allowMultipleToolCalls {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameAllowMultipleToolCalls, let value = self.allowMultipleToolCalls { result[wireKey] = value }
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelOptions
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelOptions {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelOptions"), context: context)
   }
 
@@ -200,9 +176,7 @@ public struct ModelOptions: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelOptions
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelOptions {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelOptions"), context: context)
   }
 

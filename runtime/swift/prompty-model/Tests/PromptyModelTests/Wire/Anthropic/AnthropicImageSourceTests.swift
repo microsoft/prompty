@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicImageSourceTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "media_type": "image/png",
-        "data": "iVBORw0KGgo..."
-      }
-      """
+{
+  "media_type": "image/png",
+  "data": "iVBORw0KGgo..."
+}
+"""
     let instance = try AnthropicImageSource.fromJSON(json)
     XCTAssertEqual(instance.mediaType, "image/png")
     XCTAssertEqual(instance.data, "iVBORw0KGgo...")
@@ -24,10 +23,10 @@ final class AnthropicImageSourceTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      media_type: image/png
-      data: iVBORw0KGgo...
+media_type: image/png
+data: iVBORw0KGgo...
 
-      """
+"""
     let instance = try AnthropicImageSource.fromYAML(yaml)
     XCTAssertEqual(instance.mediaType, "image/png")
     XCTAssertEqual(instance.data, "iVBORw0KGgo...")

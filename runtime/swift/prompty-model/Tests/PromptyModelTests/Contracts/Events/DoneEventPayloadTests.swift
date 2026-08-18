@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class DoneEventPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "response": {},
-        "messages": []
-      }
-      """
+{
+  "response": {},
+  "messages": []
+}
+"""
     let instance = try DoneEventPayload.fromJSON(json)
     XCTAssertEqual(instance.messages.count, 0)
     let reloaded = try DoneEventPayload.fromJSON(try instance.toJSON())
@@ -22,10 +21,10 @@ final class DoneEventPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      response: {}
-      messages: []
+response: {}
+messages: []
 
-      """
+"""
     let instance = try DoneEventPayload.fromYAML(yaml)
     XCTAssertEqual(instance.messages.count, 0)
     let reloaded = try DoneEventPayload.fromYAML(try instance.toYAML())

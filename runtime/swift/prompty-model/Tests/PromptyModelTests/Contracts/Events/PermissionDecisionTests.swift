@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class PermissionDecisionTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "perm_abc123",
-        "toolCallId": "call_abc123",
-        "permission": "tool.execute",
-        "approved": true,
-        "reason": "user_approved"
-      }
-      """
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "approved": true,
+  "reason": "user_approved"
+}
+"""
     let instance = try PermissionDecision.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "perm_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")
@@ -33,13 +32,13 @@ final class PermissionDecisionTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: perm_abc123
-      toolCallId: call_abc123
-      permission: tool.execute
-      approved: true
-      reason: user_approved
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+approved: true
+reason: user_approved
 
-      """
+"""
     let instance = try PermissionDecision.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "perm_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")

@@ -3,19 +3,18 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolExecutionStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "exec_abc123",
-        "toolCallId": "call_abc123",
-        "toolName": "powershell",
-        "workingDirectory": "/workspace/project"
-      }
-      """
+{
+  "requestId": "exec_abc123",
+  "toolCallId": "call_abc123",
+  "toolName": "powershell",
+  "workingDirectory": "/workspace/project"
+}
+"""
     let instance = try ToolExecutionStartPayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "exec_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")
@@ -30,12 +29,12 @@ final class ToolExecutionStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: exec_abc123
-      toolCallId: call_abc123
-      toolName: powershell
-      workingDirectory: /workspace/project
+requestId: exec_abc123
+toolCallId: call_abc123
+toolName: powershell
+workingDirectory: /workspace/project
 
-      """
+"""
     let instance = try ToolExecutionStartPayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "exec_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")

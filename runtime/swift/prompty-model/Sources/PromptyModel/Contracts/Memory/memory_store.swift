@@ -16,9 +16,7 @@ public struct MemoryStore: TypraModel {
     let object = try TypraRuntime.object(data, typeName: "MemoryStore")
     var instance = MemoryStore()
     if let value = object["entries"] {
-      instance.entries = try TypraRuntime.array(value, field: "entries").enumerated().map {
-        try MemoryEntry.load($1, context: context.at("entries").atIndex($0))
-      }
+      instance.entries = try TypraRuntime.array(value, field: "entries").enumerated().map { try MemoryEntry.load($1, context: context.at("entries").atIndex($0)) }
     }
     return instance
   }
@@ -29,9 +27,7 @@ public struct MemoryStore: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> MemoryStore
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> MemoryStore {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "MemoryStore"), context: context)
   }
 
@@ -39,9 +35,7 @@ public struct MemoryStore: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> MemoryStore
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> MemoryStore {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "MemoryStore"), context: context)
   }
 

@@ -17,12 +17,7 @@ public struct Agent: TypraModel {
   public var template: Template? = nil
   public var instructions: String? = nil
 
-  public init(
-    name: String = "", displayName: String? = nil, description: String? = nil,
-    metadata: [String: Any]? = nil, inputs: [Property]? = nil, outputs: [Property]? = nil,
-    model: Model? = nil, tools: [Tool]? = nil, template: Template? = nil,
-    instructions: String? = nil
-  ) {
+  public init(name: String = "", displayName: String? = nil, description: String? = nil, metadata: [String: Any]? = nil, inputs: [Property]? = nil, outputs: [Property]? = nil, model: Model? = nil, tools: [Tool]? = nil, template: Template? = nil, instructions: String? = nil) {
     self.name = name
     self.displayName = displayName
     self.description = description
@@ -40,7 +35,8 @@ public struct Agent: TypraModel {
     var instance = Agent()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["displayName"] {
@@ -81,9 +77,7 @@ public struct Agent: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -103,8 +97,7 @@ public struct Agent: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -125,9 +118,7 @@ public struct Agent: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -147,8 +138,7 @@ public struct Agent: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -169,9 +159,7 @@ public struct Agent: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -191,8 +179,7 @@ public struct Agent: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -238,8 +225,7 @@ public struct Agent: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Agent
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Agent {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Agent"), context: context)
   }
 
@@ -247,8 +233,7 @@ public struct Agent: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Agent
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Agent {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Agent"), context: context)
   }
 

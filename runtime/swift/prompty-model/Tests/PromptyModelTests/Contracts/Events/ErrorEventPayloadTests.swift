@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ErrorEventPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "Rate limit exceeded",
-        "errorKind": "rate_limit",
-        "phase": "llm"
-      }
-      """
+{
+  "message": "Rate limit exceeded",
+  "errorKind": "rate_limit",
+  "phase": "llm"
+}
+"""
     let instance = try ErrorEventPayload.fromJSON(json)
     XCTAssertEqual(instance.message, "Rate limit exceeded")
     XCTAssertEqual((try XCTUnwrap(instance.errorKind)), "rate_limit")
@@ -27,11 +26,11 @@ final class ErrorEventPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: Rate limit exceeded
-      errorKind: rate_limit
-      phase: llm
+message: Rate limit exceeded
+errorKind: rate_limit
+phase: llm
 
-      """
+"""
     let instance = try ErrorEventPayload.fromYAML(yaml)
     XCTAssertEqual(instance.message, "Rate limit exceeded")
     XCTAssertEqual((try XCTUnwrap(instance.errorKind)), "rate_limit")

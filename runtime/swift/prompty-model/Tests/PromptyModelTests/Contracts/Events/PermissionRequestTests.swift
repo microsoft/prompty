@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class PermissionRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "requestId": "perm_abc123",
-        "toolCallId": "call_abc123",
-        "permission": "tool.execute",
-        "target": "shell",
-        "promptRequest": "Allow shell to run tests?"
-      }
-      """
+{
+  "requestId": "perm_abc123",
+  "toolCallId": "call_abc123",
+  "permission": "tool.execute",
+  "target": "shell",
+  "promptRequest": "Allow shell to run tests?"
+}
+"""
     let instance = try PermissionRequest.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "perm_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")
@@ -33,13 +32,13 @@ final class PermissionRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      requestId: perm_abc123
-      toolCallId: call_abc123
-      permission: tool.execute
-      target: shell
-      promptRequest: Allow shell to run tests?
+requestId: perm_abc123
+toolCallId: call_abc123
+permission: tool.execute
+target: shell
+promptRequest: Allow shell to run tests?
 
-      """
+"""
     let instance = try PermissionRequest.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.requestId)), "perm_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.toolCallId)), "call_abc123")

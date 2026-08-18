@@ -3,14 +3,13 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class FinalOutputPolicyResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {}
-      """
+{}
+"""
     let instance = try FinalOutputPolicyResult.fromJSON(json)
     let reloaded = try FinalOutputPolicyResult.fromJSON(try instance.toJSON())
     _ = reloaded
@@ -18,9 +17,9 @@ final class FinalOutputPolicyResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      {}
+{}
 
-      """
+"""
     let instance = try FinalOutputPolicyResult.fromYAML(yaml)
     let reloaded = try FinalOutputPolicyResult.fromYAML(try instance.toYAML())
     _ = reloaded

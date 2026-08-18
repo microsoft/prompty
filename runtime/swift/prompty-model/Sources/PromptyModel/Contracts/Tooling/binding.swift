@@ -24,7 +24,8 @@ public struct Binding: TypraModel {
     var instance = Binding()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["input"] {
@@ -40,9 +41,7 @@ public struct Binding: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Binding
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Binding {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Binding"), context: context)
   }
 
@@ -50,9 +49,7 @@ public struct Binding: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Binding
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Binding {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Binding"), context: context)
   }
 

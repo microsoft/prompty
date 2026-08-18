@@ -39,9 +39,7 @@ public struct Template: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Template
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Template {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Template"), context: context)
   }
 
@@ -49,9 +47,7 @@ public struct Template: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Template
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Template {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Template"), context: context)
   }
 

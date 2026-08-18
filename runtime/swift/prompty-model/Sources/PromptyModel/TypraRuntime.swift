@@ -7,9 +7,7 @@ import Yams
 public struct LoadContext {
   public let path: String
   public init(path: String = "") { self.path = path }
-  public func at(_ segment: String) -> LoadContext {
-    LoadContext(path: path.isEmpty ? segment : "\(path).\(segment)")
-  }
+  public func at(_ segment: String) -> LoadContext { LoadContext(path: path.isEmpty ? segment : "\(path).\(segment)") }
   public func atIndex(_ index: Int) -> LoadContext { LoadContext(path: "\(path)[\(index)]") }
 }
 
@@ -35,8 +33,7 @@ public enum TypraRuntimeError: Error, CustomStringConvertible {
     case .invalidObject(let type): return "Expected object for \(type)."
     case .invalidField(let field, let expected): return "Expected \(expected) for field \(field)."
     case .invalidEnum(let type, let value): return "Invalid \(type) value: \(value)."
-    case .unknownDiscriminator(let type, let field, let value):
-      return "Unknown \(type) discriminator \(field)=\(value)."
+    case .unknownDiscriminator(let type, let field, let value): return "Unknown \(type) discriminator \(field)=\(value)."
     case .unsupported(let message): return message
     }
   }
@@ -49,30 +46,22 @@ public protocol TypraModel {
 
 public enum TypraRuntime {
   public static func object(_ data: Any, typeName: String) throws -> [String: Any] {
-    guard let object = data as? [String: Any] else {
-      throw TypraRuntimeError.invalidObject(type: typeName)
-    }
+    guard let object = data as? [String: Any] else { throw TypraRuntimeError.invalidObject(type: typeName) }
     return object
   }
 
   public static func dictionary(_ data: Any, field: String) throws -> [String: Any] {
-    guard let object = data as? [String: Any] else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "dictionary")
-    }
+    guard let object = data as? [String: Any] else { throw TypraRuntimeError.invalidField(field: field, expected: "dictionary") }
     return object
   }
 
   public static func array(_ data: Any, field: String) throws -> [Any] {
-    guard let array = data as? [Any] else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "array")
-    }
+    guard let array = data as? [Any] else { throw TypraRuntimeError.invalidField(field: field, expected: "array") }
     return array
   }
 
   public static func string(_ data: Any, field: String) throws -> String {
-    guard let value = data as? String else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "string")
-    }
+    guard let value = data as? String else { throw TypraRuntimeError.invalidField(field: field, expected: "string") }
     return value
   }
 
@@ -84,9 +73,7 @@ public enum TypraRuntime {
 
   public static func double(_ data: Any, field: String) throws -> Double {
     if let number = data as? NSNumber {
-      if isBoolNumber(number) {
-        throw TypraRuntimeError.invalidField(field: field, expected: "number")
-      }
+      if isBoolNumber(number) { throw TypraRuntimeError.invalidField(field: field, expected: "number") }
       return number.doubleValue
     }
     if let decimal = data as? Decimal { return NSDecimalNumber(decimal: decimal).doubleValue }
@@ -104,43 +91,31 @@ public enum TypraRuntime {
 
   public static func int(_ data: Any, field: String) throws -> Int {
     let value = try int64(data, field: field)
-    guard value >= Int64(Int.min) && value <= Int64(Int.max) else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "integer")
-    }
+    guard value >= Int64(Int.min) && value <= Int64(Int.max) else { throw TypraRuntimeError.invalidField(field: field, expected: "integer") }
     return Int(value)
   }
 
   public static func int32(_ data: Any, field: String) throws -> Int32 {
     let value = try int64(data, field: field)
-    guard value >= Int64(Int32.min) && value <= Int64(Int32.max) else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "int32")
-    }
+    guard value >= Int64(Int32.min) && value <= Int64(Int32.max) else { throw TypraRuntimeError.invalidField(field: field, expected: "int32") }
     return Int32(value)
   }
 
   public static func int64(_ data: Any, field: String) throws -> Int64 {
     if let number = data as? NSNumber {
-      if isBoolNumber(number) {
-        throw TypraRuntimeError.invalidField(field: field, expected: "integer")
-      }
+      if isBoolNumber(number) { throw TypraRuntimeError.invalidField(field: field, expected: "integer") }
       return try exactInt64(number, field: field)
     }
-    if let decimal = data as? Decimal {
-      return try exactInt64(NSDecimalNumber(decimal: decimal), field: field)
-    }
+    if let decimal = data as? Decimal { return try exactInt64(NSDecimalNumber(decimal: decimal), field: field) }
     if let value = data as? Int64 { return value }
     if let value = data as? Int { return Int64(value) }
     if let value = data as? Int32 { return Int64(value) }
     if let value = data as? UInt64 {
-      guard value <= UInt64(Int64.max) else {
-        throw TypraRuntimeError.invalidField(field: field, expected: "int64")
-      }
+      guard value <= UInt64(Int64.max) else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
       return Int64(value)
     }
     if let value = data as? UInt {
-      guard value <= UInt(Int64.max) else {
-        throw TypraRuntimeError.invalidField(field: field, expected: "int64")
-      }
+      guard value <= UInt(Int64.max) else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
       return Int64(value)
     }
     if let value = data as? UInt32 { return Int64(value) }
@@ -153,9 +128,7 @@ public enum TypraRuntime {
       return number.int64Value
     case "C", "S", "I", "L", "Q":
       let value = number.uint64Value
-      guard value <= UInt64(Int64.max) else {
-        throw TypraRuntimeError.invalidField(field: field, expected: "int64")
-      }
+      guard value <= UInt64(Int64.max) else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
       return Int64(value)
     default:
       break
@@ -163,18 +136,11 @@ public enum TypraRuntime {
     var decimal = number.decimalValue
     var minimum = Decimal(string: "-9223372036854775808")!
     var maximum = Decimal(string: "9223372036854775807")!
-    guard
-      NSDecimalCompare(&decimal, &minimum) != .orderedAscending
-        && NSDecimalCompare(&decimal, &maximum) != .orderedDescending
-    else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
+    guard NSDecimalCompare(&decimal, &minimum) != .orderedAscending && NSDecimalCompare(&decimal, &maximum) != .orderedDescending else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
     var rounded = Decimal()
     NSDecimalRound(&rounded, &decimal, 0, .plain)
-    guard NSDecimalCompare(&rounded, &decimal) == .orderedSame else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "integer")
-    }
-    guard let parsed = Int64(NSDecimalNumber(decimal: rounded).stringValue) else {
-      throw TypraRuntimeError.invalidField(field: field, expected: "int64")
-    }
+    guard NSDecimalCompare(&rounded, &decimal) == .orderedSame else { throw TypraRuntimeError.invalidField(field: field, expected: "integer") }
+    guard let parsed = Int64(NSDecimalNumber(decimal: rounded).stringValue) else { throw TypraRuntimeError.invalidField(field: field, expected: "int64") }
     return parsed
   }
 
@@ -184,9 +150,7 @@ public enum TypraRuntime {
   }
 
   public static func jsonObject(from json: String, typeName: String) throws -> Any {
-    guard let data = json.data(using: .utf8) else {
-      throw TypraRuntimeError.invalidObject(type: typeName)
-    }
+    guard let data = json.data(using: .utf8) else { throw TypraRuntimeError.invalidObject(type: typeName) }
     return try JSONSerialization.jsonObject(with: data, options: [])
   }
 
@@ -196,9 +160,7 @@ public enum TypraRuntime {
   }
 
   public static func yamlObject(from yaml: String, typeName: String) throws -> Any {
-    guard let value = try Yams.load(yaml: yaml) else {
-      throw TypraRuntimeError.invalidObject(type: typeName)
-    }
+    guard let value = try Yams.load(yaml: yaml) else { throw TypraRuntimeError.invalidObject(type: typeName) }
     return value
   }
 

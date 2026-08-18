@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class StatusEventPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "Starting iteration 3"
-      }
-      """
+{
+  "message": "Starting iteration 3"
+}
+"""
     let instance = try StatusEventPayload.fromJSON(json)
     XCTAssertEqual(instance.message, "Starting iteration 3")
     let reloaded = try StatusEventPayload.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class StatusEventPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: Starting iteration 3
+message: Starting iteration 3
 
-      """
+"""
     let instance = try StatusEventPayload.fromYAML(yaml)
     XCTAssertEqual(instance.message, "Starting iteration 3")
     let reloaded = try StatusEventPayload.fromYAML(try instance.toYAML())

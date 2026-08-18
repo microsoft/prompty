@@ -10,8 +10,7 @@ public struct TokenUsage: TypraModel {
   public var completionTokens: Int32? = nil
   public var totalTokens: Int32? = nil
 
-  public init(promptTokens: Int32? = nil, completionTokens: Int32? = nil, totalTokens: Int32? = nil)
-  {
+  public init(promptTokens: Int32? = nil, completionTokens: Int32? = nil, totalTokens: Int32? = nil) {
     self.promptTokens = promptTokens
     self.completionTokens = completionTokens
     self.totalTokens = totalTokens
@@ -46,9 +45,7 @@ public struct TokenUsage: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNamePromptTokens: String?
     switch provider {
@@ -63,9 +60,7 @@ public struct TokenUsage: TypraModel {
     case "anthropic": wireNameCompletionTokens = "output_tokens"
     default: wireNameCompletionTokens = nil
     }
-    if let wireKey = wireNameCompletionTokens, let value = self.completionTokens {
-      result[wireKey] = value
-    }
+    if let wireKey = wireNameCompletionTokens, let value = self.completionTokens { result[wireKey] = value }
     let wireNameTotalTokens: String?
     switch provider {
     case "openai": wireNameTotalTokens = "total_tokens"
@@ -75,9 +70,7 @@ public struct TokenUsage: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TokenUsage
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TokenUsage {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TokenUsage"), context: context)
   }
 
@@ -85,9 +78,7 @@ public struct TokenUsage: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TokenUsage
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TokenUsage {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TokenUsage"), context: context)
   }
 

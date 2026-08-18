@@ -3,24 +3,23 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "parts": [
-          {
-            "kind": "text",
-            "value": "72°F and sunny"
-          }
-        ],
-        "errorKind": "missing_tool",
-        "errorMessage": "Tool 'get_weather' is not registered",
-        "durationMs": 42
-      }
-      """
+{
+  "parts": [
+    {
+      "kind": "text",
+      "value": "72°F and sunny"
+    }
+  ],
+  "errorKind": "missing_tool",
+  "errorMessage": "Tool 'get_weather' is not registered",
+  "durationMs": 42
+}
+"""
     let instance = try ToolResult.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.errorKind)), "missing_tool")
     XCTAssertEqual((try XCTUnwrap(instance.errorMessage)), "Tool 'get_weather' is not registered")
@@ -35,14 +34,14 @@ final class ToolResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      parts:
-        - kind: text
-          value: 72°F and sunny
-      errorKind: missing_tool
-      errorMessage: Tool 'get_weather' is not registered
-      durationMs: 42
+parts:
+  - kind: text
+    value: 72°F and sunny
+errorKind: missing_tool
+errorMessage: Tool 'get_weather' is not registered
+durationMs: 42
 
-      """
+"""
     let instance = try ToolResult.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.errorKind)), "missing_tool")
     XCTAssertEqual((try XCTUnwrap(instance.errorMessage)), "Tool 'get_weather' is not registered")

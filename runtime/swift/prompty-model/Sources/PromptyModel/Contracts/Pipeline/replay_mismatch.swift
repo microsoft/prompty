@@ -11,19 +11,14 @@ public struct ReplayMismatch: TypraModel {
   public var actual: ReplayJournalRecord? = nil
   public var message: String = ""
 
-  public init(
-    index: Int32 = 0, expected: ReplayJournalRecord? = nil, actual: ReplayJournalRecord? = nil,
-    message: String = ""
-  ) {
+  public init(index: Int32 = 0, expected: ReplayJournalRecord? = nil, actual: ReplayJournalRecord? = nil, message: String = "") {
     self.index = index
     self.expected = expected
     self.actual = actual
     self.message = message
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ReplayMismatch
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
     let object = try TypraRuntime.object(data, typeName: "ReplayMismatch")
     var instance = ReplayMismatch()
     if let value = object["index"] {
@@ -54,22 +49,16 @@ public struct ReplayMismatch: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ReplayMismatch
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ReplayMismatch"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReplayMismatch"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ReplayMismatch
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ReplayMismatch"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReplayMismatch"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

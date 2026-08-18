@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class CheckpointTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "chk_abc123",
-        "sessionId": "sess_abc123",
-        "turnId": "turn_001",
-        "checkpointNumber": 3,
-        "title": "Added harness contracts",
-        "createdAt": "2026-06-09T20:00:00Z"
-      }
-      """
+{
+  "id": "chk_abc123",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_001",
+  "checkpointNumber": 3,
+  "title": "Added harness contracts",
+  "createdAt": "2026-06-09T20:00:00Z"
+}
+"""
     let instance = try Checkpoint.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "chk_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")
@@ -36,14 +35,14 @@ final class CheckpointTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: chk_abc123
-      sessionId: sess_abc123
-      turnId: turn_001
-      checkpointNumber: 3
-      title: Added harness contracts
-      createdAt: "2026-06-09T20:00:00Z"
+id: chk_abc123
+sessionId: sess_abc123
+turnId: turn_001
+checkpointNumber: 3
+title: Added harness contracts
+createdAt: "2026-06-09T20:00:00Z"
 
-      """
+"""
     let instance = try Checkpoint.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "chk_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")

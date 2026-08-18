@@ -47,12 +47,7 @@ public struct ReplayJournalRecord: TypraModel {
   public var turns: Int32? = nil
   public var checkpoints: Int32? = nil
 
-  public init(
-    kind: ReplayRecordKind = (try! ReplayRecordKind.parse("session")), type: String? = nil,
-    sessionId: String? = nil, turnId: String? = nil, iteration: Int32? = nil,
-    status: ReplayRecordStatus? = nil, requestId: String? = nil, toolName: String? = nil,
-    success: Bool? = nil, errorKind: String? = nil, turns: Int32? = nil, checkpoints: Int32? = nil
-  ) {
+  public init(kind: ReplayRecordKind = (try! ReplayRecordKind.parse("session")), type: String? = nil, sessionId: String? = nil, turnId: String? = nil, iteration: Int32? = nil, status: ReplayRecordStatus? = nil, requestId: String? = nil, toolName: String? = nil, success: Bool? = nil, errorKind: String? = nil, turns: Int32? = nil, checkpoints: Int32? = nil) {
     self.kind = kind
     self.type = type
     self.sessionId = sessionId
@@ -67,9 +62,7 @@ public struct ReplayJournalRecord: TypraModel {
     self.checkpoints = checkpoints
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ReplayJournalRecord
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReplayJournalRecord {
     let object = try TypraRuntime.object(data, typeName: "ReplayJournalRecord")
     var instance = ReplayJournalRecord()
     if let value = object["kind"] {
@@ -88,8 +81,7 @@ public struct ReplayJournalRecord: TypraModel {
       instance.iteration = try TypraRuntime.int32(value, field: "iteration")
     }
     if let value = object["status"] {
-      instance.status = try ReplayRecordStatus.parse(
-        try TypraRuntime.string(value, field: "status"))
+      instance.status = try ReplayRecordStatus.parse(try TypraRuntime.string(value, field: "status"))
     }
     if let value = object["requestId"] {
       instance.requestId = try TypraRuntime.string(value, field: "requestId")
@@ -151,22 +143,16 @@ public struct ReplayJournalRecord: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ReplayJournalRecord
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ReplayJournalRecord"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReplayJournalRecord {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReplayJournalRecord"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ReplayJournalRecord
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ReplayJournalRecord"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReplayJournalRecord {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReplayJournalRecord"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

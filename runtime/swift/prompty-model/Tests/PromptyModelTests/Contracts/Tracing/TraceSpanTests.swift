@@ -3,23 +3,22 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TraceSpanTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "prompty.core.pipeline.run",
-        "signature": "prompty.core.pipeline.run",
-        "error": "Connection refused",
-        "__time": {
-          "start": "2026-04-04T12:00:00Z",
-          "end": "2026-04-04T12:00:01Z",
-          "duration": 1000
-        }
-      }
-      """
+{
+  "name": "prompty.core.pipeline.run",
+  "signature": "prompty.core.pipeline.run",
+  "error": "Connection refused",
+  "__time": {
+    "start": "2026-04-04T12:00:00Z",
+    "end": "2026-04-04T12:00:01Z",
+    "duration": 1000
+  }
+}
+"""
     let instance = try TraceSpan.fromJSON(json)
     XCTAssertEqual(instance.name, "prompty.core.pipeline.run")
     XCTAssertEqual((try XCTUnwrap(instance.signature)), "prompty.core.pipeline.run")
@@ -38,15 +37,15 @@ final class TraceSpanTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: prompty.core.pipeline.run
-      signature: prompty.core.pipeline.run
-      error: Connection refused
-      __time:
-        start: "2026-04-04T12:00:00Z"
-        end: "2026-04-04T12:00:01Z"
-        duration: 1000
+name: prompty.core.pipeline.run
+signature: prompty.core.pipeline.run
+error: Connection refused
+__time:
+  start: "2026-04-04T12:00:00Z"
+  end: "2026-04-04T12:00:01Z"
+  duration: 1000
 
-      """
+"""
     let instance = try TraceSpan.fromYAML(yaml)
     XCTAssertEqual(instance.name, "prompty.core.pipeline.run")
     XCTAssertEqual((try XCTUnwrap(instance.signature)), "prompty.core.pipeline.run")

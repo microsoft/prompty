@@ -13,10 +13,7 @@ public struct PermissionDecision: TypraModel {
   public var reason: String? = nil
   public var result: [String: Any]? = nil
 
-  public init(
-    requestId: String? = nil, toolCallId: String? = nil, permission: String = "",
-    approved: Bool = false, reason: String? = nil, result: [String: Any]? = nil
-  ) {
+  public init(requestId: String? = nil, toolCallId: String? = nil, permission: String = "", approved: Bool = false, reason: String? = nil, result: [String: Any]? = nil) {
     self.requestId = requestId
     self.toolCallId = toolCallId
     self.permission = permission
@@ -25,9 +22,7 @@ public struct PermissionDecision: TypraModel {
     self.result = result
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> PermissionDecision
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> PermissionDecision {
     let object = try TypraRuntime.object(data, typeName: "PermissionDecision")
     var instance = PermissionDecision()
     if let value = object["requestId"] {
@@ -70,22 +65,16 @@ public struct PermissionDecision: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> PermissionDecision
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "PermissionDecision"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PermissionDecision {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "PermissionDecision"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> PermissionDecision
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "PermissionDecision"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PermissionDecision {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PermissionDecision"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

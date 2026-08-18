@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class EnginePermissionDecisionTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "approved": true
-      }
-      """
+{
+  "approved": true
+}
+"""
     let instance = try EnginePermissionDecision.fromJSON(json)
     XCTAssertEqual(instance.approved, true)
     let reloaded = try EnginePermissionDecision.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class EnginePermissionDecisionTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      approved: true
+approved: true
 
-      """
+"""
     let instance = try EnginePermissionDecision.fromYAML(yaml)
     XCTAssertEqual(instance.approved, true)
     let reloaded = try EnginePermissionDecision.fromYAML(try instance.toYAML())

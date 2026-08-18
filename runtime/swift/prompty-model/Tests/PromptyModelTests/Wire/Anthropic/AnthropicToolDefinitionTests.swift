@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicToolDefinitionTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "get_weather",
-        "description": "Get the current weather for a city"
-      }
-      """
+{
+  "name": "get_weather",
+  "description": "Get the current weather for a city"
+}
+"""
     let instance = try AnthropicToolDefinition.fromJSON(json)
     XCTAssertEqual(instance.name, "get_weather")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "Get the current weather for a city")
@@ -24,10 +23,10 @@ final class AnthropicToolDefinitionTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: get_weather
-      description: Get the current weather for a city
+name: get_weather
+description: Get the current weather for a city
 
-      """
+"""
     let instance = try AnthropicToolDefinition.fromYAML(yaml)
     XCTAssertEqual(instance.name, "get_weather")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "Get the current weather for a city")

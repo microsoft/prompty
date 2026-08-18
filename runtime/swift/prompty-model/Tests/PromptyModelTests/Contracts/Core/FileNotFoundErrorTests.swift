@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class FileNotFoundErrorTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "message": "Prompty file not found: ./chat.prompty",
-        "path": "./chat.prompty"
-      }
-      """
+{
+  "message": "Prompty file not found: ./chat.prompty",
+  "path": "./chat.prompty"
+}
+"""
     let instance = try FileNotFoundError.fromJSON(json)
     XCTAssertEqual(instance.message, "Prompty file not found: ./chat.prompty")
     XCTAssertEqual(instance.path, "./chat.prompty")
@@ -24,10 +23,10 @@ final class FileNotFoundErrorTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      message: "Prompty file not found: ./chat.prompty"
-      path: ./chat.prompty
+message: "Prompty file not found: ./chat.prompty"
+path: ./chat.prompty
 
-      """
+"""
     let instance = try FileNotFoundError.fromYAML(yaml)
     XCTAssertEqual(instance.message, "Prompty file not found: ./chat.prompty")
     XCTAssertEqual(instance.path, "./chat.prompty")

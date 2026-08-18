@@ -28,11 +28,7 @@ public struct RunTurnResult: TypraModel {
   public var toolResults: [HostToolResult]? = nil
   public var checkpoints: [Checkpoint]? = nil
 
-  public init(
-    sessionId: String = "", turnId: String = "",
-    status: RunTurnStatus = (try! RunTurnStatus.parse("success")), output: Any? = nil,
-    iterations: Int32 = 0, toolResults: [HostToolResult]? = nil, checkpoints: [Checkpoint]? = nil
-  ) {
+  public init(sessionId: String = "", turnId: String = "", status: RunTurnStatus = (try! RunTurnStatus.parse("success")), output: Any? = nil, iterations: Int32 = 0, toolResults: [HostToolResult]? = nil, checkpoints: [Checkpoint]? = nil) {
     self.sessionId = sessionId
     self.turnId = turnId
     self.status = status
@@ -42,8 +38,7 @@ public struct RunTurnResult: TypraModel {
     self.checkpoints = checkpoints
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RunTurnResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RunTurnResult {
     let object = try TypraRuntime.object(data, typeName: "RunTurnResult")
     var instance = RunTurnResult()
     if let value = object["sessionId"] {
@@ -62,14 +57,10 @@ public struct RunTurnResult: TypraModel {
       instance.iterations = try TypraRuntime.int32(value, field: "iterations")
     }
     if let value = object["toolResults"] {
-      instance.toolResults = try TypraRuntime.array(value, field: "toolResults").enumerated().map {
-        try HostToolResult.load($1, context: context.at("toolResults").atIndex($0))
-      }
+      instance.toolResults = try TypraRuntime.array(value, field: "toolResults").enumerated().map { try HostToolResult.load($1, context: context.at("toolResults").atIndex($0)) }
     }
     if let value = object["checkpoints"] {
-      instance.checkpoints = try TypraRuntime.array(value, field: "checkpoints").enumerated().map {
-        try Checkpoint.load($1, context: context.at("checkpoints").atIndex($0))
-      }
+      instance.checkpoints = try TypraRuntime.array(value, field: "checkpoints").enumerated().map { try Checkpoint.load($1, context: context.at("checkpoints").atIndex($0)) }
     }
     return instance
   }
@@ -92,22 +83,16 @@ public struct RunTurnResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RunTurnResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "RunTurnResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RunTurnResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "RunTurnResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RunTurnResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "RunTurnResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RunTurnResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RunTurnResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

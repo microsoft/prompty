@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class RedactionMetadataTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sanitized": true,
-        "policy": "default-v1"
-      }
-      """
+{
+  "sanitized": true,
+  "policy": "default-v1"
+}
+"""
     let instance = try RedactionMetadata.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.sanitized)), true)
     XCTAssertEqual((try XCTUnwrap(instance.policy)), "default-v1")
@@ -24,10 +23,10 @@ final class RedactionMetadataTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sanitized: true
-      policy: default-v1
+sanitized: true
+policy: default-v1
 
-      """
+"""
     let instance = try RedactionMetadata.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.sanitized)), true)
     XCTAssertEqual((try XCTUnwrap(instance.policy)), "default-v1")

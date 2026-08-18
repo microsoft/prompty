@@ -15,11 +15,7 @@ public struct ContextRequest: TypraModel {
   public var contextState: InvocationContextState = InvocationContextState()
   public var inputs: Any? = nil
 
-  public init(
-    sessionId: String = "", turnId: String = "", invocationId: String = "", iteration: Int32 = 0,
-    messages: [Message] = [], stablePrefixMessages: Int32 = 0,
-    contextState: InvocationContextState = InvocationContextState(), inputs: Any? = nil
-  ) {
+  public init(sessionId: String = "", turnId: String = "", invocationId: String = "", iteration: Int32 = 0, messages: [Message] = [], stablePrefixMessages: Int32 = 0, contextState: InvocationContextState = InvocationContextState(), inputs: Any? = nil) {
     self.sessionId = sessionId
     self.turnId = turnId
     self.invocationId = invocationId
@@ -30,9 +26,7 @@ public struct ContextRequest: TypraModel {
     self.inputs = inputs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ContextRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ContextRequest {
     let object = try TypraRuntime.object(data, typeName: "ContextRequest")
     var instance = ContextRequest()
     if let value = object["sessionId"] {
@@ -48,22 +42,19 @@ public struct ContextRequest: TypraModel {
       instance.iteration = try TypraRuntime.int32(value, field: "iteration")
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["stablePrefixMessages"] {
       instance.stablePrefixMessages = try TypraRuntime.int32(value, field: "stablePrefixMessages")
-    } else {
+    }
+    else {
       instance.stablePrefixMessages = 0
     }
     if object["contextState"] == nil || object["contextState"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("contextState").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("contextState").path + ": missing required field")
     }
     if let value = object["contextState"] {
-      instance.contextState = try InvocationContextState.load(
-        value, context: context.at("contextState"))
+      instance.contextState = try InvocationContextState.load(value, context: context.at("contextState"))
     }
     if let value = object["inputs"] {
       instance.inputs = value
@@ -86,22 +77,16 @@ public struct ContextRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ContextRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ContextRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ContextRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ContextRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ContextRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ContextRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ContextRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ContextRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

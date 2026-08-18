@@ -25,10 +25,7 @@ public struct MemoryEntry: TypraModel {
   public var createdAt: String? = nil
   public var tags: [String]? = nil
 
-  public init(
-    content: String = "", category: MemoryCategory = (try! MemoryCategory.parse("core")),
-    createdAt: String? = nil, tags: [String]? = nil
-  ) {
+  public init(content: String = "", category: MemoryCategory = (try! MemoryCategory.parse("core")), createdAt: String? = nil, tags: [String]? = nil) {
     self.content = content
     self.category = category
     self.createdAt = createdAt
@@ -40,22 +37,21 @@ public struct MemoryEntry: TypraModel {
     var instance = MemoryEntry()
     if let value = object["content"] {
       instance.content = try TypraRuntime.string(value, field: "content")
-    } else {
+    }
+    else {
       instance.content = ""
     }
     if let value = object["category"] {
-      instance.category = try MemoryCategory.parse(
-        try TypraRuntime.string(value, field: "category"))
-    } else {
+      instance.category = try MemoryCategory.parse(try TypraRuntime.string(value, field: "category"))
+    }
+    else {
       instance.category = (try! MemoryCategory.parse("core"))
     }
     if let value = object["createdAt"] {
       instance.createdAt = try TypraRuntime.string(value, field: "createdAt")
     }
     if let value = object["tags"] {
-      instance.tags = try TypraRuntime.array(value, field: "tags").map {
-        try TypraRuntime.string($0, field: "tags")
-      }
+      instance.tags = try TypraRuntime.array(value, field: "tags").map { try TypraRuntime.string($0, field: "tags") }
     }
     return instance
   }
@@ -73,9 +69,7 @@ public struct MemoryEntry: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> MemoryEntry
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> MemoryEntry {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "MemoryEntry"), context: context)
   }
 
@@ -83,9 +77,7 @@ public struct MemoryEntry: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> MemoryEntry
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> MemoryEntry {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "MemoryEntry"), context: context)
   }
 

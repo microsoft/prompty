@@ -12,10 +12,7 @@ public struct ResumeContext: TypraModel {
   public var lastJournalSequence: Int64 = 0
   public var metadata: [String: Any]? = nil
 
-  public init(
-    checkpoint: EngineCheckpoint = EngineCheckpoint(), maxIterations: Int32 = 0,
-    maxModelAttempts: Int32 = 0, lastJournalSequence: Int64 = 0, metadata: [String: Any]? = nil
-  ) {
+  public init(checkpoint: EngineCheckpoint = EngineCheckpoint(), maxIterations: Int32 = 0, maxModelAttempts: Int32 = 0, lastJournalSequence: Int64 = 0, metadata: [String: Any]? = nil) {
     self.checkpoint = checkpoint
     self.maxIterations = maxIterations
     self.maxModelAttempts = maxModelAttempts
@@ -23,13 +20,11 @@ public struct ResumeContext: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ResumeContext
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ResumeContext {
     let object = try TypraRuntime.object(data, typeName: "ResumeContext")
     var instance = ResumeContext()
     if object["checkpoint"] == nil || object["checkpoint"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("checkpoint").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("checkpoint").path + ": missing required field")
     }
     if let value = object["checkpoint"] {
       instance.checkpoint = try EngineCheckpoint.load(value, context: context.at("checkpoint"))
@@ -42,7 +37,8 @@ public struct ResumeContext: TypraModel {
     }
     if let value = object["lastJournalSequence"] {
       instance.lastJournalSequence = try TypraRuntime.int64(value, field: "lastJournalSequence")
-    } else {
+    }
+    else {
       instance.lastJournalSequence = 0
     }
     if let value = object["metadata"] {
@@ -63,22 +59,16 @@ public struct ResumeContext: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ResumeContext
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ResumeContext"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ResumeContext {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ResumeContext"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ResumeContext
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ResumeContext"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ResumeContext {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ResumeContext"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -27,11 +27,7 @@ public struct ModelToolResult: TypraModel {
   public var errorKind: String? = nil
   public var metadata: [String: Any]? = nil
 
-  public init(
-    requestId: String = "", name: String = "",
-    outcome: ModelToolOutcome = (try! ModelToolOutcome.parse("success")), output: Any? = nil,
-    errorKind: String? = nil, metadata: [String: Any]? = nil
-  ) {
+  public init(requestId: String = "", name: String = "", outcome: ModelToolOutcome = (try! ModelToolOutcome.parse("success")), output: Any? = nil, errorKind: String? = nil, metadata: [String: Any]? = nil) {
     self.requestId = requestId
     self.name = name
     self.outcome = outcome
@@ -40,9 +36,7 @@ public struct ModelToolResult: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelToolResult
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelToolResult {
     let object = try TypraRuntime.object(data, typeName: "ModelToolResult")
     var instance = ModelToolResult()
     if let value = object["requestId"] {
@@ -52,8 +46,7 @@ public struct ModelToolResult: TypraModel {
       instance.name = try TypraRuntime.string(value, field: "name")
     }
     if let value = object["outcome"] {
-      instance.outcome = try ModelToolOutcome.parse(
-        try TypraRuntime.string(value, field: "outcome"))
+      instance.outcome = try ModelToolOutcome.parse(try TypraRuntime.string(value, field: "outcome"))
     }
     if let value = object["output"] {
       instance.output = value
@@ -84,22 +77,16 @@ public struct ModelToolResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelToolResult
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelToolResult"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelToolResult {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelToolResult"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelToolResult
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelToolResult"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelToolResult {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelToolResult"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

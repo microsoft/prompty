@@ -11,18 +11,14 @@ public struct ModelToolRequest: TypraModel {
   public var arguments: Any? = nil
   public var metadata: [String: Any]? = nil
 
-  public init(
-    id: String = "", name: String = "", arguments: Any? = nil, metadata: [String: Any]? = nil
-  ) {
+  public init(id: String = "", name: String = "", arguments: Any? = nil, metadata: [String: Any]? = nil) {
     self.id = id
     self.name = name
     self.arguments = arguments
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelToolRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelToolRequest {
     let object = try TypraRuntime.object(data, typeName: "ModelToolRequest")
     var instance = ModelToolRequest()
     if let value = object["id"] {
@@ -53,22 +49,16 @@ public struct ModelToolRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelToolRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelToolRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelToolRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelToolRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelToolRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelToolRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelToolRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelToolRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

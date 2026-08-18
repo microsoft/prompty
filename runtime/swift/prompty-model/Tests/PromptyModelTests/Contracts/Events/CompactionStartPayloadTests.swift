@@ -3,16 +3,15 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class CompactionStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "droppedCount": 5
-      }
-      """
+{
+  "droppedCount": 5
+}
+"""
     let instance = try CompactionStartPayload.fromJSON(json)
     XCTAssertEqual(instance.droppedCount, 5)
     let reloaded = try CompactionStartPayload.fromJSON(try instance.toJSON())
@@ -21,9 +20,9 @@ final class CompactionStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      droppedCount: 5
+droppedCount: 5
 
-      """
+"""
     let instance = try CompactionStartPayload.fromYAML(yaml)
     XCTAssertEqual(instance.droppedCount, 5)
     let reloaded = try CompactionStartPayload.fromYAML(try instance.toYAML())

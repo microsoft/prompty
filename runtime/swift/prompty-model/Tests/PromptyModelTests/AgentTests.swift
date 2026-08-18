@@ -3,88 +3,82 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AgentTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": {
-          "firstName": {
-            "kind": "string",
-            "default": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "default": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        },
-        "outputs": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        },
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": [
-          {
-            "name": "getCurrentWeather",
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        ],
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -95,13 +89,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -113,63 +102,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        firstName:
-          kind: string
-          default: Jane
-        lastName:
-          kind: string
-          default: Doe
-        question:
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        answer:
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        - name: getCurrentWeather
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -180,13 +164,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -198,81 +177,76 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip2() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": {
-          "firstName": {
-            "kind": "string",
-            "default": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "default": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        },
-        "outputs": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        },
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": {
-          "getCurrentWeather": {
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        },
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -283,13 +257,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -301,63 +270,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip2() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        firstName:
-          kind: string
-          default: Jane
-        lastName:
-          kind: string
-          default: Doe
-        question:
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        answer:
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        getCurrentWeather:
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -368,13 +332,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -386,83 +345,78 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip3() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": {
-          "firstName": {
-            "kind": "string",
-            "default": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "default": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        },
-        "outputs": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ],
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": [
-          {
-            "name": "getCurrentWeather",
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        ],
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -473,13 +427,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -491,63 +440,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip3() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        firstName:
-          kind: string
-          default: Jane
-        lastName:
-          kind: string
-          default: Doe
-        question:
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        - name: getCurrentWeather
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -558,13 +502,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -576,82 +515,77 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip4() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": {
+    "firstName": {
+      "kind": "string",
+      "default": "Jane"
+    },
+    "lastName": {
+      "kind": "string",
+      "default": "Doe"
+    },
+    "question": {
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  },
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": {
-          "firstName": {
-            "kind": "string",
-            "default": "Jane"
-          },
-          "lastName": {
-            "kind": "string",
-            "default": "Doe"
-          },
-          "question": {
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        },
-        "outputs": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ],
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": {
-          "getCurrentWeather": {
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        },
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -662,13 +596,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -680,63 +609,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip4() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        firstName:
-          kind: string
-          default: Jane
-        lastName:
-          kind: string
-          default: Doe
-        question:
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        getCurrentWeather:
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  firstName:
+    kind: string
+    default: Jane
+  lastName:
+    kind: string
+    default: Doe
+  question:
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -747,13 +671,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -765,85 +684,80 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip5() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "default": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "default": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        ],
-        "outputs": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        },
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": [
-          {
-            "name": "getCurrentWeather",
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        ],
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -854,13 +768,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -872,63 +781,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip5() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        - name: firstName
-          kind: string
-          default: Jane
-        - name: lastName
-          kind: string
-          default: Doe
-        - name: question
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        answer:
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        - name: getCurrentWeather
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -939,13 +843,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -957,84 +856,79 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip6() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": {
+    "answer": {
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  },
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "default": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "default": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        ],
-        "outputs": {
-          "answer": {
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        },
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": {
-          "getCurrentWeather": {
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        },
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1045,13 +939,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1063,63 +952,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip6() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        - name: firstName
-          kind: string
-          default: Jane
-        - name: lastName
-          kind: string
-          default: Doe
-        - name: question
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        answer:
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        getCurrentWeather:
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  answer:
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1130,13 +1014,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1148,86 +1027,81 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip7() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": [
+    {
+      "name": "getCurrentWeather",
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "default": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "default": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        ],
-        "outputs": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ],
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": [
-          {
-            "name": "getCurrentWeather",
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        ],
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  ],
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1238,13 +1112,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1256,63 +1125,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip7() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        - name: firstName
-          kind: string
-          default: Jane
-        - name: lastName
-          kind: string
-          default: Doe
-        - name: question
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        - name: getCurrentWeather
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  - name: getCurrentWeather
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1323,13 +1187,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1341,85 +1200,80 @@ final class AgentTests: XCTestCase {
 
   func testJSONRoundTrip8() throws {
     let json = """
-      {
-        "name": "basic-prompt",
-        "displayName": "Basic Prompt",
-        "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
-        "metadata": {
-          "authors": [
-            "sethjuarez",
-            "jietong"
-          ],
-          "tags": [
-            "example",
-            "prompt"
-          ]
+{
+  "name": "basic-prompt",
+  "displayName": "Basic Prompt",
+  "description": "A basic prompt that uses the GPT-3 chat API to answer questions",
+  "metadata": {
+    "authors": [
+      "sethjuarez",
+      "jietong"
+    ],
+    "tags": [
+      "example",
+      "prompt"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "firstName",
+      "kind": "string",
+      "default": "Jane"
+    },
+    {
+      "name": "lastName",
+      "kind": "string",
+      "default": "Doe"
+    },
+    {
+      "name": "question",
+      "kind": "string",
+      "default": "What is the meaning of life?"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "answer",
+      "kind": "string",
+      "description": "The answer to the user's question."
+    }
+  ],
+  "model": {
+    "id": "gpt-35-turbo",
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
+      "apiKey": "{your-api-key}"
+    }
+  },
+  "tools": {
+    "getCurrentWeather": {
+      "kind": "function",
+      "description": "Get the current weather in a given location",
+      "parameters": {
+        "location": {
+          "kind": "string",
+          "description": "The city and state, e.g. San Francisco, CA"
         },
-        "inputs": [
-          {
-            "name": "firstName",
-            "kind": "string",
-            "default": "Jane"
-          },
-          {
-            "name": "lastName",
-            "kind": "string",
-            "default": "Doe"
-          },
-          {
-            "name": "question",
-            "kind": "string",
-            "default": "What is the meaning of life?"
-          }
-        ],
-        "outputs": [
-          {
-            "name": "answer",
-            "kind": "string",
-            "description": "The answer to the user's question."
-          }
-        ],
-        "model": {
-          "id": "gpt-35-turbo",
-          "connection": {
-            "kind": "key",
-            "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",
-            "apiKey": "{your-api-key}"
-          }
-        },
-        "tools": {
-          "getCurrentWeather": {
-            "kind": "function",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-              "location": {
-                "kind": "string",
-                "description": "The city and state, e.g. San Francisco, CA"
-              },
-              "unit": {
-                "kind": "string",
-                "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
-              }
-            }
-          }
-        },
-        "template": {
-          "format": "mustache",
-          "parser": "prompty"
-        },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "unit": {
+          "kind": "string",
+          "description": "The unit of temperature, e.g. Celsius or Fahrenheit"
+        }
       }
-      """
+    }
+  },
+  "template": {
+    "format": "mustache",
+    "parser": "prompty"
+  },
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+}
+"""
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1430,13 +1284,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1448,63 +1297,58 @@ final class AgentTests: XCTestCase {
 
   func testYAMLRoundTrip8() throws {
     let yaml = """
-      name: basic-prompt
-      displayName: Basic Prompt
-      description: A basic prompt that uses the GPT-3 chat API to answer questions
-      metadata:
-        authors:
-          - sethjuarez
-          - jietong
-        tags:
-          - example
-          - prompt
-      inputs:
-        - name: firstName
-          kind: string
-          default: Jane
-        - name: lastName
-          kind: string
-          default: Doe
-        - name: question
-          kind: string
-          default: What is the meaning of life?
-      outputs:
-        - name: answer
-          kind: string
-          description: The answer to the user's question.
-      model:
-        id: gpt-35-turbo
-        connection:
-          kind: key
-          endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
-          apiKey: "{your-api-key}"
-      tools:
-        getCurrentWeather:
-          kind: function
-          description: Get the current weather in a given location
-          parameters:
-            location:
-              kind: string
-              description: The city and state, e.g. San Francisco, CA
-            unit:
-              kind: string
-              description: The unit of temperature, e.g. Celsius or Fahrenheit
-      template:
-        format: mustache
-        parser: prompty
-      instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+name: basic-prompt
+displayName: Basic Prompt
+description: A basic prompt that uses the GPT-3 chat API to answer questions
+metadata:
+  authors:
+    - sethjuarez
+    - jietong
+  tags:
+    - example
+    - prompt
+inputs:
+  - name: firstName
+    kind: string
+    default: Jane
+  - name: lastName
+    kind: string
+    default: Doe
+  - name: question
+    kind: string
+    default: What is the meaning of life?
+outputs:
+  - name: answer
+    kind: string
+    description: The answer to the user's question.
+model:
+  id: gpt-35-turbo
+  connection:
+    kind: key
+    endpoint: "https://{your-custom-endpoint}.openai.azure.com/"
+    apiKey: "{your-api-key}"
+tools:
+  getCurrentWeather:
+    kind: function
+    description: Get the current weather in a given location
+    parameters:
+      location:
+        kind: string
+        description: The city and state, e.g. San Francisco, CA
+      unit:
+        kind: string
+        description: The unit of temperature, e.g. Celsius or Fahrenheit
+template:
+  format: mustache
+  parser: prompty
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
-      """
+"""
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(instance.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1515,13 +1359,8 @@ final class AgentTests: XCTestCase {
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.description)),
-      "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual(
-      (try XCTUnwrap(reloaded.instructions)),
-      "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
-    )
+    XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)

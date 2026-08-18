@@ -13,11 +13,7 @@ public struct ModelInvocationResponse: TypraModel {
   public var nextContextState: InvocationContextState? = nil
   public var metadata: [String: Any]? = nil
 
-  public init(
-    output: Any? = nil, usage: InvocationUsage? = nil, assistantMessages: [Message]? = nil,
-    toolRequests: [ModelToolRequest]? = nil, nextContextState: InvocationContextState? = nil,
-    metadata: [String: Any]? = nil
-  ) {
+  public init(output: Any? = nil, usage: InvocationUsage? = nil, assistantMessages: [Message]? = nil, toolRequests: [ModelToolRequest]? = nil, nextContextState: InvocationContextState? = nil, metadata: [String: Any]? = nil) {
     self.output = output
     self.usage = usage
     self.assistantMessages = assistantMessages
@@ -26,9 +22,7 @@ public struct ModelInvocationResponse: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationResponse
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelInvocationResponse {
     let object = try TypraRuntime.object(data, typeName: "ModelInvocationResponse")
     var instance = ModelInvocationResponse()
     if let value = object["output"] {
@@ -38,18 +32,13 @@ public struct ModelInvocationResponse: TypraModel {
       instance.usage = try InvocationUsage.load(value, context: context.at("usage"))
     }
     if let value = object["assistantMessages"] {
-      instance.assistantMessages = try TypraRuntime.array(value, field: "assistantMessages")
-        .enumerated().map {
-          try Message.load($1, context: context.at("assistantMessages").atIndex($0))
-        }
+      instance.assistantMessages = try TypraRuntime.array(value, field: "assistantMessages").enumerated().map { try Message.load($1, context: context.at("assistantMessages").atIndex($0)) }
     }
     if let value = object["toolRequests"] {
-      instance.toolRequests = try TypraRuntime.array(value, field: "toolRequests").enumerated().map
-      { try ModelToolRequest.load($1, context: context.at("toolRequests").atIndex($0)) }
+      instance.toolRequests = try TypraRuntime.array(value, field: "toolRequests").enumerated().map { try ModelToolRequest.load($1, context: context.at("toolRequests").atIndex($0)) }
     }
     if let value = object["nextContextState"] {
-      instance.nextContextState = try InvocationContextState.load(
-        value, context: context.at("nextContextState"))
+      instance.nextContextState = try InvocationContextState.load(value, context: context.at("nextContextState"))
     }
     if let value = object["metadata"] {
       instance.metadata = try TypraRuntime.dictionary(value, field: "metadata")
@@ -80,22 +69,16 @@ public struct ModelInvocationResponse: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationResponse
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationResponse"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelInvocationResponse {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationResponse"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationResponse
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationResponse"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelInvocationResponse {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationResponse"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

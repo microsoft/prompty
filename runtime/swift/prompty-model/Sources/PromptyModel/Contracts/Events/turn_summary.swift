@@ -15,11 +15,7 @@ public struct TurnSummary: TypraModel {
   public var usage: TokenUsage? = nil
   public var durationMs: Double? = nil
 
-  public init(
-    turnId: String = "", status: String = "", iterations: Int32 = 0, llmCalls: Int32? = nil,
-    toolCalls: Int32? = nil, retries: Int32? = nil, usage: TokenUsage? = nil,
-    durationMs: Double? = nil
-  ) {
+  public init(turnId: String = "", status: String = "", iterations: Int32 = 0, llmCalls: Int32? = nil, toolCalls: Int32? = nil, retries: Int32? = nil, usage: TokenUsage? = nil, durationMs: Double? = nil) {
     self.turnId = turnId
     self.status = status
     self.iterations = iterations
@@ -83,9 +79,7 @@ public struct TurnSummary: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnSummary
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnSummary {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnSummary"), context: context)
   }
 
@@ -93,9 +87,7 @@ public struct TurnSummary: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnSummary
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnSummary {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnSummary"), context: context)
   }
 

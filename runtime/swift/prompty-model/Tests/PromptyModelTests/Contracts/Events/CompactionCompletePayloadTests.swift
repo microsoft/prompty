@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class CompactionCompletePayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "removed": 5,
-        "remaining": 3,
-        "summaryLength": 1200
-      }
-      """
+{
+  "removed": 5,
+  "remaining": 3,
+  "summaryLength": 1200
+}
+"""
     let instance = try CompactionCompletePayload.fromJSON(json)
     XCTAssertEqual(instance.removed, 5)
     XCTAssertEqual(instance.remaining, 3)
@@ -27,11 +26,11 @@ final class CompactionCompletePayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      removed: 5
-      remaining: 3
-      summaryLength: 1200
+removed: 5
+remaining: 3
+summaryLength: 1200
 
-      """
+"""
     let instance = try CompactionCompletePayload.fromYAML(yaml)
     XCTAssertEqual(instance.removed, 5)
     XCTAssertEqual(instance.remaining, 3)

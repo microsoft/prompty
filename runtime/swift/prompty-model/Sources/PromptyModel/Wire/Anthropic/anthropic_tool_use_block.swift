@@ -11,23 +11,20 @@ public struct AnthropicToolUseBlock: TypraModel {
   public var name: String = ""
   public var input: [String: Any] = [:]
 
-  public init(
-    type: String = "tool_use", id: String = "", name: String = "", input: [String: Any] = [:]
-  ) {
+  public init(type: String = "tool_use", id: String = "", name: String = "", input: [String: Any] = [:]) {
     self.type = type
     self.id = id
     self.name = name
     self.input = input
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicToolUseBlock
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicToolUseBlock {
     let object = try TypraRuntime.object(data, typeName: "AnthropicToolUseBlock")
     var instance = AnthropicToolUseBlock()
     if let value = object["type"] {
       instance.type = try TypraRuntime.string(value, field: "type")
-    } else {
+    }
+    else {
       instance.type = "tool_use"
     }
     if let value = object["id"] {
@@ -51,22 +48,16 @@ public struct AnthropicToolUseBlock: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicToolUseBlock
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicToolUseBlock"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicToolUseBlock {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicToolUseBlock"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicToolUseBlock
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicToolUseBlock"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicToolUseBlock {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicToolUseBlock"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

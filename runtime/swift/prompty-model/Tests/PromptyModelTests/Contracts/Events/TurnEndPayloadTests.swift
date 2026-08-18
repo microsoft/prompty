@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnEndPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "iterations": 2,
-        "durationMs": 1500
-      }
-      """
+{
+  "iterations": 2,
+  "durationMs": 1500
+}
+"""
     let instance = try TurnEndPayload.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.iterations)), 2)
     XCTAssertEqual((try XCTUnwrap(instance.durationMs)), 1500)
@@ -24,10 +23,10 @@ final class TurnEndPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      iterations: 2
-      durationMs: 1500
+iterations: 2
+durationMs: 1500
 
-      """
+"""
     let instance = try TurnEndPayload.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.iterations)), 2)
     XCTAssertEqual((try XCTUnwrap(instance.durationMs)), 1500)

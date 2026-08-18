@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SubscriptionInfoTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "subscriptionId": "sample",
-        "displayName": "sample",
-        "state": "sample"
-      }
-      """
+{
+  "subscriptionId": "sample",
+  "displayName": "sample",
+  "state": "sample"
+}
+"""
     let instance = try SubscriptionInfo.fromJSON(json)
     XCTAssertEqual(instance.subscriptionId, "sample")
     XCTAssertEqual(instance.displayName, "sample")
@@ -27,11 +26,11 @@ final class SubscriptionInfoTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      subscriptionId: sample
-      displayName: sample
-      state: sample
+subscriptionId: sample
+displayName: sample
+state: sample
 
-      """
+"""
     let instance = try SubscriptionInfo.fromYAML(yaml)
     XCTAssertEqual(instance.subscriptionId, "sample")
     XCTAssertEqual(instance.displayName, "sample")

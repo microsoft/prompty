@@ -28,25 +28,16 @@ public enum Connection: TypraModel {
     let object = try TypraRuntime.object(normalizedData, typeName: "Connection")
     let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
     if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(
-        field: context.at("kind").path, expected: "non-blank string")
+      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
     }
     switch discriminator {
-    case "reference":
-      return .referenceConnection(try ReferenceConnection.load(normalizedData, context: context))
-    case "remote":
-      return .remoteConnection(try RemoteConnection.load(normalizedData, context: context))
-    case "key":
-      return .apiKeyConnection(try ApiKeyConnection.load(normalizedData, context: context))
-    case "anonymous":
-      return .anonymousConnection(try AnonymousConnection.load(normalizedData, context: context))
-    case "oauth":
-      return .oAuthConnection(try OAuthConnection.load(normalizedData, context: context))
-    case "foundry":
-      return .foundryConnection(try FoundryConnection.load(normalizedData, context: context))
-    default:
-      throw TypraRuntimeError.unknownDiscriminator(
-        type: "Connection", field: "kind", value: discriminator)
+    case "reference": return .referenceConnection(try ReferenceConnection.load(normalizedData, context: context))
+    case "remote": return .remoteConnection(try RemoteConnection.load(normalizedData, context: context))
+    case "key": return .apiKeyConnection(try ApiKeyConnection.load(normalizedData, context: context))
+    case "anonymous": return .anonymousConnection(try AnonymousConnection.load(normalizedData, context: context))
+    case "oauth": return .oAuthConnection(try OAuthConnection.load(normalizedData, context: context))
+    case "foundry": return .foundryConnection(try FoundryConnection.load(normalizedData, context: context))
+    default: throw TypraRuntimeError.unknownDiscriminator(type: "Connection", field: "kind", value: discriminator)
     }
   }
 
@@ -61,9 +52,7 @@ public enum Connection: TypraModel {
     }
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Connection
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Connection {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Connection"), context: context)
   }
 
@@ -71,9 +60,7 @@ public enum Connection: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Connection
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Connection {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Connection"), context: context)
   }
 
@@ -91,10 +78,7 @@ public struct ReferenceConnection: TypraModel {
   public var name: String = ""
   public var target: String? = nil
 
-  public init(
-    kind: String = "reference", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, name: String = "", target: String? = nil
-  ) {
+  public init(kind: String = "reference", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, name: String = "", target: String? = nil) {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
@@ -102,19 +86,17 @@ public struct ReferenceConnection: TypraModel {
     self.target = target
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ReferenceConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReferenceConnection {
     let object = try TypraRuntime.object(data, typeName: "ReferenceConnection")
     var instance = ReferenceConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "reference"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -144,22 +126,16 @@ public struct ReferenceConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ReferenceConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ReferenceConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReferenceConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReferenceConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ReferenceConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ReferenceConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReferenceConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReferenceConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -176,10 +152,7 @@ public struct RemoteConnection: TypraModel {
   public var name: String = ""
   public var endpoint: String = ""
 
-  public init(
-    kind: String = "remote", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, name: String = "", endpoint: String = ""
-  ) {
+  public init(kind: String = "remote", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, name: String = "", endpoint: String = "") {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
@@ -187,19 +160,17 @@ public struct RemoteConnection: TypraModel {
     self.endpoint = endpoint
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> RemoteConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RemoteConnection {
     let object = try TypraRuntime.object(data, typeName: "RemoteConnection")
     var instance = RemoteConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "remote"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -227,22 +198,16 @@ public struct RemoteConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RemoteConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "RemoteConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RemoteConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "RemoteConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RemoteConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "RemoteConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RemoteConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RemoteConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -259,10 +224,7 @@ public struct ApiKeyConnection: TypraModel {
   public var endpoint: String = ""
   public var apiKey: String = ""
 
-  public init(
-    kind: String = "key", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, endpoint: String = "", apiKey: String = ""
-  ) {
+  public init(kind: String = "key", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, endpoint: String = "", apiKey: String = "") {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
@@ -270,19 +232,17 @@ public struct ApiKeyConnection: TypraModel {
     self.apiKey = apiKey
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ApiKeyConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ApiKeyConnection {
     let object = try TypraRuntime.object(data, typeName: "ApiKeyConnection")
     var instance = ApiKeyConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "key"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -310,22 +270,16 @@ public struct ApiKeyConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ApiKeyConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ApiKeyConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ApiKeyConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ApiKeyConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ApiKeyConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ApiKeyConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ApiKeyConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ApiKeyConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -340,29 +294,24 @@ public struct AnonymousConnection: TypraModel {
   public var usageDescription: String? = nil
   public var endpoint: String = ""
 
-  public init(
-    kind: String = "anonymous", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, endpoint: String = ""
-  ) {
+  public init(kind: String = "anonymous", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, endpoint: String = "") {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
     self.endpoint = endpoint
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnonymousConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnonymousConnection {
     let object = try TypraRuntime.object(data, typeName: "AnonymousConnection")
     var instance = AnonymousConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "anonymous"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -386,22 +335,16 @@ public struct AnonymousConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnonymousConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnonymousConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnonymousConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnonymousConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnonymousConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnonymousConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnonymousConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnonymousConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -421,11 +364,7 @@ public struct OAuthConnection: TypraModel {
   public var tokenUrl: String = ""
   public var scopes: [String]? = nil
 
-  public init(
-    kind: String = "oauth", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, endpoint: String = "", clientId: String = "",
-    clientSecret: String = "", tokenUrl: String = "", scopes: [String]? = nil
-  ) {
+  public init(kind: String = "oauth", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, endpoint: String = "", clientId: String = "", clientSecret: String = "", tokenUrl: String = "", scopes: [String]? = nil) {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
@@ -436,19 +375,17 @@ public struct OAuthConnection: TypraModel {
     self.scopes = scopes
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> OAuthConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> OAuthConnection {
     let object = try TypraRuntime.object(data, typeName: "OAuthConnection")
     var instance = OAuthConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "oauth"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -466,9 +403,7 @@ public struct OAuthConnection: TypraModel {
       instance.tokenUrl = try TypraRuntime.string(value, field: "tokenUrl")
     }
     if let value = object["scopes"] {
-      instance.scopes = try TypraRuntime.array(value, field: "scopes").map {
-        try TypraRuntime.string($0, field: "scopes")
-      }
+      instance.scopes = try TypraRuntime.array(value, field: "scopes").map { try TypraRuntime.string($0, field: "scopes") }
     }
     return instance
   }
@@ -492,22 +427,16 @@ public struct OAuthConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> OAuthConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "OAuthConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> OAuthConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "OAuthConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> OAuthConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "OAuthConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> OAuthConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "OAuthConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -525,11 +454,7 @@ public struct FoundryConnection: TypraModel {
   public var name: String? = nil
   public var connectionType: String? = nil
 
-  public init(
-    kind: String = "foundry", authenticationMode: AuthenticationMode? = nil,
-    usageDescription: String? = nil, endpoint: String = "", name: String? = nil,
-    connectionType: String? = nil
-  ) {
+  public init(kind: String = "foundry", authenticationMode: AuthenticationMode? = nil, usageDescription: String? = nil, endpoint: String = "", name: String? = nil, connectionType: String? = nil) {
     self.kind = kind
     self.authenticationMode = authenticationMode
     self.usageDescription = usageDescription
@@ -538,19 +463,17 @@ public struct FoundryConnection: TypraModel {
     self.connectionType = connectionType
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> FoundryConnection
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FoundryConnection {
     let object = try TypraRuntime.object(data, typeName: "FoundryConnection")
     var instance = FoundryConnection()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "foundry"
     }
     if let value = object["authenticationMode"] {
-      instance.authenticationMode = try AuthenticationMode.parse(
-        try TypraRuntime.string(value, field: "authenticationMode"))
+      instance.authenticationMode = try AuthenticationMode.parse(try TypraRuntime.string(value, field: "authenticationMode"))
     }
     if let value = object["usageDescription"] {
       instance.usageDescription = try TypraRuntime.string(value, field: "usageDescription")
@@ -586,22 +509,16 @@ public struct FoundryConnection: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FoundryConnection
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "FoundryConnection"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FoundryConnection {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "FoundryConnection"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FoundryConnection
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "FoundryConnection"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FoundryConnection {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FoundryConnection"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

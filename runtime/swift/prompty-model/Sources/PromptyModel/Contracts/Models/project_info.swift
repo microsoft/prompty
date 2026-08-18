@@ -39,9 +39,7 @@ public struct ProjectInfo: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameName: String?
     switch provider {
@@ -64,9 +62,7 @@ public struct ProjectInfo: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ProjectInfo
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ProjectInfo {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ProjectInfo"), context: context)
   }
 
@@ -74,9 +70,7 @@ public struct ProjectInfo: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ProjectInfo
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ProjectInfo {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ProjectInfo"), context: context)
   }
 

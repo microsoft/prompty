@@ -3,34 +3,33 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelInvocationContextSnapshotTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "context:inv_abc123",
-        "sessionId": "sess_abc123",
-        "turnId": "turn_abc123",
-        "invocationId": "inv_abc123",
-        "messages": [
-          {
-            "role": "user",
-            "parts": [
-              {
-                "kind": "text",
-                "value": "Hello!"
-              }
-            ],
-            "metadata": {
-              "source": "user-input"
-            }
-          }
-        ],
-        "contextState": {}
+{
+  "id": "context:inv_abc123",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_abc123",
+  "invocationId": "inv_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
       }
-      """
+    }
+  ],
+  "contextState": {}
+}
+"""
     let instance = try ModelInvocationContextSnapshot.fromJSON(json)
     XCTAssertEqual(instance.id, "context:inv_abc123")
     XCTAssertEqual(instance.sessionId, "sess_abc123")
@@ -47,20 +46,20 @@ final class ModelInvocationContextSnapshotTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: "context:inv_abc123"
-      sessionId: sess_abc123
-      turnId: turn_abc123
-      invocationId: inv_abc123
-      messages:
-        - role: user
-          parts:
-            - kind: text
-              value: Hello!
-          metadata:
-            source: user-input
-      contextState: {}
+id: "context:inv_abc123"
+sessionId: sess_abc123
+turnId: turn_abc123
+invocationId: inv_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
-      """
+"""
     let instance = try ModelInvocationContextSnapshot.fromYAML(yaml)
     XCTAssertEqual(instance.id, "context:inv_abc123")
     XCTAssertEqual(instance.sessionId, "sess_abc123")

@@ -3,17 +3,16 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class HookStartPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "hookInvocationId": "hook_abc123",
-        "hookType": "preToolUse"
-      }
-      """
+{
+  "hookInvocationId": "hook_abc123",
+  "hookType": "preToolUse"
+}
+"""
     let instance = try HookStartPayload.fromJSON(json)
     XCTAssertEqual(instance.hookInvocationId, "hook_abc123")
     XCTAssertEqual(instance.hookType, "preToolUse")
@@ -24,10 +23,10 @@ final class HookStartPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      hookInvocationId: hook_abc123
-      hookType: preToolUse
+hookInvocationId: hook_abc123
+hookType: preToolUse
 
-      """
+"""
     let instance = try HookStartPayload.fromYAML(yaml)
     XCTAssertEqual(instance.hookInvocationId, "hook_abc123")
     XCTAssertEqual(instance.hookType, "preToolUse")

@@ -14,9 +14,7 @@ public struct AnthropicWireMessage: TypraModel {
     self.content = content
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicWireMessage
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicWireMessage {
     let object = try TypraRuntime.object(data, typeName: "AnthropicWireMessage")
     var instance = AnthropicWireMessage()
     if let value = object["role"] {
@@ -35,22 +33,16 @@ public struct AnthropicWireMessage: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicWireMessage
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicWireMessage"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicWireMessage {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicWireMessage"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicWireMessage
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicWireMessage"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicWireMessage {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicWireMessage"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

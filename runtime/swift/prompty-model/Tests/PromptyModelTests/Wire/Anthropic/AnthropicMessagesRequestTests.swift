@@ -3,30 +3,29 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicMessagesRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "model": "claude-sonnet-4-20250514",
-        "max_tokens": 4096,
-        "system": "You are a helpful assistant.",
-        "temperature": 0.7,
-        "top_p": 0.9,
-        "top_k": 40,
-        "stop_sequences": [
-          "\\n\\nHuman:"
-        ],
-        "messages": [
-          {
-            "role": "user",
-            "content": []
-          }
-        ]
-      }
-      """
+{
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 4096,
+  "system": "You are a helpful assistant.",
+  "temperature": 0.7,
+  "top_p": 0.9,
+  "top_k": 40,
+  "stop_sequences": [
+    "\\n\\nHuman:"
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": []
+    }
+  ]
+}
+"""
     let instance = try AnthropicMessagesRequest.fromJSON(json)
     XCTAssertEqual(instance.model, "claude-sonnet-4-20250514")
     XCTAssertEqual(instance.maxTokens, 4096)
@@ -49,19 +48,19 @@ final class AnthropicMessagesRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      model: claude-sonnet-4-20250514
-      max_tokens: 4096
-      system: You are a helpful assistant.
-      temperature: 0.7
-      top_p: 0.9
-      top_k: 40
-      stop_sequences:
-        - "\\n\\nHuman:"
-      messages:
-        - role: user
-          content: []
+model: claude-sonnet-4-20250514
+max_tokens: 4096
+system: You are a helpful assistant.
+temperature: 0.7
+top_p: 0.9
+top_k: 40
+stop_sequences:
+  - "\\n\\nHuman:"
+messages:
+  - role: user
+    content: []
 
-      """
+"""
     let instance = try AnthropicMessagesRequest.fromYAML(yaml)
     XCTAssertEqual(instance.model, "claude-sonnet-4-20250514")
     XCTAssertEqual(instance.maxTokens, 4096)

@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class AnthropicToolUseBlockTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "toolu_01A09q90qw90lq917835lq9",
-        "name": "get_weather",
-        "input": {
-          "city": "Paris"
-        }
-      }
-      """
+{
+  "id": "toolu_01A09q90qw90lq917835lq9",
+  "name": "get_weather",
+  "input": {
+    "city": "Paris"
+  }
+}
+"""
     let instance = try AnthropicToolUseBlock.fromJSON(json)
     XCTAssertEqual(instance.id, "toolu_01A09q90qw90lq917835lq9")
     XCTAssertEqual(instance.name, "get_weather")
@@ -29,12 +28,12 @@ final class AnthropicToolUseBlockTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: toolu_01A09q90qw90lq917835lq9
-      name: get_weather
-      input:
-        city: Paris
+id: toolu_01A09q90qw90lq917835lq9
+name: get_weather
+input:
+  city: Paris
 
-      """
+"""
     let instance = try AnthropicToolUseBlock.fromYAML(yaml)
     XCTAssertEqual(instance.id, "toolu_01A09q90qw90lq917835lq9")
     XCTAssertEqual(instance.name, "get_weather")

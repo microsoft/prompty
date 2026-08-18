@@ -28,10 +28,7 @@ public struct ToolResult: TypraModel {
   public var errorMessage: String? = nil
   public var durationMs: Double? = nil
 
-  public init(
-    parts: [ContentPart] = [], status: ToolResultStatus? = nil, errorKind: String? = nil,
-    errorMessage: String? = nil, durationMs: Double? = nil
-  ) {
+  public init(parts: [ContentPart] = [], status: ToolResultStatus? = nil, errorKind: String? = nil, errorMessage: String? = nil, durationMs: Double? = nil) {
     self.parts = parts
     self.status = status
     self.errorKind = errorKind
@@ -43,9 +40,7 @@ public struct ToolResult: TypraModel {
     let object = try TypraRuntime.object(data, typeName: "ToolResult")
     var instance = ToolResult()
     if let value = object["parts"] {
-      instance.parts = try TypraRuntime.array(value, field: "parts").enumerated().map {
-        try ContentPart.load($1, context: context.at("parts").atIndex($0))
-      }
+      instance.parts = try TypraRuntime.array(value, field: "parts").enumerated().map { try ContentPart.load($1, context: context.at("parts").atIndex($0)) }
     }
     if let value = object["status"] {
       instance.status = try ToolResultStatus.parse(try TypraRuntime.string(value, field: "status"))
@@ -80,9 +75,7 @@ public struct ToolResult: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolResult
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolResult {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolResult"), context: context)
   }
 
@@ -90,9 +83,7 @@ public struct ToolResult: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolResult
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolResult {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolResult"), context: context)
   }
 

@@ -12,10 +12,7 @@ public struct OAuthToken: TypraModel {
   public var refreshToken: String? = nil
   public var scope: String? = nil
 
-  public init(
-    accessToken: String = "", tokenType: String = "", expiresIn: Int64 = 0,
-    refreshToken: String? = nil, scope: String? = nil
-  ) {
+  public init(accessToken: String = "", tokenType: String = "", expiresIn: Int64 = 0, refreshToken: String? = nil, scope: String? = nil) {
     self.accessToken = accessToken
     self.tokenType = tokenType
     self.expiresIn = expiresIn
@@ -58,9 +55,7 @@ public struct OAuthToken: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameAccessToken: String?
     switch provider {
@@ -95,9 +90,7 @@ public struct OAuthToken: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> OAuthToken
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> OAuthToken {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "OAuthToken"), context: context)
   }
 
@@ -105,9 +98,7 @@ public struct OAuthToken: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> OAuthToken
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> OAuthToken {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "OAuthToken"), context: context)
   }
 

@@ -12,10 +12,7 @@ public struct RetryPayload: TypraModel {
   public var delayMs: Double? = nil
   public var reason: String? = nil
 
-  public init(
-    operation: String = "", attempt: Int32 = 0, maxAttempts: Int32? = nil, delayMs: Double? = nil,
-    reason: String? = nil
-  ) {
+  public init(operation: String = "", attempt: Int32 = 0, maxAttempts: Int32? = nil, delayMs: Double? = nil, reason: String? = nil) {
     self.operation = operation
     self.attempt = attempt
     self.maxAttempts = maxAttempts
@@ -23,8 +20,7 @@ public struct RetryPayload: TypraModel {
     self.reason = reason
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RetryPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RetryPayload {
     let object = try TypraRuntime.object(data, typeName: "RetryPayload")
     var instance = RetryPayload()
     if let value = object["operation"] {
@@ -61,9 +57,7 @@ public struct RetryPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RetryPayload
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RetryPayload {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "RetryPayload"), context: context)
   }
 
@@ -71,9 +65,7 @@ public struct RetryPayload: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RetryPayload
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RetryPayload {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RetryPayload"), context: context)
   }
 

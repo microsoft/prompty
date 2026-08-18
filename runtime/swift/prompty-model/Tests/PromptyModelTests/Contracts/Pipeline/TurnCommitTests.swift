@@ -3,32 +3,31 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnCommitTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sess_abc123",
-        "turnId": "turn_abc123",
-        "messages": [
-          {
-            "role": "user",
-            "parts": [
-              {
-                "kind": "text",
-                "value": "Hello!"
-              }
-            ],
-            "metadata": {
-              "source": "user-input"
-            }
-          }
-        ],
-        "contextState": {}
+{
+  "sessionId": "sess_abc123",
+  "turnId": "turn_abc123",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
       }
-      """
+    }
+  ],
+  "contextState": {}
+}
+"""
     let instance = try TurnCommit.fromJSON(json)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual(instance.turnId, "turn_abc123")
@@ -41,18 +40,18 @@ final class TurnCommitTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sess_abc123
-      turnId: turn_abc123
-      messages:
-        - role: user
-          parts:
-            - kind: text
-              value: Hello!
-          metadata:
-            source: user-input
-      contextState: {}
+sessionId: sess_abc123
+turnId: turn_abc123
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
+contextState: {}
 
-      """
+"""
     let instance = try TurnCommit.fromYAML(yaml)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual(instance.turnId, "turn_abc123")

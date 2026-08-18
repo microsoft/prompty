@@ -16,9 +16,7 @@ public struct CompactionConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> CompactionConfig
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CompactionConfig {
     let object = try TypraRuntime.object(data, typeName: "CompactionConfig")
     var instance = CompactionConfig()
     if let value = object["strategy"] {
@@ -47,22 +45,16 @@ public struct CompactionConfig: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> CompactionConfig
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "CompactionConfig"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CompactionConfig {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "CompactionConfig"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> CompactionConfig
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "CompactionConfig"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CompactionConfig {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CompactionConfig"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

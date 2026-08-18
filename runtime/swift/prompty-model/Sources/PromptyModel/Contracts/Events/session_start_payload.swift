@@ -16,11 +16,7 @@ public struct SessionStartPayload: TypraModel {
   public var reasoningEffort: String? = nil
   public var context: HarnessContext? = nil
 
-  public init(
-    sessionId: String = "", schemaVersion: String? = nil, producer: String? = nil,
-    runtime: String? = nil, promptyVersion: String? = nil, startTime: String? = nil,
-    selectedModel: String? = nil, reasoningEffort: String? = nil, context: HarnessContext? = nil
-  ) {
+  public init(sessionId: String = "", schemaVersion: String? = nil, producer: String? = nil, runtime: String? = nil, promptyVersion: String? = nil, startTime: String? = nil, selectedModel: String? = nil, reasoningEffort: String? = nil, context: HarnessContext? = nil) {
     self.sessionId = sessionId
     self.schemaVersion = schemaVersion
     self.producer = producer
@@ -32,9 +28,7 @@ public struct SessionStartPayload: TypraModel {
     self.context = context
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> SessionStartPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
     let object = try TypraRuntime.object(data, typeName: "SessionStartPayload")
     var instance = SessionStartPayload()
     if let value = object["sessionId"] {
@@ -97,22 +91,16 @@ public struct SessionStartPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionStartPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "SessionStartPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionStartPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionStartPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "SessionStartPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionStartPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

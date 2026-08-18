@@ -12,17 +12,14 @@ public struct ModelInvocationRequest: TypraModel {
     self.context = context
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelInvocationRequest {
     let object = try TypraRuntime.object(data, typeName: "ModelInvocationRequest")
     var instance = ModelInvocationRequest()
     if object["context"] == nil || object["context"] is NSNull {
       throw TypraRuntimeError.unsupported(context.at("context").path + ": missing required field")
     }
     if let value = object["context"] {
-      instance.context = try ModelInvocationContextSnapshot.load(
-        value, context: context.at("context"))
+      instance.context = try ModelInvocationContextSnapshot.load(value, context: context.at("context"))
     }
     return instance
   }
@@ -33,22 +30,16 @@ public struct ModelInvocationRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelInvocationRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelInvocationRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

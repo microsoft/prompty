@@ -11,18 +11,14 @@ public struct RetryPolicyRequest: TypraModel {
   public var maxAttempts: Int32 = 0
   public var reason: String = ""
 
-  public init(
-    failedAttempts: Int32 = 0, nextAttempt: Int32 = 0, maxAttempts: Int32 = 0, reason: String = ""
-  ) {
+  public init(failedAttempts: Int32 = 0, nextAttempt: Int32 = 0, maxAttempts: Int32 = 0, reason: String = "") {
     self.failedAttempts = failedAttempts
     self.nextAttempt = nextAttempt
     self.maxAttempts = maxAttempts
     self.reason = reason
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> RetryPolicyRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RetryPolicyRequest {
     let object = try TypraRuntime.object(data, typeName: "RetryPolicyRequest")
     var instance = RetryPolicyRequest()
     if let value = object["failedAttempts"] {
@@ -49,22 +45,16 @@ public struct RetryPolicyRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RetryPolicyRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "RetryPolicyRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RetryPolicyRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "RetryPolicyRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RetryPolicyRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "RetryPolicyRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RetryPolicyRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RetryPolicyRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

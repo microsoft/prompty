@@ -26,8 +26,7 @@ public indirect enum Property: TypraModel {
     let object = try TypraRuntime.object(normalizedData, typeName: "Property")
     let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
     if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(
-        field: context.at("kind").path, expected: "non-blank string")
+      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
     }
     switch discriminator {
     case "array": return .arrayProperty(try ArrayProperty.load(normalizedData, context: context))
@@ -46,9 +45,7 @@ public indirect enum Property: TypraModel {
     }
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> Property
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Property {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "Property"), context: context)
   }
 
@@ -56,9 +53,7 @@ public indirect enum Property: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> Property
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Property {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Property"), context: context)
   }
 
@@ -80,11 +75,7 @@ public struct ArrayProperty: TypraModel {
   public var enumValues: [Any]? = nil
   public var items: Property = .unknown([:])
 
-  public init(
-    name: String = "", kind: String = "array", description: String? = nil, `required`: Bool? = nil,
-    nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil,
-    items: Property = .unknown([:])
-  ) {
+  public init(name: String = "", kind: String = "array", description: String? = nil, `required`: Bool? = nil, nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil, items: Property = .unknown([:])) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -96,18 +87,19 @@ public struct ArrayProperty: TypraModel {
     self.items = items
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ArrayProperty
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ArrayProperty {
     let object = try TypraRuntime.object(data, typeName: "ArrayProperty")
     var instance = ArrayProperty()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "array"
     }
     if let value = object["description"] {
@@ -163,22 +155,16 @@ public struct ArrayProperty: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ArrayProperty
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ArrayProperty"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ArrayProperty {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ArrayProperty"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ArrayProperty
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ArrayProperty"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ArrayProperty {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ArrayProperty"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -199,11 +185,7 @@ public struct ObjectProperty: TypraModel {
   public var enumValues: [Any]? = nil
   public var properties: [Property] = []
 
-  public init(
-    name: String = "", kind: String = "object", description: String? = nil, `required`: Bool? = nil,
-    nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil,
-    properties: [Property] = []
-  ) {
+  public init(name: String = "", kind: String = "object", description: String? = nil, `required`: Bool? = nil, nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil, properties: [Property] = []) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -215,19 +197,19 @@ public struct ObjectProperty: TypraModel {
     self.properties = properties
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ObjectProperty
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ObjectProperty {
     let object = try TypraRuntime.object(data, typeName: "ObjectProperty")
     var instance = ObjectProperty()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "object"
     }
     if let value = object["description"] {
@@ -262,9 +244,7 @@ public struct ObjectProperty: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -284,8 +264,7 @@ public struct ObjectProperty: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -324,22 +303,16 @@ public struct ObjectProperty: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ObjectProperty
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ObjectProperty"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ObjectProperty {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ObjectProperty"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ObjectProperty
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ObjectProperty"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ObjectProperty {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ObjectProperty"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
@@ -361,11 +334,7 @@ public struct UnionProperty: TypraModel {
   public var oneOf: [Property]? = nil
   public var anyOf: [Property]? = nil
 
-  public init(
-    name: String = "", kind: String = "union", description: String? = nil, `required`: Bool? = nil,
-    nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil,
-    oneOf: [Property]? = nil, anyOf: [Property]? = nil
-  ) {
+  public init(name: String = "", kind: String = "union", description: String? = nil, `required`: Bool? = nil, nullable: Bool? = nil, `default`: Any? = nil, example: Any? = nil, enumValues: [Any]? = nil, oneOf: [Property]? = nil, anyOf: [Property]? = nil) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -378,18 +347,19 @@ public struct UnionProperty: TypraModel {
     self.anyOf = anyOf
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> UnionProperty
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> UnionProperty {
     let object = try TypraRuntime.object(data, typeName: "UnionProperty")
     var instance = UnionProperty()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "union"
     }
     if let value = object["description"] {
@@ -411,14 +381,10 @@ public struct UnionProperty: TypraModel {
       instance.enumValues = try TypraRuntime.array(value, field: "enumValues").map { $0 }
     }
     if let value = object["oneOf"] {
-      instance.oneOf = try TypraRuntime.array(value, field: "oneOf").enumerated().map {
-        try Property.load($1, context: context.at("oneOf").atIndex($0))
-      }
+      instance.oneOf = try TypraRuntime.array(value, field: "oneOf").enumerated().map { try Property.load($1, context: context.at("oneOf").atIndex($0)) }
     }
     if let value = object["anyOf"] {
-      instance.anyOf = try TypraRuntime.array(value, field: "anyOf").enumerated().map {
-        try Property.load($1, context: context.at("anyOf").atIndex($0))
-      }
+      instance.anyOf = try TypraRuntime.array(value, field: "anyOf").enumerated().map { try Property.load($1, context: context.at("anyOf").atIndex($0)) }
     }
     return instance
   }
@@ -454,22 +420,16 @@ public struct UnionProperty: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> UnionProperty
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "UnionProperty"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> UnionProperty {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "UnionProperty"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> UnionProperty
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "UnionProperty"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> UnionProperty {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "UnionProperty"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

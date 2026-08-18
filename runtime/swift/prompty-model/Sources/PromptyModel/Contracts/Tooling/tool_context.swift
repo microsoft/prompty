@@ -18,9 +18,7 @@ public struct ToolContext: TypraModel {
     let object = try TypraRuntime.object(data, typeName: "ToolContext")
     var instance = ToolContext()
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["metadata"] {
       instance.metadata = try TypraRuntime.dictionary(value, field: "metadata")
@@ -37,9 +35,7 @@ public struct ToolContext: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ToolContext
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolContext {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolContext"), context: context)
   }
 
@@ -47,9 +43,7 @@ public struct ToolContext: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ToolContext
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolContext {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolContext"), context: context)
   }
 

@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class RetryPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "operation": "llm",
-        "attempt": 2,
-        "maxAttempts": 3,
-        "delayMs": 1250,
-        "reason": "rate_limit"
-      }
-      """
+{
+  "operation": "llm",
+  "attempt": 2,
+  "maxAttempts": 3,
+  "delayMs": 1250,
+  "reason": "rate_limit"
+}
+"""
     let instance = try RetryPayload.fromJSON(json)
     XCTAssertEqual(instance.operation, "llm")
     XCTAssertEqual(instance.attempt, 2)
@@ -33,13 +32,13 @@ final class RetryPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      operation: llm
-      attempt: 2
-      maxAttempts: 3
-      delayMs: 1250
-      reason: rate_limit
+operation: llm
+attempt: 2
+maxAttempts: 3
+delayMs: 1250
+reason: rate_limit
 
-      """
+"""
     let instance = try RetryPayload.fromYAML(yaml)
     XCTAssertEqual(instance.operation, "llm")
     XCTAssertEqual(instance.attempt, 2)

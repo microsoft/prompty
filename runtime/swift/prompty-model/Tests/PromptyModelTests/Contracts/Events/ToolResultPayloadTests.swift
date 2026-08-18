@@ -3,24 +3,23 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ToolResultPayloadTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
+{
+  "name": "get_weather",
+  "result": {
+    "parts": [
       {
-        "name": "get_weather",
-        "result": {
-          "parts": [
-            {
-              "kind": "text",
-              "value": "72°F and sunny"
-            }
-          ]
-        }
+        "kind": "text",
+        "value": "72°F and sunny"
       }
-      """
+    ]
+  }
+}
+"""
     let instance = try ToolResultPayload.fromJSON(json)
     XCTAssertEqual(instance.name, "get_weather")
     let reloaded = try ToolResultPayload.fromJSON(try instance.toJSON())
@@ -29,13 +28,13 @@ final class ToolResultPayloadTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      name: get_weather
-      result:
-        parts:
-          - kind: text
-            value: 72°F and sunny
+name: get_weather
+result:
+  parts:
+    - kind: text
+      value: 72°F and sunny
 
-      """
+"""
     let instance = try ToolResultPayload.fromYAML(yaml)
     XCTAssertEqual(instance.name, "get_weather")
     let reloaded = try ToolResultPayload.fromYAML(try instance.toYAML())

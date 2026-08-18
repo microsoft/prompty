@@ -16,9 +16,7 @@ public struct SubscriptionInfo: TypraModel {
     self.state = state
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> SubscriptionInfo
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
     let object = try TypraRuntime.object(data, typeName: "SubscriptionInfo")
     var instance = SubscriptionInfo()
     if let value = object["subscriptionId"] {
@@ -41,9 +39,7 @@ public struct SubscriptionInfo: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameSubscriptionId: String?
     switch provider {
@@ -66,22 +62,16 @@ public struct SubscriptionInfo: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SubscriptionInfo
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "SubscriptionInfo"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "SubscriptionInfo"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SubscriptionInfo
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "SubscriptionInfo"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SubscriptionInfo"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

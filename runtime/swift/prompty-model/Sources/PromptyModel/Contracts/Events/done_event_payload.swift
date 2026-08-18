@@ -14,18 +14,14 @@ public struct DoneEventPayload: TypraModel {
     self.messages = messages
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> DoneEventPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> DoneEventPayload {
     let object = try TypraRuntime.object(data, typeName: "DoneEventPayload")
     var instance = DoneEventPayload()
     if let value = object["response"] {
       instance.response = value
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     return instance
   }
@@ -37,22 +33,16 @@ public struct DoneEventPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> DoneEventPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "DoneEventPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> DoneEventPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "DoneEventPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> DoneEventPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "DoneEventPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> DoneEventPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "DoneEventPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -3,25 +3,24 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class MessageTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "role": "user",
-        "parts": [
-          {
-            "kind": "text",
-            "value": "Hello!"
-          }
-        ],
-        "metadata": {
-          "source": "user-input"
-        }
-      }
-      """
+{
+  "role": "user",
+  "parts": [
+    {
+      "kind": "text",
+      "value": "Hello!"
+    }
+  ],
+  "metadata": {
+    "source": "user-input"
+  }
+}
+"""
     let instance = try Message.fromJSON(json)
     XCTAssertEqual(instance.role, Role.user)
     XCTAssertEqual(instance.parts.count, 1)
@@ -34,14 +33,14 @@ final class MessageTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      role: user
-      parts:
-        - kind: text
-          value: Hello!
-      metadata:
-        source: user-input
+role: user
+parts:
+  - kind: text
+    value: Hello!
+metadata:
+  source: user-input
 
-      """
+"""
     let instance = try Message.fromYAML(yaml)
     XCTAssertEqual(instance.role, Role.user)
     XCTAssertEqual(instance.parts.count, 1)

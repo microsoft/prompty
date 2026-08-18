@@ -3,18 +3,17 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class InvocationUsageTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "inputTokens": 150,
-        "outputTokens": 42,
-        "totalTokens": 192
-      }
-      """
+{
+  "inputTokens": 150,
+  "outputTokens": 42,
+  "totalTokens": 192
+}
+"""
     let instance = try InvocationUsage.fromJSON(json)
     XCTAssertEqual(instance.inputTokens, 150)
     XCTAssertEqual(instance.outputTokens, 42)
@@ -27,11 +26,11 @@ final class InvocationUsageTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      inputTokens: 150
-      outputTokens: 42
-      totalTokens: 192
+inputTokens: 150
+outputTokens: 42
+totalTokens: 192
 
-      """
+"""
     let instance = try InvocationUsage.fromYAML(yaml)
     XCTAssertEqual(instance.inputTokens, 150)
     XCTAssertEqual(instance.outputTokens, 42)

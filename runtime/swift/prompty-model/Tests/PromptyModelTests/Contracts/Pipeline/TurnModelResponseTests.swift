@@ -3,14 +3,13 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnModelResponseTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {}
-      """
+{}
+"""
     let instance = try TurnModelResponse.fromJSON(json)
     let reloaded = try TurnModelResponse.fromJSON(try instance.toJSON())
     _ = reloaded
@@ -18,9 +17,9 @@ final class TurnModelResponseTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      {}
+{}
 
-      """
+"""
     let instance = try TurnModelResponse.fromYAML(yaml)
     let reloaded = try TurnModelResponse.fromYAML(try instance.toYAML())
     _ = reloaded

@@ -12,10 +12,7 @@ public struct HostToolRequest: TypraModel {
   public var arguments: [String: Any]? = nil
   public var workingDirectory: String? = nil
 
-  public init(
-    requestId: String? = nil, toolCallId: String? = nil, toolName: String = "",
-    arguments: [String: Any]? = nil, workingDirectory: String? = nil
-  ) {
+  public init(requestId: String? = nil, toolCallId: String? = nil, toolName: String = "", arguments: [String: Any]? = nil, workingDirectory: String? = nil) {
     self.requestId = requestId
     self.toolCallId = toolCallId
     self.toolName = toolName
@@ -23,9 +20,7 @@ public struct HostToolRequest: TypraModel {
     self.workingDirectory = workingDirectory
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> HostToolRequest
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> HostToolRequest {
     let object = try TypraRuntime.object(data, typeName: "HostToolRequest")
     var instance = HostToolRequest()
     if let value = object["requestId"] {
@@ -64,22 +59,16 @@ public struct HostToolRequest: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> HostToolRequest
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "HostToolRequest"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> HostToolRequest {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "HostToolRequest"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> HostToolRequest
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "HostToolRequest"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> HostToolRequest {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "HostToolRequest"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

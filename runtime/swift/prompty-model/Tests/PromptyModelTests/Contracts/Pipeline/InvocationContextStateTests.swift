@@ -3,14 +3,13 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class InvocationContextStateTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {}
-      """
+{}
+"""
     let instance = try InvocationContextState.fromJSON(json)
     let reloaded = try InvocationContextState.fromJSON(try instance.toJSON())
     _ = reloaded
@@ -18,9 +17,9 @@ final class InvocationContextStateTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      {}
+{}
 
-      """
+"""
     let instance = try InvocationContextState.fromYAML(yaml)
     let reloaded = try InvocationContextState.fromYAML(try instance.toYAML())
     _ = reloaded

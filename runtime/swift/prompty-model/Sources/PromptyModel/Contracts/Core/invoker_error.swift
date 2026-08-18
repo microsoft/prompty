@@ -16,8 +16,7 @@ public struct InvokerError: TypraModel {
     self.key = key
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> InvokerError
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> InvokerError {
     let object = try TypraRuntime.object(data, typeName: "InvokerError")
     var instance = InvokerError()
     if let value = object["message"] {
@@ -40,9 +39,7 @@ public struct InvokerError: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> InvokerError
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> InvokerError {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "InvokerError"), context: context)
   }
 
@@ -50,9 +47,7 @@ public struct InvokerError: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> InvokerError
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> InvokerError {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "InvokerError"), context: context)
   }
 

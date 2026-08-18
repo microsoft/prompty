@@ -18,12 +18,7 @@ public struct SessionTrace: TypraModel {
   public var refs: [SessionRef]? = nil
   public var summary: SessionSummary? = nil
 
-  public init(
-    version: String = "1", runtime: String? = nil, promptyVersion: String? = nil,
-    sessionId: String? = nil, events: [SessionEvent] = [], turns: [TurnTrace]? = nil,
-    checkpoints: [Checkpoint]? = nil, trajectory: [TrajectoryEvent]? = nil,
-    files: [SessionFileRef]? = nil, refs: [SessionRef]? = nil, summary: SessionSummary? = nil
-  ) {
+  public init(version: String = "1", runtime: String? = nil, promptyVersion: String? = nil, sessionId: String? = nil, events: [SessionEvent] = [], turns: [TurnTrace]? = nil, checkpoints: [Checkpoint]? = nil, trajectory: [TrajectoryEvent]? = nil, files: [SessionFileRef]? = nil, refs: [SessionRef]? = nil, summary: SessionSummary? = nil) {
     self.version = version
     self.runtime = runtime
     self.promptyVersion = promptyVersion
@@ -37,13 +32,13 @@ public struct SessionTrace: TypraModel {
     self.summary = summary
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionTrace
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionTrace {
     let object = try TypraRuntime.object(data, typeName: "SessionTrace")
     var instance = SessionTrace()
     if let value = object["version"] {
       instance.version = try TypraRuntime.string(value, field: "version")
-    } else {
+    }
+    else {
       instance.version = "1"
     }
     if let value = object["runtime"] {
@@ -56,34 +51,22 @@ public struct SessionTrace: TypraModel {
       instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
     }
     if let value = object["events"] {
-      instance.events = try TypraRuntime.array(value, field: "events").enumerated().map {
-        try SessionEvent.load($1, context: context.at("events").atIndex($0))
-      }
+      instance.events = try TypraRuntime.array(value, field: "events").enumerated().map { try SessionEvent.load($1, context: context.at("events").atIndex($0)) }
     }
     if let value = object["turns"] {
-      instance.turns = try TypraRuntime.array(value, field: "turns").enumerated().map {
-        try TurnTrace.load($1, context: context.at("turns").atIndex($0))
-      }
+      instance.turns = try TypraRuntime.array(value, field: "turns").enumerated().map { try TurnTrace.load($1, context: context.at("turns").atIndex($0)) }
     }
     if let value = object["checkpoints"] {
-      instance.checkpoints = try TypraRuntime.array(value, field: "checkpoints").enumerated().map {
-        try Checkpoint.load($1, context: context.at("checkpoints").atIndex($0))
-      }
+      instance.checkpoints = try TypraRuntime.array(value, field: "checkpoints").enumerated().map { try Checkpoint.load($1, context: context.at("checkpoints").atIndex($0)) }
     }
     if let value = object["trajectory"] {
-      instance.trajectory = try TypraRuntime.array(value, field: "trajectory").enumerated().map {
-        try TrajectoryEvent.load($1, context: context.at("trajectory").atIndex($0))
-      }
+      instance.trajectory = try TypraRuntime.array(value, field: "trajectory").enumerated().map { try TrajectoryEvent.load($1, context: context.at("trajectory").atIndex($0)) }
     }
     if let value = object["files"] {
-      instance.files = try TypraRuntime.array(value, field: "files").enumerated().map {
-        try SessionFileRef.load($1, context: context.at("files").atIndex($0))
-      }
+      instance.files = try TypraRuntime.array(value, field: "files").enumerated().map { try SessionFileRef.load($1, context: context.at("files").atIndex($0)) }
     }
     if let value = object["refs"] {
-      instance.refs = try TypraRuntime.array(value, field: "refs").enumerated().map {
-        try SessionRef.load($1, context: context.at("refs").atIndex($0))
-      }
+      instance.refs = try TypraRuntime.array(value, field: "refs").enumerated().map { try SessionRef.load($1, context: context.at("refs").atIndex($0)) }
     }
     if let value = object["summary"] {
       instance.summary = try SessionSummary.load(value, context: context.at("summary"))
@@ -125,9 +108,7 @@ public struct SessionTrace: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> SessionTrace
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionTrace {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionTrace"), context: context)
   }
 
@@ -135,9 +116,7 @@ public struct SessionTrace: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> SessionTrace
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionTrace {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionTrace"), context: context)
   }
 

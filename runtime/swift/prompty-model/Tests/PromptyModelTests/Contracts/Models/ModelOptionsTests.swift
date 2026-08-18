@@ -3,31 +3,30 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ModelOptionsTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "frequencyPenalty": 0.5,
-        "maxOutputTokens": 2048,
-        "presencePenalty": 0.3,
-        "seed": 42,
-        "temperature": 0.7,
-        "topK": 40,
-        "topP": 0.9,
-        "stopSequences": [
-          "\\n",
-          "###"
-        ],
-        "allowMultipleToolCalls": true,
-        "additionalProperties": {
-          "customProperty": "value",
-          "anotherProperty": "anotherValue"
-        }
-      }
-      """
+{
+  "frequencyPenalty": 0.5,
+  "maxOutputTokens": 2048,
+  "presencePenalty": 0.3,
+  "seed": 42,
+  "temperature": 0.7,
+  "topK": 40,
+  "topP": 0.9,
+  "stopSequences": [
+    "\\n",
+    "###"
+  ],
+  "allowMultipleToolCalls": true,
+  "additionalProperties": {
+    "customProperty": "value",
+    "anotherProperty": "anotherValue"
+  }
+}
+"""
     let instance = try ModelOptions.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(instance.maxOutputTokens)), 2048)
@@ -54,22 +53,22 @@ final class ModelOptionsTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      frequencyPenalty: 0.5
-      maxOutputTokens: 2048
-      presencePenalty: 0.3
-      seed: 42
-      temperature: 0.7
-      topK: 40
-      topP: 0.9
-      stopSequences:
-        - "\\n"
-        - "###"
-      allowMultipleToolCalls: true
-      additionalProperties:
-        customProperty: value
-        anotherProperty: anotherValue
+frequencyPenalty: 0.5
+maxOutputTokens: 2048
+presencePenalty: 0.3
+seed: 42
+temperature: 0.7
+topK: 40
+topP: 0.9
+stopSequences:
+  - "\\n"
+  - "###"
+allowMultipleToolCalls: true
+additionalProperties:
+  customProperty: value
+  anotherProperty: anotherValue
 
-      """
+"""
     let instance = try ModelOptions.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(instance.maxOutputTokens)), 2048)

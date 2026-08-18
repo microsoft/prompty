@@ -3,24 +3,23 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TurnEngineResultTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "commit": {
-          "sessionId": "sess_abc123",
-          "turnId": "turn_abc123",
-          "status": "success",
-          "messages": [],
-          "iterations": 1,
-          "lastSequence": 1,
-          "contextState": {}
-        }
-      }
-      """
+{
+  "commit": {
+    "sessionId": "sess_abc123",
+    "turnId": "turn_abc123",
+    "status": "success",
+    "messages": [],
+    "iterations": 1,
+    "lastSequence": 1,
+    "contextState": {}
+  }
+}
+"""
     let instance = try TurnEngineResult.fromJSON(json)
     XCTAssertEqual(instance.commit.sessionId, "sess_abc123")
     XCTAssertEqual(instance.commit.turnId, "turn_abc123")
@@ -37,16 +36,16 @@ final class TurnEngineResultTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      commit:
-        sessionId: sess_abc123
-        turnId: turn_abc123
-        status: success
-        messages: []
-        iterations: 1
-        lastSequence: 1
-        contextState: {}
+commit:
+  sessionId: sess_abc123
+  turnId: turn_abc123
+  status: success
+  messages: []
+  iterations: 1
+  lastSequence: 1
+  contextState: {}
 
-      """
+"""
     let instance = try TurnEngineResult.fromYAML(yaml)
     XCTAssertEqual(instance.commit.sessionId, "sess_abc123")
     XCTAssertEqual(instance.commit.turnId, "turn_abc123")

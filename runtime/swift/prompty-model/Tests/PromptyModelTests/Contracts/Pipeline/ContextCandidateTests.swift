@@ -3,31 +3,30 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class ContextCandidateTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "memory:project-plan",
-        "source": "memory",
-        "messages": [
-          {
-            "role": "user",
-            "parts": [
-              {
-                "kind": "text",
-                "value": "Hello!"
-              }
-            ],
-            "metadata": {
-              "source": "user-input"
-            }
-          }
-        ]
+{
+  "id": "memory:project-plan",
+  "source": "memory",
+  "messages": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "kind": "text",
+          "value": "Hello!"
+        }
+      ],
+      "metadata": {
+        "source": "user-input"
       }
-      """
+    }
+  ]
+}
+"""
     let instance = try ContextCandidate.fromJSON(json)
     XCTAssertEqual(instance.id, "memory:project-plan")
     XCTAssertEqual(instance.source, "memory")
@@ -40,17 +39,17 @@ final class ContextCandidateTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: "memory:project-plan"
-      source: memory
-      messages:
-        - role: user
-          parts:
-            - kind: text
-              value: Hello!
-          metadata:
-            source: user-input
+id: "memory:project-plan"
+source: memory
+messages:
+  - role: user
+    parts:
+      - kind: text
+        value: Hello!
+    metadata:
+      source: user-input
 
-      """
+"""
     let instance = try ContextCandidate.fromYAML(yaml)
     XCTAssertEqual(instance.id, "memory:project-plan")
     XCTAssertEqual(instance.source, "memory")

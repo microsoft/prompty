@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionSummaryTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "sessionId": "sess_abc123",
-        "status": "success",
-        "turns": 5,
-        "checkpoints": 2,
-        "durationMs": 12500
-      }
-      """
+{
+  "sessionId": "sess_abc123",
+  "status": "success",
+  "turns": 5,
+  "checkpoints": 2,
+  "durationMs": 12500
+}
+"""
     let instance = try SessionSummary.fromJSON(json)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.status)), SessionSummaryStatus.success)
@@ -33,13 +32,13 @@ final class SessionSummaryTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      sessionId: sess_abc123
-      status: success
-      turns: 5
-      checkpoints: 2
-      durationMs: 12500
+sessionId: sess_abc123
+status: success
+turns: 5
+checkpoints: 2
+durationMs: 12500
 
-      """
+"""
     let instance = try SessionSummary.fromYAML(yaml)
     XCTAssertEqual(instance.sessionId, "sess_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.status)), SessionSummaryStatus.success)

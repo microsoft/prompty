@@ -15,8 +15,7 @@ public enum Tool: TypraModel {
     let object = try TypraRuntime.object(normalizedData, typeName: "Tool")
     let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
     if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(
-        field: context.at("kind").path, expected: "non-blank string")
+      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
     }
     switch discriminator {
     case "function": return .functionTool(try FunctionTool.load(normalizedData, context: context))
@@ -69,10 +68,7 @@ public struct FunctionTool: TypraModel {
   public var parameters: [Property] = []
   public var strict: Bool? = nil
 
-  public init(
-    name: String = "", kind: String = "function", description: String? = nil,
-    bindings: [Binding]? = nil, parameters: [Property] = [], strict: Bool? = nil
-  ) {
+  public init(name: String = "", kind: String = "function", description: String? = nil, bindings: [Binding]? = nil, parameters: [Property] = [], strict: Bool? = nil) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -81,18 +77,19 @@ public struct FunctionTool: TypraModel {
     self.strict = strict
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FunctionTool
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FunctionTool {
     let object = try TypraRuntime.object(data, typeName: "FunctionTool")
     var instance = FunctionTool()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "function"
     }
     if let value = object["description"] {
@@ -118,9 +115,7 @@ public struct FunctionTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -140,8 +135,7 @@ public struct FunctionTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -166,9 +160,7 @@ public struct FunctionTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -188,8 +180,7 @@ public struct FunctionTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -219,9 +210,7 @@ public struct FunctionTool: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> FunctionTool
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FunctionTool {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "FunctionTool"), context: context)
   }
 
@@ -229,9 +218,7 @@ public struct FunctionTool: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> FunctionTool
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FunctionTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FunctionTool"), context: context)
   }
 
@@ -250,11 +237,7 @@ public struct CustomTool: TypraModel {
   public var connection: Connection = .referenceConnection(ReferenceConnection())
   public var options: [String: Any] = [:]
 
-  public init(
-    name: String = "", kind: String = "*", description: String? = nil, bindings: [Binding]? = nil,
-    connection: Connection = .referenceConnection(ReferenceConnection()),
-    options: [String: Any] = [:]
-  ) {
+  public init(name: String = "", kind: String = "*", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), options: [String: Any] = [:]) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -268,12 +251,14 @@ public struct CustomTool: TypraModel {
     var instance = CustomTool()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "*"
     }
     if let value = object["description"] {
@@ -283,8 +268,7 @@ public struct CustomTool: TypraModel {
       instance.bindings = try loadBindings(value, context: context.at("bindings"))
     }
     if object["connection"] == nil || object["connection"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("connection").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("connection").path + ": missing required field")
     }
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
@@ -303,9 +287,7 @@ public struct CustomTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -325,8 +307,7 @@ public struct CustomTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -358,9 +339,7 @@ public struct CustomTool: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> CustomTool
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CustomTool {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "CustomTool"), context: context)
   }
 
@@ -368,9 +347,7 @@ public struct CustomTool: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> CustomTool
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CustomTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CustomTool"), context: context)
   }
 
@@ -392,12 +369,7 @@ public struct McpTool: TypraModel {
   public var approvalMode: McpApprovalMode? = nil
   public var allowedTools: [String]? = nil
 
-  public init(
-    name: String = "", kind: String = "mcp", description: String? = nil, bindings: [Binding]? = nil,
-    connection: Connection = .referenceConnection(ReferenceConnection()), serverName: String = "",
-    serverDescription: String? = nil, approvalMode: McpApprovalMode? = nil,
-    allowedTools: [String]? = nil
-  ) {
+  public init(name: String = "", kind: String = "mcp", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), serverName: String = "", serverDescription: String? = nil, approvalMode: McpApprovalMode? = nil, allowedTools: [String]? = nil) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -414,12 +386,14 @@ public struct McpTool: TypraModel {
     var instance = McpTool()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "mcp"
     }
     if let value = object["description"] {
@@ -429,8 +403,7 @@ public struct McpTool: TypraModel {
       instance.bindings = try loadBindings(value, context: context.at("bindings"))
     }
     if object["connection"] == nil || object["connection"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("connection").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("connection").path + ": missing required field")
     }
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
@@ -445,9 +418,7 @@ public struct McpTool: TypraModel {
       instance.approvalMode = try McpApprovalMode.load(value, context: context.at("approvalMode"))
     }
     if let value = object["allowedTools"] {
-      instance.allowedTools = try TypraRuntime.array(value, field: "allowedTools").map {
-        try TypraRuntime.string($0, field: "allowedTools")
-      }
+      instance.allowedTools = try TypraRuntime.array(value, field: "allowedTools").map { try TypraRuntime.string($0, field: "allowedTools") }
     }
     return instance
   }
@@ -460,9 +431,7 @@ public struct McpTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -482,8 +451,7 @@ public struct McpTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -524,9 +492,7 @@ public struct McpTool: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> McpTool
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> McpTool {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "McpTool"), context: context)
   }
 
@@ -534,9 +500,7 @@ public struct McpTool: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> McpTool
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> McpTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "McpTool"), context: context)
   }
 
@@ -554,11 +518,7 @@ public struct OpenApiTool: TypraModel {
   public var connection: Connection = .referenceConnection(ReferenceConnection())
   public var specification: String = ""
 
-  public init(
-    name: String = "", kind: String = "openapi", description: String? = nil,
-    bindings: [Binding]? = nil,
-    connection: Connection = .referenceConnection(ReferenceConnection()), specification: String = ""
-  ) {
+  public init(name: String = "", kind: String = "openapi", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), specification: String = "") {
     self.name = name
     self.kind = kind
     self.description = description
@@ -572,12 +532,14 @@ public struct OpenApiTool: TypraModel {
     var instance = OpenApiTool()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "openapi"
     }
     if let value = object["description"] {
@@ -587,8 +549,7 @@ public struct OpenApiTool: TypraModel {
       instance.bindings = try loadBindings(value, context: context.at("bindings"))
     }
     if object["connection"] == nil || object["connection"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("connection").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("connection").path + ": missing required field")
     }
     if let value = object["connection"] {
       instance.connection = try Connection.load(value, context: context.at("connection"))
@@ -607,9 +568,7 @@ public struct OpenApiTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -629,8 +588,7 @@ public struct OpenApiTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -662,9 +620,7 @@ public struct OpenApiTool: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> OpenApiTool
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> OpenApiTool {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "OpenApiTool"), context: context)
   }
 
@@ -672,9 +628,7 @@ public struct OpenApiTool: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> OpenApiTool
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> OpenApiTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "OpenApiTool"), context: context)
   }
 
@@ -693,10 +647,7 @@ public struct PromptyTool: TypraModel {
   public var path: String = ""
   public var mode: String = "single"
 
-  public init(
-    name: String = "", kind: String = "prompty", description: String? = nil,
-    bindings: [Binding]? = nil, path: String = "", mode: String = "single"
-  ) {
+  public init(name: String = "", kind: String = "prompty", description: String? = nil, bindings: [Binding]? = nil, path: String = "", mode: String = "single") {
     self.name = name
     self.kind = kind
     self.description = description
@@ -710,12 +661,14 @@ public struct PromptyTool: TypraModel {
     var instance = PromptyTool()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = ""
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "prompty"
     }
     if let value = object["description"] {
@@ -729,7 +682,8 @@ public struct PromptyTool: TypraModel {
     }
     if let value = object["mode"] {
       instance.mode = try TypraRuntime.string(value, field: "mode")
-    } else {
+    }
+    else {
       instance.mode = "single"
     }
     return instance
@@ -743,9 +697,7 @@ public struct PromptyTool: TypraModel {
     return try values.keys.sorted().map { name in
       let value = values[name]!
       if value is [Any] {
-        throw TypraRuntimeError.invalidField(
-          field: context.at(name).path,
-          expected: "non-array named collection entry; received category array")
+        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
       }
       var itemData: [String: Any]
       if let object = value as? [String: Any] {
@@ -765,8 +717,7 @@ public struct PromptyTool: TypraModel {
     }
     var names = Set<String>()
     for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted
-      else {
+      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
         return serialized
       }
     }
@@ -798,9 +749,7 @@ public struct PromptyTool: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> PromptyTool
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PromptyTool {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "PromptyTool"), context: context)
   }
 
@@ -808,9 +757,7 @@ public struct PromptyTool: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> PromptyTool
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PromptyTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PromptyTool"), context: context)
   }
 

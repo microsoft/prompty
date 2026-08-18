@@ -16,18 +16,14 @@ public struct RedactionMetadata: TypraModel {
     self.policy = policy
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> RedactionMetadata
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> RedactionMetadata {
     let object = try TypraRuntime.object(data, typeName: "RedactionMetadata")
     var instance = RedactionMetadata()
     if let value = object["sanitized"] {
       instance.sanitized = try TypraRuntime.bool(value, field: "sanitized")
     }
     if let value = object["fields"] {
-      instance.fields = try TypraRuntime.array(value, field: "fields").enumerated().map {
-        try RedactedField.load($1, context: context.at("fields").atIndex($0))
-      }
+      instance.fields = try TypraRuntime.array(value, field: "fields").enumerated().map { try RedactedField.load($1, context: context.at("fields").atIndex($0)) }
     }
     if let value = object["policy"] {
       instance.policy = try TypraRuntime.string(value, field: "policy")
@@ -49,22 +45,16 @@ public struct RedactionMetadata: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> RedactionMetadata
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "RedactionMetadata"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> RedactionMetadata {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "RedactionMetadata"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> RedactionMetadata
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "RedactionMetadata"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> RedactionMetadata {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "RedactionMetadata"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

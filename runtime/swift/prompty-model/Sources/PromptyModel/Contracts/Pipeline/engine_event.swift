@@ -73,12 +73,7 @@ public struct EngineEvent: TypraModel {
   public var kind: EngineEventKind = (try! EngineEventKind.parse("turn_started"))
   public var payload: Any? = nil
 
-  public init(
-    sequence: Int64 = 0, id: String = "", timestamp: String = "", sessionId: String = "",
-    turnId: String = "", runId: String = "", parentRunId: String? = nil, delegationDepth: Int32 = 0,
-    invocationId: String? = nil, iteration: Int32? = nil,
-    kind: EngineEventKind = (try! EngineEventKind.parse("turn_started")), payload: Any? = nil
-  ) {
+  public init(sequence: Int64 = 0, id: String = "", timestamp: String = "", sessionId: String = "", turnId: String = "", runId: String = "", parentRunId: String? = nil, delegationDepth: Int32 = 0, invocationId: String? = nil, iteration: Int32? = nil, kind: EngineEventKind = (try! EngineEventKind.parse("turn_started")), payload: Any? = nil) {
     self.sequence = sequence
     self.id = id
     self.timestamp = timestamp
@@ -119,7 +114,8 @@ public struct EngineEvent: TypraModel {
     }
     if let value = object["delegationDepth"] {
       instance.delegationDepth = try TypraRuntime.int32(value, field: "delegationDepth")
-    } else {
+    }
+    else {
       instance.delegationDepth = 0
     }
     if let value = object["invocationId"] {
@@ -162,9 +158,7 @@ public struct EngineEvent: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> EngineEvent
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> EngineEvent {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "EngineEvent"), context: context)
   }
 
@@ -172,9 +166,7 @@ public struct EngineEvent: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> EngineEvent
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> EngineEvent {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "EngineEvent"), context: context)
   }
 

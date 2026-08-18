@@ -3,20 +3,19 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class CompactionConfigTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "strategy": "summarize",
-        "budget": 50000,
-        "options": {
-          "preserveSystemMessages": true
-        }
-      }
-      """
+{
+  "strategy": "summarize",
+  "budget": 50000,
+  "options": {
+    "preserveSystemMessages": true
+  }
+}
+"""
     let instance = try CompactionConfig.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.strategy)), "summarize")
     XCTAssertEqual((try XCTUnwrap(instance.budget)), 50000)
@@ -29,12 +28,12 @@ final class CompactionConfigTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      strategy: summarize
-      budget: 50000
-      options:
-        preserveSystemMessages: true
+strategy: summarize
+budget: 50000
+options:
+  preserveSystemMessages: true
 
-      """
+"""
     let instance = try CompactionConfig.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.strategy)), "summarize")
     XCTAssertEqual((try XCTUnwrap(instance.budget)), 50000)

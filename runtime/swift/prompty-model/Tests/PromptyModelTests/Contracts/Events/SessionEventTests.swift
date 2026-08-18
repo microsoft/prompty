@@ -3,21 +3,20 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class SessionEventTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "evt_abc123",
-        "timestamp": "2026-06-09T20:00:00Z",
-        "sessionId": "sess_abc123",
-        "turnId": "turn_001",
-        "parentId": "evt_parent",
-        "spanId": "span_hook_001"
-      }
-      """
+{
+  "id": "evt_abc123",
+  "timestamp": "2026-06-09T20:00:00Z",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_001",
+  "parentId": "evt_parent",
+  "spanId": "span_hook_001"
+}
+"""
     let instance = try SessionEvent.fromJSON(json)
     XCTAssertEqual(instance.id, "evt_abc123")
     XCTAssertEqual(instance.timestamp, "2026-06-09T20:00:00Z")
@@ -36,14 +35,14 @@ final class SessionEventTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: evt_abc123
-      timestamp: "2026-06-09T20:00:00Z"
-      sessionId: sess_abc123
-      turnId: turn_001
-      parentId: evt_parent
-      spanId: span_hook_001
+id: evt_abc123
+timestamp: "2026-06-09T20:00:00Z"
+sessionId: sess_abc123
+turnId: turn_001
+parentId: evt_parent
+spanId: span_hook_001
 
-      """
+"""
     let instance = try SessionEvent.fromYAML(yaml)
     XCTAssertEqual(instance.id, "evt_abc123")
     XCTAssertEqual(instance.timestamp, "2026-06-09T20:00:00Z")

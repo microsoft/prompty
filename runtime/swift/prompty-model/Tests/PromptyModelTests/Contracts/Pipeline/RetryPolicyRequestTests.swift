@@ -3,19 +3,18 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class RetryPolicyRequestTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "failedAttempts": 1,
-        "nextAttempt": 1,
-        "maxAttempts": 1,
-        "reason": "sample"
-      }
-      """
+{
+  "failedAttempts": 1,
+  "nextAttempt": 1,
+  "maxAttempts": 1,
+  "reason": "sample"
+}
+"""
     let instance = try RetryPolicyRequest.fromJSON(json)
     XCTAssertEqual(instance.failedAttempts, 1)
     XCTAssertEqual(instance.nextAttempt, 1)
@@ -30,12 +29,12 @@ final class RetryPolicyRequestTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      failedAttempts: 1
-      nextAttempt: 1
-      maxAttempts: 1
-      reason: sample
+failedAttempts: 1
+nextAttempt: 1
+maxAttempts: 1
+reason: sample
 
-      """
+"""
     let instance = try RetryPolicyRequest.fromYAML(yaml)
     XCTAssertEqual(instance.failedAttempts, 1)
     XCTAssertEqual(instance.nextAttempt, 1)

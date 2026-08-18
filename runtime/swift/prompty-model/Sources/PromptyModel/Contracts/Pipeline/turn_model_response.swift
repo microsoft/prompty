@@ -11,19 +11,14 @@ public struct TurnModelResponse: TypraModel {
   public var toolRequests: [HostToolRequest]? = nil
   public var checkpointState: [String: Any]? = nil
 
-  public init(
-    output: Any? = nil, usage: InvocationUsage? = nil, toolRequests: [HostToolRequest]? = nil,
-    checkpointState: [String: Any]? = nil
-  ) {
+  public init(output: Any? = nil, usage: InvocationUsage? = nil, toolRequests: [HostToolRequest]? = nil, checkpointState: [String: Any]? = nil) {
     self.output = output
     self.usage = usage
     self.toolRequests = toolRequests
     self.checkpointState = checkpointState
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> TurnModelResponse
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnModelResponse {
     let object = try TypraRuntime.object(data, typeName: "TurnModelResponse")
     var instance = TurnModelResponse()
     if let value = object["output"] {
@@ -33,8 +28,7 @@ public struct TurnModelResponse: TypraModel {
       instance.usage = try InvocationUsage.load(value, context: context.at("usage"))
     }
     if let value = object["toolRequests"] {
-      instance.toolRequests = try TypraRuntime.array(value, field: "toolRequests").enumerated().map
-      { try HostToolRequest.load($1, context: context.at("toolRequests").atIndex($0)) }
+      instance.toolRequests = try TypraRuntime.array(value, field: "toolRequests").enumerated().map { try HostToolRequest.load($1, context: context.at("toolRequests").atIndex($0)) }
     }
     if let value = object["checkpointState"] {
       instance.checkpointState = try TypraRuntime.dictionary(value, field: "checkpointState")
@@ -59,22 +53,16 @@ public struct TurnModelResponse: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnModelResponse
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "TurnModelResponse"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnModelResponse {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnModelResponse"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnModelResponse
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "TurnModelResponse"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnModelResponse {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnModelResponse"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -16,9 +16,7 @@ public struct TurnStartPayload: TypraModel {
     self.maxIterations = maxIterations
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> TurnStartPayload
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnStartPayload {
     let object = try TypraRuntime.object(data, typeName: "TurnStartPayload")
     var instance = TurnStartPayload()
     if let value = object["agent"] {
@@ -47,22 +45,16 @@ public struct TurnStartPayload: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> TurnStartPayload
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "TurnStartPayload"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnStartPayload {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnStartPayload"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> TurnStartPayload
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "TurnStartPayload"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnStartPayload {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnStartPayload"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -14,18 +14,19 @@ public struct ThreadMarker: TypraModel {
     self.kind = kind
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ThreadMarker
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ThreadMarker {
     let object = try TypraRuntime.object(data, typeName: "ThreadMarker")
     var instance = ThreadMarker()
     if let value = object["name"] {
       instance.name = try TypraRuntime.string(value, field: "name")
-    } else {
+    }
+    else {
       instance.name = "thread"
     }
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
-    } else {
+    }
+    else {
       instance.kind = "thread"
     }
     return instance
@@ -38,9 +39,7 @@ public struct ThreadMarker: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ThreadMarker
-  {
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ThreadMarker {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ThreadMarker"), context: context)
   }
 
@@ -48,9 +47,7 @@ public struct ThreadMarker: TypraModel {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ThreadMarker
-  {
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ThreadMarker {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ThreadMarker"), context: context)
   }
 

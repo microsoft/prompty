@@ -17,12 +17,7 @@ public struct ModelInvocationContextSnapshot: TypraModel {
   public var contextState: InvocationContextState = InvocationContextState()
   public var metadata: [String: Any]? = nil
 
-  public init(
-    id: String = "", sessionId: String = "", turnId: String = "", invocationId: String = "",
-    iteration: Int32 = 0, messages: [Message] = [], decisions: [InvocationContextDecision]? = nil,
-    stablePrefixMessages: Int32 = 0,
-    contextState: InvocationContextState = InvocationContextState(), metadata: [String: Any]? = nil
-  ) {
+  public init(id: String = "", sessionId: String = "", turnId: String = "", invocationId: String = "", iteration: Int32 = 0, messages: [Message] = [], decisions: [InvocationContextDecision]? = nil, stablePrefixMessages: Int32 = 0, contextState: InvocationContextState = InvocationContextState(), metadata: [String: Any]? = nil) {
     self.id = id
     self.sessionId = sessionId
     self.turnId = turnId
@@ -35,9 +30,7 @@ public struct ModelInvocationContextSnapshot: TypraModel {
     self.metadata = metadata
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationContextSnapshot
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ModelInvocationContextSnapshot {
     let object = try TypraRuntime.object(data, typeName: "ModelInvocationContextSnapshot")
     var instance = ModelInvocationContextSnapshot()
     if let value = object["id"] {
@@ -56,27 +49,22 @@ public struct ModelInvocationContextSnapshot: TypraModel {
       instance.iteration = try TypraRuntime.int32(value, field: "iteration")
     }
     if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map {
-        try Message.load($1, context: context.at("messages").atIndex($0))
-      }
+      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
     }
     if let value = object["decisions"] {
-      instance.decisions = try TypraRuntime.array(value, field: "decisions").enumerated().map {
-        try InvocationContextDecision.load($1, context: context.at("decisions").atIndex($0))
-      }
+      instance.decisions = try TypraRuntime.array(value, field: "decisions").enumerated().map { try InvocationContextDecision.load($1, context: context.at("decisions").atIndex($0)) }
     }
     if let value = object["stablePrefixMessages"] {
       instance.stablePrefixMessages = try TypraRuntime.int32(value, field: "stablePrefixMessages")
-    } else {
+    }
+    else {
       instance.stablePrefixMessages = 0
     }
     if object["contextState"] == nil || object["contextState"] is NSNull {
-      throw TypraRuntimeError.unsupported(
-        context.at("contextState").path + ": missing required field")
+      throw TypraRuntimeError.unsupported(context.at("contextState").path + ": missing required field")
     }
     if let value = object["contextState"] {
-      instance.contextState = try InvocationContextState.load(
-        value, context: context.at("contextState"))
+      instance.contextState = try InvocationContextState.load(value, context: context.at("contextState"))
     }
     if let value = object["metadata"] {
       instance.metadata = try TypraRuntime.dictionary(value, field: "metadata")
@@ -103,24 +91,16 @@ public struct ModelInvocationContextSnapshot: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationContextSnapshot
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationContextSnapshot"),
-      context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelInvocationContextSnapshot {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelInvocationContextSnapshot"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> ModelInvocationContextSnapshot
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationContextSnapshot"),
-      context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ModelInvocationContextSnapshot {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ModelInvocationContextSnapshot"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

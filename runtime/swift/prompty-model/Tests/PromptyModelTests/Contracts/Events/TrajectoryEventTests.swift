@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class TrajectoryEventTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "id": "traj_abc123",
-        "sessionId": "sess_abc123",
-        "turnId": "turn_001",
-        "toolCallId": "call_abc123",
-        "turnIndex": 4,
-        "eventType": "command",
-        "createdAt": "2026-06-09T20:00:00Z"
-      }
-      """
+{
+  "id": "traj_abc123",
+  "sessionId": "sess_abc123",
+  "turnId": "turn_001",
+  "toolCallId": "call_abc123",
+  "turnIndex": 4,
+  "eventType": "command",
+  "createdAt": "2026-06-09T20:00:00Z"
+}
+"""
     let instance = try TrajectoryEvent.fromJSON(json)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "traj_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")
@@ -39,15 +38,15 @@ final class TrajectoryEventTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      id: traj_abc123
-      sessionId: sess_abc123
-      turnId: turn_001
-      toolCallId: call_abc123
-      turnIndex: 4
-      eventType: command
-      createdAt: "2026-06-09T20:00:00Z"
+id: traj_abc123
+sessionId: sess_abc123
+turnId: turn_001
+toolCallId: call_abc123
+turnIndex: 4
+eventType: command
+createdAt: "2026-06-09T20:00:00Z"
 
-      """
+"""
     let instance = try TrajectoryEvent.fromYAML(yaml)
     XCTAssertEqual((try XCTUnwrap(instance.id)), "traj_abc123")
     XCTAssertEqual((try XCTUnwrap(instance.sessionId)), "sess_abc123")

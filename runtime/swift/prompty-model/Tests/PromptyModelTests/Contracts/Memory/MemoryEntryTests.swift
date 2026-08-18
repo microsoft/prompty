@@ -3,22 +3,21 @@
 
 import Foundation
 import XCTest
-
 @testable import PromptyModel
 
 final class MemoryEntryTests: XCTestCase {
   func testJSONRoundTrip1() throws {
     let json = """
-      {
-        "content": "The user prefers concise answers.",
-        "category": "core",
-        "createdAt": "2026-06-09T20:00:00Z",
-        "tags": [
-          "preference",
-          "tone"
-        ]
-      }
-      """
+{
+  "content": "The user prefers concise answers.",
+  "category": "core",
+  "createdAt": "2026-06-09T20:00:00Z",
+  "tags": [
+    "preference",
+    "tone"
+  ]
+}
+"""
     let instance = try MemoryEntry.fromJSON(json)
     XCTAssertEqual(instance.content, "The user prefers concise answers.")
     XCTAssertEqual(instance.category, MemoryCategory.core)
@@ -33,14 +32,14 @@ final class MemoryEntryTests: XCTestCase {
 
   func testYAMLRoundTrip1() throws {
     let yaml = """
-      content: The user prefers concise answers.
-      category: core
-      createdAt: "2026-06-09T20:00:00Z"
-      tags:
-        - preference
-        - tone
+content: The user prefers concise answers.
+category: core
+createdAt: "2026-06-09T20:00:00Z"
+tags:
+  - preference
+  - tone
 
-      """
+"""
     let instance = try MemoryEntry.fromYAML(yaml)
     XCTAssertEqual(instance.content, "The user prefers concise answers.")
     XCTAssertEqual(instance.category, MemoryCategory.core)

@@ -14,10 +14,7 @@ public struct AnthropicMessagesResponse: TypraModel {
   public var stopReason: String = ""
   public var usage: AnthropicUsage = AnthropicUsage()
 
-  public init(
-    id: String = "", type: String = "message", role: String = "assistant", content: [Any] = [],
-    model: String = "", stopReason: String = "", usage: AnthropicUsage = AnthropicUsage()
-  ) {
+  public init(id: String = "", type: String = "message", role: String = "assistant", content: [Any] = [], model: String = "", stopReason: String = "", usage: AnthropicUsage = AnthropicUsage()) {
     self.id = id
     self.type = type
     self.role = role
@@ -27,9 +24,7 @@ public struct AnthropicMessagesResponse: TypraModel {
     self.usage = usage
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesResponse
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
     let object = try TypraRuntime.object(data, typeName: "AnthropicMessagesResponse")
     var instance = AnthropicMessagesResponse()
     if let value = object["id"] {
@@ -37,12 +32,14 @@ public struct AnthropicMessagesResponse: TypraModel {
     }
     if let value = object["type"] {
       instance.type = try TypraRuntime.string(value, field: "type")
-    } else {
+    }
+    else {
       instance.type = "message"
     }
     if let value = object["role"] {
       instance.role = try TypraRuntime.string(value, field: "role")
-    } else {
+    }
+    else {
       instance.role = "assistant"
     }
     if let value = object["content"] {
@@ -75,22 +72,16 @@ public struct AnthropicMessagesResponse: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesResponse
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesResponse"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesResponse"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AnthropicMessagesResponse
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesResponse"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesResponse"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

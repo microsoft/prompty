@@ -13,10 +13,7 @@ public struct AiResourceInfo: TypraModel {
   public var resourceGroup: String = ""
   public var serviceUrl: String? = nil
 
-  public init(
-    name: String = "", kind: String = "", endpoint: String = "", location: String = "",
-    resourceGroup: String = "", serviceUrl: String? = nil
-  ) {
+  public init(name: String = "", kind: String = "", endpoint: String = "", location: String = "", resourceGroup: String = "", serviceUrl: String? = nil) {
     self.name = name
     self.kind = kind
     self.endpoint = endpoint
@@ -25,9 +22,7 @@ public struct AiResourceInfo: TypraModel {
     self.serviceUrl = serviceUrl
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws
-    -> AiResourceInfo
-  {
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AiResourceInfo {
     let object = try TypraRuntime.object(data, typeName: "AiResourceInfo")
     var instance = AiResourceInfo()
     if let value = object["name"] {
@@ -64,9 +59,7 @@ public struct AiResourceInfo: TypraModel {
     return result
   }
 
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String:
-    Any]
-  {
+  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     let wireNameName: String?
     switch provider {
@@ -107,22 +100,16 @@ public struct AiResourceInfo: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws
-    -> AiResourceInfo
-  {
-    return try load(
-      TypraRuntime.jsonObject(from: json, typeName: "AiResourceInfo"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AiResourceInfo {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AiResourceInfo"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws
-    -> AiResourceInfo
-  {
-    return try load(
-      TypraRuntime.yamlObject(from: yaml, typeName: "AiResourceInfo"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AiResourceInfo {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AiResourceInfo"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
