@@ -21,10 +21,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install Swift toolchain
+      # Linux has no Xcode, so install a pinned standalone Swift toolchain.
+      - name: Install Swift toolchain (Linux)
+        if: runner.os == 'Linux'
         uses: swift-actions/setup-swift@v2
         with:
           swift-version: '6.0'
+
+      # macOS ships Xcode whose bundled Swift compiler is matched to its SDK.
+      # A standalone toolchain from setup-swift pins the compiler but still uses
+      # the runner's newer Xcode SDK, which fails with "this SDK is not supported
+      # by the compiler". Select Xcode explicitly and use its bundled Swift so the
+      # compiler and SDK stay in lockstep. See issue #474 (toolchain pinning).
+      - name: Select Xcode (macOS)
+        if: runner.os == 'macOS'
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Report Swift version
         run: swift --version
