@@ -139,9 +139,7 @@ async fn fetch_all(token: &str, first_url: String) -> Result<Vec<Value>, String>
             .await
             .map_err(|e| format!("Failed to parse ARM response: {e}"))?;
 
-        if let Some(arr) = body.get("value").and_then(|v| v.as_array()) {
-            items.extend(arr.iter().cloned());
-        }
+        items.extend(page_objects(&body));
 
         next = body
             .get("nextLink")
@@ -151,6 +149,22 @@ async fn fetch_all(token: &str, first_url: String) -> Result<Vec<Value>, String>
     }
 
     Ok(items)
+}
+
+/// Extract the object entries of an ARM list page's `value` array.
+///
+/// ARM list responses carry results in a `value` array. Only JSON objects can be
+/// valid resources, so non-object entries (`null`, strings, numbers) are dropped
+/// here. Without this filter a stray non-object entry would reach the infallible
+/// `parse_s1_project` mapping and become a phantom `FoundryProject` with empty
+/// fields, which in turn makes `projects` non-empty and suppresses the classic-hub
+/// fallback (#445). This mirrors the Java runtime's paging helper, keeping the two
+/// behavioural references in agreement.
+fn page_objects(body: &Value) -> Vec<Value> {
+    body.get("value")
+        .and_then(|v| v.as_array())
+        .map(|arr| arr.iter().filter(|v| v.is_object()).cloned().collect())
+        .unwrap_or_default()
 }
 
 fn parse_subscription(v: &Value) -> Option<Subscription> {
@@ -424,5 +438,34 @@ mod tests {
         });
         let res = AiResource::load_from_value(&v, &prompty::model::context::LoadContext::default());
         assert_eq!(res.service_url, None);
+    }
+
+    // Regression tests for #445: a non-object `value` entry must not become a
+    // phantom project (and must not suppress the classic-hub fallback).
+    #[test]
+    fn page_objects_skips_non_object_entries() {
+        let body = json!({
+            "value": [
+                null,
+                "a-string",
+                42,
+                true,
+                [1, 2, 3],
+                { "name": "acct/proj-a" }
+            ]
+        });
+        let objs = page_objects(&body);
+        assert_eq!(objs.len(), 1, "only the object entry should survive");
+        assert_eq!(objs[0]["name"], "acct/proj-a");
+    }
+
+    #[test]
+    fn page_objects_empty_without_value_array() {
+        assert!(page_objects(&json!({})).is_empty());
+        assert!(page_objects(&json!({ "value": "not-an-array" })).is_empty());
+        assert!(page_objects(&json!({ "value": [] })).is_empty());
+        // A page consisting solely of non-object entries yields nothing, so the
+        // caller's `projects.is_empty()` fallback guard stays reachable.
+        assert!(page_objects(&json!({ "value": [null, "x", 1] })).is_empty());
     }
 }
