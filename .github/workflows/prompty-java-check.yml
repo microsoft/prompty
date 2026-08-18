@@ -1,0 +1,37 @@
+name: prompty Java build and test
+on:
+  pull_request:
+    paths:
+      - 'runtime/java/**'
+      - '.github/workflows/prompty-java-check.yml'
+
+  workflow_call:
+
+jobs:
+  java-tests:
+    name: test Java ${{ matrix.java }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        java: ["21"]
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: runtime/java
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build and test (live tests excluded)
+        run: ./gradlew build --console=plain
