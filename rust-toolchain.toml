@@ -1,0 +1,10 @@
+# Pins the Rust toolchain for every crate in this repo so local builds and CI
+# agree by construction. rustup, cargo and `dtolnay/rust-toolchain` all honour
+# this file, which matters most for `cargo fmt`: the schema generator runs
+# `cargo fmt --all` over the emitted Rust, and a floating rustfmt reformats that
+# output differently, showing up as false generated-code drift in
+# .github/workflows/schema-repro-check.yml. The channel matches the toolchain
+# that workflow pins (dtolnay/rust-toolchain @ 1.97.1).
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]

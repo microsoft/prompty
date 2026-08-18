@@ -77,16 +77,16 @@ jobs:
       # commit. Please do not "helpfully" restore floating versions here.
       # These values are the ones that produced the verified-green first run.
       #
-      # KNOWN LIMITATION, accepted deliberately. Pinning here fixes CI-side drift but
-      # introduces a second-order skew: a developer running `cargo fmt` on rustup
-      # stable, or `dotnet format` on whichever SDK they have, can produce output this
-      # job rejects. Workflow pins bind CI only. The durable instrument is a root
+      # KNOWN LIMITATION, historically accepted. Pinning here fixes CI-side drift
+      # but introduced a second-order skew: a developer running `cargo fmt` on
+      # rustup stable, or `dotnet format` on whichever SDK they have, could produce
+      # output this job rejected. The durable instrument is a root
       # `rust-toolchain.toml` plus a committed `global.json`, which rustup, rustc,
       # `dtolnay/rust-toolchain` and the .NET CLI all honour — making local and CI
-      # agree by construction instead of by coincidence. That changes the toolchain
-      # for every Rust and C# developer in this repo, so it belongs in its own PR
-      # with its own review, not as a rider on a CI change. Until then, if this gate
-      # disagrees with your local formatter, check these versions first.
+      # agree by construction instead of by coincidence. Both now exist at the repo
+      # root (added deliberately, changing the toolchain for every Rust and C#
+      # developer here), so `dotnet format` no longer needs the ephemeral global.json
+      # this job used to write, and the action pins below simply mirror them.
       - uses: actions/setup-node@v7
         with:
           node-version: '22.23.2'
@@ -152,43 +152,17 @@ jobs:
         working-directory: schema
         run: npm ci
 
-      # setup-dotnet's `dotnet-version` installs an SDK, it does NOT select one.
-      # Measured on the previous run of this workflow: with `dotnet-version: 9.0.317`
-      # the image still resolved `dotnet --version` to 10.0.302, because it carries
-      # eleven SDKs (8.0.129 through 10.0.302) and absent a global.json the highest
-      # wins. The pin alone was doing nothing for `dotnet format`, leaving it the one
-      # formatter that could still float with no repo change at all.
-      #
-      # 9.0.317, matching the net9.0 target of every csproj under runtime/csharp/ and
-      # the `9.0.x` that prompty-csharp-check.yml, prompty-csharp.yml and
-      # docs-examples.yml already pin, so this gate does not disagree with the rest of
-      # the repo about which SDK is authoritative.
+      # The committed root global.json (added alongside this change) selects the SDK
+      # for `dotnet format`. setup-dotnet above installs 9.0.317; the committed
+      # global.json pins the 9.0 feature band (rollForward: latestFeature), so on a
+      # fresh runner the only 9.0.x SDK present — 9.0.317 — is the one selected. This
+      # replaces the ephemeral global.json this job used to write and delete.
       #
       # Honest caveat, measured: no SDK-dependent difference has been observed on this
       # tree. 9.0.317, 10.0.111 and 10.0.302 all produced byte-identical output (the
       # same git blob) for the one file where formatting was ever in question. The pin
       # is therefore precautionary — it makes the SDK an explicit, reviewable input
       # rather than a property of whatever image the runner happens to boot.
-      #
-      # This global.json is written here and deleted before the diff assertion — it is
-      # deliberately NOT committed, because a repo-root global.json would constrain
-      # every other .NET job and build in the repo, which is a much larger decision.
-      # rollForward: disable means a future image that drops 9.0.317 fails loudly with
-      # "requested SDK not found" — unambiguous and attributable — rather than silently
-      # formatting with a new SDK and reporting the result as generated-code drift.
-
-      # Pin the SDK that dotnet format will use
-      - name: Pin the SDK that dotnet format will use
-        shell: bash
-        run: |
-          cat > global.json <<'JSON'
-          {
-            "sdk": {
-              "version": "9.0.317",
-              "rollForward": "disable"
-            }
-          }
-          JSON
 
       # Record every version that can change the output. When this gate goes red,
       # formatter?" — this makes that answerable from the log alone instead of by
@@ -231,15 +205,6 @@ jobs:
             grep -E 'Warning: ' "$RUNNER_TEMP/generate.log" || true
             exit 1
           fi
-
-      # Must run before the assertion below: global.json is untracked, and
-      # `git status --porcelain` reports untracked files, so leaving it in place
-      # would fail the very check it exists to make trustworthy. `if: always()`
-      # so a failed generate still cleans up rather than confusing the failure log.
-      - name: Remove the temporary global.json
-        if: always()
-        shell: bash
-        run: rm -f global.json
 
       - name: Assert the tree is unchanged
         shell: bash
