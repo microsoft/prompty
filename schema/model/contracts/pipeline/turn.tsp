@@ -84,7 +84,7 @@ model TurnModelRequest {
   @sample(callbackIterationSample)
   iteration: int32;
 
-  @doc("Inputs supplied to the deterministic single-turn run")
+  @doc("Inputs supplied to the deterministic single-turn run. Values may be explicit null.")
   inputs?: Record<unknown>;
 
   @doc("Canonical turn execution options")
@@ -107,7 +107,7 @@ model TurnModelResponse {
   @doc("Host tool execution requests emitted by the model callback")
   toolRequests?: HostToolRequest[];
 
-  @doc("Additional deterministic state to merge into the iteration checkpoint")
+  @doc("Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.")
   checkpointState?: Record<unknown>;
 }
 
@@ -123,7 +123,7 @@ model RunTurnRequest {
   @sample(RunTurnRequestTurnIdSample)
   turnId: string;
 
-  @doc("Inputs supplied to the deterministic single-turn run")
+  @doc("Inputs supplied to the deterministic single-turn run. Values may be explicit null.")
   inputs?: Record<unknown>;
 
   @doc("Canonical turn execution options")

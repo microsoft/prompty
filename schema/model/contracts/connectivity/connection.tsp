@@ -11,7 +11,8 @@ alias ConnectionType =
   | "key"
   | "anonymous"
   | "foundry"
-  | "oauth";
+  | "oauth"
+  | string;
 alias AuthenticationMode = "user" | "system";
 
 /**

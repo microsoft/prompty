@@ -68,8 +68,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -216,6 +220,34 @@
           "kind": "type",
           "group": "",
           "source": "DiscoveryConformance.cs",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineDurabilityPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePermissionPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePostCommitPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineToolPort.cs",
           "protocol": true
         },
         {
@@ -1689,6 +1721,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort.cs",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort.cs",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort.cs",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort.cs",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -2052,6 +2178,10 @@
         "Agent.cs",
         "CheckpointStore.cs",
         "DiscoveryConformance.cs",
+        "EngineDurabilityPort.cs",
+        "EnginePermissionPort.cs",
+        "EnginePostCommitPort.cs",
+        "EngineToolPort.cs",
         "EventJournalWriter.cs",
         "EventSink.cs",
         "Executor.cs",
@@ -2228,8 +2358,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -2376,6 +2510,34 @@
           "kind": "type",
           "group": "",
           "source": "discovery_conformance.go",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_durability_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_permission_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_post_commit_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_tool_port.go",
           "protocol": true
         },
         {
@@ -3849,6 +4011,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "engine_durability_port.go",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "engine_permission_port.go",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "engine_post_commit_port.go",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "engine_tool_port.go",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -4238,8 +4494,12 @@
         "discovery_conformance.go",
         "done_event_payload.go",
         "engine_checkpoint.go",
+        "engine_durability_port.go",
         "engine_event.go",
         "engine_permission_decision.go",
+        "engine_permission_port.go",
+        "engine_post_commit_port.go",
+        "engine_tool_port.go",
         "error_event_payload.go",
         "event_journal_writer.go",
         "event_sink.go",
@@ -4387,8 +4647,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -4535,6 +4799,34 @@
           "kind": "type",
           "group": "",
           "source": "DiscoveryConformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineDurabilityPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePermissionPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePostCommitPort",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineToolPort",
           "protocol": true
         },
         {
@@ -6008,6 +6300,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -6397,8 +6783,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
@@ -6547,8 +6937,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -6695,6 +7089,34 @@
           "kind": "type",
           "group": "",
           "source": "._DiscoveryConformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EngineDurabilityPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EnginePermissionPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EnginePostCommitPort",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EngineToolPort",
           "protocol": true
         },
         {
@@ -8168,6 +8590,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "._EngineDurabilityPort",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "._EnginePermissionPort",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "._EnginePostCommitPort",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "._EngineToolPort",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -8531,6 +9047,10 @@
         "._Agent",
         "._CheckpointStore",
         "._DiscoveryConformance",
+        "._EngineDurabilityPort",
+        "._EnginePermissionPort",
+        "._EnginePostCommitPort",
+        "._EngineToolPort",
         "._EventJournalWriter",
         "._EventSink",
         "._Executor",
@@ -8585,8 +9105,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -8733,6 +9257,34 @@
           "kind": "type",
           "group": "",
           "source": "discovery_conformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_durability_port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_permission_port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_post_commit_port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_tool_port",
           "protocol": true
         },
         {
@@ -10206,6 +10758,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "engine_durability_port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "engine_permission_port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "engine_post_commit_port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "engine_tool_port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -10571,6 +11217,10 @@
         "context",
         "contracts",
         "discovery_conformance",
+        "engine_durability_port",
+        "engine_permission_port",
+        "engine_post_commit_port",
+        "engine_tool_port",
         "event_journal_writer",
         "event_sink",
         "executor",
@@ -10625,8 +11275,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -10773,6 +11427,34 @@
           "kind": "type",
           "group": "",
           "source": "./discovery-conformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-durability-port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-permission-port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-post-commit-port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-tool-port",
           "protocol": true
         },
         {
@@ -12246,6 +12928,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "./engine-durability-port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "./engine-permission-port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "./engine-post-commit-port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "./engine-tool-port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -12722,6 +13498,10 @@
         "./contracts/validation-error",
         "./contracts/validation-result",
         "./discovery-conformance",
+        "./engine-durability-port",
+        "./engine-permission-port",
+        "./engine-post-commit-port",
+        "./engine-tool-port",
         "./event-journal-writer",
         "./event-sink",
         "./executor",

@@ -55,4 +55,4 @@ spanId: span_tool_001
 | iteration | int32 | Zero-based agent-loop iteration associated with the event |
 | parentId | string | Parent event or span identifier for reconstructing event hierarchy |
 | spanId | string | Trace span identifier associated with this event |
-| payload | dictionary | Event-specific payload. Use the typed payload model matching 'type'. |
+| payload | dictionary | Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'. |

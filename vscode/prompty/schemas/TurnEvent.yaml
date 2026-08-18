@@ -75,7 +75,7 @@ properties:
     description: Trace span identifier associated with this event
   payload:
     $ref: RecordUnknown.yaml
-    description: Event-specific payload. Use the typed payload model matching 'type'.
+    description: Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
 required:
   - id
   - type

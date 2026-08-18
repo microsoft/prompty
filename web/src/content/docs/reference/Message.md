@@ -51,7 +51,7 @@ metadata:
 | ---- | ---- | ----------- |
 | role | string | The role of the message sender |
 | parts | [ContentPart[]](../contentpart/) | The content parts of the message(Related Types: [TextPart](../textpart/), [ImagePart](../imagepart/), [FilePart](../filepart/), [AudioPart](../audiopart/)) |
-| metadata | dictionary | Optional metadata associated with the message |
+| metadata | dictionary | Optional metadata associated with the message. Values may be explicit null. |
 
 ## Helper Methods
 

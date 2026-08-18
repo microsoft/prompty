@@ -70,7 +70,7 @@ public partial class TurnEvent
     public string? SpanId { get; set; }
 
     /// <summary>
-    /// Event-specific payload. Use the typed payload model matching 'type'.
+    /// Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     /// </summary>
     public IDictionary<string, object?> Payload { get; set; } = new Dictionary<string, object?>();
 

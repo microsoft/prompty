@@ -21,7 +21,7 @@ pub struct HostToolRequest {
     pub tool_call_id: Option<String>,
     /// Name of the host tool being executed
     pub tool_name: String,
-    /// Tool arguments after host-side sanitization
+    /// Tool arguments after host-side sanitization. Values may be explicit null.
     pub arguments: serde_json::Value,
     /// Working directory or execution scope for the tool
     pub working_directory: Option<String>,

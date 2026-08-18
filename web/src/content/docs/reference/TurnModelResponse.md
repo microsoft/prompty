@@ -48,7 +48,7 @@ classDiagram
 | output | unknown | Provider-neutral final model output for the turn when no more tools are requested |
 | usage | [InvocationUsage](../invocationusage/) | Complete cumulative token usage reported for this model invocation, when available |
 | toolRequests | [HostToolRequest[]](../hosttoolrequest/) | Host tool execution requests emitted by the model callback |
-| checkpointState | dictionary | Additional deterministic state to merge into the iteration checkpoint |
+| checkpointState | dictionary | Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null. |
 
 ## Composed Types
 

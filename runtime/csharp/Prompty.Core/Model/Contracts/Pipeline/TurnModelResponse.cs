@@ -46,7 +46,7 @@ public partial class TurnModelResponse
     public IList<HostToolRequest>? ToolRequests { get; set; }
 
     /// <summary>
-    /// Additional deterministic state to merge into the iteration checkpoint
+    /// Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?>? CheckpointState { get; set; }
 

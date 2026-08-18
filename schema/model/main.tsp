@@ -73,6 +73,7 @@ import "./operations/pipeline/parser.tsp";
 import "./operations/pipeline/executor.tsp";
 import "./operations/pipeline/processor.tsp";
 import "./operations/pipeline/harness.tsp";
+import "./operations/pipeline/engine-ports.tsp";
 
 // Conformance-only seams hosting the remaining pipeline-stage behavior vectors.
 // These carry @vector evidence into the cross-runtime vectors.json and are not

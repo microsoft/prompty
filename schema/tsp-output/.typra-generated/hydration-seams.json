@@ -21,6 +21,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "csharp",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "EngineDurabilityPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "csharp",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "EnginePermissionPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "csharp",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "EnginePostCommitPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "csharp",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "EngineToolPort.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "csharp",
       "group": "",
@@ -130,6 +162,38 @@
       "group": "",
       "symbol": "DiscoveryConformance",
       "generatedSource": "discovery_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "go",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "engine_durability_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "go",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "engine_permission_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "go",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "engine_post_commit_port.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "go",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "engine_tool_port.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -245,6 +309,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "markdown",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "EngineDurabilityPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "markdown",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "EnginePermissionPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "markdown",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "EnginePostCommitPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "markdown",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "EngineToolPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "markdown",
       "group": "",
@@ -354,6 +450,38 @@
       "group": "",
       "symbol": "DiscoveryConformance",
       "generatedSource": "._DiscoveryConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "python",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "._EngineDurabilityPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "python",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "._EnginePermissionPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "python",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "._EnginePostCommitPort",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "python",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "._EngineToolPort",
       "seamKind": "protocol-adapter"
     },
     {
@@ -469,6 +597,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "rust",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "engine_durability_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "rust",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "engine_permission_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "rust",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "engine_post_commit_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "rust",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "engine_tool_port",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "rust",
       "group": "",
@@ -578,6 +738,38 @@
       "group": "",
       "symbol": "DiscoveryConformance",
       "generatedSource": "./discovery-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "typescript",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "./engine-durability-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "typescript",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "./engine-permission-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "typescript",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "./engine-post-commit-port",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "typescript",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "./engine-tool-port",
       "seamKind": "protocol-adapter"
     },
     {

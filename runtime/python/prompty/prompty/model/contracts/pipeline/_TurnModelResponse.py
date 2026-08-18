@@ -26,7 +26,7 @@ class TurnModelResponse:
     tool_requests : Optional[list[HostToolRequest]]
         Host tool execution requests emitted by the model callback
     checkpoint_state : Optional[dict[str, Any]]
-        Additional deterministic state to merge into the iteration checkpoint
+        Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.
     """
 
     _shorthand_property: ClassVar[str | None] = None
