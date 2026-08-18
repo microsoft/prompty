@@ -9646,6 +9646,99 @@ const vectors = [
     },
     returns: "unknown",
     vector: {
+      name: "structured_output_nested_optional",
+      description:
+        "§7.1.4/§7.1.6 — OpenAI strict mode recursively requires every object property and represents optional fields as nullable.",
+      stage: "wire",
+      provider: "openai",
+      targetApi: "chat",
+      input: {
+        provider: "openai",
+        apiType: "chat",
+        model_id: "gpt-4o-mini",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                kind: "text",
+                value: "Choose a visual style.",
+              },
+            ],
+          },
+        ],
+        tools: [],
+        options: {},
+        outputs: [
+          {
+            name: "style",
+            kind: "object",
+            required: true,
+            properties: [
+              {
+                name: "color",
+                kind: "string",
+                required: true,
+              },
+              {
+                name: "border",
+                kind: "string",
+                required: false,
+              },
+            ],
+          },
+        ],
+      },
+      expected: {
+        request_body: {
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "user",
+              content: "Choose a visual style.",
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "structured_output",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  style: {
+                    type: "object",
+                    properties: {
+                      color: {
+                        type: "string",
+                      },
+                      border: {
+                        type: ["string", "null"],
+                      },
+                    },
+                    required: ["color", "border"],
+                    additionalProperties: false,
+                  },
+                },
+                required: ["style"],
+                additionalProperties: false,
+              },
+            },
+          },
+        },
+      },
+      operation: "toRequest",
+    },
+  },
+  {
+    contract: "WireConformance",
+    operation: "toRequest",
+    params: {
+      agent: "Agent",
+      messages: "Message[]",
+    },
+    returns: "unknown",
+    vector: {
       name: "tools_bindings_stripped",
       description:
         "§7.1.3 — Parameters listed in bindings MUST be stripped from wire tools (properties AND required).",

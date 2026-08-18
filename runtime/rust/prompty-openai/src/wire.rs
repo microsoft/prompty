@@ -413,7 +413,7 @@ fn property_to_json_schema(prop: &Property, strict: bool) -> Result<Value, Schem
                     p.name.clone(),
                     property_to_json_schema_with_optional(p, !p.required.unwrap_or(false), strict)?,
                 );
-                if p.required.unwrap_or(false) {
+                if strict || p.required.unwrap_or(false) {
                     req.push(Value::String(p.name.clone()));
                 }
             }

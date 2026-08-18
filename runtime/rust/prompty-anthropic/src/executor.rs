@@ -198,13 +198,7 @@ fn resolve_connection(
 
 fn build_url(agent: &Agent) -> Result<String, InvokerError> {
     let conn = resolve_connection(agent)?;
-    let endpoint = conn
-        .get("endpoint")
-        .and_then(|e| e.as_str())
-        .unwrap_or("https://api.anthropic.com");
-
-    let base = endpoint.trim_end_matches('/');
-    Ok(format!("{base}/v1/messages"))
+    Ok(crate::endpoint::build_api_url(&conn, "messages"))
 }
 
 fn get_api_key(agent: &Agent) -> Result<String, InvokerError> {
@@ -375,8 +369,14 @@ impl Stream for AnthropicSseParser {
                     return Poll::Ready(None);
                 }
                 Poll::Ready(None) => {
+                    self.pending.push_back(serde_json::json!({
+                        "error": {
+                            "type": "sse_transport_error",
+                            "message": "Anthropic SSE stream ended before message_stop",
+                        }
+                    }));
                     self.done = true;
-                    return Poll::Ready(None);
+                    return Poll::Ready(self.pending.pop_front());
                 }
                 Poll::Pending => {
                     return Poll::Pending;
@@ -394,6 +394,24 @@ mod tests {
     use serde_json::json;
     use serial_test::serial;
 
+    struct RemovedBaseUrl(Option<std::ffi::OsString>);
+
+    impl RemovedBaseUrl {
+        fn new() -> Self {
+            let previous = std::env::var_os("ANTHROPIC_BASE_URL");
+            unsafe { std::env::remove_var("ANTHROPIC_BASE_URL") };
+            Self(previous)
+        }
+    }
+
+    impl Drop for RemovedBaseUrl {
+        fn drop(&mut self) {
+            if let Some(value) = self.0.take() {
+                unsafe { std::env::set_var("ANTHROPIC_BASE_URL", value) };
+            }
+        }
+    }
+
     fn make_agent(model_json: Value) -> Agent {
         let mut data = json!({
             "name": "test",
@@ -407,6 +425,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_build_url_default() {
+        let _base_url = RemovedBaseUrl::new();
         let agent = make_agent(json!({"id": "claude-3", "provider": "anthropic"}));
         let url = build_url(&agent).unwrap();
         assert_eq!(url, "https://api.anthropic.com/v1/messages");
@@ -426,6 +445,43 @@ mod tests {
         }));
         let url = build_url(&agent).unwrap();
         assert_eq!(url, "https://custom.anthropic.com/v1/messages");
+    }
+
+    #[test]
+    #[serial]
+    fn test_build_url_custom_endpoint_with_v1() {
+        let agent = make_agent(json!({
+            "id": "claude-3",
+            "provider": "anthropic",
+            "connection": {
+                "kind": "key",
+                "endpoint": "https://custom.anthropic.com/v1/",
+                "apiKey": "test-key"
+            }
+        }));
+        let url = build_url(&agent).unwrap();
+        assert_eq!(url, "https://custom.anthropic.com/v1/messages");
+    }
+
+    #[tokio::test]
+    async fn test_sse_parser_reports_premature_eof() {
+        use futures::StreamExt;
+
+        let inner = futures::stream::iter(vec![Ok::<Bytes, reqwest::Error>(Bytes::from(
+            "event: content_block_delta\ndata: {\"type\":\"content_block_delta\",\"index\":0,\"delta\":{\"type\":\"text_delta\",\"text\":\"partial\"}}\n\n",
+        ))]);
+        let mut stream = AnthropicSseParser::new(inner);
+
+        assert_eq!(stream.next().await.unwrap()["type"], "content_block_delta");
+        let failure = stream.next().await.unwrap();
+        assert_eq!(failure["error"]["type"], "sse_transport_error");
+        assert!(
+            failure["error"]["message"]
+                .as_str()
+                .unwrap()
+                .contains("before message_stop")
+        );
+        assert!(stream.next().await.is_none());
     }
 
     #[test]

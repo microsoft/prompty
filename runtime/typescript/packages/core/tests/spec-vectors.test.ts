@@ -772,12 +772,7 @@ function buildAgentFromWireInput(input: any, name?: string): Agent {
   // Build tools
   if (input.tools && input.tools.length > 0) {
     agent.tools = input.tools.map((t: any) => {
-      const params = (t.parameters ?? []).map((p: any) => new Property({
-        name: p.name,
-        kind: p.kind,
-        required: p.required,
-        description: p.description,
-      }));
+      const params = (t.parameters ?? []).map((p: any) => Property.load(p));
       const bindings = Object.entries(t.bindings ?? {}).map(([bname, bval]: [string, any]) =>
         new Binding({ name: bname, input: typeof bval === "object" ? bval.input : String(bval) }),
       );
@@ -794,12 +789,7 @@ function buildAgentFromWireInput(input: any, name?: string): Agent {
 
   // Build outputs
   if (input.outputs && input.outputs.length > 0) {
-    agent.outputs = input.outputs.map((o: any) => new Property({
-      name: o.name,
-      kind: o.kind,
-      required: o.required,
-      description: o.description,
-    }));
+    agent.outputs = input.outputs.map((o: any) => Property.load(o));
   }
 
   return agent;

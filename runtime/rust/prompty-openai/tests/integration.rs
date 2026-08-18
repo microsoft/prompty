@@ -313,11 +313,17 @@ async fn test_structured_output() {
             "parser": { "kind": "prompty" },
         },
         "outputs": [
-            { "name": "city", "kind": "string", "description": "The city name", "required": true },
-            { "name": "country", "kind": "string", "description": "The country name", "required": true },
-            { "name": "population", "kind": "integer", "description": "Approximate population", "required": true },
+            {
+                "name": "style",
+                "kind": "object",
+                "required": true,
+                "properties": [
+                    { "name": "color", "kind": "string", "required": true },
+                    { "name": "border", "kind": "string", "required": false }
+                ]
+            },
         ],
-        "instructions": "system:\nYou are a geography expert. Return structured data.\nuser:\nTell me about Paris.",
+        "instructions": "system:\nReturn the requested visual style as structured data.\nuser:\nUse blue with no border.",
     });
     let agent = Agent::load_from_value(&data, &LoadContext::default());
 
@@ -336,14 +342,18 @@ async fn test_structured_output() {
         other => panic!("Expected object or JSON string, got: {other:?}"),
     };
 
-    assert!(obj.contains_key("city"), "missing 'city' field: {obj:?}");
+    let style = obj
+        .get("style")
+        .and_then(Value::as_object)
+        .expect("missing object 'style' field");
+    assert!(style.get("color").is_some_and(Value::is_string));
     assert!(
-        obj.contains_key("country"),
-        "missing 'country' field: {obj:?}"
+        style.contains_key("border"),
+        "missing 'border' field: {style:?}"
     );
     assert!(
-        obj.contains_key("population"),
-        "missing 'population' field: {obj:?}"
+        style["border"].is_null() || style["border"].is_string(),
+        "'border' must be nullable: {style:?}"
     );
     eprintln!("Structured output: {obj:?}");
 }

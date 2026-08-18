@@ -179,17 +179,18 @@ A `list[Property]` (used for `inputs`, `outputs`, and `FunctionTool.parameters`)
 MUST be converted to a JSON Schema object for wire transmission:
 
 ```
-function schema_to_wire(properties: list[Property]) → dict:
+function schema_to_wire(properties: list[Property], strict: bool = false) → dict:
   schema = { type: "object", properties: {}, required: [] }
 
   for prop in properties:
-    prop_schema = { type: map_kind_to_json_type(prop.kind) }
+    optional = strict and not prop.required
+    prop_schema = property_to_json_schema(prop, strict, optional)
     if prop.description:
       prop_schema.description = prop.description
     if prop.enumValues:
       prop_schema.enum = prop.enumValues
     schema.properties[prop.name] = prop_schema
-    if prop.required:
+    if strict or prop.required:
       schema.required.append(prop.name)
 
   if schema.required is empty:
@@ -197,6 +198,13 @@ function schema_to_wire(properties: list[Property]) → dict:
 
   return schema
 ```
+
+`property_to_json_schema` MUST recurse through array items and object
+properties. Outside provider strict mode, each object lists only explicitly
+required children in `required`. In OpenAI strict mode, every property of every
+object MUST appear in that object's `required` array. A property that is
+optional in the Prompty model MUST instead be represented as nullable in the
+strict wire schema.
 
 **Kind → JSON Schema type mapping.** Implementations MUST use this table:
 
