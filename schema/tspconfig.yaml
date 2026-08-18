@@ -33,5 +33,11 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
         import-path: "prompty::model"
+      - type: Swift
+        output-dir: "../runtime/swift/prompty-model"
+        package-name: "PromptyModel"
+        # test-dir intentionally omitted: the Typra Swift test emitter emits
+        # tests that do not compile. Model round-trip coverage lives in
+        # runtime/swift/prompty. Restore test-dir once the emitter is fixed.
       - type: markdown
         output-dir: "../web/src/content/docs/reference"

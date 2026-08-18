@@ -24,3 +24,11 @@ schema/tsp-output/.typra-generated/report.json
 !schema/tsp-output/json-ast/
 !schema/tsp-output/json-ast/model.json
 .playwright-mcp/
+
+# SwiftPM build artifacts and resolved dependency pins.
+# Package.resolved is untracked because the Swift runtime is a library: pinning
+# transitive versions here would constrain every consumer.
+.build/
+.swiftpm/
+Package.resolved
+.swift-toolchain-stamp
