@@ -191,10 +191,10 @@ cannot express, such as Windows line endings.
 
 ### Coverage against the shared vectors
 
-This port is **not parity-complete**. Eight of the ten shared vector files are
-exercised, and two of those run only their OpenAI subset. The other two describe
-surface area this runtime does not yet implement. That is a deliberate scoping
-decision, not an oversight.
+This port is **not parity-complete**. Nine of the ten shared vector files are
+exercised, and two of those run only their OpenAI subset. The remaining file —
+the durable turn engine — describes surface area this runtime does not yet
+implement. That is a deliberate scoping decision, not an oversight.
 
 | Vector file                             |   Cases | Status                                |
 | --------------------------------------- | ------: | ------------------------------------- |
@@ -206,8 +206,8 @@ decision, not an oversight.
 | `harness/replay_vectors.json`           |       5 | Run                                   |
 | `discovery/discovery_vectors.json`      |       7 | Run — OpenAI, Anthropic, and Foundry  |
 | `discovery/enrichment_vectors.json`     |       9 | Run                                   |
+| `agent/agent_vectors.json`              |      28 | Run — basic loop and all extensions   |
 | `engine/turn_vectors.json`              |       5 | **Not wired** — engine incomplete     |
-| `agent/agent_vectors.json`              |      28 | **Not implemented** — no agent layer  |
 
 The Anthropic provider is now complete: `PromptyAnthropic` ships a wire executor
 (`AnthropicWire` + `AnthropicExecutor`) and response processor
@@ -223,6 +223,22 @@ Model discovery (the `discovery` and `enrichment` stages) is fully implemented.
 `model_capabilities.json` dataset (fill-only-missing, longest-prefix match). A
 `DatasetDriftTests` guard keeps the vendored copy identical to the canonical
 `spec/data/model_capabilities.json`.
+
+The agent stage (`agent/agent_vectors.json`) is fully implemented. `AgentLoop`
+provides `Pipeline.turn`, the model→tool→model loop the `agent` vectors are
+written against, and `AgentExtensions` layers on cancellation, guardrails
+(input/output/tool), steering injection, context-budget trimming, parallel tool
+calls, and lifecycle events. `AgentVectorTests` replays all 28 cases — the 11
+basic control-flow vectors plus the 17 extension vectors — against a mock
+executor/processor, asserting the same lenient contract Python and TypeScript
+use (final result, error type and reason, denied/executed tools, and a subset
+match on emitted event types with a terminal `done`/`cancelled`).
+
+The `turn` engine stage stays intentionally out of scope, matching Python and
+TypeScript: the durable journal engine with checkpointing and delegated provider
+state remains Rust-only. Swift implements the same agent surface those runtimes
+do, so it is at parity with them — the engine gap below is shared, not
+Swift-specific.
 
 The turn engine is the substantive gap. `ReferenceTurnRunner` already implements
 the iteration loop, permission mediation, host tool execution, and checkpointing,

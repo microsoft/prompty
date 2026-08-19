@@ -379,4 +379,278 @@ final class AgentVectorTests: XCTestCase {
         "expected a missing-tool error, got: \(message)")
     }
   }
+
+  // MARK: - Extension support
+
+  /// Thread-safe recorder for the events a vector's `on_event` sink emits.
+  private final class EventRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var events: [AgentEvent] = []
+
+    func record(_ event: AgentEvent) {
+      lock.lock()
+      defer { lock.unlock() }
+      events.append(event)
+    }
+
+    /// Event type strings in emission order.
+    var types: [String] {
+      lock.lock()
+      defer { lock.unlock() }
+      return events.map(\.type)
+    }
+  }
+
+  /// A once-only latch: the first `trip()` returns true, all later ones false.
+  private final class FirstCallLatch: @unchecked Sendable {
+    private let lock = NSLock()
+    private var tripped = false
+
+    func trip() -> Bool {
+      lock.lock()
+      defer { lock.unlock() }
+      if tripped { return false }
+      tripped = true
+      return true
+    }
+  }
+
+  /// Build the agent-loop options a vector's `input` extension keys describe.
+  ///
+  /// Reads `context_budget`, `guardrails`, `steering`, `parallel_tool_calls`,
+  /// and wires the recorder when `on_event` is present. Cancellation is wired by
+  /// the caller (it owns the token), so it is passed in.
+  private func makeOptions(
+    input: [String: Any],
+    recorder: EventRecorder?,
+    cancel: CancellationToken?
+  ) -> Pipeline.Options {
+    var options = Pipeline.Options()
+
+    if let recorder {
+      options.onEvent = { event in recorder.record(event) }
+    }
+    if let budget = input["context_budget"] as? Int {
+      options.contextBudget = budget
+    }
+    if let parallel = input["parallel_tool_calls"] as? Bool {
+      options.parallelToolCalls = parallel
+    }
+    options.cancel = cancel
+    options.guardrails = makeGuardrails(input["guardrails"] as? [String: Any])
+    options.steering = makeSteering(input["steering"] as? [String: Any])
+
+    return options
+  }
+
+  /// Translate a vector's `guardrails` block into runtime guardrail closures.
+  private func makeGuardrails(_ spec: [String: Any]?) -> Guardrails? {
+    guard let spec else { return nil }
+    var guardrails = Guardrails()
+
+    if let input = spec["input"] as? [String: Any] {
+      let deny = (input["action"] as? String) == "deny"
+      let reason = input["reason"] as? String ?? "Input denied"
+      guardrails.input = { _ in deny ? .deny(reason) : .allow() }
+    }
+    if let output = spec["output"] as? [String: Any] {
+      let deny = (output["action"] as? String) == "deny"
+      let reason = output["reason"] as? String ?? "Output denied"
+      guardrails.output = { _ in deny ? .deny(reason) : .allow() }
+    }
+    if let tool = spec["tool"] as? [String: Any] {
+      let denied = Set((tool["deny_tools"] as? [Any] ?? []).compactMap { $0 as? String })
+      let reason = tool["reason"] as? String ?? "Tool denied"
+      guardrails.tool = { name, _ in denied.contains(name) ? .deny(reason) : .allow() }
+    }
+    return guardrails
+  }
+
+  /// Translate a vector's `steering` block into a runtime steering queue.
+  private func makeSteering(_ spec: [String: Any]?) -> Steering? {
+    guard let spec, let messages = spec["messages"] as? [Any] else { return nil }
+    let scheduled = messages.compactMap { entry -> SteeringMessage? in
+      guard let message = entry as? [String: Any] else { return nil }
+      return SteeringMessage(
+        injectBeforeIteration: message["inject_before_iteration"] as? Int ?? 1,
+        role: message["role"] as? String ?? "user",
+        text: message["text"] as? String ?? "")
+    }
+    return Steering(scheduled)
+  }
+
+  /// Wrap every handler so the first tool call trips the shared latch, cancelling
+  /// the token — the mechanism the `cancellation_between_*` vectors rely on.
+  private func cancelOnFirstTool(
+    _ tools: [String: ToolHandler],
+    token: CancellationToken,
+    reason: String
+  ) -> [String: ToolHandler] {
+    let latch = FirstCallLatch()
+    var wrapped: [String: ToolHandler] = [:]
+    for (name, handler) in tools {
+      wrapped[name] = .async { arguments in
+        let result = try await handler.invoke(arguments)
+        if latch.trip() { token.cancel(reason: reason) }
+        return result
+      }
+    }
+    return wrapped
+  }
+
+  /// Assert the recorded events satisfy the vector's lenient event contract:
+  /// every expected type (minus `status`) is present — with `tool_result` and
+  /// `error` interchangeable — and a terminal `done`/`cancelled` event fired.
+  private func assertEvents(_ recorder: EventRecorder, expected: [[String: Any]], _ label: String) {
+    let actual = Set(recorder.types)
+    let expectedTypes = Set(expected.compactMap { $0["type"] as? String }).subtracting(["status"])
+
+    func satisfied(_ type: String) -> Bool {
+      if actual.contains(type) { return true }
+      if type == "error" && actual.contains("tool_result") { return true }
+      if type == "tool_result" && actual.contains("error") { return true }
+      return false
+    }
+
+    for type in expectedTypes {
+      XCTAssertTrue(satisfied(type), "\(label): missing event '\(type)' in \(recorder.types)")
+    }
+    XCTAssertTrue(
+      actual.contains("done") || actual.contains("cancelled"),
+      "\(label): no terminal event in \(recorder.types)")
+  }
+
+  // MARK: - Extension vectors — result cases
+
+  func testExtensionResultVectors() async throws {
+    var run = VectorRun(stage: "agent")
+    let names = [
+      "context_trim_basic",
+      "context_no_trim_when_fits",
+      "context_preserves_system_messages",
+      "guardrail_tool_deny",
+      "guardrail_all_pass",
+      "steering_inject_message",
+      "steering_multiple_messages",
+      "parallel_tools_basic",
+      "parallel_tools_with_guardrail_deny",
+      "events_basic_tool_loop",
+      "events_no_tools",
+      "events_error_logged",
+    ]
+
+    for name in names {
+      await run.checkAsync(name) {
+        let harness = try self.harness(for: name)
+        let input = try self.vector(name)["input"] as? [String: Any] ?? [:]
+        let hasEvents = input["on_event"] != nil
+        let recorder = hasEvents ? EventRecorder() : nil
+        let options = self.makeOptions(input: input, recorder: recorder, cancel: nil)
+
+        let result = try await Pipeline.turn(
+          harness.agent, inputs: harness.inputs, tools: harness.tools,
+          registry: harness.registry, options: options)
+
+        let expected = try XCTUnwrap(harness.expected["result"] as? String)
+        try expectEqual(result, expected, "result")
+
+        // Denied tools must never have executed.
+        if let denied = harness.expected["denied_tools"] as? [Any] {
+          for entry in denied {
+            let tool = entry as? String ?? ""
+            XCTAssertNil(
+              harness.captured.arguments(for: tool),
+              "\(name): denied tool '\(tool)' should not have executed")
+          }
+        }
+        // Named tools must have executed, in any order.
+        if let order = harness.expected["tool_execution_order"] as? [Any] {
+          for entry in order {
+            let tool = entry as? String ?? ""
+            XCTAssertNotNil(
+              harness.captured.arguments(for: tool),
+              "\(name): tool '\(tool)' should have executed")
+          }
+        }
+        if let recorder, let events = harness.expected["events"] as? [[String: Any]] {
+          self.assertEvents(recorder, expected: events, name)
+        }
+      }
+    }
+
+    run.assertClean()
+  }
+
+  // MARK: - Extension vectors — guardrail error cases
+
+  func testGuardrailInputDenyThrows() async throws {
+    let harness = try harness(for: "guardrail_input_deny")
+    let input = try vector("guardrail_input_deny")["input"] as? [String: Any] ?? [:]
+    let options = makeOptions(input: input, recorder: nil, cancel: nil)
+    do {
+      _ = try await Pipeline.turn(
+        harness.agent, inputs: harness.inputs, tools: harness.tools,
+        registry: harness.registry, options: options)
+      XCTFail("expected guardrail_input_deny to throw")
+    } catch let error as GuardrailError {
+      let reason = try XCTUnwrap(harness.expected["error_reason"] as? String)
+      XCTAssertTrue(
+        error.description.contains(reason),
+        "expected reason '\(reason)', got: \(error.description)")
+    }
+  }
+
+  func testGuardrailOutputDenyThrows() async throws {
+    let harness = try harness(for: "guardrail_output_deny")
+    let input = try vector("guardrail_output_deny")["input"] as? [String: Any] ?? [:]
+    let options = makeOptions(input: input, recorder: nil, cancel: nil)
+    do {
+      _ = try await Pipeline.turn(
+        harness.agent, inputs: harness.inputs, tools: harness.tools,
+        registry: harness.registry, options: options)
+      XCTFail("expected guardrail_output_deny to throw")
+    } catch let error as GuardrailError {
+      let reason = try XCTUnwrap(harness.expected["error_reason"] as? String)
+      XCTAssertTrue(
+        error.description.contains(reason),
+        "expected reason '\(reason)', got: \(error.description)")
+    }
+  }
+
+  // MARK: - Extension vectors — cancellation cases
+
+  func testCancellationVectors() async throws {
+    // before_llm cancels up front; the between_* vectors trip the token from the
+    // first tool call and rely on the loop's cancel checks to stop the turn.
+    for name in ["cancellation_before_llm", "cancellation_between_iterations", "cancellation_between_tools"] {
+      let harness = try harness(for: name)
+      let input = try vector(name)["input"] as? [String: Any] ?? [:]
+      let cancelSpec = input["cancel"] as? [String: Any] ?? [:]
+      let cancelledAt = cancelSpec["cancelled_at"] as? String ?? ""
+
+      let token = CancellationToken()
+      var tools = harness.tools
+      if cancelledAt == "before_first_iteration" || cancelledAt.contains("before_iteration_1")
+        || name == "cancellation_before_llm"
+      {
+        token.cancel(reason: "Cancellation requested before first iteration")
+      } else {
+        tools = cancelOnFirstTool(tools, token: token, reason: "Cancellation requested after \(cancelledAt)")
+      }
+
+      let recorder = EventRecorder()
+      let options = makeOptions(input: input, recorder: recorder, cancel: token)
+
+      do {
+        _ = try await Pipeline.turn(
+          harness.agent, inputs: harness.inputs, tools: tools,
+          registry: harness.registry, options: options)
+        XCTFail("\(name): expected cancellation to throw")
+      } catch is CancelledError {
+        if let events = harness.expected["events"] as? [[String: Any]] {
+          assertEvents(recorder, expected: events, name)
+        }
+      }
+    }
+  }
 }
