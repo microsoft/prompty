@@ -184,20 +184,16 @@ final class GeneratedModelRoundTripTests: XCTestCase {
     XCTAssertTrue(Spec.equal(saved["name"], "vendor_tool"))
   }
 
-  /// `Connection`, unlike `Tool`, is a *closed* union: an unknown discriminator
-  /// is rejected outright rather than dispatched to a wildcard case. This is the
-  /// cross-runtime contract (Rust `panic!`s on the same input).
-  func testUnknownConnectionKindIsRejected() throws {
+  /// `Connection` is an *open* union: an unknown discriminator survives a round
+  /// trip through the wildcard `unknown` case instead of throwing. This is the
+  /// cross-runtime contract (Rust preserves the same input as
+  /// `ConnectionKind::Unknown` rather than rejecting it).
+  func testUnknownConnectionKindRoundTrips() throws {
     let source: [String: Any] = ["kind": "vendor.auth", "endpoint": "https://example.test"]
-    XCTAssertThrowsError(try Connection.load(source)) { error in
-      guard case .unknownDiscriminator(let type, let field, let value)? = error as? TypraRuntimeError
-      else {
-        return XCTFail("expected .unknownDiscriminator, got \(error)")
-      }
-      XCTAssertEqual(type, "Connection")
-      XCTAssertEqual(field, "kind")
-      XCTAssertEqual(value, "vendor.auth")
-    }
+    let saved = try Connection.load(source).save()
+    XCTAssertTrue(
+      Spec.equal(saved["kind"], "vendor.auth"), "unknown connection kind was not preserved")
+    XCTAssertTrue(Spec.equal(saved["endpoint"], "https://example.test"))
   }
 
   /// The base `Connection` fields survive a load/save round trip on every
