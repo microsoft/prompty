@@ -12,42 +12,45 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// A chunk of data from a streaming LLM response. Stream chunks are
-    ///
-    /// discriminated on the `kind` field.
+    /// A classified failure chunk from the LLM response stream.
     /// </summary>
-public abstract partial class StreamChunk
+public partial class FailureChunk : StreamChunk
 {
     /// <summary>
     /// The shorthand property name for this type, if any.
     /// </summary>
-    public static string? ShorthandProperty => null;
+    public new static string? ShorthandProperty => null;
 
     /// <summary>
-    /// Initializes a new instance of <see cref="StreamChunk"/>.
+    /// Initializes a new instance of <see cref="FailureChunk"/>.
     /// </summary>
 #pragma warning disable CS8618
-    protected StreamChunk()
+    public FailureChunk()
     {
     }
 #pragma warning restore CS8618
 
     /// <summary>
-    /// The kind of stream chunk
+    /// The kind identifier for classified failure chunks
     /// </summary>
-    public virtual string Kind { get; set; } = string.Empty;
+    public override string Kind { get; set; } = "failure";
+
+    /// <summary>
+    /// The classified stream failure
+    /// </summary>
+    public StreamFailure Failure { get; set; }
 
 
 
     #region Load Methods
 
     /// <summary>
-    /// Load a StreamChunk instance from a dictionary.
+    /// Load a FailureChunk instance from a dictionary.
     /// </summary>
     /// <param name="data">The dictionary containing the data.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded StreamChunk instance.</returns>
-    public static StreamChunk Load(Dictionary<string, object?> data, LoadContext? context = null)
+    /// <returns>The loaded FailureChunk instance.</returns>
+    public new static FailureChunk Load(Dictionary<string, object?> data, LoadContext? context = null)
     {
         context ??= new LoadContext();
         if (context is not null)
@@ -56,13 +59,23 @@ public abstract partial class StreamChunk
         }
 
 
-        // Load polymorphic StreamChunk instance
-        var instance = LoadKind(data, context);
+        if (!data.TryGetValue("failure", out var requiredFailureValue) || requiredFailureValue is null)
+        {
+            throw new ArgumentException($"{context!.At("failure").Path}: missing required field");
+        }
+
+        // Create new instance
+        var instance = new FailureChunk();
 
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
         {
             instance.Kind = kindValue.ToString()!;
+        }
+
+        if (data.TryGetValue("failure", out var failureValue) && failureValue is not null)
+        {
+            instance.Failure = StreamFailure.Load(failureValue.GetDictionary(StreamFailure.ShorthandProperty), context!.At("failure"));
         }
 
         if (context is not null)
@@ -73,40 +86,16 @@ public abstract partial class StreamChunk
     }
 
 
-    /// <summary>
-    /// Load polymorphic StreamChunk based on discriminator.
-    /// </summary>
-    private static StreamChunk LoadKind(Dictionary<string, object?> data, LoadContext? context)
-    {
-        if (!data.TryGetValue("kind", out var discriminatorValue) || discriminatorValue is not string discriminator || discriminator == "")
-        {
-            throw new ArgumentException("Invalid StreamChunk discriminator field 'kind': expected non-blank string");
-        }
-
-        return discriminator switch
-        {
-            "text" => TextChunk.Load(data, context),
-            "thinking" => ThinkingChunk.Load(data, context),
-            "tool" => ToolChunk.Load(data, context),
-            "usage" => UsageChunk.Load(data, context),
-            "error" => ErrorChunk.Load(data, context),
-            "failure" => FailureChunk.Load(data, context),
-            _ => throw new ArgumentException($"Unknown StreamChunk discriminator field 'kind' value: {discriminator}"),
-        };
-
-    }
-
-
     #endregion
 
     #region Save Methods
 
     /// <summary>
-    /// Save the StreamChunk instance to a dictionary.
+    /// Save the FailureChunk instance to a dictionary.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
-    public virtual Dictionary<string, object?> Save(SaveContext? context = null)
+    public override Dictionary<string, object?> Save(SaveContext? context = null)
     {
         var obj = this;
         if (context is not null)
@@ -115,51 +104,50 @@ public abstract partial class StreamChunk
         }
 
 
-        var result = new Dictionary<string, object?>();
+        // Start with parent class properties
+        var result = base.Save(context);
 
 
         result["kind"] = obj.Kind;
 
 
-        if (context is not null)
-        {
-            result = context.ProcessDict(result);
-        }
+        result["failure"] = obj.Failure?.Save(context);
+
 
         return result;
     }
 
 
     /// <summary>
-    /// Convert the StreamChunk instance to a YAML string.
+    /// Convert the FailureChunk instance to a YAML string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The YAML string representation of this instance.</returns>
-    public string ToYaml(SaveContext? context = null)
+    public new string ToYaml(SaveContext? context = null)
     {
         context ??= new SaveContext();
         return context.ToYaml(Save(context));
     }
 
     /// <summary>
-    /// Convert the StreamChunk instance to a JSON string.
+    /// Convert the FailureChunk instance to a JSON string.
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <param name="indent">Whether to indent the output. Defaults to true.</param>
     /// <returns>The JSON string representation of this instance.</returns>
-    public string ToJson(SaveContext? context = null, bool indent = true)
+    public new string ToJson(SaveContext? context = null, bool indent = true)
     {
         context ??= new SaveContext();
         return context.ToJson(Save(context), indent);
     }
 
     /// <summary>
-    /// Load a StreamChunk instance from a JSON string.
+    /// Load a FailureChunk instance from a JSON string.
     /// </summary>
     /// <param name="json">The JSON string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded StreamChunk instance.</returns>
-    public static StreamChunk FromJson(string json, LoadContext? context = null)
+    /// <returns>The loaded FailureChunk instance.</returns>
+    public new static FailureChunk FromJson(string json, LoadContext? context = null)
     {
         using var doc = JsonDocument.Parse(json);
         Dictionary<string, object?> dict;
@@ -170,12 +158,12 @@ public abstract partial class StreamChunk
     }
 
     /// <summary>
-    /// Load a StreamChunk instance from a YAML string.
+    /// Load a FailureChunk instance from a YAML string.
     /// </summary>
     /// <param name="yaml">The YAML string to parse.</param>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
-    /// <returns>The loaded StreamChunk instance.</returns>
-    public static StreamChunk FromYaml(string yaml, LoadContext? context = null)
+    /// <returns>The loaded FailureChunk instance.</returns>
+    public new static FailureChunk FromYaml(string yaml, LoadContext? context = null)
     {
         var dict = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml)
             ?? throw new ArgumentException("Failed to parse YAML as dictionary");

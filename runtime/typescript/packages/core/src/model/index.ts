@@ -102,6 +102,7 @@ export { SessionFileRef } from "./contracts/events/session-file-ref";
 export { SessionRef } from "./contracts/events/session-ref";
 export { SessionSummary } from "./contracts/events/session-summary";
 export { SessionTrace } from "./contracts/events/session-trace";
+export { StreamFailure } from "./contracts/events/stream-failure";
 export {
   StreamChunk,
   TextChunk,
@@ -109,6 +110,7 @@ export {
   ToolChunk,
   UsageChunk,
   ErrorChunk,
+  FailureChunk,
 } from "./contracts/events/stream-chunk";
 
 export { GuardrailResult } from "./contracts/guardrails/guardrail-result";

@@ -103,6 +103,9 @@ pub use status_event_payload::*;
 pub mod stream_chunk;
 pub use stream_chunk::*;
 
+pub mod stream_failure;
+pub use stream_failure::*;
+
 pub mod thinking_event_payload;
 pub use thinking_event_payload::*;
 

@@ -9,6 +9,7 @@ public enum StreamChunk: TypraModel {
   case toolChunk(ToolChunk)
   case usageChunk(UsageChunk)
   case errorChunk(ErrorChunk)
+  case failureChunk(FailureChunk)
 
   public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> StreamChunk {
     let normalizedData: Any = data
@@ -23,6 +24,7 @@ public enum StreamChunk: TypraModel {
     case "tool": return .toolChunk(try ToolChunk.load(normalizedData, context: context))
     case "usage": return .usageChunk(try UsageChunk.load(normalizedData, context: context))
     case "error": return .errorChunk(try ErrorChunk.load(normalizedData, context: context))
+    case "failure": return .failureChunk(try FailureChunk.load(normalizedData, context: context))
     default: throw TypraRuntimeError.unknownDiscriminator(type: "StreamChunk", field: "kind", value: discriminator)
     }
   }
@@ -34,6 +36,7 @@ public enum StreamChunk: TypraModel {
     case .toolChunk(let value): return try value.save(context)
     case .usageChunk(let value): return try value.save(context)
     case .errorChunk(let value): return try value.save(context)
+    case .failureChunk(let value): return try value.save(context)
     }
   }
 
@@ -303,6 +306,59 @@ public struct ErrorChunk: TypraModel {
 
   public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ErrorChunk {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ErrorChunk"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// A classified failure chunk from the LLM response stream.
+public struct FailureChunk: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var kind: String = "failure"
+  public var failure: StreamFailure = StreamFailure()
+
+  public init(kind: String = "failure", failure: StreamFailure = StreamFailure()) {
+    self.kind = kind
+    self.failure = failure
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FailureChunk {
+    let object = try TypraRuntime.object(data, typeName: "FailureChunk")
+    var instance = FailureChunk()
+    if let value = object["kind"] {
+      instance.kind = try TypraRuntime.string(value, field: "kind")
+    }
+    else {
+      instance.kind = "failure"
+    }
+    if object["failure"] == nil || object["failure"] is NSNull {
+      throw TypraRuntimeError.unsupported(context.at("failure").path + ": missing required field")
+    }
+    if let value = object["failure"] {
+      instance.failure = try StreamFailure.load(value, context: context.at("failure"))
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["kind"] = self.kind
+    result["failure"] = try self.failure.save(context)
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FailureChunk {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "FailureChunk"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FailureChunk {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FailureChunk"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

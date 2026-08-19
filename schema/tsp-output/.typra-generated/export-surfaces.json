@@ -79,6 +79,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -158,6 +159,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -507,6 +509,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts/ErrorEventPayload.cs",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/StreamChunk.cs",
           "protocol": false
         },
         {
@@ -1014,6 +1023,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/StreamFailure.cs",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -1386,6 +1402,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -1458,6 +1475,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -1579,6 +1597,7 @@
             "SessionWarningPayload.cs",
             "StatusEventPayload.cs",
             "StreamChunk.cs",
+            "StreamFailure.cs",
             "StreamOptions.cs",
             "SubscriptionInfo.cs",
             "Template.cs",
@@ -2274,6 +2293,7 @@
         "contracts/SessionWarningPayload.cs",
         "contracts/StatusEventPayload.cs",
         "contracts/StreamChunk.cs",
+        "contracts/StreamFailure.cs",
         "contracts/StreamOptions.cs",
         "contracts/SubscriptionInfo.cs",
         "contracts/Template.cs",
@@ -2369,6 +2389,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -2448,6 +2469,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -2797,6 +2819,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "error_event_payload.go",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "stream_chunk.go",
           "protocol": false
         },
         {
@@ -3304,6 +3333,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "stream_failure.go",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -3676,6 +3712,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -3748,6 +3785,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -3869,6 +3907,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -4572,6 +4611,7 @@
         "session_warning_payload.go",
         "status_event_payload.go",
         "stream_chunk.go",
+        "stream_failure.go",
         "stream_options.go",
         "subscription_info.go",
         "template.go",
@@ -4658,6 +4698,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -4737,6 +4778,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -5086,6 +5128,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "ErrorEventPayload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamChunk",
           "protocol": false
         },
         {
@@ -5593,6 +5642,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamFailure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -5965,6 +6021,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -6037,6 +6094,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -6158,6 +6216,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -6861,6 +6920,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -6948,6 +7008,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -7027,6 +7088,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -7373,6 +7435,13 @@
         },
         {
           "name": "ErrorEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
           "kind": "value",
           "group": "contracts",
           "source": ".contracts",
@@ -7883,6 +7952,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -8255,6 +8331,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -8327,6 +8404,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -8448,6 +8526,7 @@
             "_SessionWarningPayload",
             "_StatusEventPayload",
             "_StreamChunk",
+            "_StreamFailure",
             "_StreamOptions",
             "_SubscriptionInfo",
             "_Template",
@@ -9116,6 +9195,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -9195,6 +9275,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -9544,6 +9625,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts::error_event_payload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::stream_chunk",
           "protocol": false
         },
         {
@@ -10051,6 +10139,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::stream_failure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -10423,6 +10518,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -10495,6 +10591,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -10616,6 +10713,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -11286,6 +11384,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -11365,6 +11464,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -11714,6 +11814,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Sources/PromptyModel/contracts/error_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
           "protocol": false
         },
         {
@@ -12221,6 +12328,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_failure.swift",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -12593,6 +12707,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -12665,6 +12780,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -12786,6 +12902,7 @@
             "session_warning_payload.swift",
             "status_event_payload.swift",
             "stream_chunk.swift",
+            "stream_failure.swift",
             "stream_options.swift",
             "subscription_info.swift",
             "template.swift",
@@ -13464,6 +13581,7 @@
         "Sources/PromptyModel/contracts/session_warning_payload.swift",
         "Sources/PromptyModel/contracts/status_event_payload.swift",
         "Sources/PromptyModel/contracts/stream_chunk.swift",
+        "Sources/PromptyModel/contracts/stream_failure.swift",
         "Sources/PromptyModel/contracts/stream_options.swift",
         "Sources/PromptyModel/contracts/subscription_info.swift",
         "Sources/PromptyModel/contracts/template.swift",
@@ -13576,6 +13694,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -13655,6 +13774,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -14004,6 +14124,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "./contracts/error-event-payload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/stream-chunk",
           "protocol": false
         },
         {
@@ -14511,6 +14638,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/stream-failure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -14883,6 +15017,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -14955,6 +15090,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -15076,6 +15212,7 @@
             "session-warning-payload",
             "status-event-payload",
             "stream-chunk",
+            "stream-failure",
             "stream-options",
             "subscription-info",
             "template",
@@ -15754,6 +15891,7 @@
         "./contracts/session-warning-payload",
         "./contracts/status-event-payload",
         "./contracts/stream-chunk",
+        "./contracts/stream-failure",
         "./contracts/stream-options",
         "./contracts/subscription-info",
         "./contracts/template",

@@ -180,6 +180,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/FailureChunkConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/HarnessContextConversionTests.cs",
       "marker": true
     },
@@ -301,6 +306,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/StreamChunkConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/StreamFailureConversionTests.cs",
       "marker": true
     },
     {
@@ -940,6 +950,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Events/FailureChunk.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Events/HarnessContext.cs",
       "marker": true
     },
@@ -1091,6 +1106,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Events/StreamChunk.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Events/StreamFailure.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Events/StreamFailureOutcome.cs",
       "marker": true
     },
     {
@@ -2065,6 +2090,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/failure_chunk_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/file_not_found_error_test.go",
       "marker": true
     },
@@ -2761,6 +2791,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/stream_chunk.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/stream_failure_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/stream_failure.go",
       "marker": true
     },
     {
@@ -3490,6 +3530,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/contracts/events/_StreamFailure.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/contracts/events/_ThinkingEventPayload.py",
       "marker": true
     },
@@ -4105,6 +4150,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/events/test_failure_chunk.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_harness_context.py",
       "marker": true
     },
@@ -4226,6 +4276,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_stream_chunk.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/events/test_stream_failure.py",
       "marker": true
     },
     {
@@ -4936,6 +4991,11 @@
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/contracts/events/stream_chunk.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/contracts/events/stream_failure.rs",
       "marker": true
     },
     {
@@ -5725,6 +5785,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/contracts/events/stream_failure_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/thinking_event_payload_test.rs",
       "marker": true
     },
@@ -6411,6 +6476,11 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/stream_chunk.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/stream_failure.swift",
       "marker": true
     },
     {
@@ -7130,6 +7200,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StreamFailureTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ThinkingEventPayloadTests.swift",
       "marker": true
     },
@@ -7781,6 +7856,11 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/contracts/events/stream-chunk.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/contracts/events/stream-failure.ts",
       "marker": true
     },
     {
@@ -8485,6 +8565,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/failure-chunk.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/harness-context.test.ts",
       "marker": true
     },
@@ -8606,6 +8691,11 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/stream-chunk.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/stream-failure.test.ts",
       "marker": true
     },
     {
@@ -9275,6 +9365,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/FailureChunk.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/FileNotFoundError.md",
       "marker": true
     },
@@ -9671,6 +9766,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/StreamChunk.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/StreamFailure.md",
       "marker": true
     },
     {
