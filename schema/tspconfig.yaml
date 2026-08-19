@@ -34,6 +34,10 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
         import-path: "prompty::model"
+      - type: Java
+        output-dir: "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model"
+        test-dir: "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model"
+        package-name: "com.microsoft.prompty.model"
       - type: Swift
         output-dir: "../runtime/swift/prompty-model"
         test-dir: "../runtime/swift/prompty-model/Tests/PromptyModelTests"

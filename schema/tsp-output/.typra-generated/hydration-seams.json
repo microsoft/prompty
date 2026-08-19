@@ -294,6 +294,150 @@
     },
     {
       "contract": "CheckpointStore",
+      "target": "java",
+      "group": "",
+      "symbol": "CheckpointStore",
+      "generatedSource": "CheckpointStore.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "DiscoveryConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "java",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "EngineDurabilityPort.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "java",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "EnginePermissionPort.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "java",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "EnginePostCommitPort.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "java",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "EngineToolPort.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "java",
+      "group": "",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "EventJournalWriter.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "java",
+      "group": "",
+      "symbol": "EventSink",
+      "generatedSource": "EventSink.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "java",
+      "group": "",
+      "symbol": "Executor",
+      "generatedSource": "Executor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "java",
+      "group": "",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "HostToolExecutor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "LoadConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "java",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "ModelLister.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "java",
+      "group": "",
+      "symbol": "Parser",
+      "generatedSource": "Parser.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "java",
+      "group": "",
+      "symbol": "PermissionResolver",
+      "generatedSource": "PermissionResolver.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "java",
+      "group": "",
+      "symbol": "Processor",
+      "generatedSource": "Processor.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "java",
+      "group": "",
+      "symbol": "Renderer",
+      "generatedSource": "Renderer.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "TurnConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "TurnConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "WireConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
       "target": "markdown",
       "group": "",
       "symbol": "CheckpointStore",

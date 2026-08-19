@@ -1,0 +1,11 @@
+# Gradle
+.gradle/
+build/
+
+# Local credentials for live provider tests — never commit.
+.env
+
+# IDE
+.idea/
+*.iml
+.vscode/
