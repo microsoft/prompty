@@ -292,20 +292,22 @@ final class AgentVectorTests: XCTestCase {
 
   // MARK: - Basic vectors
 
+  /// Basic control-flow vectors driven purely by their final `result`.
+  private static let basicRunVectors = [
+    "no_tool_calls",
+    "single_tool_call",
+    "multiple_tool_calls_single_turn",
+    "multi_turn_tool_calls",
+    "tool_result_message_format",
+    "assistant_tool_calls_metadata",
+    "empty_tool_result",
+    "async_tool_function",
+  ]
+
   func testBasicAgentVectors() async throws {
     var run = VectorRun(stage: "agent")
-    let names = [
-      "no_tool_calls",
-      "single_tool_call",
-      "multiple_tool_calls_single_turn",
-      "multi_turn_tool_calls",
-      "tool_result_message_format",
-      "assistant_tool_calls_metadata",
-      "empty_tool_result",
-      "async_tool_function",
-    ]
 
-    for name in names {
+    for name in Self.basicRunVectors {
       await run.checkAsync(name) {
         let harness = try self.harness(for: name)
         let result = try await Pipeline.turn(
@@ -522,24 +524,27 @@ final class AgentVectorTests: XCTestCase {
 
   // MARK: - Extension vectors — result cases
 
+  /// Extension vectors asserted by final `result` (plus denied/executed tools
+  /// and, when the vector carries `on_event`, an event-subset check).
+  private static let extensionResultVectors = [
+    "context_trim_basic",
+    "context_no_trim_when_fits",
+    "context_preserves_system_messages",
+    "guardrail_tool_deny",
+    "guardrail_all_pass",
+    "steering_inject_message",
+    "steering_multiple_messages",
+    "parallel_tools_basic",
+    "parallel_tools_with_guardrail_deny",
+    "events_basic_tool_loop",
+    "events_no_tools",
+    "events_error_logged",
+  ]
+
   func testExtensionResultVectors() async throws {
     var run = VectorRun(stage: "agent")
-    let names = [
-      "context_trim_basic",
-      "context_no_trim_when_fits",
-      "context_preserves_system_messages",
-      "guardrail_tool_deny",
-      "guardrail_all_pass",
-      "steering_inject_message",
-      "steering_multiple_messages",
-      "parallel_tools_basic",
-      "parallel_tools_with_guardrail_deny",
-      "events_basic_tool_loop",
-      "events_no_tools",
-      "events_error_logged",
-    ]
 
-    for name in names {
+    for name in Self.extensionResultVectors {
       await run.checkAsync(name) {
         let harness = try self.harness(for: name)
         let input = try self.vector(name)["input"] as? [String: Any] ?? [:]
@@ -619,10 +624,17 @@ final class AgentVectorTests: XCTestCase {
 
   // MARK: - Extension vectors — cancellation cases
 
+  /// Cancellation vectors, asserted by a thrown `CancelledError` plus events.
+  private static let cancellationVectors = [
+    "cancellation_before_llm",
+    "cancellation_between_iterations",
+    "cancellation_between_tools",
+  ]
+
   func testCancellationVectors() async throws {
     // before_llm cancels up front; the between_* vectors trip the token from the
     // first tool call and rely on the loop's cancel checks to stop the turn.
-    for name in ["cancellation_before_llm", "cancellation_between_iterations", "cancellation_between_tools"] {
+    for name in Self.cancellationVectors {
       let harness = try harness(for: name)
       let input = try vector(name)["input"] as? [String: Any] ?? [:]
       let cancelSpec = input["cancel"] as? [String: Any] ?? [:]
@@ -652,5 +664,45 @@ final class AgentVectorTests: XCTestCase {
         }
       }
     }
+  }
+
+  // MARK: - Coverage completeness
+
+  /// Every agent vector this suite drives, across all test methods.
+  ///
+  /// Kept in one place so the guard below and the per-method loops share a
+  /// single source of truth — a name can't be run without also being counted,
+  /// and vice versa.
+  private static let coveredVectors: Set<String> =
+    Set(basicRunVectors)
+    .union(extensionResultVectors)
+    .union(cancellationVectors)
+    .union([
+      // Singletons exercised by their own dedicated test methods.
+      "bindings_injected",
+      "max_iterations_exceeded",
+      "tool_not_registered_error",
+      "guardrail_input_deny",
+      "guardrail_output_deny",
+    ])
+
+  /// Fail loudly if the generated `agent` stage grows a vector this suite does
+  /// not run. Typra will eventually enforce runtime/vector parity from the
+  /// generation side; until then this is the runtime-side backstop, so a newly
+  /// generated agent vector cannot land silently unexercised.
+  func testEveryAgentVectorIsCovered() throws {
+    let generated = Set(try Spec.vectors("agent").compactMap { $0["name"] as? String })
+
+    let unwired = generated.subtracting(Self.coveredVectors)
+    XCTAssertTrue(
+      unwired.isEmpty,
+      "agent vectors present in the generated file but not exercised by this suite: "
+        + "\(unwired.sorted()). Wire them into the matching test method.")
+
+    let stale = Self.coveredVectors.subtracting(generated)
+    XCTAssertTrue(
+      stale.isEmpty,
+      "this suite references agent vectors that no longer exist in the generated file: "
+        + "\(stale.sorted()). Remove them.")
   }
 }
