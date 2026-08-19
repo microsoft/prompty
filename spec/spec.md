@@ -395,12 +395,11 @@ Tools are defined as a list under the `tools` frontmatter property. Each tool ha
 | Kind       | Type           | Additional Fields                                      |
 | ---------- | -------------- | ------------------------------------------------------ |
 | `function` | `FunctionTool` | `parameters` (`list[Property]`), `strict` (boolean)    |
-| `prompty`  | `PromptyTool`  | `path` (string), `mode` (`single` or `agentic`)        |
 | `mcp`      | `McpTool`      | `connection`, `serverName`, `approvalMode`, `allowedTools` |
 | `openapi`  | `OpenApiTool`  | `connection`, `specification` (path or URL)             |
 | `*`        | `CustomTool`   | `connection`, `options` — wildcard catch-all            |
 
-Any `kind` value that does not match `function`, `prompty`, `mcp`, or `openapi` MUST
+Any `kind` value that does not match `function`, `mcp`, or `openapi` MUST
 be loaded as a `CustomTool` (the wildcard `*` catch-all).
 
 #### §2.9.1 Tool Bindings
@@ -433,32 +432,6 @@ tools:
 2. When executing a tool call from the LLM's response, bound parameters MUST be
    **injected** into the tool's arguments before invocation.
 3. If the LLM provides a value for a bound parameter, the binding MUST take precedence.
-
-#### §2.9.2 PromptyTool
-
-The `prompty` tool kind allows one `.prompty` file to invoke another as a tool:
-
-```yaml
-tools:
-  - name: summarize
-    kind: prompty
-    path: ./summarize.prompty
-    mode: single
-    description: Summarize a block of text
-```
-
-| Field  | Type     | Default    | Description                                        |
-| ------ | -------- | ---------- | -------------------------------------------------- |
-| `path` | `string` | —          | Relative path to the `.prompty` file               |
-| `mode` | `string` | `"single"` | `single`: one-shot call. `agentic`: full agent loop |
-
-When the LLM invokes this tool:
-
-1. Load the referenced `.prompty` file via `load(path)`.
-2. If `mode` is `"single"`: call `invoke(path, arguments)` — one pass, no tool loop.
-3. If `mode` is `"agentic"`: call `turn(child_agent, arguments, tools=child_agent_tools)` — full agent loop
-   with any tools defined in the referenced prompty.
-4. Return the result as the tool's output.
 
 ### §2.10 Role Markers
 
@@ -1399,7 +1372,6 @@ a different projection strategy, but the wire format is always the same:
 | Tool Kind    | Projection Strategy                                                        |
 | ------------ | -------------------------------------------------------------------------- |
 | `function`   | Already function-shaped — convert `parameters` (`list[Property]`) to JSON Schema directly |
-| `prompty`    | Load child `.prompty` file, project its `inputs` as the function's `parameters` |
 | `mcp`        | Resolve MCP server connection, discover its tools, project each as a function definition |
 | `openapi`    | Parse OpenAPI specification, project each operation as a function definition |
 | custom (`*`) | Look up in tool registry, use registered function signature               |
@@ -1441,19 +1413,6 @@ function project_tool(tool) → list of func_defs:
           name: tool.name,
           description: tool.description,
           parameters: schema_to_wire(tool.parameters)
-        }
-      }]
-
-    "prompty":
-      // Load child prompty to extract its input schema
-      child = load(tool.path)
-      params = schema_to_wire(child.inputs)
-      return [{
-        type: "function",
-        function: {
-          name: tool.name,
-          description: tool.description or child.description,
-          parameters: params
         }
       }]
 
@@ -2525,33 +2484,6 @@ function apply_bindings(tool, args, inputs) → dict:
 Bindings MUST override any value the LLM may have generated for the same
 parameter name.
 
-### §9.7 PromptyTool Execution
-
-A `PromptyTool` references another `.prompty` file to be invoked as a tool.
-PromptyTool is **always single-shot** — one LLM call, no agent loop.
-
-```
-function execute_prompty_tool(tool, args, parent_inputs) → ToolResult:
-  // Resolve path relative to the parent .prompty file
-  child_agent = load(tool.path)
-
-  // Merge: LLM-provided args + bindings from parent inputs
-  merged = apply_bindings(tool, args, parent_inputs)
-
-  // Single-shot execution — invoke, not turn
-  result = invoke(child_agent, merged)
-  return ToolResult(parts: [TextPart(kind: "text", value: str(result))])
-```
-
-Implementations MUST NOT run an agent loop for `kind: prompty` tools.
-Applications that need agentic sub-agent delegation SHOULD register
-`kind: function` tools that internally call `turn()` with their own
-`TurnOptions`. This keeps policy decisions (event propagation, cancellation,
-steering scope, guardrail inheritance) in application code where they belong.
-
-Child `PromptyTool` execution MUST inherit the parent's tracer registry,
-producing nested trace spans that show the full call hierarchy.
-
 ### §9.8 Resilient Argument Parsing
 
 LLMs frequently produce malformed JSON in tool call arguments — markdown
@@ -2609,8 +2541,7 @@ function resilient_json_parse(raw_arguments) → dict:
 Tool handlers are user-provided code. Implementations MUST catch exceptions
 (or panics, in languages that distinguish them) raised by tool handlers
 during execution. This applies to all tool dispatch paths: direct name
-handlers (§9.2 Layer 1), kind handlers (§9.2 Layer 2), and PromptyTool
-execution (§9.7).
+handlers (§9.2 Layer 1) and kind handlers (§9.2 Layer 2).
 
 **Requirements:**
 
@@ -2823,14 +2754,13 @@ When resolving a tool call with name `N` and tool definition kind `K`:
 ```
 
 The name registry (layer 1) always takes priority, allowing users to override
-any tool — including built-in prompty tools — with a custom callable.
+any tool with a custom callable.
 
 #### Built-in Kind Handlers
 
 | Tool Kind    | Handler Behaviour                                             |
 | ------------ | ------------------------------------------------------------- |
 | `"function"` | Look up callable in name registry, call `handler(args)`       |
-| `"prompty"`  | Load child `.prompty` via `tool.path`, execute per §9.6       |
 | `"mcp"`      | Send tool-call request via MCP client protocol                |
 | `"openapi"`  | Make HTTP call per OpenAPI specification                      |
 | `"*"`        | Delegate to user-provided handler's `execute(args)` method   |
@@ -3133,6 +3063,7 @@ specific exception class SHOULD follow language idioms.
 | Load        | Invalid YAML frontmatter                   | ValueError          | `"Invalid frontmatter YAML: {details}"`             |
 | Load        | Missing env var (no default)               | ValueError          | `"Environment variable '{name}' not set"`           |
 | Load        | Referenced file not found (`${file:}`)     | FileNotFoundError   | `"Referenced file not found: {path}"`               |
+| Load        | Path escapes allowed roots (`${file:}`)    | ValueError          | `"{path} resolves outside allowed roots"`           |
 | Render      | Undefined template variable                | ValueError          | `"Undefined template variable: {name}"`             |
 | Render      | Template syntax error                      | ValueError          | `"Template syntax error: {details}"`                |
 | Parse       | Role marker nonce mismatch (strict mode)   | ValueError          | `"Role marker nonce mismatch (possible injection)"` |
@@ -3506,7 +3437,7 @@ the current conversation, not sub-agent invocations or child tool calls.
 
 - Steering messages MUST be processed between iterations of the agent loop.
 - Steering MUST NOT interrupt in-progress tool execution.
-- Steering MUST NOT propagate to sub-agents (including `kind: prompty` tool invocations).
+- Steering MUST NOT propagate to sub-agents or child tool calls.
 - Implementations MUST NOT make implicit LLM calls to route or transform steering messages.
 
 **Steering Queue:**

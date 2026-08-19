@@ -80,7 +80,6 @@ a different projection strategy, but the wire format is always the same:
 | Tool Kind    | Projection Strategy                                                        |
 | ------------ | -------------------------------------------------------------------------- |
 | `function`   | Already function-shaped — convert `parameters` (`list[Property]`) to JSON Schema directly |
-| `prompty`    | Load child `.prompty` file, project its `inputs` as the function's `parameters` |
 | `mcp`        | Resolve MCP server connection, discover its tools, project each as a function definition |
 | `openapi`    | Parse OpenAPI specification, project each operation as a function definition |
 | custom (`*`) | Look up in tool registry, use registered function signature               |
@@ -122,19 +121,6 @@ function project_tool(tool) → list of func_defs:
           name: tool.name,
           description: tool.description,
           parameters: schema_to_wire(tool.parameters)
-        }
-      }]
-
-    "prompty":
-      // Load child prompty to extract its input schema
-      child = load(tool.path)
-      params = schema_to_wire(child.inputs)
-      return [{
-        type: "function",
-        function: {
-          name: tool.name,
-          description: tool.description or child.description,
-          parameters: params
         }
       }]
 

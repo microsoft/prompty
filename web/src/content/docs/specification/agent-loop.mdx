@@ -255,25 +255,6 @@ function apply_bindings(tool, args, inputs) → dict:
 Bindings MUST override any value the LLM may have generated for the same
 parameter name.
 
-## §9.6 PromptyTool Execution
-
-A `PromptyTool` references another `.prompty` file to be invoked as a tool:
-
-```
-function execute_prompty_tool(tool, args, parent_inputs) → result:
-  // Resolve path relative to the parent .prompty file
-  child_agent = load(tool.path)
-
-  // Merge: LLM-provided args + bindings from parent inputs
-  merged = apply_bindings(tool, args, parent_inputs)
-
-  // One child prompt invocation — no nested agent loop.
-  return invoke(child_agent, merged)
-```
-
-Child `PromptyTool` execution MUST inherit the parent's tracer registry,
-producing nested trace spans that show the full call hierarchy.
-
 ## §9.8 Resilient Argument Parsing
 
 LLMs frequently produce malformed JSON in tool call arguments — markdown
