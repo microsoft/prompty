@@ -1,0 +1,55 @@
+{
+  "description": "Cross-runtime fallback capability data for provider model discovery. Some provider /models endpoints (Anthropic, Foundry) return capability fields directly; others (OpenAI) return only ids. To keep discovery results consistent across providers AND across runtimes, every Prompty runtime embeds THIS file and applies one shared rule: provider-supplied fields always win; entries here only fill fields the provider left empty (fill-only-missing). Model ids are matched by longest prefix within a provider's list. This dataset is deliberately NOT emitted from TypeSpec: it is volatile provider data (context windows, modalities, new model families) refreshed as a snapshot, whereas TypeSpec owns the structural ModelInfo contract. Fields use the canonical camelCase ModelInfo names. A missing 'contextWindow' means unknown; a present empty modality list (e.g. []) is intentional (e.g. embeddings produce no textual/image output modality).",
+  "match": "longest_prefix",
+  "providers": {
+    "openai": [
+      {
+        "prefix": "gpt-4o-mini",
+        "contextWindow": 128000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      },
+      {
+        "prefix": "gpt-4o",
+        "contextWindow": 128000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      },
+      {
+        "prefix": "gpt-4-turbo",
+        "contextWindow": 128000,
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["text"]
+      },
+      {
+        "prefix": "gpt-4",
+        "contextWindow": 8192,
+        "inputModalities": ["text"],
+        "outputModalities": ["text"]
+      },
+      {
+        "prefix": "gpt-3.5-turbo",
+        "contextWindow": 16385,
+        "inputModalities": ["text"],
+        "outputModalities": ["text"]
+      },
+      {
+        "prefix": "text-embedding-3-small",
+        "contextWindow": 8191,
+        "inputModalities": ["text"],
+        "outputModalities": []
+      },
+      {
+        "prefix": "text-embedding-3-large",
+        "contextWindow": 8191,
+        "inputModalities": ["text"],
+        "outputModalities": []
+      },
+      {
+        "prefix": "dall-e-3",
+        "inputModalities": ["text"],
+        "outputModalities": ["image"]
+      }
+    ]
+  }
+}

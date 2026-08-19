@@ -189,10 +189,10 @@ cannot express, such as Windows line endings.
 
 ### Coverage against the shared vectors
 
-This port is **not parity-complete**. Six of the ten shared vector files are
-exercised, and two of those six run only their OpenAI subset. The other four
-describe surface area this runtime does not implement. That is a deliberate
-scoping decision for an initial port, not an oversight.
+This port is **not parity-complete**. Eight of the ten shared vector files are
+exercised, and two of those run only their OpenAI subset. The other two describe
+surface area this runtime does not yet implement. That is a deliberate scoping
+decision, not an oversight.
 
 | Vector file                             |   Cases | Status                                |
 | --------------------------------------- | ------: | ------------------------------------- |
@@ -202,15 +202,24 @@ scoping decision for an initial port, not an oversight.
 | `wire/wire_vectors.json`                | 22 / 27 | Run — 5 Anthropic cases skipped       |
 | `process/process_vectors.json`          | 17 / 21 | Run — 4 Anthropic cases skipped       |
 | `harness/replay_vectors.json`           |       5 | Run                                   |
+| `discovery/discovery_vectors.json`      |       7 | Run — OpenAI, Anthropic, and Foundry  |
+| `discovery/enrichment_vectors.json`     |       9 | Run                                   |
 | `engine/turn_vectors.json`              |       5 | **Not wired** — engine incomplete     |
 | `agent/agent_vectors.json`              |      28 | **Not implemented** — no agent layer  |
-| `discovery/discovery_vectors.json`      |       7 | **Not implemented** — no discovery    |
-| `discovery/enrichment_vectors.json`     |       9 | **Not implemented** — no enrichment   |
 
-The nine skipped Anthropic cases are provider coverage, not a contract gap: this
-package ships the OpenAI provider only, so `WireVectorTests` and
-`ProcessVectorTests` filter on `input.provider`. An Anthropic package would pick
-them up unchanged.
+The nine skipped Anthropic cases are provider coverage, not a contract gap: the
+`PromptyOpenAI`, `PromptyAnthropic`, and `PromptyFoundry` packages ship model
+discovery for all three providers, but only OpenAI has a wire executor and
+processor so far, so `WireVectorTests` and `ProcessVectorTests` filter on
+`input.provider`. An Anthropic executor/processor will pick them up unchanged.
+
+Model discovery (the `discovery` and `enrichment` stages) is fully implemented.
+`PromptyOpenAI`, `PromptyAnthropic`, and `PromptyFoundry` each map their raw
+`/models` payloads into the provider-neutral `ModelInfo` contract, and the shared
+`Discovery.enrich` in the core `Prompty` module applies the vendored
+`model_capabilities.json` dataset (fill-only-missing, longest-prefix match). A
+`DatasetDriftTests` guard keeps the vendored copy identical to the canonical
+`spec/data/model_capabilities.json`.
 
 The turn engine is the substantive gap. `ReferenceTurnRunner` already implements
 the iteration loop, permission mediation, host tool execution, and checkpointing,
