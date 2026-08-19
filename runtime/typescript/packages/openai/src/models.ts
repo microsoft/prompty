@@ -5,18 +5,58 @@
  */
 
 import OpenAI from "openai";
-import { ModelInfo, ApiKeyConnection, ReferenceConnection, getConnection } from "@prompty/core";
+import {
+  ModelInfo,
+  ApiKeyConnection,
+  ReferenceConnection,
+  getConnection,
+} from "@prompty/core";
 import type { Connection } from "@prompty/core";
 
 /** Known model metadata for enrichment (context windows and modalities). */
-const KNOWN_MODELS: Record<string, { contextWindow?: number; inputModalities: string[]; outputModalities: string[] }> = {
-  "gpt-4o": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4o-mini": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4-turbo": { contextWindow: 128_000, inputModalities: ["text", "image"], outputModalities: ["text"] },
-  "gpt-4": { contextWindow: 8_192, inputModalities: ["text"], outputModalities: ["text"] },
-  "gpt-3.5-turbo": { contextWindow: 16_385, inputModalities: ["text"], outputModalities: ["text"] },
-  "text-embedding-3-small": { contextWindow: 8_191, inputModalities: ["text"], outputModalities: [] },
-  "text-embedding-3-large": { contextWindow: 8_191, inputModalities: ["text"], outputModalities: [] },
+const KNOWN_MODELS: Record<
+  string,
+  {
+    contextWindow?: number;
+    inputModalities: string[];
+    outputModalities: string[];
+  }
+> = {
+  "gpt-4o": {
+    contextWindow: 128_000,
+    inputModalities: ["text", "image"],
+    outputModalities: ["text"],
+  },
+  "gpt-4o-mini": {
+    contextWindow: 128_000,
+    inputModalities: ["text", "image"],
+    outputModalities: ["text"],
+  },
+  "gpt-4-turbo": {
+    contextWindow: 128_000,
+    inputModalities: ["text", "image"],
+    outputModalities: ["text"],
+  },
+  "gpt-4": {
+    contextWindow: 8_192,
+    inputModalities: ["text"],
+    outputModalities: ["text"],
+  },
+  "gpt-3.5-turbo": {
+    contextWindow: 16_385,
+    inputModalities: ["text"],
+    outputModalities: ["text"],
+  },
+  "text-embedding-3-small": {
+    contextWindow: 8_191,
+    inputModalities: ["text"],
+    outputModalities: [],
+  },
+  "text-embedding-3-large": {
+    contextWindow: 8_191,
+    inputModalities: ["text"],
+    outputModalities: [],
+  },
   "dall-e-3": { inputModalities: ["text"], outputModalities: ["image"] },
 };
 

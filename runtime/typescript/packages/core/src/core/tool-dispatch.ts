@@ -176,7 +176,8 @@ class PromptyToolHandler implements ToolHandler {
     const { load } = await import("./loader.js");
     const { prepare, run, turn } = await import("./pipeline.js");
 
-    const parentPath = (agent.metadata ?? {}).__source_path as string | undefined;
+    const parentPath = (agent.metadata ?? {}).__source_path as
+      string | undefined;
     if (!parentPath) {
       return `Error: cannot resolve PromptyTool '${tool.name}': parent has no __source_path`;
     }
@@ -184,9 +185,14 @@ class PromptyToolHandler implements ToolHandler {
     const childPath = resolve(dirname(parentPath), tool.path as string);
 
     // Circular reference detection
-    const stack = ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ?? [];
+    const stack =
+      ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ??
+      [];
     const normalizedChild = resolve(childPath);
-    const visited = new Set([...stack.map((p) => resolve(p)), resolve(parentPath)]);
+    const visited = new Set([
+      ...stack.map((p) => resolve(p)),
+      resolve(parentPath),
+    ]);
     if (visited.has(normalizedChild)) {
       const chain = [...stack, parentPath, childPath].join(" → ");
       return `Error executing PromptyTool '${tool.name}': circular reference detected: ${chain}`;
@@ -299,11 +305,14 @@ export function extractFirstJsonBlock(text: string): string | null {
  * Parse JSON with fallback strategies per spec §9.8.
  * Returns parsed value on success, or null if all strategies fail.
  */
-export function resilientJsonParse(raw: string): Record<string, unknown> | null {
+export function resilientJsonParse(
+  raw: string,
+): Record<string, unknown> | null {
   // Strategy 1: Direct parse
   try {
     const result = JSON.parse(raw);
-    if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+    if (typeof result === "object" && result !== null)
+      return result as Record<string, unknown>;
     return { _raw: result };
   } catch {
     // continue to fallbacks
@@ -314,8 +323,11 @@ export function resilientJsonParse(raw: string): Record<string, unknown> | null 
   if (fenceMatch) {
     try {
       const result = JSON.parse(fenceMatch[1]);
-      console.warn("[prompty] Parsed tool arguments after stripping markdown fences");
-      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      console.warn(
+        "[prompty] Parsed tool arguments after stripping markdown fences",
+      );
+      if (typeof result === "object" && result !== null)
+        return result as Record<string, unknown>;
       return { _raw: result };
     } catch {
       // continue
@@ -327,8 +339,11 @@ export function resilientJsonParse(raw: string): Record<string, unknown> | null 
   if (block !== null) {
     try {
       const result = JSON.parse(block);
-      console.warn("[prompty] Parsed tool arguments after extracting JSON block");
-      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      console.warn(
+        "[prompty] Parsed tool arguments after extracting JSON block",
+      );
+      if (typeof result === "object" && result !== null)
+        return result as Record<string, unknown>;
       return { _raw: result };
     } catch {
       // continue
@@ -340,8 +355,11 @@ export function resilientJsonParse(raw: string): Record<string, unknown> | null 
   if (cleaned !== raw) {
     try {
       const result = JSON.parse(cleaned);
-      console.warn("[prompty] Parsed tool arguments after stripping trailing commas");
-      if (typeof result === "object" && result !== null) return result as Record<string, unknown>;
+      console.warn(
+        "[prompty] Parsed tool arguments after stripping trailing commas",
+      );
+      if (typeof result === "object" && result !== null)
+        return result as Record<string, unknown>;
       return { _raw: result };
     } catch {
       // continue

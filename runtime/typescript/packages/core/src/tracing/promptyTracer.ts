@@ -23,7 +23,9 @@ function readPackageVersion(): string {
     for (let i = 0; i < 5; i++) {
       const candidate = path.join(dir, "package.json");
       if (fs.existsSync(candidate)) {
-        const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as { version?: string };
+        const pkg = JSON.parse(fs.readFileSync(candidate, "utf-8")) as {
+          version?: string;
+        };
         if (pkg.version) return pkg.version;
       }
       dir = path.dirname(dir);
@@ -150,10 +152,17 @@ export class PromptyTracer {
     };
 
     // Hoist usage from result
-    if (frame.result && typeof frame.result === "object" && !Array.isArray(frame.result)) {
+    if (
+      frame.result &&
+      typeof frame.result === "object" &&
+      !Array.isArray(frame.result)
+    ) {
       const result = frame.result as Record<string, unknown>;
       if (result.usage && typeof result.usage === "object") {
-        frame.__usage = this.hoistUsage(result.usage as Record<string, unknown>, frame.__usage ?? {});
+        frame.__usage = this.hoistUsage(
+          result.usage as Record<string, unknown>,
+          frame.__usage ?? {},
+        );
       }
     }
 
@@ -163,7 +172,10 @@ export class PromptyTracer {
         if (item && typeof item === "object" && "usage" in item) {
           const r = item as Record<string, unknown>;
           if (r.usage && typeof r.usage === "object") {
-            frame.__usage = this.hoistUsage(r.usage as Record<string, unknown>, frame.__usage ?? {});
+            frame.__usage = this.hoistUsage(
+              r.usage as Record<string, unknown>,
+              frame.__usage ?? {},
+            );
           }
         }
       }
@@ -196,7 +208,8 @@ export class PromptyTracer {
     cur: Record<string, number>,
   ): Record<string, number> {
     for (const [key, value] of Object.entries(src)) {
-      if (value === null || value === undefined || typeof value === "object") continue;
+      if (value === null || value === undefined || typeof value === "object")
+        continue;
       if (typeof value === "number") {
         cur[key] = (cur[key] ?? 0) + value;
       }

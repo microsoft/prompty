@@ -11,7 +11,13 @@
 
 import type Anthropic from "@anthropic-ai/sdk";
 import type { Agent } from "@prompty/core";
-import { ApiKeyConnection, ReferenceConnection, PromptyStream, Message, text } from "@prompty/core";
+import {
+  ApiKeyConnection,
+  ReferenceConnection,
+  PromptyStream,
+  Message,
+  text,
+} from "@prompty/core";
 import type { Executor } from "@prompty/core";
 import { getConnection } from "@prompty/core";
 import { traceSpan, sanitizeValue } from "@prompty/core";
@@ -39,7 +45,13 @@ export class AnthropicExecutor implements Executor {
       });
 
       const apiType = agent.model?.apiType ?? "chat";
-      const result = await this.executeApiCall(client, clientName, agent, messages, apiType);
+      const result = await this.executeApiCall(
+        client,
+        clientName,
+        agent,
+        messages,
+        apiType,
+      );
       emit("result", result);
       return result;
     });
@@ -107,7 +119,11 @@ export class AnthropicExecutor implements Executor {
       });
     }
     messages.push(
-      new Message({ role: "assistant", parts: textContent ? [text(textContent)] : [], metadata: { content: rawContent } }),
+      new Message({
+        role: "assistant",
+        parts: textContent ? [text(textContent)] : [],
+        metadata: { content: rawContent },
+      }),
     );
 
     // Single user message with batched tool_result blocks
@@ -116,7 +132,13 @@ export class AnthropicExecutor implements Executor {
       tool_use_id: tc.id,
       content: toolResults[i],
     }));
-    messages.push(new Message({ role: "user", parts: [], metadata: { tool_results: toolResultBlocks } }));
+    messages.push(
+      new Message({
+        role: "user",
+        parts: [],
+        metadata: { tool_results: toolResultBlocks },
+      }),
+    );
 
     return messages;
   }

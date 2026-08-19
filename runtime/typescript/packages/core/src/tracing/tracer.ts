@@ -99,7 +99,10 @@ export function trace<T extends (...args: unknown[]) => Promise<unknown>>(
 ): T {
   const spanName = name ?? fn.name ?? "anonymous";
 
-  const wrapped = async function (this: unknown, ...args: unknown[]): Promise<unknown> {
+  const wrapped = async function (
+    this: unknown,
+    ...args: unknown[]
+  ): Promise<unknown> {
     const span = Tracer.start(spanName);
     const startTime = Date.now();
 
@@ -178,7 +181,10 @@ export function traceMethod(attributes?: Record<string, unknown>) {
   ): PropertyDescriptor {
     const original = descriptor.value;
 
-    descriptor.value = async function (this: unknown, ...args: unknown[]): Promise<unknown> {
+    descriptor.value = async function (
+      this: unknown,
+      ...args: unknown[]
+    ): Promise<unknown> {
       const span = Tracer.start(propertyKey);
       const startTime = Date.now();
 
@@ -250,9 +256,15 @@ export function sanitizeValue(key: string, value: unknown): unknown {
  */
 export function toSerializable(obj: unknown): unknown {
   if (obj === null || obj === undefined) return obj;
-  if (typeof obj === "boolean" || typeof obj === "number" || typeof obj === "string") return obj;
+  if (
+    typeof obj === "boolean" ||
+    typeof obj === "number" ||
+    typeof obj === "string"
+  )
+    return obj;
   if (obj instanceof Date) return obj.toISOString();
-  if (obj instanceof Error) return { name: obj.name, message: obj.message, stack: obj.stack };
+  if (obj instanceof Error)
+    return { name: obj.name, message: obj.message, stack: obj.stack };
   if (obj instanceof Map) return Object.fromEntries(obj);
   if (obj instanceof Set) return [...obj];
   if (Array.isArray(obj)) return obj.map(toSerializable);

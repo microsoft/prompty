@@ -12,6 +12,8 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"packages/*/src/**/*.{ts,tsx}\" \"!packages/*/src/model/**\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx}\" \"!packages/*/src/model/**\"",
     "clean": "npm run clean --workspaces",
     "release": "node scripts/release.mjs"
   },

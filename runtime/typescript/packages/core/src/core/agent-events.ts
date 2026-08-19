@@ -27,7 +27,10 @@ export type AgentEventType =
   | "compaction_failed";
 
 /** Callback signature for agent loop events. */
-export type EventCallback = (eventType: AgentEventType, data: Record<string, unknown>) => void;
+export type EventCallback = (
+  eventType: AgentEventType,
+  data: Record<string, unknown>,
+) => void;
 
 /**
  * Safely emit an event. Swallows errors from callback (spec §13.1:
@@ -46,7 +49,8 @@ export function emitEvent(
         id: `evt_${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`,
         type: eventType,
         timestamp: new Date().toISOString(),
-        iteration: typeof data.iteration === "number" ? data.iteration : undefined,
+        iteration:
+          typeof data.iteration === "number" ? data.iteration : undefined,
         payload: data,
       },
     });

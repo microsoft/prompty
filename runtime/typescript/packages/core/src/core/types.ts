@@ -74,7 +74,11 @@ export class Message implements MessageHelpers {
   parts: ContentPart[];
   metadata: Record<string, unknown>;
 
-  constructor(init?: { role?: Role; parts?: ContentPart[]; metadata?: Record<string, unknown> }) {
+  constructor(init?: {
+    role?: Role;
+    parts?: ContentPart[];
+    metadata?: Record<string, unknown>;
+  }) {
     this.role = init?.role ?? "user";
     this.parts = init?.parts ?? [];
     this.metadata = init?.metadata ?? {};
@@ -109,7 +113,10 @@ function partToWireContent(part: ContentPart): Record<string, unknown> {
     case "image":
       return {
         type: "image_url",
-        image_url: { url: part.source, ...(part.detail && { detail: part.detail }) },
+        image_url: {
+          url: part.source,
+          ...(part.detail && { detail: part.detail }),
+        },
       };
     case "file":
       return { type: "file", file: { url: part.source } };
@@ -164,7 +171,13 @@ export interface ToolCall {
 export const RICH_KINDS = new Set(["thread", "image", "file", "audio"]);
 
 /** Standard message roles. */
-export const ROLES = new Set<Role>(["system", "user", "assistant", "developer", "tool"]);
+export const ROLES = new Set<Role>([
+  "system",
+  "user",
+  "assistant",
+  "developer",
+  "tool",
+]);
 
 // ---------------------------------------------------------------------------
 // Streaming
@@ -220,7 +233,11 @@ export function text(value: string): TextPart {
 }
 
 /** Create a Message with a single text part. */
-export function textMessage(role: Role, value: string, metadata: Record<string, unknown> = {}): Message {
+export function textMessage(
+  role: Role,
+  value: string,
+  metadata: Record<string, unknown> = {},
+): Message {
   return new Message({ role, parts: [text(value)], metadata });
 }
 

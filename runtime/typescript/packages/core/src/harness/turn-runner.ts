@@ -24,7 +24,9 @@ type JsonRecord = Record<string, unknown>;
 
 export { RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse };
 
-export type TurnModelCallback = (request: TurnModelRequest) => TurnModelResponse | Promise<TurnModelResponse>;
+export type TurnModelCallback = (
+  request: TurnModelRequest,
+) => TurnModelResponse | Promise<TurnModelResponse>;
 
 export interface TurnRunnerDependencies {
   eventSink: EventSink;
@@ -68,18 +70,25 @@ export class ReferenceTurnRunner {
         attempt: 0,
       });
 
-      const modelResponse = await this.dependencies.invokeModel(new TurnModelRequest({
-        sessionId: request.sessionId,
-        turnId: request.turnId,
-        iteration,
-        inputs,
-        options,
-        toolResults: pendingToolResults,
-      }));
+      const modelResponse = await this.dependencies.invokeModel(
+        new TurnModelRequest({
+          sessionId: request.sessionId,
+          turnId: request.turnId,
+          iteration,
+          inputs,
+          options,
+          toolResults: pendingToolResults,
+        }),
+      );
 
       this.recordTurn("llm_complete", request.turnId, iteration, {});
 
-      const checkpoint = await this.saveCheckpoint(request.sessionId, request.turnId, iteration, modelResponse);
+      const checkpoint = await this.saveCheckpoint(
+        request.sessionId,
+        request.turnId,
+        iteration,
+        modelResponse,
+      );
       checkpoints.push(checkpoint);
 
       const toolRequests = modelResponse.toolRequests ?? [];
@@ -90,7 +99,11 @@ export class ReferenceTurnRunner {
 
       pendingToolResults = [];
       for (const toolRequest of toolRequests) {
-        const toolResult = await this.resolveAndExecuteTool(request.turnId, iteration, toolRequest);
+        const toolResult = await this.resolveAndExecuteTool(
+          request.turnId,
+          iteration,
+          toolRequest,
+        );
         pendingToolResults.push(toolResult);
         allToolResults.push(toolResult);
       }
@@ -154,7 +167,9 @@ export class ReferenceTurnRunner {
       state: {
         iteration,
         output: modelResponse.output,
-        toolRequests: (modelResponse.toolRequests ?? []).map((toolRequest) => toolRequest.save()),
+        toolRequests: (modelResponse.toolRequests ?? []).map((toolRequest) =>
+          toolRequest.save(),
+        ),
         ...(modelResponse.checkpointState ?? {}),
       },
       createdAt: this.timestamp(),
@@ -173,15 +188,23 @@ export class ReferenceTurnRunner {
     toolRequest: HostToolRequest,
   ): Promise<HostToolResult> {
     const permission = new PermissionRequest({
-      requestId: toolRequest.requestId ? `${toolRequest.requestId}-permission` : this.id("permission"),
+      requestId: toolRequest.requestId
+        ? `${toolRequest.requestId}-permission`
+        : this.id("permission"),
       toolCallId: toolRequest.toolCallId,
       permission: "tool.execute",
       target: toolRequest.toolName,
       details: toolRequest.save(),
     });
 
-    this.recordTurn("permission_requested", turnId, iteration, permission.save());
-    const decision = await this.dependencies.permissionResolver.request(permission);
+    this.recordTurn(
+      "permission_requested",
+      turnId,
+      iteration,
+      permission.save(),
+    );
+    const decision =
+      await this.dependencies.permissionResolver.request(permission);
     this.recordTurn("permission_completed", turnId, iteration, decision.save());
 
     if (!decision.approved) {
@@ -197,14 +220,30 @@ export class ReferenceTurnRunner {
       return deniedResult;
     }
 
-    this.recordTurn("tool_execution_start", turnId, iteration, toolRequest.save());
-    const result = await this.dependencies.hostToolExecutor.execute(toolRequest);
-    this.recordTurn("tool_execution_complete", turnId, iteration, result.save());
+    this.recordTurn(
+      "tool_execution_start",
+      turnId,
+      iteration,
+      toolRequest.save(),
+    );
+    const result =
+      await this.dependencies.hostToolExecutor.execute(toolRequest);
+    this.recordTurn(
+      "tool_execution_complete",
+      turnId,
+      iteration,
+      result.save(),
+    );
     this.recordTurn("tool_result", turnId, iteration, result.save());
     return result;
   }
 
-  private recordTurn(type: TurnEvent["type"], turnId: string, iteration: number, payload: JsonRecord): void {
+  private recordTurn(
+    type: TurnEvent["type"],
+    turnId: string,
+    iteration: number,
+    payload: JsonRecord,
+  ): void {
     const event = new TurnEvent({
       id: this.id("turn-event"),
       type,
@@ -217,7 +256,12 @@ export class ReferenceTurnRunner {
     this.dependencies.journal.appendTurn(event);
   }
 
-  private recordSession(type: SessionEvent["type"], sessionId: string, turnId: string, payload: JsonRecord): void {
+  private recordSession(
+    type: SessionEvent["type"],
+    sessionId: string,
+    turnId: string,
+    payload: JsonRecord,
+  ): void {
     const event = new SessionEvent({
       id: this.id("session-event"),
       type,

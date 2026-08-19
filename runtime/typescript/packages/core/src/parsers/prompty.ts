@@ -13,11 +13,7 @@
 import { resolve } from "node:path";
 import { randomBytes } from "node:crypto";
 import type { Agent } from "../model/agent.js";
-import {
-  type TextPart,
-  Message,
-  ROLES,
-} from "../core/types.js";
+import { type TextPart, Message, ROLES } from "../core/types.js";
 import type { Parser } from "../core/interfaces.js";
 
 // Role boundary regex — matches lines like `system:` or `user[name="Alice"]:`
@@ -30,7 +26,10 @@ import type { Parser } from "../core/interfaces.js";
 // attribute-like start (`key=`) and then swallow the remainder of the bracket with a
 // single `[^\]]*` class that cannot overlap the closing `]`. This is structurally
 // linear. Individual attributes are still split later by ATTR_RE. See #446.
-const ROLE_NAMES = [...ROLES].filter((r) => r !== "tool").sort().join("|");
+const ROLE_NAMES = [...ROLES]
+  .filter((r) => r !== "tool")
+  .sort()
+  .join("|");
 const BOUNDARY_RE = new RegExp(
   `^\\s*#?\\s*(${ROLE_NAMES})(\\[\\w+\\s*=\\s*[^\\]]*\\])?\\s*:\\s*$`,
   "i",
@@ -98,7 +97,15 @@ export class PromptyChatParser implements Parser {
 
       if (m) {
         if (contentBuffer.length > 0) {
-          messages.push(this.buildMessage(role, contentBuffer, attrs, hasBoundary ? nonce : undefined, basePath));
+          messages.push(
+            this.buildMessage(
+              role,
+              contentBuffer,
+              attrs,
+              hasBoundary ? nonce : undefined,
+              basePath,
+            ),
+          );
           contentBuffer = [];
         }
 
@@ -114,7 +121,15 @@ export class PromptyChatParser implements Parser {
 
     // Flush remaining content
     if (contentBuffer.length > 0) {
-      messages.push(this.buildMessage(role, contentBuffer, attrs, hasBoundary ? nonce : undefined, basePath));
+      messages.push(
+        this.buildMessage(
+          role,
+          contentBuffer,
+          attrs,
+          hasBoundary ? nonce : undefined,
+          basePath,
+        ),
+      );
     }
 
     return messages;
@@ -143,8 +158,8 @@ export class PromptyChatParser implements Parser {
       if (String(msgNonce ?? "") !== nonce) {
         throw new Error(
           "Nonce mismatch — possible prompt injection detected " +
-          "(strict mode is enabled). A template variable may be " +
-          "injecting role markers.",
+            "(strict mode is enabled). A template variable may be " +
+            "injecting role markers.",
         );
       }
     }
@@ -186,5 +201,4 @@ export class PromptyChatParser implements Parser {
 
     return result;
   }
-
 }

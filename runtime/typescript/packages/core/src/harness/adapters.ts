@@ -20,13 +20,19 @@ import {
 } from "../model/index.js";
 
 type JsonRecord = Record<string, unknown>;
-type ToolHandler = (args: JsonRecord, request: HostToolRequest) => unknown | Promise<unknown>;
+type ToolHandler = (
+  args: JsonRecord,
+  request: HostToolRequest,
+) => unknown | Promise<unknown>;
 
 function checkpointKey(sessionId: string, checkpointId: string): string {
   return `${sessionId}\u0000${checkpointId}`;
 }
 
-function requireCheckpointKey(checkpoint: Checkpoint): { sessionId: string; checkpointId: string } {
+function requireCheckpointKey(checkpoint: Checkpoint): {
+  sessionId: string;
+  checkpointId: string;
+} {
   if (!checkpoint.sessionId) {
     throw new Error("Checkpoint sessionId is required");
   }
@@ -101,12 +107,17 @@ export class InMemoryCheckpointStore implements CheckpointStore {
     return checkpoint;
   }
 
-  async load(sessionId: string, checkpointId: string): Promise<Checkpoint | null> {
+  async load(
+    sessionId: string,
+    checkpointId: string,
+  ): Promise<Checkpoint | null> {
     return this.checkpoints.get(checkpointKey(sessionId, checkpointId)) ?? null;
   }
 
   async listCheckpoints(sessionId: string): Promise<Checkpoint[]> {
-    return [...this.checkpoints.values()].filter((checkpoint) => checkpoint.sessionId === sessionId);
+    return [...this.checkpoints.values()].filter(
+      (checkpoint) => checkpoint.sessionId === sessionId,
+    );
   }
 }
 
@@ -150,7 +161,9 @@ export class FunctionHostToolExecutor implements HostToolExecutor {
         toolName: request.toolName,
         success: false,
         errorKind: "not_found",
-        result: { message: `No host tool registered for '${request.toolName}'` },
+        result: {
+          message: `No host tool registered for '${request.toolName}'`,
+        },
         durationMs: Date.now() - started,
       });
     }

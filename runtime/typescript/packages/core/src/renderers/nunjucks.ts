@@ -15,7 +15,12 @@ import { prepareRenderInputs } from "./common.js";
 
 type NunjucksRuntime = {
   memberLookup: (object: unknown, property: unknown) => unknown;
-  callWrap: (callable: unknown, name: string, context: unknown, args: unknown[]) => unknown;
+  callWrap: (
+    callable: unknown,
+    name: string,
+    context: unknown,
+    args: unknown[],
+  ) => unknown;
 };
 
 const UNSAFE_PROPERTIES = new Set(["__proto__", "constructor", "prototype"]);
@@ -39,15 +44,30 @@ function safeMemberLookup(object: unknown, property: unknown): unknown {
   }
 
   const descriptor = Object.getOwnPropertyDescriptor(object, property);
-  return descriptor !== undefined && "value" in descriptor ? descriptor.value : undefined;
+  return descriptor !== undefined && "value" in descriptor
+    ? descriptor.value
+    : undefined;
 }
 
-function safeCallWrap(_callable: unknown, name: string, _context: unknown, _args: unknown[]): never {
+function safeCallWrap(
+  _callable: unknown,
+  name: string,
+  _context: unknown,
+  _args: unknown[],
+): never {
   throw new Error(`Template function calls are not allowed: ${name}`);
 }
 
-function sanitizeValue(value: unknown, seen = new WeakMap<object, unknown>()): unknown {
-  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+function sanitizeValue(
+  value: unknown,
+  seen = new WeakMap<object, unknown>(),
+): unknown {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return value;
   }
 
@@ -71,7 +91,9 @@ function sanitizeValue(value: unknown, seen = new WeakMap<object, unknown>()): u
 
   const result = Object.create(null) as Record<string, unknown>;
   seen.set(value, result);
-  for (const [key, descriptor] of Object.entries(Object.getOwnPropertyDescriptors(value))) {
+  for (const [key, descriptor] of Object.entries(
+    Object.getOwnPropertyDescriptors(value),
+  )) {
     if (!UNSAFE_PROPERTIES.has(key) && "value" in descriptor) {
       result[key] = sanitizeValue(descriptor.value, seen);
     }
@@ -79,11 +101,16 @@ function sanitizeValue(value: unknown, seen = new WeakMap<object, unknown>()): u
   return result;
 }
 
-function sanitizeInputs(inputs: Record<string, unknown>): Record<string, unknown> {
+function sanitizeInputs(
+  inputs: Record<string, unknown>,
+): Record<string, unknown> {
   return sanitizeValue(inputs) as Record<string, unknown>;
 }
 
-function renderSafely(template: string, inputs: Record<string, unknown>): string {
+function renderSafely(
+  template: string,
+  inputs: Record<string, unknown>,
+): string {
   const runtime = nunjucks.runtime as unknown as NunjucksRuntime;
   const memberLookup = runtime.memberLookup;
   const callWrap = runtime.callWrap;

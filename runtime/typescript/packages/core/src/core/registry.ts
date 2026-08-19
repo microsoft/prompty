@@ -52,8 +52,8 @@ export class InvokerError extends Error {
   ) {
     super(
       `No ${group} registered for key "${key}". ` +
-      `Register one with register${group.charAt(0).toUpperCase() + group.slice(1)}("${key}", impl) ` +
-      `or install a package that provides it.`,
+        `Register one with register${group.charAt(0).toUpperCase() + group.slice(1)}("${key}", impl) ` +
+        `or install a package that provides it.`,
     );
     this.name = "InvokerError";
   }

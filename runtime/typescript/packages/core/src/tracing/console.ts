@@ -20,8 +20,12 @@ export const consoleTracer: TracerFactory = (signature: string) => {
   console.error(`[Tracer] ── ${signature}`);
   return (key: string, value: unknown) => {
     if (key === "__end__") return;
-    const display = typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
-    const truncated = display.length > 200 ? display.slice(0, 200) + "..." : display;
+    const display =
+      typeof value === "object"
+        ? JSON.stringify(value, null, 2)
+        : String(value);
+    const truncated =
+      display.length > 200 ? display.slice(0, 200) + "..." : display;
     console.error(`[Tracer]    ${key}: ${truncated}`);
   };
 };

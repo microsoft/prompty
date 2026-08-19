@@ -120,9 +120,12 @@ export function buildEmbeddingArgs(
   if (Array.isArray(data)) {
     const texts = data.map((item: unknown) => {
       if (typeof item === "string") return item;
-      if (item && typeof item === "object" && "text" in item) return (item as { text: string }).text;
+      if (item && typeof item === "object" && "text" in item)
+        return (item as { text: string }).text;
       if (item && typeof item === "object" && "toTextContent" in item) {
-        const content = (item as { toTextContent: () => unknown }).toTextContent();
+        const content = (
+          item as { toTextContent: () => unknown }
+        ).toTextContent();
         return typeof content === "string" ? content : String(content);
       }
       return String(item);
@@ -162,16 +165,18 @@ export function buildImageArgs(
   } else if (Array.isArray(data)) {
     // Messages have .parts[].value for text content, or a .text getter
     prompt = data
-      .map((m: { text?: string; parts?: { kind: string; value: string }[] }) => {
-        if (typeof m.text === "string") return m.text;
-        if (Array.isArray(m.parts)) {
-          return m.parts
-            .filter((p) => p.kind === "text")
-            .map((p) => p.value)
-            .join("");
-        }
-        return String(m);
-      })
+      .map(
+        (m: { text?: string; parts?: { kind: string; value: string }[] }) => {
+          if (typeof m.text === "string") return m.text;
+          if (Array.isArray(m.parts)) {
+            return m.parts
+              .filter((p) => p.kind === "text")
+              .map((p) => p.value)
+              .join("");
+          }
+          return String(m);
+        },
+      )
       .join("\n")
       .trim();
   } else {
@@ -207,7 +212,10 @@ function buildOptions(agent: Agent): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result = modelOptionsToWire(opts as unknown as Record<string, unknown>, "openai");
+  const result = modelOptionsToWire(
+    opts as unknown as Record<string, unknown>,
+    "openai",
+  );
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
@@ -222,14 +230,19 @@ function buildOptions(agent: Agent): Record<string, unknown> {
 }
 
 function modelOptionsToWire(
-  opts: Record<string, unknown> & { toWire?: (provider: string) => Record<string, unknown> },
+  opts: Record<string, unknown> & {
+    toWire?: (provider: string) => Record<string, unknown>;
+  },
   provider: "openai" | "responses",
 ): Record<string, unknown> {
   const result = typeof opts.toWire === "function" ? opts.toWire(provider) : {};
 
   const mappings: Record<string, Partial<Record<typeof provider, string>>> = {
     frequencyPenalty: { openai: "frequency_penalty" },
-    maxOutputTokens: { openai: "max_completion_tokens", responses: "max_output_tokens" },
+    maxOutputTokens: {
+      openai: "max_completion_tokens",
+      responses: "max_output_tokens",
+    },
     presencePenalty: { openai: "presence_penalty" },
     seed: { openai: "seed" },
     temperature: { openai: "temperature", responses: "temperature" },
@@ -243,7 +256,8 @@ function modelOptionsToWire(
     const target = mapping[provider];
     const value = opts[key];
     if (!target || value === undefined || value === null) continue;
-    if (key === "stopSequences" && Array.isArray(value) && value.length === 0) continue;
+    if (key === "stopSequences" && Array.isArray(value) && value.length === 0)
+      continue;
     result[target] = value;
   }
 
@@ -255,11 +269,18 @@ function modelOptionsToWire(
 }
 
 /** Convert a Property list to a JSON Schema `{type: "object", properties: ...}`. */
-function schemaToWire(properties: unknown[], strict: boolean = false): Record<string, unknown> {
+function schemaToWire(
+  properties: unknown[],
+  strict: boolean = false,
+): Record<string, unknown> {
   const props: Record<string, unknown> = {};
   const required: string[] = [];
 
-  for (const p of properties as Array<{ name?: string; required?: boolean } & Parameters<typeof propertyToJsonSchema>[0]>) {
+  for (const p of properties as Array<
+    { name?: string; required?: boolean } & Parameters<
+      typeof propertyToJsonSchema
+    >[0]
+  >) {
     if (!p.name) continue;
     props[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
     if (strict || p.required) required.push(p.name);
@@ -271,22 +292,27 @@ function schemaToWire(properties: unknown[], strict: boolean = false): Record<st
 }
 
 /** Convert a single Property to a JSON Schema definition (recursive for structured output). */
-function propertyToJsonSchema(prop: {
-  kind?: string;
-  required?: boolean;
-  description?: string;
-  enumValues?: unknown[];
-  items?: unknown;
-  properties?: unknown[];
-  nullable?: boolean;
-  oneOf?: unknown[];
-  anyOf?: unknown[];
-}, optional: boolean = false, strict: boolean = false): Record<string, unknown> {
+function propertyToJsonSchema(
+  prop: {
+    kind?: string;
+    required?: boolean;
+    description?: string;
+    enumValues?: unknown[];
+    items?: unknown;
+    properties?: unknown[];
+    nullable?: boolean;
+    oneOf?: unknown[];
+    anyOf?: unknown[];
+  },
+  optional: boolean = false,
+  strict: boolean = false,
+): Record<string, unknown> {
   const jsonType = KIND_TO_JSON_TYPE[prop.kind ?? ""];
   const schema: Record<string, unknown> = jsonType ? { type: jsonType } : {};
 
   if (prop.description) schema.description = prop.description;
-  if (prop.enumValues && prop.enumValues.length > 0) schema.enum = prop.enumValues;
+  if (prop.enumValues && prop.enumValues.length > 0)
+    schema.enum = prop.enumValues;
 
   // Array items
   if (prop.kind === "array") {
@@ -300,10 +326,12 @@ function propertyToJsonSchema(prop: {
     if (prop.properties) {
       const nested: Record<string, unknown> = {};
       const req: string[] = [];
-      for (const p of prop.properties as Array<{ name?: string } & typeof prop>) {
+      for (const p of prop.properties as Array<
+        { name?: string } & typeof prop
+      >) {
         if (!p.name) continue;
-          nested[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
-          if (strict || p.required) req.push(p.name);
+        nested[p.name] = propertyToJsonSchema(p, strict && !p.required, strict);
+        if (strict || p.required) req.push(p.name);
       }
       schema.properties = nested;
       if (req.length > 0) schema.required = req;
@@ -366,9 +394,15 @@ function toolsToWire(agent: Agent): Record<string, unknown>[] {
       let params = (t as { parameters?: unknown[] }).parameters;
       if (params && Array.isArray(params)) {
         if (boundNames.size > 0) {
-          params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+          params = params.filter(
+            (p) =>
+              !boundNames.has((p as Record<string, unknown>).name as string),
+          );
         }
-        funcDef.parameters = schemaToWire(params, Boolean((t as { strict?: boolean }).strict));
+        funcDef.parameters = schemaToWire(
+          params,
+          Boolean((t as { strict?: boolean }).strict),
+        );
       }
 
       // Strict mode
@@ -376,13 +410,17 @@ function toolsToWire(agent: Agent): Record<string, unknown>[] {
       if (strict) {
         funcDef.strict = true;
         if (funcDef.parameters) {
-          (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+          (funcDef.parameters as Record<string, unknown>).additionalProperties =
+            false;
         }
       }
 
       result.push({ type: "function", function: funcDef });
     } else if (t.kind === "prompty") {
-      const funcDef = projectPromptyTool(t as unknown as Record<string, unknown>, agent);
+      const funcDef = projectPromptyTool(
+        t as unknown as Record<string, unknown>,
+        agent,
+      );
       result.push({ type: "function", function: funcDef });
     }
   }
@@ -396,14 +434,18 @@ function toolsToWire(agent: Agent): Record<string, unknown>[] {
  * Loads the child `.prompty` file, uses its `inputs` as the
  * function parameters, and applies binding/strict stripping.
  */
-function projectPromptyTool(tool: Record<string, unknown>, parent: Agent): Record<string, unknown> {
+function projectPromptyTool(
+  tool: Record<string, unknown>,
+  parent: Agent,
+): Record<string, unknown> {
   const toolPath = tool.path as string | undefined;
   if (!toolPath) {
     throw new Error(`PromptyTool '${tool.name}' has no path`);
   }
 
   // Resolve child path relative to the parent .prompty file
-  const parentPath = (parent.metadata ?? {}).__source_path as string | undefined;
+  const parentPath = (parent.metadata ?? {}).__source_path as
+    string | undefined;
   if (!parentPath) {
     throw new Error(
       `Cannot resolve PromptyTool '${tool.name}': parent agent has no __source_path in metadata`,
@@ -422,15 +464,21 @@ function projectPromptyTool(tool: Record<string, unknown>, parent: Agent): Recor
   const childInputs = child.inputs ?? [];
   let params: unknown[] = childInputs;
   if (boundNames.size > 0) {
-    params = params.filter((p) => !boundNames.has((p as Record<string, unknown>).name as string));
+    params = params.filter(
+      (p) => !boundNames.has((p as Record<string, unknown>).name as string),
+    );
   }
-  funcDef.parameters = schemaToWire(params, Boolean((tool as { strict?: boolean }).strict));
+  funcDef.parameters = schemaToWire(
+    params,
+    Boolean((tool as { strict?: boolean }).strict),
+  );
 
   const strict = (tool as { strict?: boolean }).strict;
   if (strict) {
     funcDef.strict = true;
     if (funcDef.parameters) {
-      (funcDef.parameters as Record<string, unknown>).additionalProperties = false;
+      (funcDef.parameters as Record<string, unknown>).additionalProperties =
+        false;
     }
   }
 
@@ -559,7 +607,10 @@ function buildResponsesOptions(agent: Agent): Record<string, unknown> {
   const opts = agent.model?.options;
   if (!opts) return {};
 
-  const result = modelOptionsToWire(opts as unknown as Record<string, unknown>, "responses");
+  const result = modelOptionsToWire(
+    opts as unknown as Record<string, unknown>,
+    "responses",
+  );
 
   // Pass through additionalProperties — but don't overwrite mapped keys
   if (opts.additionalProperties) {
@@ -598,14 +649,18 @@ function responsesToolsToWire(agent: Agent): Record<string, unknown>[] {
       if (strict) {
         tool.strict = true;
         if (tool.parameters) {
-          (tool.parameters as Record<string, unknown>).additionalProperties = false;
+          (tool.parameters as Record<string, unknown>).additionalProperties =
+            false;
         }
       }
 
       result.push(tool);
     } else if (t.kind === "prompty") {
       // Project prompty tool as a flat function definition (Responses API format)
-      const projected = projectPromptyTool(t as unknown as Record<string, unknown>, agent);
+      const projected = projectPromptyTool(
+        t as unknown as Record<string, unknown>,
+        agent,
+      );
       const tool: Record<string, unknown> = {
         type: "function",
         name: projected.name,
@@ -617,7 +672,8 @@ function responsesToolsToWire(agent: Agent): Record<string, unknown>[] {
       if (strict) {
         tool.strict = true;
         if (tool.parameters) {
-          (tool.parameters as Record<string, unknown>).additionalProperties = false;
+          (tool.parameters as Record<string, unknown>).additionalProperties =
+            false;
         }
       }
 

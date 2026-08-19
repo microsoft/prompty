@@ -27,7 +27,10 @@ export type InputGuardrail = (messages: Message[]) => GuardrailResult;
 /** Output guardrail hook signature. */
 export type OutputGuardrail = (message: Message) => GuardrailResult;
 /** Tool guardrail hook signature. */
-export type ToolGuardrail = (name: string, args: Record<string, unknown>) => GuardrailResult;
+export type ToolGuardrail = (
+  name: string,
+  args: Record<string, unknown>,
+) => GuardrailResult;
 
 /** Configuration for guardrail hooks. */
 export interface GuardrailsOptions {

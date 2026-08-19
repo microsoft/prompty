@@ -33,7 +33,9 @@ export interface ToolParameter {
 }
 
 /** Extended function with __tool__ metadata. */
-export interface ToolFunction<T extends (...args: unknown[]) => unknown = (...args: unknown[]) => unknown> {
+export interface ToolFunction<
+  T extends (...args: unknown[]) => unknown = (...args: unknown[]) => unknown,
+> {
   (...args: Parameters<T>): ReturnType<T>;
   __tool__: FunctionTool;
 }
@@ -71,14 +73,15 @@ export function tool<T extends (...args: unknown[]) => unknown>(
   const toolDesc = options?.description ?? "";
   const shouldRegister = options?.register !== false;
 
-  const properties: Property[] = (options?.parameters ?? []).map((p) =>
-    new Property({
-      name: p.name,
-      kind: p.kind ?? "string",
-      required: p.required ?? (p.default === undefined),
-      description: p.description,
-      default: p.default,
-    }),
+  const properties: Property[] = (options?.parameters ?? []).map(
+    (p) =>
+      new Property({
+        name: p.name,
+        kind: p.kind ?? "string",
+        required: p.required ?? p.default === undefined,
+        description: p.description,
+        default: p.default,
+      }),
   );
 
   const toolDef = new FunctionTool({

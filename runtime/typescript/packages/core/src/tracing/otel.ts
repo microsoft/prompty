@@ -76,7 +76,11 @@ function setAttributes(
 ): void {
   if (value === null || value === undefined) return;
 
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     span.setAttribute(prefix, value);
     return;
   }
@@ -121,7 +125,10 @@ function setAttributes(
  * @param options - Optional configuration.
  * @returns A `TracerFactory` suitable for `Tracer.add()`.
  */
-export function otelTracer(api: OtelApi, options?: OtelTracerOptions): TracerFactory {
+export function otelTracer(
+  api: OtelApi,
+  options?: OtelTracerOptions,
+): TracerFactory {
   const tracerName = options?.tracerName ?? DEFAULT_TRACER_NAME;
   const tracer = api.trace.getTracer(tracerName);
 
@@ -139,7 +146,10 @@ export function otelTracer(api: OtelApi, options?: OtelTracerOptions): TracerFac
       }
 
       if (key === "error") {
-        span.setStatus({ code: api.SpanStatusCode.ERROR, message: String(value) });
+        span.setStatus({
+          code: api.SpanStatusCode.ERROR,
+          message: String(value),
+        });
         if (value instanceof Error) {
           span.recordException(value);
           if (value.stack) {
