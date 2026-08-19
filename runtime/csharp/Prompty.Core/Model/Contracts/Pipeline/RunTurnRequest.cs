@@ -41,7 +41,7 @@ public partial class RunTurnRequest
     public string TurnId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Inputs supplied to the deterministic single-turn run
+    /// Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?>? Inputs { get; set; }
 

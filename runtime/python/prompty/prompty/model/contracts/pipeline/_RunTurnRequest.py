@@ -23,7 +23,7 @@ class RunTurnRequest:
     turn_id : str
         Stable turn identifier within the session
     inputs : Optional[dict[str, Any]]
-        Inputs supplied to the deterministic single-turn run
+        Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     options : Optional[TurnOptions]
         Canonical turn execution options
     """

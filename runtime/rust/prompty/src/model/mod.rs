@@ -22,6 +22,18 @@ pub use checkpoint_store::*;
 pub mod discovery_conformance;
 pub use discovery_conformance::*;
 
+pub mod engine_durability_port;
+pub use engine_durability_port::*;
+
+pub mod engine_permission_port;
+pub use engine_permission_port::*;
+
+pub mod engine_post_commit_port;
+pub use engine_post_commit_port::*;
+
+pub mod engine_tool_port;
+pub use engine_tool_port::*;
+
 pub mod event_journal_writer;
 pub use event_journal_writer::*;
 

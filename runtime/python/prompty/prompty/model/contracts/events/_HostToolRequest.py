@@ -24,7 +24,7 @@ class HostToolRequest:
     tool_name : str
         Name of the host tool being executed
     arguments : Optional[dict[str, Any]]
-        Tool arguments after host-side sanitization
+        Tool arguments after host-side sanitization. Values may be explicit null.
     working_directory : Optional[str]
         Working directory or execution scope for the tool
     """

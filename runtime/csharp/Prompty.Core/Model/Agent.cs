@@ -66,7 +66,7 @@ public partial class Agent
     public string? Description { get; set; }
 
     /// <summary>
-    /// Additional metadata including authors, tags, and other arbitrary properties
+    /// Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?>? Metadata { get; set; }
 

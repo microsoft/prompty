@@ -29,7 +29,7 @@ class TurnModelRequest:
     iteration : int
         Zero-based model loop iteration
     inputs : Optional[dict[str, Any]]
-        Inputs supplied to the deterministic single-turn run
+        Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     options : Optional[TurnOptions]
         Canonical turn execution options
     tool_results : Optional[list[HostToolResult]]

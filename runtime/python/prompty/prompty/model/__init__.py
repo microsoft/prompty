@@ -8,6 +8,10 @@ from ._Agent import Agent
 from ._CheckpointStore import CheckpointStore
 from ._context import LoadContext, SaveContext
 from ._DiscoveryConformance import DiscoveryConformance
+from ._EngineDurabilityPort import EngineDurabilityPort
+from ._EnginePermissionPort import EnginePermissionPort
+from ._EnginePostCommitPort import EnginePostCommitPort
+from ._EngineToolPort import EngineToolPort
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
@@ -353,6 +357,10 @@ __all__ = [
     "AnthropicMessagesResponse",
     "CheckpointStore",
     "DiscoveryConformance",
+    "EngineDurabilityPort",
+    "EnginePermissionPort",
+    "EnginePostCommitPort",
+    "EngineToolPort",
     "EventJournalWriter",
     "EventSink",
     "Executor",
