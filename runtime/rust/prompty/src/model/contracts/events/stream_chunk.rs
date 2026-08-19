@@ -14,6 +14,8 @@ use super::super::super::context::{LoadContext, SaveContext};
 
 use super::super::super::contracts::models::invocation_usage::InvocationUsage;
 
+use super::stream_failure::StreamFailure;
+
 use super::super::super::contracts::conversation::tool_call::ToolCall;
 
 /// Variant-specific data for [`StreamChunk`], discriminated by `kind`.
@@ -43,6 +45,11 @@ pub enum StreamChunkKind {
     ErrorChunk {
         /// The error message
         message: String,
+    },
+    /// `kind` = `"failure"`
+    FailureChunk {
+        /// The classified stream failure
+        failure: StreamFailure,
     },
 }
 
@@ -127,6 +134,13 @@ impl StreamChunk {
                     .unwrap_or_default()
                     .to_string(),
             },
+            "failure" => StreamChunkKind::FailureChunk {
+                failure: value
+                    .get("failure")
+                    .filter(|v| v.is_object() || v.is_array() || v.is_string())
+                    .map(|v| StreamFailure::load_from_value(v, ctx))
+                    .unwrap_or_default(),
+            },
             _ => panic!(
                 "Unknown StreamChunk discriminator field 'kind' value: {}",
                 kind_str
@@ -177,6 +191,18 @@ impl StreamChunk {
                 InvocationUsage::validate_input_at(child, &child_path)?;
             }
             "error" => {}
+            "failure" => {
+                let child_path = if path.is_empty() {
+                    "failure".to_string()
+                } else {
+                    format!("{}.failure", path)
+                };
+                let child = value
+                    .get("failure")
+                    .filter(|candidate| !candidate.is_null())
+                    .ok_or_else(|| format!("{}: missing required field", child_path))?;
+                StreamFailure::validate_input_at(child, &child_path)?;
+            }
             _ => {}
         }
         Ok(())
@@ -188,7 +214,7 @@ impl StreamChunk {
             .and_then(|candidate| candidate.as_str())
             .ok_or_else(|| "Missing StreamChunk discriminator property: 'kind'".to_string())?;
         match discriminator {
-            "text" | "thinking" | "tool" | "usage" | "error" => Ok(()),
+            "text" | "thinking" | "tool" | "usage" | "error" | "failure" => Ok(()),
             _ => Err(format!(
                 "Unknown StreamChunk discriminator field 'kind' value: {}",
                 discriminator
@@ -204,6 +230,7 @@ impl StreamChunk {
             StreamChunkKind::ToolChunk { .. } => "tool",
             StreamChunkKind::UsageChunk { .. } => "usage",
             StreamChunkKind::ErrorChunk { .. } => "error",
+            StreamChunkKind::FailureChunk { .. } => "failure",
         }
     }
 
@@ -245,6 +272,10 @@ impl StreamChunk {
                     "message".to_string(),
                     serde_json::Value::String(message.clone()),
                 );
+            }
+            StreamChunkKind::FailureChunk { failure, .. } => {
+                let nested = failure.to_value(ctx);
+                result.insert("failure".to_string(), nested);
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))

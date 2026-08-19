@@ -8,6 +8,10 @@ from ._Agent import Agent
 from ._CheckpointStore import CheckpointStore
 from ._context import LoadContext, SaveContext
 from ._DiscoveryConformance import DiscoveryConformance
+from ._EngineDurabilityPort import EngineDurabilityPort
+from ._EnginePermissionPort import EnginePermissionPort
+from ._EnginePostCommitPort import EnginePostCommitPort
+from ._EngineToolPort import EngineToolPort
 from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
@@ -63,6 +67,7 @@ from .contracts.events import (
     DoneEventPayload,
     ErrorChunk,
     ErrorEventPayload,
+    FailureChunk,
     HarnessContext,
     HookEndPayload,
     HookStartPayload,
@@ -88,6 +93,7 @@ from .contracts.events import (
     SessionWarningPayload,
     StatusEventPayload,
     StreamChunk,
+    StreamFailure,
     TextChunk,
     ThinkingChunk,
     ThinkingEventPayload,
@@ -327,12 +333,14 @@ __all__ = [
     "SessionRef",
     "SessionSummary",
     "SessionTrace",
+    "StreamFailure",
     "StreamChunk",
     "TextChunk",
     "ThinkingChunk",
     "ToolChunk",
     "UsageChunk",
     "ErrorChunk",
+    "FailureChunk",
     "StreamOptions",
     "TraceTime",
     "TraceSpan",
@@ -349,6 +357,10 @@ __all__ = [
     "AnthropicMessagesResponse",
     "CheckpointStore",
     "DiscoveryConformance",
+    "EngineDurabilityPort",
+    "EnginePermissionPort",
+    "EnginePostCommitPort",
+    "EngineToolPort",
     "EventJournalWriter",
     "EventSink",
     "Executor",

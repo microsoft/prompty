@@ -26,7 +26,7 @@ class Message:
     parts : list[ContentPart]
         The content parts of the message
     metadata : dict[str, Any]
-        Optional metadata associated with the message
+        Optional metadata associated with the message. Values may be explicit null.
     """
 
     _shorthand_property: ClassVar[str | None] = None

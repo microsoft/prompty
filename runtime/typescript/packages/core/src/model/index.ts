@@ -6,6 +6,10 @@ export { LoadContext, SaveContext } from "./context";
 export { Agent } from "./agent";
 export type { CheckpointStore } from "./checkpoint-store";
 export type { DiscoveryConformance } from "./discovery-conformance";
+export type { EngineDurabilityPort } from "./engine-durability-port";
+export type { EnginePermissionPort } from "./engine-permission-port";
+export type { EnginePostCommitPort } from "./engine-post-commit-port";
+export type { EngineToolPort } from "./engine-tool-port";
 export type { EventJournalWriter } from "./event-journal-writer";
 export type { EventSink } from "./event-sink";
 export type { Executor } from "./executor";
@@ -98,6 +102,7 @@ export { SessionFileRef } from "./contracts/events/session-file-ref";
 export { SessionRef } from "./contracts/events/session-ref";
 export { SessionSummary } from "./contracts/events/session-summary";
 export { SessionTrace } from "./contracts/events/session-trace";
+export { StreamFailure } from "./contracts/events/stream-failure";
 export {
   StreamChunk,
   TextChunk,
@@ -105,6 +110,7 @@ export {
   ToolChunk,
   UsageChunk,
   ErrorChunk,
+  FailureChunk,
 } from "./contracts/events/stream-chunk";
 
 export { GuardrailResult } from "./contracts/guardrails/guardrail-result";

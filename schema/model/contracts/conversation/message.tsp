@@ -43,7 +43,7 @@ model Message {
   @sample(MessagePartsSample)
   parts: ContentPart[];
 
-  @doc("Optional metadata associated with the message")
+  @doc("Optional metadata associated with the message. Values may be explicit null.")
   @sample(MessageMetadataSample)
   metadata: Record<unknown>;
 }

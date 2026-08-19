@@ -40,7 +40,7 @@ class Agent:
     description : Optional[str]
         Description of the prompt's purpose
     metadata : Optional[dict[str, Any]]
-        Additional metadata including authors, tags, and other arbitrary properties
+        Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.
     inputs : Optional[list[Property]]
         Input parameters that participate in template rendering
     outputs : Optional[list[Property]]

@@ -34,6 +34,8 @@ public abstract class StreamChunk {
           return UsageChunk.load(data, ctx);
         case "error":
           return ErrorChunk.load(data, ctx);
+        case "failure":
+          return FailureChunk.load(data, ctx);
         default:
           throw new IllegalArgumentException("Unknown StreamChunk discriminator field 'kind' value: " + discriminatorString);
       }

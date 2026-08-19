@@ -61,4 +61,4 @@ additionalProperties:
 | contextWindow | int32 | Maximum context window size in tokens |
 | inputModalities | string[] | Input modalities the model accepts (e.g., 'text', 'image', 'audio') |
 | outputModalities | string[] | Output modalities the model can produce (e.g., 'text', 'audio') |
-| additionalProperties | dictionary | Additional provider-specific properties |
+| additionalProperties | dictionary | Additional provider-specific properties. Values may be explicit null. |

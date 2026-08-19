@@ -69,7 +69,7 @@ iteration: 0
 | sessionId | string | Stable harness session identifier |
 | turnId | string | Stable turn identifier within the session |
 | iteration | int32 | Zero-based model loop iteration |
-| inputs | dictionary | Inputs supplied to the deterministic single-turn run |
+| inputs | dictionary | Inputs supplied to the deterministic single-turn run. Values may be explicit null. |
 | options | [TurnOptions](../turnoptions/) | Canonical turn execution options |
 | toolResults | [HostToolResult[]](../hosttoolresult/) | Host tool results produced by the previous iteration |
 

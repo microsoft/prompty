@@ -13,6 +13,7 @@ public abstract class Connection {
   public String kind = "";
   public AuthenticationMode authenticationMode = null;
   public String usageDescription = null;
+  protected Map<String, Object> rawPayload;
 
   public Connection() { }
 
@@ -39,8 +40,11 @@ public abstract class Connection {
         case "foundry":
           return FoundryConnection.load(data, ctx);
         default:
-          throw new IllegalArgumentException("Unknown Connection discriminator field 'kind' value: " + discriminatorString);
+          break;
       }
+    }
+    if (data instanceof Map<?, ?>) {
+      return UnknownConnection.load(data, ctx);
     }
     throw new IllegalArgumentException("Cannot instantiate abstract Connection; expected a matching 'kind' discriminator.");
   }
@@ -60,7 +64,7 @@ public abstract class Connection {
   public Map<String, Object> save(SaveContext context) {
     SaveContext ctx = context == null ? new SaveContext() : context;
     Connection obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
+    Map<String, Object> result = obj.rawPayload == null ? new LinkedHashMap<>() : cloneRawMap(obj.rawPayload);
     obj.saveFields(result, ctx);
     return ctx.processDict(result);
   }
@@ -106,6 +110,24 @@ public abstract class Connection {
 
   private static Object serializeScalar(Object value) {
     if (value instanceof Enum<?> e) return e.name().toLowerCase().replace("_", "-");
+    return value;
+  }
+
+  protected static Map<String, Object> cloneRawMap(Map<?, ?> source) {
+    Map<String, Object> result = new LinkedHashMap<>();
+    for (Map.Entry<?, ?> entry : source.entrySet()) {
+      result.put(String.valueOf(entry.getKey()), cloneRawValue(entry.getValue()));
+    }
+    return result;
+  }
+
+  protected static Object cloneRawValue(Object value) {
+    if (value instanceof Map<?, ?> map) return cloneRawMap(map);
+    if (value instanceof Iterable<?> values) {
+      List<Object> result = new ArrayList<>();
+      for (Object item : values) result.add(cloneRawValue(item));
+      return result;
+    }
     return value;
   }
 

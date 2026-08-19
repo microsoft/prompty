@@ -35,7 +35,7 @@ class ModelInfo:
     output_modalities : Optional[list[str]]
         Output modalities the model can produce (e.g., 'text', 'audio')
     additional_properties : Optional[dict[str, Any]]
-        Additional provider-specific properties
+        Additional provider-specific properties. Values may be explicit null.
     """
 
     _shorthand_property: ClassVar[str | None] = None

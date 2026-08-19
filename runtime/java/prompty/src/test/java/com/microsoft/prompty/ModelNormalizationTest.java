@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.prompty.model.Connection;
@@ -18,6 +17,9 @@ import com.microsoft.prompty.model.SessionEvent;
 import com.microsoft.prompty.model.SessionEventType;
 import com.microsoft.prompty.model.Tool;
 import com.microsoft.prompty.model.ToolResult;
+import com.microsoft.prompty.model.UnknownConnection;
+
+import java.util.Map;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -162,9 +164,16 @@ class ModelNormalizationTest {
   class DiscriminatedUnions {
 
     @Test
-    @DisplayName("an unknown connection kind is rejected")
-    void unknownConnectionKindThrows() {
-      assertThrows(IllegalArgumentException.class, () -> Connection.fromJson("{\"kind\": \"nope\"}"));
+    @DisplayName("an unknown connection kind round-trips as UnknownConnection")
+    void unknownConnectionKindRoundTrips() {
+      Connection connection = Connection.fromJson("{\"kind\": \"nope\", \"custom\": \"value\"}");
+
+      assertInstanceOf(UnknownConnection.class, connection);
+      assertEquals("nope", connection.kind);
+
+      Map<String, Object> saved = connection.save(null);
+      assertEquals("nope", saved.get("kind"));
+      assertEquals("value", saved.get("custom"));
     }
   }
 

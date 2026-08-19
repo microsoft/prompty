@@ -32,6 +32,8 @@
  */
 
 import { Agent } from "../model/agent.js";
+import { FailureChunk } from "../model/contracts/events/stream-chunk.js";
+import { StreamFailure } from "../model/contracts/events/stream-failure.js";
 import {
   type ToolCall,
   Message,
@@ -89,6 +91,24 @@ export class ExecuteError extends Error {
     super(message);
     this.name = "ExecuteError";
     this.messages = messages;
+  }
+}
+
+/** Terminal classified failure from a processed model stream. */
+export class StreamFailureError extends Error {
+  public readonly failure: StreamFailure;
+  public readonly partialContent: string;
+
+  constructor(failure: StreamFailure, partialContent: string) {
+    super(failure.message);
+    this.name = "StreamFailureError";
+    this.failure = failure;
+    this.partialContent = partialContent;
+  }
+
+  /** Whether the provider outcome must be reconciled before another invocation. */
+  get requiresReconciliation(): boolean {
+    return this.failure.outcome === "indeterminate";
   }
 }
 
@@ -766,9 +786,24 @@ export async function turn<T = unknown>(
       }
       let processed: unknown;
       try {
-        processed = await process(agent, response);
+        if (isAsyncIterable(response)) {
+          const streamResult = await consumeStream(agent, response, onEvent);
+          processed = streamResult.content;
+        } else {
+          processed = await process(agent, response);
+        }
       } catch (err) {
-        emitFailedTurnEnd(onEvent, err, 0, response);
+        if (err instanceof StreamFailureError) {
+          emitEvent(onEvent, "error", {
+            message: err.message,
+            outcome: err.failure.outcome,
+            requiresReconciliation: err.requiresReconciliation,
+            partialContent: err.partialContent,
+          });
+          emitFailedTurnEnd(onEvent, err, 0, err.partialContent);
+        } else {
+          emitFailedTurnEnd(onEvent, err, 0, response);
+        }
         throw err;
       }
 
@@ -893,7 +928,17 @@ export async function turn<T = unknown>(
         try {
           streamResult = await consumeStream(agent, response, onEvent);
         } catch (err) {
-          emitFailedTurnEnd(onEvent, err, iteration, response);
+          if (err instanceof StreamFailureError) {
+            emitEvent(onEvent, "error", {
+              message: err.message,
+              outcome: err.failure.outcome,
+              requiresReconciliation: err.requiresReconciliation,
+              partialContent: err.partialContent,
+            });
+            emitFailedTurnEnd(onEvent, err, iteration, err.partialContent);
+          } else {
+            emitFailedTurnEnd(onEvent, err, iteration, response);
+          }
           throw err;
         }
         const { toolCalls, content } = streamResult;
@@ -1097,7 +1142,10 @@ async function consumeStream(
 
   if (isAsyncIterable(processed)) {
     for await (const item of processed) {
-      if (isToolCallLike(item)) {
+      const failure = streamFailureFrom(item);
+      if (failure !== undefined) {
+        throw new StreamFailureError(failure, textParts.join(""));
+      } else if (isToolCallLike(item)) {
         toolCalls.push(item);
       } else if (typeof item === "string") {
         textParts.push(item);
@@ -1110,6 +1158,21 @@ async function consumeStream(
   }
 
   return { toolCalls, content: textParts.join("") };
+}
+
+function streamFailureFrom(item: unknown): StreamFailure | undefined {
+  if (item instanceof FailureChunk) {
+    return item.failure;
+  }
+  if (typeof item !== "object" || item === null) {
+    return undefined;
+  }
+
+  const chunk = item as Record<string, unknown>;
+  if (chunk.kind !== "failure" || typeof chunk.failure !== "object" || chunk.failure === null) {
+    return undefined;
+  }
+  return StreamFailure.load(chunk.failure as Record<string, unknown>);
 }
 
 

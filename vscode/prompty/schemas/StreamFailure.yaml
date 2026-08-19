@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: StreamFailure.yaml
+type: object
+properties:
+  outcome:
+    anyOf:
+      - type: string
+        const: determinate
+      - type: string
+        const: indeterminate
+    description: Whether the provider outcome is known or requires reconciliation
+  message:
+    type: string
+    description: The human-readable failure message
+required:
+  - outcome
+  - message
+description: A classified terminal failure from an LLM response stream.

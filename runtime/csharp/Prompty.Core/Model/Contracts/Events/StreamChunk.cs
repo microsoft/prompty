@@ -90,6 +90,7 @@ public abstract partial class StreamChunk
             "tool" => ToolChunk.Load(data, context),
             "usage" => UsageChunk.Load(data, context),
             "error" => ErrorChunk.Load(data, context),
+            "failure" => FailureChunk.Load(data, context),
             _ => throw new ArgumentException($"Unknown StreamChunk discriminator field 'kind' value: {discriminator}"),
         };
 

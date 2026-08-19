@@ -106,7 +106,7 @@ pub struct Message {
     pub role: Role,
     /// The content parts of the message
     pub parts: Vec<ContentPart>,
-    /// Optional metadata associated with the message
+    /// Optional metadata associated with the message. Values may be explicit null.
     pub metadata: serde_json::Value,
 }
 

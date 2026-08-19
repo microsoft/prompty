@@ -14,6 +14,7 @@ export {
   invoke,
   resolveBindings,
   ExecuteError,
+  StreamFailureError,
   type TurnOptions,
   type InvokeOptions,
 } from "./pipeline.js";

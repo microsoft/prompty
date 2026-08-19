@@ -128,13 +128,20 @@ pub enum ConnectionKind {
         /// The connection type within the Foundry project (e.g., 'model', 'index', 'storage')
         connection_type: Option<String>,
     },
+    /// Lossless fallback for unrecognized `kind` values.
+    Unknown {
+        /// The raw `kind` string for this unknown variant.
+        kind_name: String,
+        /// Unmodeled fields preserved for forward-compatible round trips.
+        raw: serde_json::Map<String, serde_json::Value>,
+    },
 }
 
 impl Default for ConnectionKind {
     fn default() -> Self {
-        ConnectionKind::Reference {
-            name: String::from(""),
-            target: None,
+        ConnectionKind::Unknown {
+            kind_name: String::new(),
+            raw: serde_json::Map::new(),
         }
     }
 }
@@ -265,10 +272,16 @@ impl Connection {
                     .and_then(|v| v.as_str())
                     .map(|s| s.to_string()),
             },
-            _ => panic!(
-                "Unknown Connection discriminator field 'kind' value: {}",
-                kind_str
-            ),
+            _ => ConnectionKind::Unknown {
+                kind_name: kind_str.to_string(),
+                raw: {
+                    let mut raw = value.as_object().cloned().unwrap_or_default();
+                    raw.remove("kind");
+                    raw.remove("authenticationMode");
+                    raw.remove("usageDescription");
+                    raw
+                },
+            },
         };
         Self {
             authentication_mode: value
@@ -284,7 +297,6 @@ impl Connection {
     }
 
     pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
-        Self::validate_discriminator(value)?;
         let discriminator = value
             .get("kind")
             .ok_or_else(|| "Missing Connection discriminator property: 'kind'".to_string())?;
@@ -309,20 +321,6 @@ impl Connection {
         Ok(())
     }
 
-    fn validate_discriminator(value: &serde_json::Value) -> Result<(), String> {
-        let discriminator = value
-            .get("kind")
-            .and_then(|candidate| candidate.as_str())
-            .ok_or_else(|| "Missing Connection discriminator property: 'kind'".to_string())?;
-        match discriminator {
-            "reference" | "remote" | "key" | "anonymous" | "oauth" | "foundry" => Ok(()),
-            _ => Err(format!(
-                "Unknown Connection discriminator field 'kind' value: {}",
-                discriminator
-            )),
-        }
-    }
-
     /// Returns the `kind` discriminator string for this instance.
     pub fn kind_str(&self) -> &str {
         match &self.kind {
@@ -332,6 +330,7 @@ impl Connection {
             ConnectionKind::Anonymous { .. } => "anonymous",
             ConnectionKind::OAuth { .. } => "oauth",
             ConnectionKind::Foundry { .. } => "foundry",
+            ConnectionKind::Unknown { kind_name, .. } => kind_name.as_str(),
         }
     }
 
@@ -440,6 +439,17 @@ impl Connection {
                         "connectionType".to_string(),
                         serde_json::Value::String(val.clone()),
                     );
+                }
+            }
+            ConnectionKind::Unknown { raw, .. } => {
+                for (key, value) in raw {
+                    if matches!(
+                        key.as_str(),
+                        "kind" | "authenticationMode" | "usageDescription"
+                    ) {
+                        continue;
+                    }
+                    result.insert(key.clone(), value.clone());
                 }
             }
         }

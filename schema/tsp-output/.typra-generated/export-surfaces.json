@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.9.2",
-        "supportedRange": "0.9.2",
+        "version": "0.9.3",
+        "supportedRange": "0.9.3",
         "supported": true
       }
     ]
@@ -68,13 +68,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -154,6 +159,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -216,6 +222,34 @@
           "kind": "type",
           "group": "",
           "source": "DiscoveryConformance.cs",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineDurabilityPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePermissionPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePostCommitPort.cs",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineToolPort.cs",
           "protocol": true
         },
         {
@@ -475,6 +509,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts/ErrorEventPayload.cs",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/StreamChunk.cs",
           "protocol": false
         },
         {
@@ -982,6 +1023,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/StreamFailure.cs",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -1354,6 +1402,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -1426,6 +1475,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -1547,6 +1597,7 @@
             "SessionWarningPayload.cs",
             "StatusEventPayload.cs",
             "StreamChunk.cs",
+            "StreamFailure.cs",
             "StreamOptions.cs",
             "SubscriptionInfo.cs",
             "Template.cs",
@@ -1683,6 +1734,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort.cs",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort.cs",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort.cs",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort.cs",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -2052,6 +2197,10 @@
         "Agent.cs",
         "CheckpointStore.cs",
         "DiscoveryConformance.cs",
+        "EngineDurabilityPort.cs",
+        "EnginePermissionPort.cs",
+        "EnginePostCommitPort.cs",
+        "EngineToolPort.cs",
         "EventJournalWriter.cs",
         "EventSink.cs",
         "Executor.cs",
@@ -2144,6 +2293,7 @@
         "contracts/SessionWarningPayload.cs",
         "contracts/StatusEventPayload.cs",
         "contracts/StreamChunk.cs",
+        "contracts/StreamFailure.cs",
         "contracts/StreamOptions.cs",
         "contracts/SubscriptionInfo.cs",
         "contracts/Template.cs",
@@ -2228,13 +2378,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -2314,6 +2469,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -2376,6 +2532,34 @@
           "kind": "type",
           "group": "",
           "source": "discovery_conformance.go",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_durability_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_permission_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_post_commit_port.go",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_tool_port.go",
           "protocol": true
         },
         {
@@ -2635,6 +2819,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "error_event_payload.go",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "stream_chunk.go",
           "protocol": false
         },
         {
@@ -3142,6 +3333,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "stream_failure.go",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -3514,6 +3712,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -3586,6 +3785,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -3707,6 +3907,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -3843,6 +4044,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "engine_durability_port.go",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "engine_permission_port.go",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "engine_post_commit_port.go",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "engine_tool_port.go",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -4238,8 +4533,12 @@
         "discovery_conformance.go",
         "done_event_payload.go",
         "engine_checkpoint.go",
+        "engine_durability_port.go",
         "engine_event.go",
         "engine_permission_decision.go",
+        "engine_permission_port.go",
+        "engine_post_commit_port.go",
+        "engine_tool_port.go",
         "error_event_payload.go",
         "event_journal_writer.go",
         "event_sink.go",
@@ -4312,6 +4611,7 @@
         "session_warning_payload.go",
         "status_event_payload.go",
         "stream_chunk.go",
+        "stream_failure.go",
         "stream_options.go",
         "subscription_info.go",
         "template.go",
@@ -4388,13 +4688,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -4474,6 +4779,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -4536,6 +4842,34 @@
           "kind": "type",
           "group": "",
           "source": "DiscoveryConformance.java",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineDurabilityPort.java",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePermissionPort.java",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePostCommitPort.java",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineToolPort.java",
           "protocol": true
         },
         {
@@ -4795,6 +5129,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "ErrorEventPayload.java",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamChunk.java",
           "protocol": false
         },
         {
@@ -5302,6 +5643,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamFailure.java",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -5674,6 +6022,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -5746,6 +6095,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -5867,6 +6217,7 @@
             "SessionWarningPayload.java",
             "StatusEventPayload.java",
             "StreamChunk.java",
+            "StreamFailure.java",
             "StreamOptions.java",
             "SubscriptionInfo.java",
             "Template.java",
@@ -6003,6 +6354,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort.java",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort.java",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort.java",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort.java",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -6398,8 +6843,12 @@
         "DiscoveryConformance.java",
         "DoneEventPayload.java",
         "EngineCheckpoint.java",
+        "EngineDurabilityPort.java",
         "EngineEvent.java",
         "EnginePermissionDecision.java",
+        "EnginePermissionPort.java",
+        "EnginePostCommitPort.java",
+        "EngineToolPort.java",
         "ErrorEventPayload.java",
         "EventJournalWriter.java",
         "EventSink.java",
@@ -6472,6 +6921,7 @@
         "SessionWarningPayload.java",
         "StatusEventPayload.java",
         "StreamChunk.java",
+        "StreamFailure.java",
         "StreamOptions.java",
         "SubscriptionInfo.java",
         "Template.java",
@@ -6547,13 +6997,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -6633,6 +7088,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -6695,6 +7151,34 @@
           "kind": "type",
           "group": "",
           "source": "DiscoveryConformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineDurabilityPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePermissionPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "EnginePostCommitPort",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "EngineToolPort",
           "protocol": true
         },
         {
@@ -6954,6 +7438,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "ErrorEventPayload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamChunk",
           "protocol": false
         },
         {
@@ -7461,6 +7952,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "StreamFailure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -7833,6 +8331,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -7905,6 +8404,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -8026,6 +8526,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -8162,6 +8663,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "EngineDurabilityPort",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "EnginePermissionPort",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "EnginePostCommitPort",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "EngineToolPort",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -8557,8 +9152,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
@@ -8631,6 +9230,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -8707,13 +9307,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -8793,6 +9398,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -8855,6 +9461,34 @@
           "kind": "type",
           "group": "",
           "source": "._DiscoveryConformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EngineDurabilityPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EnginePermissionPort",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EnginePostCommitPort",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "._EngineToolPort",
           "protocol": true
         },
         {
@@ -9111,6 +9745,13 @@
         },
         {
           "name": "ErrorEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
           "kind": "value",
           "group": "contracts",
           "source": ".contracts",
@@ -9621,6 +10262,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -9993,6 +10641,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -10065,6 +10714,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -10186,6 +10836,7 @@
             "_SessionWarningPayload",
             "_StatusEventPayload",
             "_StreamChunk",
+            "_StreamFailure",
             "_StreamOptions",
             "_SubscriptionInfo",
             "_Template",
@@ -10322,6 +10973,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "._EngineDurabilityPort",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "._EnginePermissionPort",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "._EnginePostCommitPort",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "._EngineToolPort",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -10691,6 +11436,10 @@
         "._Agent",
         "._CheckpointStore",
         "._DiscoveryConformance",
+        "._EngineDurabilityPort",
+        "._EnginePermissionPort",
+        "._EnginePostCommitPort",
+        "._EngineToolPort",
         "._EventJournalWriter",
         "._EventSink",
         "._Executor",
@@ -10745,13 +11494,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -10831,6 +11585,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -10893,6 +11648,34 @@
           "kind": "type",
           "group": "",
           "source": "discovery_conformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_durability_port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_permission_port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_post_commit_port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "engine_tool_port",
           "protocol": true
         },
         {
@@ -11152,6 +11935,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts::error_event_payload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::stream_chunk",
           "protocol": false
         },
         {
@@ -11659,6 +12449,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::stream_failure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -12031,6 +12828,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -12103,6 +12901,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -12224,6 +13023,7 @@
             "session_warning_payload",
             "status_event_payload",
             "stream_chunk",
+            "stream_failure",
             "stream_options",
             "subscription_info",
             "template",
@@ -12360,6 +13160,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "engine_durability_port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "engine_permission_port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "engine_post_commit_port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "engine_tool_port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -12731,6 +13625,10 @@
         "context",
         "contracts",
         "discovery_conformance",
+        "engine_durability_port",
+        "engine_permission_port",
+        "engine_post_commit_port",
+        "engine_tool_port",
         "event_journal_writer",
         "event_sink",
         "executor",
@@ -12747,9 +13645,9 @@
       ]
     },
     {
-      "target": "typescript",
-      "outputRoot": "../runtime/typescript/packages/core/src/model",
-      "namespace": "Prompty",
+      "target": "swift",
+      "outputRoot": "../runtime/swift/prompty-model",
+      "packageName": "PromptyModel",
       "rootExports": [
         "Agent",
         "AiResourceInfo",
@@ -12785,13 +13683,18 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -12871,6 +13774,2317 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
+        "StreamOptions",
+        "SubscriptionInfo",
+        "Template",
+        "TextChunk",
+        "TextPart",
+        "ThinkingChunk",
+        "ThinkingEventPayload",
+        "ThreadMarker",
+        "TokenEventPayload",
+        "TokenUsage",
+        "Tool",
+        "ToolCall",
+        "ToolCallCompletePayload",
+        "ToolCallStartPayload",
+        "ToolChunk",
+        "ToolContext",
+        "ToolDispatchResult",
+        "ToolExecutionCompletePayload",
+        "ToolExecutionStartPayload",
+        "ToolResult",
+        "ToolResultPayload",
+        "TraceFile",
+        "TraceSpan",
+        "TraceTime",
+        "TrajectoryEvent",
+        "TurnCommit",
+        "TurnConformance",
+        "TurnEndPayload",
+        "TurnEngineResult",
+        "TurnEvent",
+        "TurnModelRequest",
+        "TurnModelResponse",
+        "TurnOptions",
+        "TurnStartPayload",
+        "TurnSummary",
+        "TurnTrace",
+        "UnionProperty",
+        "UsageChunk",
+        "ValidationError",
+        "ValidationResult",
+        "WireConformance"
+      ],
+      "exports": [
+        {
+          "name": "Agent",
+          "kind": "value",
+          "group": "",
+          "source": "Sources/PromptyModel/agent.swift",
+          "protocol": false
+        },
+        {
+          "name": "CheckpointStore",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/checkpoint_store.swift",
+          "protocol": true
+        },
+        {
+          "name": "DiscoveryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/discovery_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_durability_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_permission_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_post_commit_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_tool_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EventJournalWriter",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/event_journal_writer.swift",
+          "protocol": true
+        },
+        {
+          "name": "EventSink",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/event_sink.swift",
+          "protocol": true
+        },
+        {
+          "name": "Executor",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/executor.swift",
+          "protocol": true
+        },
+        {
+          "name": "HostToolExecutor",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/host_tool_executor.swift",
+          "protocol": true
+        },
+        {
+          "name": "LoadConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/load_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "ModelLister",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/model_lister.swift",
+          "protocol": true
+        },
+        {
+          "name": "Parser",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/parser.swift",
+          "protocol": true
+        },
+        {
+          "name": "PermissionResolver",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/permission_resolver.swift",
+          "protocol": true
+        },
+        {
+          "name": "Processor",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/processor.swift",
+          "protocol": true
+        },
+        {
+          "name": "Renderer",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/renderer.swift",
+          "protocol": true
+        },
+        {
+          "name": "TurnConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/turn_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "WireConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/wire_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "AiResourceInfo",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/ai_resource_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnonymousConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "ApiKeyConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "ArrayProperty",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "AudioPart",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "AuthorizationCodeFlow",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/authorization_code_flow.swift",
+          "protocol": false
+        },
+        {
+          "name": "Binding",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/binding.swift",
+          "protocol": false
+        },
+        {
+          "name": "Checkpoint",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/checkpoint.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionCompletePayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/compaction_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionConfig",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/compaction_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionFailedPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/compaction_failed_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "CompactionStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/compaction_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "Connection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContentPart",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContextCandidate",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/context_candidate.swift",
+          "protocol": false
+        },
+        {
+          "name": "ContextRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/context_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "CustomTool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "DelegatedStateReference",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/delegated_state_reference.swift",
+          "protocol": false
+        },
+        {
+          "name": "DeviceAuthorization",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/device_authorization.swift",
+          "protocol": false
+        },
+        {
+          "name": "DoneEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/done_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "EngineCheckpoint",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/engine_checkpoint.swift",
+          "protocol": false
+        },
+        {
+          "name": "EngineEvent",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/engine_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "EnginePermissionDecision",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/engine_permission_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "ErrorChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ErrorEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/error_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "FileNotFoundError",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/file_not_found_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "FilePart",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/final_output_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "FinalOutputPolicyResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/final_output_policy_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "FormatConfig",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/format_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "FoundryConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "FunctionTool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "GuardrailResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/guardrail_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "HarnessContext",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/harness_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "HookEndPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/hook_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "HookStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/hook_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/host_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostPolicyResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/host_policy_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostToolRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/host_tool_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "HostToolResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/host_tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ImagePart",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextDecision",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/invocation_context_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvocationContextState",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/invocation_context_state.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvocationUsage",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/invocation_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "InvokerError",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/invoker_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "LlmCompletePayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/llm_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "LlmStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/llm_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "McpApprovalMode",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/mcp_approval_mode.swift",
+          "protocol": false
+        },
+        {
+          "name": "McpTool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "MemoryEntry",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/memory_entry.swift",
+          "protocol": false
+        },
+        {
+          "name": "MemoryStore",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/memory_store.swift",
+          "protocol": false
+        },
+        {
+          "name": "Message",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/message.swift",
+          "protocol": false
+        },
+        {
+          "name": "MessagesUpdatedPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/messages_updated_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "Model",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInfo",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationContextSnapshot",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_invocation_context_snapshot.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_invocation_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelInvocationResponse",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_invocation_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelOptions",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelReconciliationState",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_reconciliation_state.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_tool_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ModelToolResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model_tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "OAuthConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "OAuthToken",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/o_auth_token.swift",
+          "protocol": false
+        },
+        {
+          "name": "ObjectProperty",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "OpenApiTool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "ParserConfig",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/parser_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionCompletedPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/permission_completed_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionDecision",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/permission_decision.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/permission_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "PermissionRequestedPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/permission_requested_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ProjectInfo",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/project_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "PromptyTool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "Property",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "RedactedField",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/redacted_field.swift",
+          "protocol": false
+        },
+        {
+          "name": "RedactionMetadata",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/redaction_metadata.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReferenceConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "RemoteConnection",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/connection.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayJournalRecord",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/replay_journal_record.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayMismatch",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/replay_mismatch.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/replay_verification_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "ReplayVerificationResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/replay_verification_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ResumeContext",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/resume_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "RetryPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/retry_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "RetryPolicyRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/retry_policy_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/run_turn_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "RunTurnResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/run_turn_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionEndPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionEvent",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionFileRef",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_file_ref.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionRef",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_ref.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionSummary",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_summary.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionTrace",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_trace.swift",
+          "protocol": false
+        },
+        {
+          "name": "SessionWarningPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/session_warning_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "StatusEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/status_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "StreamChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_failure.swift",
+          "protocol": false
+        },
+        {
+          "name": "StreamOptions",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "SubscriptionInfo",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/subscription_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "Template",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/template.swift",
+          "protocol": false
+        },
+        {
+          "name": "TextChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "TextPart",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/content_part.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThinkingEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/thinking_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ThreadMarker",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/thread_marker.swift",
+          "protocol": false
+        },
+        {
+          "name": "TokenEventPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/token_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TokenUsage",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/token_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "Tool",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCall",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_call.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallCompletePayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_call_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolCallStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_call_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolContext",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_context.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolDispatchResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_dispatch_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionCompletePayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_execution_complete_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolExecutionStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_execution_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "ToolResultPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/tool_result_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceFile",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/trace_file.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceSpan",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/trace_span.swift",
+          "protocol": false
+        },
+        {
+          "name": "TraceTime",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/trace_time.swift",
+          "protocol": false
+        },
+        {
+          "name": "TrajectoryEvent",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/trajectory_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnCommit",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_commit.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEndPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_end_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEngineResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_engine_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnEvent",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_event.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_model_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnModelResponse",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_model_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnOptions",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_options.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnStartPayload",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_start_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnSummary",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_summary.swift",
+          "protocol": false
+        },
+        {
+          "name": "TurnTrace",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/turn_trace.swift",
+          "protocol": false
+        },
+        {
+          "name": "UnionProperty",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "UsageChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
+          "protocol": false
+        },
+        {
+          "name": "ValidationError",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/validation_error.swift",
+          "protocol": false
+        },
+        {
+          "name": "ValidationResult",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/validation_result.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_image_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicImageSource",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_image_source.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesRequest",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_messages_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicMessagesResponse",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_messages_response.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicTextBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_text_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolDefinition",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_definition.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolResultBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_result_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicToolUseBlock",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_tool_use_block.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicUsage",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_usage.swift",
+          "protocol": false
+        },
+        {
+          "name": "AnthropicWireMessage",
+          "kind": "value",
+          "group": "wire",
+          "source": "Sources/PromptyModel/wire/anthropic_wire_message.swift",
+          "protocol": false
+        }
+      ],
+      "groups": [
+        {
+          "name": "contracts",
+          "exports": [
+            "AiResourceInfo",
+            "AnonymousConnection",
+            "ApiKeyConnection",
+            "ArrayProperty",
+            "AudioPart",
+            "AuthorizationCodeFlow",
+            "Binding",
+            "Checkpoint",
+            "CompactionCompletePayload",
+            "CompactionConfig",
+            "CompactionFailedPayload",
+            "CompactionStartPayload",
+            "Connection",
+            "ContentPart",
+            "ContextCandidate",
+            "ContextRequest",
+            "CustomTool",
+            "DelegatedStateReference",
+            "DeviceAuthorization",
+            "DoneEventPayload",
+            "EngineCheckpoint",
+            "EngineEvent",
+            "EnginePermissionDecision",
+            "ErrorChunk",
+            "ErrorEventPayload",
+            "FailureChunk",
+            "FileNotFoundError",
+            "FilePart",
+            "FinalOutputPolicyRequest",
+            "FinalOutputPolicyResult",
+            "FormatConfig",
+            "FoundryConnection",
+            "FunctionTool",
+            "GuardrailResult",
+            "HarnessContext",
+            "HookEndPayload",
+            "HookStartPayload",
+            "HostPolicyRequest",
+            "HostPolicyResult",
+            "HostToolRequest",
+            "HostToolResult",
+            "ImagePart",
+            "InvocationContextDecision",
+            "InvocationContextState",
+            "InvocationUsage",
+            "InvokerError",
+            "LlmCompletePayload",
+            "LlmStartPayload",
+            "McpApprovalMode",
+            "McpTool",
+            "MemoryEntry",
+            "MemoryStore",
+            "Message",
+            "MessagesUpdatedPayload",
+            "Model",
+            "ModelInfo",
+            "ModelInvocationContextSnapshot",
+            "ModelInvocationRequest",
+            "ModelInvocationResponse",
+            "ModelOptions",
+            "ModelReconciliationState",
+            "ModelToolRequest",
+            "ModelToolResult",
+            "OAuthConnection",
+            "OAuthToken",
+            "ObjectProperty",
+            "OpenApiTool",
+            "ParserConfig",
+            "PermissionCompletedPayload",
+            "PermissionDecision",
+            "PermissionRequest",
+            "PermissionRequestedPayload",
+            "ProjectInfo",
+            "PromptyTool",
+            "Property",
+            "RedactedField",
+            "RedactionMetadata",
+            "ReferenceConnection",
+            "RemoteConnection",
+            "ReplayJournalRecord",
+            "ReplayMismatch",
+            "ReplayVerificationRequest",
+            "ReplayVerificationResult",
+            "ResumeContext",
+            "RetryPayload",
+            "RetryPolicyRequest",
+            "RunTurnRequest",
+            "RunTurnResult",
+            "SessionEndPayload",
+            "SessionEvent",
+            "SessionFileRef",
+            "SessionRef",
+            "SessionStartPayload",
+            "SessionSummary",
+            "SessionTrace",
+            "SessionWarningPayload",
+            "StatusEventPayload",
+            "StreamChunk",
+            "StreamFailure",
+            "StreamOptions",
+            "SubscriptionInfo",
+            "Template",
+            "TextChunk",
+            "TextPart",
+            "ThinkingChunk",
+            "ThinkingEventPayload",
+            "ThreadMarker",
+            "TokenEventPayload",
+            "TokenUsage",
+            "Tool",
+            "ToolCall",
+            "ToolCallCompletePayload",
+            "ToolCallStartPayload",
+            "ToolChunk",
+            "ToolContext",
+            "ToolDispatchResult",
+            "ToolExecutionCompletePayload",
+            "ToolExecutionStartPayload",
+            "ToolResult",
+            "ToolResultPayload",
+            "TraceFile",
+            "TraceSpan",
+            "TraceTime",
+            "TrajectoryEvent",
+            "TurnCommit",
+            "TurnEndPayload",
+            "TurnEngineResult",
+            "TurnEvent",
+            "TurnModelRequest",
+            "TurnModelResponse",
+            "TurnOptions",
+            "TurnStartPayload",
+            "TurnSummary",
+            "TurnTrace",
+            "UnionProperty",
+            "UsageChunk",
+            "ValidationError",
+            "ValidationResult"
+          ],
+          "modules": [
+            "ai_resource_info.swift",
+            "authorization_code_flow.swift",
+            "binding.swift",
+            "checkpoint.swift",
+            "compaction_complete_payload.swift",
+            "compaction_config.swift",
+            "compaction_failed_payload.swift",
+            "compaction_start_payload.swift",
+            "connection.swift",
+            "content_part.swift",
+            "context_candidate.swift",
+            "context_request.swift",
+            "delegated_state_reference.swift",
+            "device_authorization.swift",
+            "done_event_payload.swift",
+            "engine_checkpoint.swift",
+            "engine_event.swift",
+            "engine_permission_decision.swift",
+            "error_event_payload.swift",
+            "file_not_found_error.swift",
+            "final_output_policy_request.swift",
+            "final_output_policy_result.swift",
+            "format_config.swift",
+            "guardrail_result.swift",
+            "harness_context.swift",
+            "hook_end_payload.swift",
+            "hook_start_payload.swift",
+            "host_policy_request.swift",
+            "host_policy_result.swift",
+            "host_tool_request.swift",
+            "host_tool_result.swift",
+            "invocation_context_decision.swift",
+            "invocation_context_state.swift",
+            "invocation_usage.swift",
+            "invoker_error.swift",
+            "llm_complete_payload.swift",
+            "llm_start_payload.swift",
+            "mcp_approval_mode.swift",
+            "memory_entry.swift",
+            "memory_store.swift",
+            "message.swift",
+            "messages_updated_payload.swift",
+            "model.swift",
+            "model_info.swift",
+            "model_invocation_context_snapshot.swift",
+            "model_invocation_request.swift",
+            "model_invocation_response.swift",
+            "model_options.swift",
+            "model_reconciliation_state.swift",
+            "model_tool_request.swift",
+            "model_tool_result.swift",
+            "o_auth_token.swift",
+            "parser_config.swift",
+            "permission_completed_payload.swift",
+            "permission_decision.swift",
+            "permission_request.swift",
+            "permission_requested_payload.swift",
+            "project_info.swift",
+            "property.swift",
+            "redacted_field.swift",
+            "redaction_metadata.swift",
+            "replay_journal_record.swift",
+            "replay_mismatch.swift",
+            "replay_verification_request.swift",
+            "replay_verification_result.swift",
+            "resume_context.swift",
+            "retry_payload.swift",
+            "retry_policy_request.swift",
+            "run_turn_request.swift",
+            "run_turn_result.swift",
+            "session_end_payload.swift",
+            "session_event.swift",
+            "session_file_ref.swift",
+            "session_ref.swift",
+            "session_start_payload.swift",
+            "session_summary.swift",
+            "session_trace.swift",
+            "session_warning_payload.swift",
+            "status_event_payload.swift",
+            "stream_chunk.swift",
+            "stream_failure.swift",
+            "stream_options.swift",
+            "subscription_info.swift",
+            "template.swift",
+            "thinking_event_payload.swift",
+            "thread_marker.swift",
+            "token_event_payload.swift",
+            "token_usage.swift",
+            "tool.swift",
+            "tool_call.swift",
+            "tool_call_complete_payload.swift",
+            "tool_call_start_payload.swift",
+            "tool_context.swift",
+            "tool_dispatch_result.swift",
+            "tool_execution_complete_payload.swift",
+            "tool_execution_start_payload.swift",
+            "tool_result.swift",
+            "tool_result_payload.swift",
+            "trace_file.swift",
+            "trace_span.swift",
+            "trace_time.swift",
+            "trajectory_event.swift",
+            "turn_commit.swift",
+            "turn_end_payload.swift",
+            "turn_engine_result.swift",
+            "turn_event.swift",
+            "turn_model_request.swift",
+            "turn_model_response.swift",
+            "turn_options.swift",
+            "turn_start_payload.swift",
+            "turn_summary.swift",
+            "turn_trace.swift",
+            "validation_error.swift",
+            "validation_result.swift"
+          ]
+        },
+        {
+          "name": "wire",
+          "exports": [
+            "AnthropicImageBlock",
+            "AnthropicImageSource",
+            "AnthropicMessagesRequest",
+            "AnthropicMessagesResponse",
+            "AnthropicTextBlock",
+            "AnthropicToolDefinition",
+            "AnthropicToolResultBlock",
+            "AnthropicToolUseBlock",
+            "AnthropicUsage",
+            "AnthropicWireMessage"
+          ],
+          "modules": [
+            "anthropic_image_block.swift",
+            "anthropic_image_source.swift",
+            "anthropic_messages_request.swift",
+            "anthropic_messages_response.swift",
+            "anthropic_text_block.swift",
+            "anthropic_tool_definition.swift",
+            "anthropic_tool_result_block.swift",
+            "anthropic_tool_use_block.swift",
+            "anthropic_usage.swift",
+            "anthropic_wire_message.swift"
+          ]
+        }
+      ],
+      "protocols": [
+        {
+          "name": "CheckpointStore",
+          "group": "",
+          "symbol": "CheckpointStore",
+          "source": "Sources/PromptyModel/checkpoint_store.swift",
+          "methods": [
+            {
+              "name": "listCheckpoints",
+              "returns": "Checkpoint[]",
+              "params": {
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "load",
+              "returns": "Checkpoint?",
+              "params": {
+                "checkpointId": "string",
+                "sessionId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "save",
+              "returns": "Checkpoint",
+              "params": {
+                "checkpoint": "Checkpoint"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "DiscoveryConformance",
+          "group": "",
+          "symbol": "DiscoveryConformance",
+          "source": "Sources/PromptyModel/discovery_conformance.swift",
+          "methods": [
+            {
+              "name": "enrich",
+              "returns": "ModelInfo",
+              "params": {
+                "base": "ModelInfo"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "mapModel",
+              "returns": "ModelInfo",
+              "params": {
+                "raw": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "Sources/PromptyModel/engine_durability_port.swift",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "Sources/PromptyModel/engine_permission_port.swift",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "Sources/PromptyModel/engine_post_commit_port.swift",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "Sources/PromptyModel/engine_tool_port.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EventJournalWriter",
+          "group": "",
+          "symbol": "EventJournalWriter",
+          "source": "Sources/PromptyModel/event_journal_writer.swift",
+          "methods": [
+            {
+              "name": "appendSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            },
+            {
+              "name": "appendTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            },
+            {
+              "name": "close",
+              "returns": "boolean",
+              "params": {
+                "summary": "SessionSummary?"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EventSink",
+          "group": "",
+          "symbol": "EventSink",
+          "source": "Sources/PromptyModel/event_sink.swift",
+          "methods": [
+            {
+              "name": "emitSession",
+              "returns": "boolean",
+              "params": {
+                "sessionEvent": "SessionEvent"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": true
+            },
+            {
+              "name": "emitTurn",
+              "returns": "boolean",
+              "params": {
+                "turnEvent": "TurnEvent"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "Executor",
+          "group": "",
+          "symbol": "Executor",
+          "source": "Sources/PromptyModel/executor.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "executeStream",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": true,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "formatToolMessages",
+              "returns": "Message[]",
+              "params": {
+                "rawResponse": "unknown",
+                "textContent": "string?",
+                "toolCalls": "ToolCall[]",
+                "toolResults": "string[]"
+              },
+              "optional": false,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "HostToolExecutor",
+          "group": "",
+          "symbol": "HostToolExecutor",
+          "source": "Sources/PromptyModel/host_tool_executor.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "HostToolResult",
+              "params": {
+                "request": "HostToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "LoadConformance",
+          "group": "",
+          "symbol": "LoadConformance",
+          "source": "Sources/PromptyModel/load_conformance.swift",
+          "methods": [
+            {
+              "name": "load",
+              "returns": "Agent",
+              "params": {
+                "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "ModelLister",
+          "group": "",
+          "symbol": "ModelLister",
+          "source": "Sources/PromptyModel/model_lister.swift",
+          "methods": [
+            {
+              "name": "listModels",
+              "returns": "ModelInfo[]",
+              "params": {
+                "connection": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "Parser",
+          "group": "",
+          "symbol": "Parser",
+          "source": "Sources/PromptyModel/parser.swift",
+          "methods": [
+            {
+              "name": "parse",
+              "returns": "Message[]",
+              "params": {
+                "agent": "Agent",
+                "context": "Record<unknown>?",
+                "rendered": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "preRender",
+              "returns": "unknown?",
+              "params": {
+                "template": "string"
+              },
+              "optional": true,
+              "sync": true,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "PermissionResolver",
+          "group": "",
+          "symbol": "PermissionResolver",
+          "source": "Sources/PromptyModel/permission_resolver.swift",
+          "methods": [
+            {
+              "name": "request",
+              "returns": "PermissionDecision",
+              "params": {
+                "request": "PermissionRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "Processor",
+          "group": "",
+          "symbol": "Processor",
+          "source": "Sources/PromptyModel/processor.swift",
+          "methods": [
+            {
+              "name": "process",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "response": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "processStream",
+              "returns": "unknown",
+              "params": {
+                "stream": "unknown"
+              },
+              "optional": true,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "Renderer",
+          "group": "",
+          "symbol": "Renderer",
+          "source": "Sources/PromptyModel/renderer.swift",
+          "methods": [
+            {
+              "name": "render",
+              "returns": "string",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "TurnConformance",
+          "group": "",
+          "symbol": "TurnConformance",
+          "source": "Sources/PromptyModel/turn_conformance.swift",
+          "methods": [
+            {
+              "name": "replay",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "run",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "runTurn",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "WireConformance",
+          "group": "",
+          "symbol": "WireConformance",
+          "source": "Sources/PromptyModel/wire_conformance.swift",
+          "methods": [
+            {
+              "name": "toRequest",
+              "returns": "unknown",
+              "params": {
+                "agent": "Agent",
+                "messages": "Message[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        }
+      ],
+      "modules": [
+        "Sources/PromptyModel/agent.swift",
+        "Sources/PromptyModel/checkpoint_store.swift",
+        "Sources/PromptyModel/contracts/ai_resource_info.swift",
+        "Sources/PromptyModel/contracts/authorization_code_flow.swift",
+        "Sources/PromptyModel/contracts/binding.swift",
+        "Sources/PromptyModel/contracts/checkpoint.swift",
+        "Sources/PromptyModel/contracts/compaction_complete_payload.swift",
+        "Sources/PromptyModel/contracts/compaction_config.swift",
+        "Sources/PromptyModel/contracts/compaction_failed_payload.swift",
+        "Sources/PromptyModel/contracts/compaction_start_payload.swift",
+        "Sources/PromptyModel/contracts/connection.swift",
+        "Sources/PromptyModel/contracts/content_part.swift",
+        "Sources/PromptyModel/contracts/context_candidate.swift",
+        "Sources/PromptyModel/contracts/context_request.swift",
+        "Sources/PromptyModel/contracts/delegated_state_reference.swift",
+        "Sources/PromptyModel/contracts/device_authorization.swift",
+        "Sources/PromptyModel/contracts/done_event_payload.swift",
+        "Sources/PromptyModel/contracts/engine_checkpoint.swift",
+        "Sources/PromptyModel/contracts/engine_event.swift",
+        "Sources/PromptyModel/contracts/engine_permission_decision.swift",
+        "Sources/PromptyModel/contracts/error_event_payload.swift",
+        "Sources/PromptyModel/contracts/file_not_found_error.swift",
+        "Sources/PromptyModel/contracts/final_output_policy_request.swift",
+        "Sources/PromptyModel/contracts/final_output_policy_result.swift",
+        "Sources/PromptyModel/contracts/format_config.swift",
+        "Sources/PromptyModel/contracts/guardrail_result.swift",
+        "Sources/PromptyModel/contracts/harness_context.swift",
+        "Sources/PromptyModel/contracts/hook_end_payload.swift",
+        "Sources/PromptyModel/contracts/hook_start_payload.swift",
+        "Sources/PromptyModel/contracts/host_policy_request.swift",
+        "Sources/PromptyModel/contracts/host_policy_result.swift",
+        "Sources/PromptyModel/contracts/host_tool_request.swift",
+        "Sources/PromptyModel/contracts/host_tool_result.swift",
+        "Sources/PromptyModel/contracts/invocation_context_decision.swift",
+        "Sources/PromptyModel/contracts/invocation_context_state.swift",
+        "Sources/PromptyModel/contracts/invocation_usage.swift",
+        "Sources/PromptyModel/contracts/invoker_error.swift",
+        "Sources/PromptyModel/contracts/llm_complete_payload.swift",
+        "Sources/PromptyModel/contracts/llm_start_payload.swift",
+        "Sources/PromptyModel/contracts/mcp_approval_mode.swift",
+        "Sources/PromptyModel/contracts/memory_entry.swift",
+        "Sources/PromptyModel/contracts/memory_store.swift",
+        "Sources/PromptyModel/contracts/message.swift",
+        "Sources/PromptyModel/contracts/messages_updated_payload.swift",
+        "Sources/PromptyModel/contracts/model.swift",
+        "Sources/PromptyModel/contracts/model_info.swift",
+        "Sources/PromptyModel/contracts/model_invocation_context_snapshot.swift",
+        "Sources/PromptyModel/contracts/model_invocation_request.swift",
+        "Sources/PromptyModel/contracts/model_invocation_response.swift",
+        "Sources/PromptyModel/contracts/model_options.swift",
+        "Sources/PromptyModel/contracts/model_reconciliation_state.swift",
+        "Sources/PromptyModel/contracts/model_tool_request.swift",
+        "Sources/PromptyModel/contracts/model_tool_result.swift",
+        "Sources/PromptyModel/contracts/o_auth_token.swift",
+        "Sources/PromptyModel/contracts/parser_config.swift",
+        "Sources/PromptyModel/contracts/permission_completed_payload.swift",
+        "Sources/PromptyModel/contracts/permission_decision.swift",
+        "Sources/PromptyModel/contracts/permission_request.swift",
+        "Sources/PromptyModel/contracts/permission_requested_payload.swift",
+        "Sources/PromptyModel/contracts/project_info.swift",
+        "Sources/PromptyModel/contracts/property.swift",
+        "Sources/PromptyModel/contracts/redacted_field.swift",
+        "Sources/PromptyModel/contracts/redaction_metadata.swift",
+        "Sources/PromptyModel/contracts/replay_journal_record.swift",
+        "Sources/PromptyModel/contracts/replay_mismatch.swift",
+        "Sources/PromptyModel/contracts/replay_verification_request.swift",
+        "Sources/PromptyModel/contracts/replay_verification_result.swift",
+        "Sources/PromptyModel/contracts/resume_context.swift",
+        "Sources/PromptyModel/contracts/retry_payload.swift",
+        "Sources/PromptyModel/contracts/retry_policy_request.swift",
+        "Sources/PromptyModel/contracts/run_turn_request.swift",
+        "Sources/PromptyModel/contracts/run_turn_result.swift",
+        "Sources/PromptyModel/contracts/session_end_payload.swift",
+        "Sources/PromptyModel/contracts/session_event.swift",
+        "Sources/PromptyModel/contracts/session_file_ref.swift",
+        "Sources/PromptyModel/contracts/session_ref.swift",
+        "Sources/PromptyModel/contracts/session_start_payload.swift",
+        "Sources/PromptyModel/contracts/session_summary.swift",
+        "Sources/PromptyModel/contracts/session_trace.swift",
+        "Sources/PromptyModel/contracts/session_warning_payload.swift",
+        "Sources/PromptyModel/contracts/status_event_payload.swift",
+        "Sources/PromptyModel/contracts/stream_chunk.swift",
+        "Sources/PromptyModel/contracts/stream_failure.swift",
+        "Sources/PromptyModel/contracts/stream_options.swift",
+        "Sources/PromptyModel/contracts/subscription_info.swift",
+        "Sources/PromptyModel/contracts/template.swift",
+        "Sources/PromptyModel/contracts/thinking_event_payload.swift",
+        "Sources/PromptyModel/contracts/thread_marker.swift",
+        "Sources/PromptyModel/contracts/token_event_payload.swift",
+        "Sources/PromptyModel/contracts/token_usage.swift",
+        "Sources/PromptyModel/contracts/tool.swift",
+        "Sources/PromptyModel/contracts/tool_call.swift",
+        "Sources/PromptyModel/contracts/tool_call_complete_payload.swift",
+        "Sources/PromptyModel/contracts/tool_call_start_payload.swift",
+        "Sources/PromptyModel/contracts/tool_context.swift",
+        "Sources/PromptyModel/contracts/tool_dispatch_result.swift",
+        "Sources/PromptyModel/contracts/tool_execution_complete_payload.swift",
+        "Sources/PromptyModel/contracts/tool_execution_start_payload.swift",
+        "Sources/PromptyModel/contracts/tool_result.swift",
+        "Sources/PromptyModel/contracts/tool_result_payload.swift",
+        "Sources/PromptyModel/contracts/trace_file.swift",
+        "Sources/PromptyModel/contracts/trace_span.swift",
+        "Sources/PromptyModel/contracts/trace_time.swift",
+        "Sources/PromptyModel/contracts/trajectory_event.swift",
+        "Sources/PromptyModel/contracts/turn_commit.swift",
+        "Sources/PromptyModel/contracts/turn_end_payload.swift",
+        "Sources/PromptyModel/contracts/turn_engine_result.swift",
+        "Sources/PromptyModel/contracts/turn_event.swift",
+        "Sources/PromptyModel/contracts/turn_model_request.swift",
+        "Sources/PromptyModel/contracts/turn_model_response.swift",
+        "Sources/PromptyModel/contracts/turn_options.swift",
+        "Sources/PromptyModel/contracts/turn_start_payload.swift",
+        "Sources/PromptyModel/contracts/turn_summary.swift",
+        "Sources/PromptyModel/contracts/turn_trace.swift",
+        "Sources/PromptyModel/contracts/validation_error.swift",
+        "Sources/PromptyModel/contracts/validation_result.swift",
+        "Sources/PromptyModel/discovery_conformance.swift",
+        "Sources/PromptyModel/engine_durability_port.swift",
+        "Sources/PromptyModel/engine_permission_port.swift",
+        "Sources/PromptyModel/engine_post_commit_port.swift",
+        "Sources/PromptyModel/engine_tool_port.swift",
+        "Sources/PromptyModel/event_journal_writer.swift",
+        "Sources/PromptyModel/event_sink.swift",
+        "Sources/PromptyModel/executor.swift",
+        "Sources/PromptyModel/host_tool_executor.swift",
+        "Sources/PromptyModel/load_conformance.swift",
+        "Sources/PromptyModel/model_lister.swift",
+        "Sources/PromptyModel/parser.swift",
+        "Sources/PromptyModel/permission_resolver.swift",
+        "Sources/PromptyModel/processor.swift",
+        "Sources/PromptyModel/renderer.swift",
+        "Sources/PromptyModel/turn_conformance.swift",
+        "Sources/PromptyModel/wire/anthropic_image_block.swift",
+        "Sources/PromptyModel/wire/anthropic_image_source.swift",
+        "Sources/PromptyModel/wire/anthropic_messages_request.swift",
+        "Sources/PromptyModel/wire/anthropic_messages_response.swift",
+        "Sources/PromptyModel/wire/anthropic_text_block.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_definition.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_result_block.swift",
+        "Sources/PromptyModel/wire/anthropic_tool_use_block.swift",
+        "Sources/PromptyModel/wire/anthropic_usage.swift",
+        "Sources/PromptyModel/wire/anthropic_wire_message.swift",
+        "Sources/PromptyModel/wire_conformance.swift"
+      ]
+    },
+    {
+      "target": "typescript",
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "namespace": "Prompty",
+      "rootExports": [
+        "Agent",
+        "AiResourceInfo",
+        "AnonymousConnection",
+        "AnthropicImageBlock",
+        "AnthropicImageSource",
+        "AnthropicMessagesRequest",
+        "AnthropicMessagesResponse",
+        "AnthropicTextBlock",
+        "AnthropicToolDefinition",
+        "AnthropicToolResultBlock",
+        "AnthropicToolUseBlock",
+        "AnthropicUsage",
+        "AnthropicWireMessage",
+        "ApiKeyConnection",
+        "ArrayProperty",
+        "AudioPart",
+        "AuthorizationCodeFlow",
+        "Binding",
+        "Checkpoint",
+        "CheckpointStore",
+        "CompactionCompletePayload",
+        "CompactionConfig",
+        "CompactionFailedPayload",
+        "CompactionStartPayload",
+        "Connection",
+        "ContentPart",
+        "ContextCandidate",
+        "ContextRequest",
+        "CustomTool",
+        "DelegatedStateReference",
+        "DeviceAuthorization",
+        "DiscoveryConformance",
+        "DoneEventPayload",
+        "EngineCheckpoint",
+        "EngineDurabilityPort",
+        "EngineEvent",
+        "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
+        "ErrorChunk",
+        "ErrorEventPayload",
+        "EventJournalWriter",
+        "EventSink",
+        "Executor",
+        "FailureChunk",
+        "FileNotFoundError",
+        "FilePart",
+        "FinalOutputPolicyRequest",
+        "FinalOutputPolicyResult",
+        "FormatConfig",
+        "FoundryConnection",
+        "FunctionTool",
+        "GuardrailResult",
+        "HarnessContext",
+        "HookEndPayload",
+        "HookStartPayload",
+        "HostPolicyRequest",
+        "HostPolicyResult",
+        "HostToolExecutor",
+        "HostToolRequest",
+        "HostToolResult",
+        "ImagePart",
+        "InvocationContextDecision",
+        "InvocationContextState",
+        "InvocationUsage",
+        "InvokerError",
+        "LlmCompletePayload",
+        "LlmStartPayload",
+        "LoadConformance",
+        "McpApprovalMode",
+        "McpTool",
+        "MemoryEntry",
+        "MemoryStore",
+        "Message",
+        "MessagesUpdatedPayload",
+        "Model",
+        "ModelInfo",
+        "ModelInvocationContextSnapshot",
+        "ModelInvocationRequest",
+        "ModelInvocationResponse",
+        "ModelLister",
+        "ModelOptions",
+        "ModelReconciliationState",
+        "ModelToolRequest",
+        "ModelToolResult",
+        "OAuthConnection",
+        "OAuthToken",
+        "ObjectProperty",
+        "OpenApiTool",
+        "Parser",
+        "ParserConfig",
+        "PermissionCompletedPayload",
+        "PermissionDecision",
+        "PermissionRequest",
+        "PermissionRequestedPayload",
+        "PermissionResolver",
+        "Processor",
+        "ProjectInfo",
+        "PromptyTool",
+        "Property",
+        "RedactedField",
+        "RedactionMetadata",
+        "ReferenceConnection",
+        "RemoteConnection",
+        "Renderer",
+        "ReplayJournalRecord",
+        "ReplayMismatch",
+        "ReplayVerificationRequest",
+        "ReplayVerificationResult",
+        "ResumeContext",
+        "RetryPayload",
+        "RetryPolicyRequest",
+        "RunTurnRequest",
+        "RunTurnResult",
+        "SessionEndPayload",
+        "SessionEvent",
+        "SessionFileRef",
+        "SessionRef",
+        "SessionStartPayload",
+        "SessionSummary",
+        "SessionTrace",
+        "SessionWarningPayload",
+        "StatusEventPayload",
+        "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -12933,6 +16147,34 @@
           "kind": "type",
           "group": "",
           "source": "./discovery-conformance",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-durability-port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-permission-port",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-post-commit-port",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "./engine-tool-port",
           "protocol": true
         },
         {
@@ -13192,6 +16434,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "./contracts/error-event-payload",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/stream-chunk",
           "protocol": false
         },
         {
@@ -13699,6 +16948,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/stream-failure",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -14071,6 +17327,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -14143,6 +17400,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -14264,6 +17522,7 @@
             "session-warning-payload",
             "status-event-payload",
             "stream-chunk",
+            "stream-failure",
             "stream-options",
             "subscription-info",
             "template",
@@ -14400,6 +17659,100 @@
               "optional": false,
               "sync": false,
               "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "./engine-durability-port",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "./engine-permission-port",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "./engine-post-commit-port",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "./engine-tool-port",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
               "atomic": false,
               "nonFatal": false
             }
@@ -14848,6 +18201,7 @@
         "./contracts/session-warning-payload",
         "./contracts/status-event-payload",
         "./contracts/stream-chunk",
+        "./contracts/stream-failure",
         "./contracts/stream-options",
         "./contracts/subscription-info",
         "./contracts/template",
@@ -14882,6 +18236,10 @@
         "./contracts/validation-error",
         "./contracts/validation-result",
         "./discovery-conformance",
+        "./engine-durability-port",
+        "./engine-permission-port",
+        "./engine-post-commit-port",
+        "./engine-tool-port",
         "./event-journal-writer",
         "./event-sink",
         "./executor",

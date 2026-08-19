@@ -14,5 +14,5 @@ properties:
     description: Host tool execution requests emitted by the model callback
   checkpointState:
     $ref: RecordUnknown.yaml
-    description: Additional deterministic state to merge into the iteration checkpoint
+    description: Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.
 description: Response returned by the injected model callback to the reference turn runner.

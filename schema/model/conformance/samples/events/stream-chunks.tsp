@@ -17,3 +17,16 @@ const ToolChunkToolCallSample = #{
 };
 
 const ErrorChunkMessageSample = #{ message: "Rate limit exceeded" };
+
+const StreamFailureOutcomeSample = #{ outcome: "indeterminate" };
+
+const StreamFailureMessageSample = #{
+  message: "SSE stream error: connection reset",
+};
+
+const FailureChunkFailureSample = #{
+  failure: #{
+    outcome: "indeterminate",
+    message: "SSE stream error: connection reset",
+  },
+};

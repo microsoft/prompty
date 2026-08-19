@@ -21,7 +21,7 @@ pub struct RunTurnRequest {
     pub session_id: String,
     /// Stable turn identifier within the session
     pub turn_id: String,
-    /// Inputs supplied to the deterministic single-turn run
+    /// Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     pub inputs: serde_json::Value,
     /// Canonical turn execution options
     pub options: Option<TurnOptions>,

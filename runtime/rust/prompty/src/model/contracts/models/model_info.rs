@@ -27,7 +27,7 @@ pub struct ModelInfo {
     pub input_modalities: Option<Vec<String>>,
     /// Output modalities the model can produce (e.g., 'text', 'audio')
     pub output_modalities: Option<Vec<String>>,
-    /// Additional provider-specific properties
+    /// Additional provider-specific properties. Values may be explicit null.
     pub additional_properties: serde_json::Value,
 }
 

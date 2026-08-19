@@ -133,12 +133,14 @@ public final class TypraGeneratedTests {
     SessionRefGeneratedTest.run();
     SessionSummaryGeneratedTest.run();
     SessionTraceGeneratedTest.run();
+    StreamFailureGeneratedTest.run();
     StreamChunkGeneratedTest.run();
     TextChunkGeneratedTest.run();
     ThinkingChunkGeneratedTest.run();
     ToolChunkGeneratedTest.run();
     UsageChunkGeneratedTest.run();
     ErrorChunkGeneratedTest.run();
+    FailureChunkGeneratedTest.run();
     StreamOptionsGeneratedTest.run();
     TraceTimeGeneratedTest.run();
     TraceSpanGeneratedTest.run();

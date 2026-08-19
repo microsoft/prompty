@@ -42,7 +42,7 @@ model ModelInfo {
   @sample(availableOutputModalitiesSample)
   outputModalities?: string[];
 
-  @doc("Additional provider-specific properties")
+  @doc("Additional provider-specific properties. Values may be explicit null.")
   @sample(availableAdditionalPropertiesSample)
   additionalProperties?: Record<unknown>;
 }

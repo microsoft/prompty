@@ -16,6 +16,6 @@
     "@typespec/compiler": "^1.15.0",
     "@typespec/http": "^1.15.0",
     "@typespec/json-schema": "^1.15.0",
-    "@typra/emitter": "^0.9.2"
+    "@typra/emitter": "^0.9.3"
   }
 }
