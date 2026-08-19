@@ -5,7 +5,7 @@ Explicit overrides and user-provided function callables live here.
 API: ``register_tool()``, ``get_tool()``, ``clear_tools()``.
 
 Layer 2 — **Kind handlers**: per-kind handlers keyed by tool kind
-(``"function"``, ``"prompty"``, ``"mcp"``, ``"openapi"``, ``"*"``).
+(``"function"``, ``"mcp"``, ``"openapi"``, ``"*"``).
 Extensible fallbacks that handle entire categories of tools.
 API: ``register_tool_handler()``, ``get_tool_handler()``,
 ``clear_tool_handlers()``.
@@ -26,7 +26,6 @@ import json
 import re
 import warnings
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 __all__ = [
@@ -39,7 +38,6 @@ __all__ = [
     "get_tool_handler",
     "clear_tool_handlers",
     "FunctionToolHandler",
-    "PromptyToolHandler",
     "McpToolHandler",
     "OpenApiToolHandler",
     "CustomToolHandler",
@@ -190,112 +188,6 @@ class FunctionToolHandler:
         raise ValueError(
             f"Function tool '{name}' declared but no callable provided. Pass it via tools={{'{name}': fn}} in turn()."
         )
-
-
-class PromptyToolHandler:
-    """Handler for ``kind: "prompty"`` tools.
-
-    Resolves a child ``.prompty`` file relative to the parent agent's
-    ``__source_path`` metadata, loads it, and runs it in either
-    ``"single"`` or ``"agentic"`` mode.
-
-    Tracks loaded paths via ``__prompty_tool_stack`` metadata to detect
-    and prevent circular references (A → B → A).
-    """
-
-    def execute_tool(
-        self,
-        tool: Any,
-        args: dict[str, Any],
-        agent: Any,
-        parent_inputs: dict[str, Any],
-    ) -> str:
-        """Load and execute a child .prompty file synchronously."""
-        # Lazy imports to avoid circular dependency with pipeline.py
-        from .loader import load
-        from .pipeline import prepare, run, turn
-
-        try:
-            child_path = self._resolve_child_path(tool, agent)
-            self._check_circular(child_path, agent)
-            child = load(child_path)
-            # Propagate the visited-path stack to the child
-            stack = list((agent.metadata or {}).get("__prompty_tool_stack", []))
-            stack.append(child_path)
-            if not child.metadata:
-                child.metadata = {}
-            child.metadata["__prompty_tool_stack"] = stack
-
-            mode = getattr(tool, "mode", "single")
-            if mode == "agentic":
-                result = turn(child, args)
-            else:
-                messages = prepare(child, args)
-                result = run(child, messages)
-        except Exception as e:
-            return f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}"
-
-        return str(result)
-
-    async def execute_tool_async(
-        self,
-        tool: Any,
-        args: dict[str, Any],
-        agent: Any,
-        parent_inputs: dict[str, Any],
-    ) -> str:
-        """Load and execute a child .prompty file asynchronously."""
-        from .loader import load
-        from .pipeline import prepare_async, run_async, turn_async
-
-        try:
-            child_path = self._resolve_child_path(tool, agent)
-            self._check_circular(child_path, agent)
-            child = load(child_path)
-            # Propagate the visited-path stack to the child
-            stack = list((agent.metadata or {}).get("__prompty_tool_stack", []))
-            stack.append(child_path)
-            if not child.metadata:
-                child.metadata = {}
-            child.metadata["__prompty_tool_stack"] = stack
-
-            mode = getattr(tool, "mode", "single")
-            if mode == "agentic":
-                result = await turn_async(child, args)
-            else:
-                messages = await prepare_async(child, args)
-                result = await run_async(child, messages)
-        except Exception as e:
-            return f"Error executing PromptyTool '{tool.name}': {type(e).__name__}: {e}"
-
-        return str(result)
-
-    @staticmethod
-    def _resolve_child_path(tool: Any, agent: Any) -> str:
-        """Resolve the child .prompty path relative to the parent agent."""
-        metadata = agent.metadata if agent and getattr(agent, "metadata", None) else {}
-        parent_path = metadata.get("__source_path", "")
-        if not parent_path:
-            raise FileNotFoundError(f"Cannot resolve PromptyTool '{tool.name}': parent agent has no __source_path")
-        return str(Path(parent_path).parent / tool.path)
-
-    @staticmethod
-    def _check_circular(child_path: str, agent: Any) -> None:
-        """Raise if the child path is already in the call stack."""
-        metadata = agent.metadata if agent and getattr(agent, "metadata", None) else {}
-        stack: list[str] = metadata.get("__prompty_tool_stack", [])
-        # Normalize for comparison
-        normalized = str(Path(child_path).resolve())
-        parent_source = metadata.get("__source_path", "")
-        normalized_parent = str(Path(parent_source).resolve()) if parent_source else ""
-        visited = {str(Path(p).resolve()) for p in stack}
-        if normalized_parent:
-            visited.add(normalized_parent)
-        if normalized in visited:
-            chain = (
-                " → ".join([*stack, parent_source, child_path]) if parent_source else " → ".join([*stack, child_path])
-            )
-            raise RecursionError(f"Circular PromptyTool reference detected: {chain}")
 
 
 class McpToolHandler:
@@ -652,7 +544,6 @@ def _find_tool_by_name(agent: Any, tool_name: str) -> Any | None:
 # ---------------------------------------------------------------------------
 
 register_tool_handler("function", FunctionToolHandler())
-register_tool_handler("prompty", PromptyToolHandler())
 register_tool_handler("mcp", McpToolHandler())
 register_tool_handler("openapi", OpenApiToolHandler())
 register_tool_handler("*", CustomToolHandler())

@@ -188,7 +188,6 @@ export {
   CustomTool,
   McpTool,
   OpenApiTool,
-  PromptyTool,
   McpApprovalMode,
   Binding,
   TurnEvent,

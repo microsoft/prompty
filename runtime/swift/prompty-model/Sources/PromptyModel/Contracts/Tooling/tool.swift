@@ -7,7 +7,6 @@ public enum Tool: TypraModel {
   case functionTool(FunctionTool)
   case mcpTool(McpTool)
   case openApiTool(OpenApiTool)
-  case promptyTool(PromptyTool)
   case customTool(CustomTool, [String: Any])
 
   public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Tool {
@@ -21,7 +20,6 @@ public enum Tool: TypraModel {
     case "function": return .functionTool(try FunctionTool.load(normalizedData, context: context))
     case "mcp": return .mcpTool(try McpTool.load(normalizedData, context: context))
     case "openapi": return .openApiTool(try OpenApiTool.load(normalizedData, context: context))
-    case "prompty": return .promptyTool(try PromptyTool.load(normalizedData, context: context))
     default: return .customTool(try CustomTool.load(normalizedData, context: context), object)
     }
   }
@@ -31,7 +29,6 @@ public enum Tool: TypraModel {
     case .functionTool(let value): return try value.save(context)
     case .mcpTool(let value): return try value.save(context)
     case .openApiTool(let value): return try value.save(context)
-    case .promptyTool(let value): return try value.save(context)
     case .customTool(let value, let raw):
       var result = raw
       for (key, item) in try value.save(context) {
@@ -630,135 +627,6 @@ public struct OpenApiTool: TypraModel {
 
   public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> OpenApiTool {
     return try load(TypraRuntime.yamlObject(from: yaml, typeName: "OpenApiTool"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
-}
-
-/// A tool that references another .prompty file to be invoked as a tool.  The child prompty is executed as a single prompt invocation. Nested agent loops are intentionally not started from PromptyTool.
-public struct PromptyTool: TypraModel {
-  public static let shorthandProperty: String? = nil
-  public var name: String = ""
-  public var kind: String = "prompty"
-  public var description: String? = nil
-  public var bindings: [Binding]? = nil
-  public var path: String = ""
-  public var mode: String = "single"
-
-  public init(name: String = "", kind: String = "prompty", description: String? = nil, bindings: [Binding]? = nil, path: String = "", mode: String = "single") {
-    self.name = name
-    self.kind = kind
-    self.description = description
-    self.bindings = bindings
-    self.path = path
-    self.mode = mode
-  }
-
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> PromptyTool {
-    let object = try TypraRuntime.object(data, typeName: "PromptyTool")
-    var instance = PromptyTool()
-    if let value = object["name"] {
-      instance.name = try TypraRuntime.string(value, field: "name")
-    }
-    else {
-      instance.name = ""
-    }
-    if let value = object["kind"] {
-      instance.kind = try TypraRuntime.string(value, field: "kind")
-    }
-    else {
-      instance.kind = "prompty"
-    }
-    if let value = object["description"] {
-      instance.description = try TypraRuntime.string(value, field: "description")
-    }
-    if let value = object["bindings"] {
-      instance.bindings = try loadBindings(value, context: context.at("bindings"))
-    }
-    if let value = object["path"] {
-      instance.path = try TypraRuntime.string(value, field: "path")
-    }
-    if let value = object["mode"] {
-      instance.mode = try TypraRuntime.string(value, field: "mode")
-    }
-    else {
-      instance.mode = "single"
-    }
-    return instance
-  }
-
-  private static func loadBindings(_ data: Any, context: LoadContext) throws -> [Binding] {
-    if let values = data as? [Any] {
-      return try values.enumerated().map { try Binding.load($1, context: context.atIndex($0)) }
-    }
-    let values = try TypraRuntime.dictionary(data, field: "bindings")
-    return try values.keys.sorted().map { name in
-      let value = values[name]!
-      if value is [Any] {
-        throw TypraRuntimeError.invalidField(field: context.at(name).path, expected: "non-array named collection entry; received category array")
-      }
-      var itemData: [String: Any]
-      if let object = value as? [String: Any] {
-        itemData = object
-      } else {
-        itemData = try Binding.load(value, context: context).save()
-      }
-      itemData["name"] = name
-      return try Binding.load(itemData, context: context.at(name))
-    }
-  }
-
-  private static func saveBindings(_ items: [Binding], context: SaveContext) throws -> Any {
-    let serialized = try items.map { try $0.save(context) }
-    if context.collectionFormat == "array" {
-      return serialized
-    }
-    var names = Set<String>()
-    for itemData in serialized {
-      guard let name = itemData["name"] as? String, !name.isEmpty, names.insert(name).inserted else {
-        return serialized
-      }
-    }
-    var result: [String: Any] = [:]
-    for (_, originalData) in zip(items, serialized) {
-      var itemData = originalData
-      let name = itemData.removeValue(forKey: "name") as! String
-      if context.useShorthand, itemData.count == 1, let value = itemData["input"] {
-        result[name] = value
-      } else {
-        result[name] = itemData
-      }
-    }
-    return result
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["name"] = self.name
-    result["kind"] = self.kind
-    if let value = self.description {
-      result["description"] = value
-    }
-    if let value = self.bindings {
-      result["bindings"] = try Self.saveBindings(value, context: context)
-    }
-    result["path"] = self.path
-    result["mode"] = self.mode
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PromptyTool {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "PromptyTool"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PromptyTool {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PromptyTool"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

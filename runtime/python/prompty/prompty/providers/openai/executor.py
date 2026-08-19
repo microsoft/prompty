@@ -100,8 +100,7 @@ def _audio_format(media_type: str | None) -> str:
 def _tools_to_wire(agent: Agent) -> list[dict[str, Any]] | None:
     """Convert agent tools to OpenAI function tool format.
 
-    Supports ``kind: function`` (direct schema) and ``kind: prompty``
-    (loads child .prompty to extract its inputs as parameters).
+    Supports ``kind: function`` (direct schema).
     """
     if not agent.tools:
         return None
@@ -126,50 +125,7 @@ def _tools_to_wire(agent: Agent) -> list[dict[str, Any]] | None:
                     func_def["parameters"]["additionalProperties"] = False
             wire_tools.append({"type": "function", "function": func_def})
 
-        elif kind == "prompty":
-            func_def = _project_prompty_tool(tool, agent)
-            wire_tools.append({"type": "function", "function": func_def})
-
     return wire_tools if wire_tools else None
-
-
-def _project_prompty_tool(tool: Any, parent: Agent) -> dict[str, Any]:
-    """Project a PromptyTool as an OpenAI function definition.
-
-    Loads the child ``.prompty`` file, uses its ``inputs`` as the
-    function parameters, and applies binding/strict stripping.
-    """
-    from pathlib import Path
-
-    from ...core.loader import load
-
-    # Validate tool.path
-    tool_path = getattr(tool, "path", None)
-    if not tool_path:
-        raise ValueError(f"PromptyTool '{tool.name}' has no path")
-
-    # Resolve child path relative to the parent .prompty file
-    parent_path = (parent.metadata or {}).get("__source_path", "")
-    if not parent_path:
-        raise ValueError(f"Cannot resolve PromptyTool '{tool.name}': parent agent has no __source_path in metadata")
-    child_path = Path(parent_path).parent / tool_path
-    child = load(str(child_path))
-
-    func_def: dict[str, Any] = {"name": tool.name}
-    func_def["description"] = tool.description or child.description or ""
-
-    # Use child's inputs as parameters, stripping bound params
-    bound_names = {b.name for b in tool.bindings} if tool.bindings else set()
-    child_inputs = child.inputs or []
-    params = [p for p in child_inputs if p.name not in bound_names]
-    func_def["parameters"] = _schema_to_wire(params, strict=bool(getattr(tool, "strict", False)))
-
-    if hasattr(tool, "strict") and tool.strict:
-        func_def["strict"] = True
-        if "parameters" in func_def:
-            func_def["parameters"]["additionalProperties"] = False
-
-    return func_def
 
 
 def _schema_to_wire(properties: list, *, strict: bool = False) -> dict[str, Any]:
@@ -366,23 +322,6 @@ def _responses_tools_to_wire(agent: Agent) -> list[dict[str, Any]] | None:
             if hasattr(tool, "parameters") and tool.parameters:
                 tool_def["parameters"] = _schema_to_wire(tool.parameters, strict=bool(getattr(tool, "strict", False)))
             if hasattr(tool, "strict") and tool.strict:
-                tool_def["strict"] = True
-                if "parameters" in tool_def:
-                    tool_def["parameters"]["additionalProperties"] = False
-            wire_tools.append(tool_def)
-
-        elif kind == "prompty":
-            # Project prompty tool as a flat function definition (Responses API format)
-            projected = _project_prompty_tool(tool, agent)
-            tool_def = {
-                "type": "function",
-                "name": projected["name"],
-            }
-            if projected.get("description"):
-                tool_def["description"] = projected["description"]
-            if projected.get("parameters"):
-                tool_def["parameters"] = projected["parameters"]
-            if projected.get("strict"):
                 tool_def["strict"] = True
                 if "parameters" in tool_def:
                     tool_def["parameters"]["additionalProperties"] = False

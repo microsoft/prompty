@@ -137,8 +137,6 @@ class Tool(ABC):
             return McpTool.load(data, context)
         elif discriminator_value == "openapi":
             return OpenApiTool.load(data, context)
-        elif discriminator_value == "prompty":
-            return PromptyTool.load(data, context)
 
         else:
             # load default instance
@@ -668,109 +666,6 @@ class OpenApiTool(Tool):
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the OpenApiTool instance to a JSON string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-            indent (int): Number of spaces for indentation. Defaults to 2.
-        Returns:
-            str: The JSON string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_json(self.save(context), indent)
-
-
-@dataclass
-class PromptyTool(Tool):
-    """A tool that references another .prompty file to be invoked as a tool.
-
-    The child prompty is executed as a single prompt invocation. Nested agent
-    loops are intentionally not started from PromptyTool.
-
-    Attributes
-    ----------
-    kind : str
-        The kind identifier for prompty tools
-    path : str
-        Path to the child .prompty file, relative to the parent
-    mode : str
-        Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.
-    """
-
-    _shorthand_property: ClassVar[str | None] = None
-
-    kind: str = field(default="prompty")
-    path: str = field(default="")
-    mode: str = field(default="single")
-
-    @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "PromptyTool":
-        """Load a PromptyTool instance.
-        Args:
-            data (Any): The data to load the instance from.
-            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            PromptyTool: The loaded PromptyTool instance.
-
-        """
-
-        if context is None:
-            context = LoadContext()
-        data = context.process_input(data)
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for PromptyTool: {data}")
-
-        # create new instance
-        instance = PromptyTool()
-
-        if data is not None and "kind" in data:
-            instance.kind = data["kind"]
-        if data is not None and "path" in data:
-            instance.path = data["path"]
-        if data is not None and "mode" in data:
-            instance.mode = data["mode"]
-        if context is not None:
-            instance = context.process_output(instance)
-        return instance
-
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the PromptyTool instance to a dictionary.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            dict[str, Any]: The dictionary representation of this instance.
-
-        """
-        obj = self
-        if context is not None:
-            obj = context.process_object(obj)
-
-        # Start with parent class properties
-        result = super().save(context)
-
-        if obj.kind is not None:
-            result["kind"] = obj.kind
-        if obj.path is not None:
-            result["path"] = obj.path
-        if obj.mode is not None:
-            result["mode"] = obj.mode
-        return result
-
-    def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the PromptyTool instance to a YAML string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            str: The YAML string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_yaml(self.save(context))
-
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the PromptyTool instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

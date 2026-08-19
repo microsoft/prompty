@@ -33,8 +33,6 @@ public abstract class Tool {
           return McpTool.load(data, ctx);
         case "openapi":
           return OpenApiTool.load(data, ctx);
-        case "prompty":
-          return PromptyTool.load(data, ctx);
         default:
           return CustomTool.load(data, ctx);
       }

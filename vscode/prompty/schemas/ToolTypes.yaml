@@ -8,5 +8,3 @@ anyOf:
   - type: string
     const: openapi
   - type: string
-    const: prompty
-  - type: string

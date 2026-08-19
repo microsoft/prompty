@@ -4,9 +4,7 @@ Covers:
 - Name registry: register_tool / get_tool / clear_tools
 - Kind handler registry: register_tool_handler / get_tool_handler / clear_tool_handlers
 - dispatch_tool / dispatch_tool_async (full dispatch flow)
-- PromptyToolHandler (wire projection + execution with mocked pipeline)
 - FunctionToolHandler (error for missing callable)
-- Wire projection via _project_prompty_tool
 """
 
 from __future__ import annotations
@@ -15,7 +13,7 @@ import asyncio
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -24,7 +22,6 @@ from prompty.core.tool_dispatch import (
     FunctionToolHandler,
     McpToolHandler,
     OpenApiToolHandler,
-    PromptyToolHandler,
     ToolHandlerError,
     clear_tool_handlers,
     clear_tools,
@@ -50,7 +47,6 @@ def _clean_registries():
     clear_tools()
     # Re-register built-in kind handlers (they were cleared)
     register_tool_handler("function", FunctionToolHandler())
-    register_tool_handler("prompty", PromptyToolHandler())
     register_tool_handler("mcp", McpToolHandler())
     register_tool_handler("openapi", OpenApiToolHandler())
     register_tool_handler("*", CustomToolHandler())
@@ -59,7 +55,6 @@ def _clean_registries():
     clear_tool_handlers()
     # Re-register for other tests that might run after
     register_tool_handler("function", FunctionToolHandler())
-    register_tool_handler("prompty", PromptyToolHandler())
     register_tool_handler("mcp", McpToolHandler())
     register_tool_handler("openapi", OpenApiToolHandler())
     register_tool_handler("*", CustomToolHandler())
@@ -129,8 +124,8 @@ class TestKindHandlerRegistry:
     """Test register_tool_handler / get_tool_handler / clear_tool_handlers."""
 
     def test_builtin_handlers_registered(self):
-        """Built-in handlers for function, prompty, mcp, openapi, * are registered."""
-        for kind in ("function", "prompty", "mcp", "openapi", "*"):
+        """Built-in handlers for function, mcp, openapi, * are registered."""
+        for kind in ("function", "mcp", "openapi", "*"):
             handler = get_tool_handler(kind)
             assert handler is not None
 
@@ -141,9 +136,9 @@ class TestKindHandlerRegistry:
     def test_clear_and_reregister(self):
         clear_tool_handlers()
         with pytest.raises(ToolHandlerError):
-            get_tool_handler("prompty")
-        register_tool_handler("prompty", PromptyToolHandler())
-        assert get_tool_handler("prompty") is not None
+            get_tool_handler("function")
+        register_tool_handler("function", FunctionToolHandler())
+        assert get_tool_handler("function") is not None
 
     def test_custom_handler(self):
         class MyHandler:
@@ -194,22 +189,25 @@ class TestDispatchPriority:
 
     def test_kind_handler_fallback(self):
         """Kind handler used when neither user_tools nor name registry has it."""
-        tool_def = _make_tool_def(
-            name="summarize", kind="prompty", path="./child.prompty", mode="single", bindings=None
-        )
-        agent = _make_agent(
-            tools=[tool_def],
-            metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")},
-        )
 
-        with patch("prompty.core.tool_dispatch.PromptyToolHandler.execute_tool", return_value="mocked_result"):
-            result = dispatch_tool(
-                "summarize",
-                json.dumps({"text": "hello"}),
-                user_tools={},
-                agent=agent,
-                parent_inputs={},
-            )
+        class _StubHandler:
+            def execute_tool(self, tool, args, agent, parent_inputs):
+                return "mocked_result"
+
+            async def execute_tool_async(self, tool, args, agent, parent_inputs):
+                return "mocked_result"
+
+        register_tool_handler("stub", _StubHandler())
+        tool_def = _make_tool_def(name="summarize", kind="stub")
+        agent = _make_agent(tools=[tool_def])
+
+        result = dispatch_tool(
+            "summarize",
+            json.dumps({"text": "hello"}),
+            user_tools={},
+            agent=agent,
+            parent_inputs={},
+        )
         assert result == "mocked_result"
 
     def test_nothing_found_returns_error(self):
@@ -347,76 +345,6 @@ class TestFunctionToolHandler:
         assert "no callable provided" in result
 
 
-class TestPromptyToolHandler:
-    """PromptyToolHandler: resolves child path, loads, and runs."""
-
-    def test_resolve_child_path(self):
-        handler = PromptyToolHandler()
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty")
-        agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
-        resolved = handler._resolve_child_path(tool, agent)
-        assert resolved == str(PROMPTS_DIR / "summarize_child.prompty")
-
-    def test_missing_source_path_raises(self):
-        handler = PromptyToolHandler()
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./child.prompty")
-        agent = _make_agent(metadata={})
-        with pytest.raises(FileNotFoundError, match="no __source_path"):
-            handler._resolve_child_path(tool, agent)
-
-    def test_execute_tool_loads_and_runs(self):
-        """PromptyToolHandler.execute_tool loads child and runs prepare+run."""
-        handler = PromptyToolHandler()
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./summarize_child.prompty", mode="single")
-        agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
-
-        mock_child = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "summarize_child.prompty")})
-        with (
-            patch("prompty.core.loader.load", return_value=mock_child) as mock_load,
-            patch("prompty.core.pipeline.prepare", return_value=[{"role": "user", "content": "hello"}]) as mock_prepare,
-            patch("prompty.core.pipeline.run", return_value="Summary of the text") as mock_run,
-        ):
-            result = handler.execute_tool(tool, {"text": "hello world"}, agent, {})
-
-        assert result == "Summary of the text"
-        mock_load.assert_called_once()
-        mock_prepare.assert_called_once()
-        mock_run.assert_called_once()
-
-    def test_execute_tool_error_returns_string(self):
-        """Errors during execution are caught and returned as strings."""
-        handler = PromptyToolHandler()
-        tool = _make_tool_def(name="broken", kind="prompty", path="./nonexistent.prompty", mode="single")
-        agent = _make_agent(metadata={"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")})
-        result = handler.execute_tool(tool, {}, agent, {})
-        assert "Error executing PromptyTool" in result
-
-    def test_circular_reference_detected(self):
-        """Circular A → B → A is caught before infinite recursion."""
-        handler = PromptyToolHandler()
-        parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
-        child_path = str(PROMPTS_DIR / "summarize_child.prompty")
-        tool = _make_tool_def(name="summarize", kind="prompty", path="./tools_prompty.prompty", mode="single")
-        # Simulate agent that's already in a chain: child loaded from parent
-        agent = _make_agent(
-            metadata={
-                "__source_path": child_path,
-                "__prompty_tool_stack": [parent_path],
-            }
-        )
-        result = handler.execute_tool(tool, {}, agent, {})
-        assert "circular reference" in result.lower() or "RecursionError" in result
-
-    def test_circular_self_reference(self):
-        """A .prompty that references itself is caught."""
-        handler = PromptyToolHandler()
-        parent_path = str(PROMPTS_DIR / "tools_prompty.prompty")
-        tool = _make_tool_def(name="self_ref", kind="prompty", path="./tools_prompty.prompty", mode="single")
-        agent = _make_agent(metadata={"__source_path": parent_path})
-        result = handler.execute_tool(tool, {}, agent, {})
-        assert "circular reference" in result.lower() or "RecursionError" in result
-
-
 class TestPlaceholderHandlers:
     """MCP, OpenAPI, and Custom handlers raise NotImplementedError."""
 
@@ -443,103 +371,3 @@ class TestPlaceholderHandlers:
     def test_custom_async(self):
         with pytest.raises(NotImplementedError, match="Custom"):
             asyncio.run(CustomToolHandler().execute_tool_async(None, {}, None, {}))
-
-
-# ===========================================================================
-# Wire Projection (_project_prompty_tool)
-# ===========================================================================
-
-
-class TestWireProjection:
-    """Test that PromptyTool is projected as an OpenAI function definition."""
-
-    def test_project_prompty_tool(self):
-        """Load tools_prompty.prompty and verify the tool projects correctly."""
-        from prompty.core.loader import load
-
-        agent = load(str(PROMPTS_DIR / "tools_prompty.prompty"))
-        assert agent.tools is not None
-        assert len(agent.tools) == 1
-
-        tool = agent.tools[0]
-        assert tool.name == "summarize"
-        assert tool.kind == "prompty"
-
-    def test_wire_format(self):
-        """The wire projection should produce a valid OpenAI function tool."""
-        from prompty.core.loader import load
-        from prompty.providers.openai.executor import _project_prompty_tool
-
-        agent = load(str(PROMPTS_DIR / "tools_prompty.prompty"))
-        tool = agent.tools[0]
-        func_def = _project_prompty_tool(tool, agent)
-
-        assert func_def["name"] == "summarize"
-        assert "description" in func_def
-        assert "parameters" in func_def
-
-        # Parameters should include 'text' but NOT 'context' (it's bound)
-        param_names = list(func_def["parameters"].get("properties", {}).keys())
-        assert "text" in param_names
-        assert "context" not in param_names, "bound parameter 'context' should be stripped"
-
-    def test_wire_format_through_tools_to_wire(self):
-        """End-to-end: _tools_to_wire should include the prompty tool."""
-        from prompty.core.loader import load
-        from prompty.providers.openai.executor import _tools_to_wire
-
-        agent = load(str(PROMPTS_DIR / "tools_prompty.prompty"))
-        wire = _tools_to_wire(agent)
-
-        assert wire is not None
-        assert len(wire) == 1
-        assert wire[0]["type"] == "function"
-        assert wire[0]["function"]["name"] == "summarize"
-
-    def test_missing_source_path_raises(self):
-        """Wire projection fails cleanly when parent has no __source_path."""
-        from prompty.providers.openai.executor import _project_prompty_tool
-
-        tool = _make_tool_def(name="broken", kind="prompty", path="./child.prompty")
-        parent = MagicMock()
-        parent.metadata = {}
-        parent.tools = [tool]
-
-        with pytest.raises(ValueError, match="no __source_path"):
-            _project_prompty_tool(tool, parent)
-
-    def test_missing_tool_path_raises(self):
-        """Wire projection fails when tool has no path."""
-        from prompty.providers.openai.executor import _project_prompty_tool
-
-        tool = _make_tool_def(name="broken", kind="prompty", path="")
-        parent = MagicMock()
-        parent.metadata = {"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")}
-
-        with pytest.raises(ValueError, match="has no path"):
-            _project_prompty_tool(tool, parent)
-
-    def test_child_with_no_inputs_emits_empty_schema(self):
-        """When child has no inputs, parameters should still be an empty object schema."""
-        from prompty.providers.openai.executor import _project_prompty_tool
-
-        parent = MagicMock()
-        parent.metadata = {"__source_path": str(PROMPTS_DIR / "tools_prompty.prompty")}
-
-        # Mock the child load to return an agent with no inputs
-        with patch("prompty.core.loader.load") as mock_load:
-            mock_child = MagicMock()
-            mock_child.inputs = []
-            mock_child.description = "empty child"
-            mock_load.return_value = mock_child
-            tool_obj = MagicMock()
-            tool_obj.name = "empty"
-            tool_obj.description = ""
-            tool_obj.path = "./summarize_child.prompty"
-            tool_obj.bindings = []
-            tool_obj.strict = False
-            func_def = _project_prompty_tool(tool_obj, parent)
-
-        assert "parameters" in func_def
-        assert func_def["parameters"]["type"] == "object"
-        assert func_def["parameters"]["properties"] == {}

@@ -15,8 +15,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { resolve, join } from "node:path";
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { resolve, join, dirname } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 
 // Core imports
 import {
@@ -219,6 +220,13 @@ describe("Spec Vectors: Load", () => {
             );
             return;
           }
+          // Containment error vectors (path traversal): materialize the referenced
+          // files on disk — including the escaping target — and drive the real
+          // loader so we prove containment, not a missing file.
+          if (input.agent_subdir !== undefined) {
+            expect(() => materializeAndLoad(input)).toThrow(expected.error);
+            return;
+          }
           return;
         }
 
@@ -254,6 +262,12 @@ describe("Spec Vectors: Load", () => {
 
         // ---- Frontmatter-based loading ----
         if (input.frontmatter) {
+          // Disk-backed containment control vectors resolve real ${file:} refs.
+          if (input.agent_subdir !== undefined) {
+            const agent = materializeAndLoad(input);
+            validateAgentFields(agent, expected, vec.name);
+            return;
+          }
           const agent = buildAgentFromFrontmatter(input.frontmatter, input.env, input.files);
           validateAgentFields(agent, expected, vec.name);
           return;
@@ -273,6 +287,32 @@ describe("Spec Vectors: Load", () => {
     it(`[${vec.name}] ${vec.description}`, testFn);
   }
 });
+
+/**
+ * Materialize a frontmatter vector's files and .prompty on disk (honoring
+ * `agent_subdir`) and drive the real loader. Files whose keys contain `..`
+ * are written relative to the agent directory so path-traversal vectors can
+ * place a target file outside the allowed root. JSON is valid YAML, so the
+ * frontmatter is serialized as JSON between `---` fences.
+ */
+function materializeAndLoad(input: any): Agent {
+  const base = mkdtempSync(join(tmpdir(), "prompty-vec-"));
+  try {
+    const agentDir = input.agent_subdir ? join(base, input.agent_subdir) : base;
+    mkdirSync(agentDir, { recursive: true });
+    const files = (input.files ?? {}) as Record<string, unknown>;
+    for (const [fname, content] of Object.entries(files)) {
+      const fpath = join(agentDir, fname);
+      mkdirSync(dirname(fpath), { recursive: true });
+      writeFileSync(fpath, typeof content === "string" ? content : JSON.stringify(content));
+    }
+    const agentPath = join(agentDir, "test.prompty");
+    writeFileSync(agentPath, `---\n${JSON.stringify(input.frontmatter, null, 2)}\n---\n`);
+    return load(agentPath);
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
+}
 
 /**
  * Build a Prompty from frontmatter dict (for non-fixture load vectors).

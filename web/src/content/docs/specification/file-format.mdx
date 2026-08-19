@@ -242,12 +242,11 @@ Tools are defined as a list under the `tools` frontmatter property. Each tool ha
 | Kind       | Type           | Additional Fields                                      |
 | ---------- | -------------- | ------------------------------------------------------ |
 | `function` | `FunctionTool` | `parameters` (`list[Property]`), `strict` (boolean)    |
-| `prompty`  | `PromptyTool`  | `path` (string)                                        |
 | `mcp`      | `McpTool`      | `connection`, `serverName`, `approvalMode`, `allowedTools` |
 | `openapi`  | `OpenApiTool`  | `connection`, `specification` (path or URL)             |
 | `*`        | `CustomTool`   | `connection`, `options` — wildcard catch-all            |
 
-Any `kind` value that does not match `function`, `prompty`, `mcp`, or `openapi` MUST
+Any `kind` value that does not match `function`, `mcp`, or `openapi` MUST
 be loaded as a `CustomTool` (the wildcard `*` catch-all).
 
 ### §2.9.1 Tool Bindings
@@ -281,28 +280,6 @@ tools:
 2. When executing a tool call from the LLM's response, bound parameters MUST be
    **injected** into the tool's arguments before invocation.
 3. If the LLM provides a value for a bound parameter, the binding MUST take precedence.
-
-### §2.9.2 PromptyTool
-
-The `prompty` tool kind allows one `.prompty` file to invoke another as a tool:
-
-```yaml
-tools:
-  - name: summarize
-    kind: prompty
-    path: ./summarize.prompty
-    description: Summarize a block of text
-```
-
-| Field  | Type     | Default    | Description                          |
-| ------ | -------- | ---------- | ------------------------------------ |
-| `path` | `string` | —          | Relative path to the `.prompty` file |
-
-When the LLM invokes this tool:
-
-1. Load the referenced `.prompty` file via `load(path)`.
-2. Call `invoke(path, arguments)` — one pass, no nested tool loop.
-3. Return the result as the tool's output.
 
 ## §2.10 Role Markers
 

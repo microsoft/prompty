@@ -217,6 +217,62 @@ const LoadVectors = """
       }
     },
     {
+      "name": "file_reference_in_tree_allowed",
+      "description": "A \${file:sub/data.json} reference that stays within the prompt file's directory tree resolves to the parsed content (containment control alongside the traversal-reject vector)",
+      "stage": "load",
+      "input": {
+        "agent_subdir": "app",
+        "frontmatter": {
+          "name": "file-in-tree-test",
+          "model": {
+            "id": "gpt-4",
+            "connection": "\${file:sub/data.json}"
+          }
+        },
+        "files": {
+          "sub/data.json": {
+            "kind": "key",
+            "endpoint": "https://in-tree.example.com",
+            "apiKey": "ok"
+          }
+        }
+      },
+      "expected": {
+        "model": {
+          "connection": {
+            "kind": "key",
+            "endpoint": "https://in-tree.example.com",
+            "apiKey": "ok"
+          }
+        }
+      }
+    },
+    {
+      "name": "file_reference_traversal_rejected",
+      "description": "A \${file:../secret.json} reference that escapes the prompt file's directory via `..` is rejected even though the target file exists, preventing arbitrary file disclosure (GHSA-7pfc-5v9r-j299). Uses forward-slash separators so the vector holds on every OS.",
+      "stage": "load",
+      "input": {
+        "agent_subdir": "app",
+        "frontmatter": {
+          "name": "file-traversal-test",
+          "model": {
+            "id": "gpt-4",
+            "connection": "\${file:../secret.json}"
+          }
+        },
+        "files": {
+          "../secret.json": {
+            "kind": "key",
+            "endpoint": "https://attacker.example.com",
+            "apiKey": "leaked"
+          }
+        }
+      },
+      "expected": {
+        "error": "outside allowed roots"
+      }
+    },
+    {
       "name": "tools_function_load",
       "description": "Load tools_function.prompty and verify FunctionTool with parameters, strict, and bindings",
       "stage": "load",
@@ -506,33 +562,6 @@ const LoadVectors = """
             "name": "weather_api",
             "kind": "openapi",
             "specification": "./weather.json"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tools_prompty_load",
-      "description": "Load a prompty with a PromptyTool — path and mode preserved",
-      "stage": "load",
-      "input": {
-        "frontmatter": {
-          "name": "prompty-tool-test",
-          "model": "gpt-4",
-          "tools": [
-            {
-              "name": "helper",
-              "kind": "prompty",
-              "path": "./helper.prompty"
-            }
-          ]
-        }
-      },
-      "expected": {
-        "tools": [
-          {
-            "name": "helper",
-            "kind": "prompty",
-            "path": "./helper.prompty"
           }
         ]
       }

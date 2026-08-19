@@ -236,6 +236,16 @@ public class SpecVectorTests
                             continue;
                         }
                     }
+                    // Other error cases: containment vectors materialize files
+                    // (including the escaping target) and drive the real loader so
+                    // we prove containment, not a missing file.
+                    if (input.TryGetProperty("agent_subdir", out _))
+                    {
+                        var ex = Assert.ThrowsAny<Exception>(() => MaterializeAndLoad(input));
+                        var expectedErr = expected.GetProperty("error").GetString()!;
+                        Assert.Contains(expectedErr, ex.Message);
+                        continue;
+                    }
                     // Other error cases — skip for now
                     skipped.Add(name);
                     continue;
@@ -253,6 +263,16 @@ public class SpecVectorTests
 
                     var agent = PromptyLoader.Load(fixturePath);
 
+                    var errors = CompareAgentToExpected(agent, expected);
+                    if (errors.Count > 0)
+                    {
+                        failures.Add($"[{name}] Mismatches:\n  " + string.Join("\n  ", errors));
+                    }
+                }
+                else if (input.TryGetProperty("agent_subdir", out _))
+                {
+                    // Disk-backed containment control vector: resolve real ${file:} refs.
+                    var agent = MaterializeAndLoad(input);
                     var errors = CompareAgentToExpected(agent, expected);
                     if (errors.Count > 0)
                     {
@@ -312,6 +332,55 @@ public class SpecVectorTests
     // =========================================================================
     // Helpers
     // =========================================================================
+
+    /// <summary>
+    /// Materialize a frontmatter vector's files and .prompty on disk (honoring
+    /// <c>agent_subdir</c>) and drive the real loader. Files whose keys contain
+    /// <c>..</c> are written relative to the agent directory so path-traversal
+    /// vectors can place a target outside the allowed root. JSON is valid YAML,
+    /// so the frontmatter is written verbatim between <c>---</c> fences.
+    /// </summary>
+    private static Agent MaterializeAndLoad(JsonElement input)
+    {
+        var tempBase = Path.Join(Path.GetTempPath(), "prompty-vec-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempBase);
+        try
+        {
+            var agentDir = input.TryGetProperty("agent_subdir", out var sd)
+                ? Path.Join(tempBase, sd.GetString()!)
+                : tempBase;
+            Directory.CreateDirectory(agentDir);
+
+            if (input.TryGetProperty("files", out var filesEl))
+            {
+                foreach (var f in filesEl.EnumerateObject())
+                {
+                    // Path.Join (not Path.Combine) so keys containing ".." keep their
+                    // relative traversal semantics instead of being dropped when rooted;
+                    // the loader under test is responsible for rejecting escapes.
+                    var fpath = Path.Join(agentDir, f.Name);
+                    var parent = Path.GetDirectoryName(fpath);
+                    if (parent != null)
+                        Directory.CreateDirectory(parent);
+                    var text = f.Value.ValueKind == JsonValueKind.String
+                        ? f.Value.GetString()!
+                        : f.Value.GetRawText();
+                    File.WriteAllText(fpath, text);
+                }
+            }
+
+            var frontmatter = input.GetProperty("frontmatter").GetRawText();
+            var agentPath = Path.Join(agentDir, "test.prompty");
+            File.WriteAllText(agentPath, $"---\n{frontmatter}\n---\n");
+            return PromptyLoader.Load(agentPath);
+        }
+        finally
+        {
+            try { Directory.Delete(tempBase, recursive: true); }
+            catch (IOException) { /* best-effort cleanup */ }
+            catch (UnauthorizedAccessException) { /* best-effort cleanup */ }
+        }
+    }
 
     private static Dictionary<string, object?> JsonElementToDict(JsonElement el)
     {

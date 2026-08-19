@@ -120,13 +120,24 @@ fn load_with_files(
     frontmatter: &Value,
     env: &Value,
     files: &Value,
+    agent_subdir: Option<&str>,
 ) -> Result<prompty::model::Agent, prompty::LoadError> {
     let tmp = TempDir::new("file_res");
 
-    // Write virtual files into the temp dir
+    // The prompt file lives in `agent_subdir` (when set) so that `..` file
+    // references can escape the agent directory into the temp root — this is
+    // how the path-traversal containment vectors place a target outside the
+    // allowed root.
+    let agent_dir = match agent_subdir {
+        Some(sub) => tmp.path().join(sub),
+        None => tmp.path().to_path_buf(),
+    };
+    std::fs::create_dir_all(&agent_dir).unwrap();
+
+    // Write virtual files relative to the agent directory.
     if let Some(file_map) = files.as_object() {
         for (name, content) in file_map {
-            let file_path = tmp.path().join(name);
+            let file_path = agent_dir.join(name);
             if let Some(parent) = file_path.parent() {
                 std::fs::create_dir_all(parent).unwrap();
             }
@@ -145,8 +156,8 @@ fn load_with_files(
 
     let keys = set_env_vars(env);
     // load_from_string treats its second arg as a *file* path, using .parent()
-    // for ${file:} resolution. Pass a virtual file path inside the temp dir.
-    let virtual_file = tmp.path().join("virtual.prompty");
+    // for ${file:} resolution. Pass a virtual file path inside the agent dir.
+    let virtual_file = agent_dir.join("virtual.prompty");
     let result = prompty::load_from_string(&raw, &virtual_file);
     clear_env_vars(&keys);
     result
@@ -427,14 +438,6 @@ fn validate_tool(tool: &prompty::model::tool::Tool, expected: &Value, vec_name: 
                 );
             }
         }
-        prompty::model::tool::ToolKind::Prompty { path, mode, .. } => {
-            if let Some(p) = expected.get("path").and_then(Value::as_str) {
-                assert_eq!(path, p, "[{vec_name}] tool[{idx}].path");
-            }
-            if let Some(m) = expected.get("mode").and_then(Value::as_str) {
-                assert_eq!(mode.as_str(), m, "[{vec_name}] tool[{idx}].mode");
-            }
-        }
         prompty::model::tool::ToolKind::Custom { .. } => {
             // kind_str() already checked above
         }
@@ -537,7 +540,8 @@ fn load_agent(vec_name: &str, input: &Value, env: &Value) -> prompty::model::Age
         // File resolution vector
         let frontmatter = input.get("frontmatter").unwrap_or(&Value::Null);
         let files = input.get("files").unwrap_or(&Value::Null);
-        load_with_files(frontmatter, env, files)
+        let subdir = input.get("agent_subdir").and_then(Value::as_str);
+        load_with_files(frontmatter, env, files, subdir)
             .unwrap_or_else(|e| panic!("[{vec_name}] load_with_files failed: {e}"))
     } else if let Some(fm) = input.get("frontmatter") {
         load_from_frontmatter(fm, env)
@@ -710,7 +714,8 @@ fn attempt_load(input: &Value, env: &Value) -> Result<prompty::model::Agent, Loa
     } else if input.get("files").is_some() {
         let frontmatter = input.get("frontmatter").unwrap_or(&Value::Null);
         let files = input.get("files").unwrap_or(&Value::Null);
-        load_with_files(frontmatter, env, files).map_err(LoadResult::Load)
+        let subdir = input.get("agent_subdir").and_then(Value::as_str);
+        load_with_files(frontmatter, env, files, subdir).map_err(LoadResult::Load)
     } else if let Some(fm) = input.get("frontmatter") {
         load_from_frontmatter(fm, env).map_err(LoadResult::Load)
     } else if let Some(raw) = input.get("frontmatter_raw").and_then(Value::as_str) {

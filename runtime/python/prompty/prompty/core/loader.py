@@ -108,10 +108,12 @@ def _build_agent(
     ctx = LoadContext(pre_process=_pre_process(path, allowed_file_roots=allowed_file_roots))
     agent = Agent.load(data, ctx)
 
-    # Store source path for PromptyTool resolution (relative path lookups)
+    # Store source path for relative reference resolution (e.g. ${file:...})
     if agent.metadata is None:
         agent.metadata = {}
     agent.metadata["__source_path"] = str(path)
+    if allowed_file_roots:
+        agent.metadata["__allowed_file_roots"] = [str(root) for root in allowed_file_roots]
 
     return agent
 
@@ -186,7 +188,36 @@ def _resolve_file_reference(
     allowed_file_roots: Sequence[str | Path] | None,
 ) -> Path:
     """Resolve and validate a ``${file:...}`` reference."""
-    prompt_root = agent_file.parent.resolve()
+    return _resolve_contained_path(
+        agent_file.parent,
+        reference,
+        allowed_file_roots,
+        subject=f"File reference '{reference}'",
+        agent_file=agent_file,
+    )
+
+
+def _resolve_contained_path(
+    base_dir: str | Path,
+    reference: str,
+    allowed_file_roots: Sequence[str | Path] | None = None,
+    *,
+    subject: str | None = None,
+    agent_file: str | Path | None = None,
+) -> Path:
+    """Resolve ``reference`` relative to ``base_dir`` and enforce containment.
+
+    The reference is joined onto ``base_dir`` (unless it is absolute),
+    canonicalized (which collapses ``..`` and resolves symlinks), and then
+    validated to fall inside one of the allowed roots (``base_dir`` plus any
+    ``allowed_file_roots``). Absolute references and ``..`` traversal that
+    escape every allowed root are rejected with :class:`ValueError`.
+
+    This is the containment primitive used by ``${file:...}`` resolution, so
+    every filesystem sink that dereferences an author-controlled path enforces
+    the same sandbox.
+    """
+    prompt_root = Path(base_dir).resolve()
     allowed_roots = [prompt_root, *(Path(root).resolve() for root in allowed_file_roots or ())]
 
     candidate = Path(reference)
@@ -196,9 +227,9 @@ def _resolve_file_reference(
     resolved = candidate.resolve()
     if not any(resolved == root or resolved.is_relative_to(root) for root in allowed_roots):
         roots = ", ".join(str(root) for root in allowed_roots)
-        raise ValueError(
-            f"File reference '{reference}' resolves outside allowed roots for '{agent_file}'. Allowed roots: {roots}"
-        )
+        label = subject or f"Path '{reference}'"
+        where = f" for '{agent_file}'" if agent_file is not None else ""
+        raise ValueError(f"{label} resolves outside allowed roots{where}. Allowed roots: {roots}")
 
     return resolved
 

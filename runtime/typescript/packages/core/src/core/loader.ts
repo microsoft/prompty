@@ -104,7 +104,7 @@ function buildAgent(
   });
   const agent = Agent.load(frontmatter, ctx);
 
-  // Store source path for PromptyTool resolution (relative path lookups)
+  // Store source path so ${file:} references can resolve relative lookups.
   if (!agent.metadata) {
     agent.metadata = {};
   }

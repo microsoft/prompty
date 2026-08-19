@@ -173,7 +173,6 @@ export {
   CustomTool,
   McpTool,
   OpenApiTool,
-  PromptyTool,
 } from "./contracts/tooling/tool";
 export { McpApprovalMode } from "./contracts/tooling/mcp-approval-mode";
 export { ToolContext } from "./contracts/tooling/tool-context";

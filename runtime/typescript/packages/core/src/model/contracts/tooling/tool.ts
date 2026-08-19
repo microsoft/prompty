@@ -83,8 +83,6 @@ export abstract class Tool {
         return McpTool.load(data, context);
       case "openapi":
         return OpenApiTool.load(data, context);
-      case "prompty":
-        return PromptyTool.load(data, context);
       default:
         return CustomTool.load(data, context);
     }
@@ -745,98 +743,6 @@ export class OpenApiTool extends Tool {
     const { parse } = require("yaml");
     const data = parse(yaml);
     return OpenApiTool.load(data as Record<string, unknown>, context);
-  }
-
-  //#endregion
-}
-
-export class PromptyTool extends Tool {
-  static readonly shorthandProperty: string | undefined = undefined;
-
-  kind: string = "prompty";
-  path: string = "";
-  mode: string = "single";
-
-  constructor(init?: Partial<PromptyTool>) {
-    super(init);
-    this.kind = init?.kind ?? "prompty";
-    this.path = init?.path ?? "";
-    this.mode = init?.mode ?? "single";
-  }
-
-  //#region Load Methods
-
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): PromptyTool {
-    context ??= new LoadContext();
-    if (context) {
-      data = context.processInput(data) as Record<string, unknown>;
-    }
-
-    const instance = new PromptyTool();
-
-    if (data["kind"] !== undefined && data["kind"] !== null) {
-      instance.kind = String(data["kind"]);
-    }
-    if (data["path"] !== undefined && data["path"] !== null) {
-      instance.path = String(data["path"]);
-    }
-    if (data["mode"] !== undefined && data["mode"] !== null) {
-      instance.mode = String(data["mode"]);
-    }
-
-    if (context) {
-      return context.processOutput(instance) as PromptyTool;
-    }
-    return instance;
-  }
-
-  //#endregion
-
-  //#region Save Methods
-
-  save(context?: SaveContext): Record<string, unknown> {
-    let obj: this = this;
-    if (context) {
-      obj = context.processObject(obj) as this;
-    }
-
-    // Start with parent class properties
-    const result = super.save(context);
-
-    if (obj.kind !== undefined && obj.kind !== null) {
-      result["kind"] = obj.kind;
-    }
-    if (obj.path !== undefined && obj.path !== null) {
-      result["path"] = obj.path;
-    }
-    if (obj.mode !== undefined && obj.mode !== null) {
-      result["mode"] = obj.mode;
-    }
-    return result;
-  }
-
-  toYaml(context?: SaveContext): string {
-    context = context ?? new SaveContext();
-    return context.toYaml(this.save(context));
-  }
-
-  toJson(context?: SaveContext, indent: number = 2): string {
-    context = context ?? new SaveContext();
-    return context.toJson(this.save(context), indent);
-  }
-
-  static fromJson(json: string, context?: LoadContext): PromptyTool {
-    const data = JSON.parse(json);
-    return PromptyTool.load(data as Record<string, unknown>, context);
-  }
-
-  static fromYaml(yaml: string, context?: LoadContext): PromptyTool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
-    return PromptyTool.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

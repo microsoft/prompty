@@ -136,20 +136,33 @@ class LoadVectorsTest {
     Map<String, Object> files = SpecVectors.map(input, "files");
     Path root = tempRoot();
 
+    // A vector may place the agent in a subdirectory so that a `..` file reference escapes the
+    // agent's own directory into the surrounding temp root -- the shape the path-traversal
+    // containment vectors rely on. Files are written relative to the agent's directory.
+    String subdir = SpecVectors.string(input, "agent_subdir");
+    Path agentDir = subdir != null ? root.resolve(subdir) : root;
+    if (subdir != null) {
+      try {
+        Files.createDirectories(agentDir);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
+
     if (raw == null) {
       Object frontmatter = input.get("frontmatter");
       raw = "---\n" + toYaml(frontmatter) + "---\n";
     }
 
     for (Map.Entry<String, Object> file : files.entrySet()) {
-      Path target = root.resolve(file.getKey());
+      Path target = agentDir.resolve(file.getKey());
       Object content = file.getValue();
       write(target, content instanceof String text ? text : com.microsoft.prompty.model.TypraJson.stringify(content));
     }
 
     // `${file:}` references resolve relative to the agent's own directory, so the vector's virtual
     // files have to sit beside a virtual agent path rather than beside the test's working directory.
-    return Loader.loadFromString(raw, root.resolve("virtual.prompty"));
+    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"));
   }
 
   private static String toYaml(Object frontmatter) {

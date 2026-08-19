@@ -259,6 +259,22 @@ def test_load_vector(vec: dict, tmp_path: Path):
                     load(p)
                 return
 
+            # Containment error vectors (path traversal): materialize the referenced
+            # files — including the escaping target — and assert the raised message
+            # contains the expected substring so we prove containment, not a missing file.
+            if "frontmatter" in inp and "error_field" not in expected and ("files" in inp or "agent_subdir" in inp):
+                data = inp["frontmatter"]
+                agent_dir = tmp_path / inp["agent_subdir"] if inp.get("agent_subdir") else tmp_path
+                agent_dir.mkdir(parents=True, exist_ok=True)
+                p = agent_dir / "error_test.prompty"
+                _write_prompty_from_frontmatter(p, data, inp.get("files", {}))
+                with pytest.raises(Exception) as exc_info:
+                    load(p)
+                assert expected["error"] in str(exc_info.value), (
+                    f"Expected error containing {expected['error']!r}, got {exc_info.value!r}"
+                )
+                return
+
             # Generic frontmatter error vectors (e.g. invalid template format)
             # Skip vectors with error_field — those are validation errors, not load errors
             if "frontmatter" in inp and "error_field" not in expected:
@@ -306,7 +322,9 @@ def test_load_vector(vec: dict, tmp_path: Path):
         # --- Frontmatter-only vectors (no fixture file) ---
         if "frontmatter" in inp and "fixture" not in inp:
             data = inp["frontmatter"]
-            p = tmp_path / "test.prompty"
+            agent_dir = tmp_path / inp["agent_subdir"] if inp.get("agent_subdir") else tmp_path
+            agent_dir.mkdir(parents=True, exist_ok=True)
+            p = agent_dir / "test.prompty"
             _write_prompty_from_frontmatter(p, data, inp.get("files", {}))
             agent = load(p)
             _assert_load_expected(agent, expected, name)
@@ -343,6 +361,7 @@ def _write_prompty_from_frontmatter(
     if files:
         for fname, content in files.items():
             fpath = path.parent / fname
+            fpath.parent.mkdir(parents=True, exist_ok=True)
             if isinstance(content, dict):
                 fpath.write_text(json.dumps(content), encoding="utf-8")
             else:

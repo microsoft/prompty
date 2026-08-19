@@ -60,8 +60,8 @@ using the dispatch order defined below.
 | `clear_tool_handlers()`               | Remove all kind entries (for testing)              |
 
 - Kind handlers MUST be a process-global singleton.
-- Implementations SHOULD register built-in kind handlers for `"function"` and
-  `"prompty"` at startup. Handlers for `"mcp"`, `"openapi"`, and `"*"`
+- Implementations SHOULD register a built-in kind handler for `"function"`
+  at startup. Handlers for `"mcp"`, `"openapi"`, and `"*"`
   (custom) MAY be registered by extension packages.
 
 ### Dispatch Order
@@ -79,14 +79,13 @@ When resolving a tool call with name `N` and tool definition kind `K`:
 ```
 
 The name registry (layer 1) always takes priority, allowing users to override
-any tool — including built-in prompty tools — with a custom callable.
+any tool with a custom callable.
 
 ### Built-in Kind Handlers
 
 | Tool Kind    | Handler Behaviour                                             |
 | ------------ | ------------------------------------------------------------- |
 | `"function"` | Look up callable in name registry, call `handler(args)`       |
-| `"prompty"`  | Load child `.prompty` via `tool.path`, execute per [§9.6](/specification/agent-loop/)       |
 | `"mcp"`      | Send tool-call request via MCP client protocol                |
 | `"openapi"`  | Make HTTP call per OpenAPI specification                      |
 | `"*"`        | Delegate to user-provided handler's `execute(args)` method   |

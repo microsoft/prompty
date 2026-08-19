@@ -65,8 +65,6 @@ VALID_TOOL_PROPERTIES = {
     "name", "kind", "description", "parameters", "connection", "specification",
     "serverName", "serverDescription", "approvalMode", "allowedTools",
     "options", "bindings", "strict", "source",
-    # PromptyTool extras
-    "path", "mode",
 }
 
 # Also allow `properties` inside inputs/outputs (the container for list-of-properties)
