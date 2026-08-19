@@ -50,7 +50,7 @@ turnId: turn_abc123
 | ---- | ---- | ----------- |
 | sessionId | string | Stable harness session identifier |
 | turnId | string | Stable turn identifier within the session |
-| inputs | dictionary | Inputs supplied to the deterministic single-turn run |
+| inputs | dictionary | Inputs supplied to the deterministic single-turn run. Values may be explicit null. |
 | options | [TurnOptions](../turnoptions/) | Canonical turn execution options |
 
 ## Composed Types

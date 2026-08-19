@@ -23,7 +23,7 @@ properties:
     description: The content parts of the message
   metadata:
     $ref: RecordUnknown.yaml
-    description: Optional metadata associated with the message
+    description: Optional metadata associated with the message. Values may be explicit null.
 required:
   - role
   - parts

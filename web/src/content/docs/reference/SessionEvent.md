@@ -60,7 +60,7 @@ spanId: span_hook_001
 | turnId | string | Associated turn identifier, when this session event is linked to a turn |
 | parentId | string | Parent event or span identifier for reconstructing event hierarchy |
 | spanId | string | Trace span identifier associated with this event |
-| payload | dictionary | Event-specific payload. Use the typed payload model matching 'type'. |
+| payload | dictionary | Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'. |
 | redaction | [RedactionMetadata](../redactionmetadata/) | Redaction state for sensitive payload fields |
 
 ## Composed Types

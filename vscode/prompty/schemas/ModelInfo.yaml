@@ -28,7 +28,7 @@ properties:
     description: Output modalities the model can produce (e.g., 'text', 'audio')
   additionalProperties:
     $ref: RecordUnknown.yaml
-    description: Additional provider-specific properties
+    description: Additional provider-specific properties. Values may be explicit null.
 required:
   - id
 description: |-

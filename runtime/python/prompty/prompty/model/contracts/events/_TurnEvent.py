@@ -61,7 +61,7 @@ class TurnEvent:
     span_id : Optional[str]
         Trace span identifier associated with this event
     payload : dict[str, Any]
-        Event-specific payload. Use the typed payload model matching 'type'.
+        Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     """
 
     _shorthand_property: ClassVar[str | None] = None

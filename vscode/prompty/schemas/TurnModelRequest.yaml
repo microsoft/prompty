@@ -15,7 +15,7 @@ properties:
     description: Zero-based model loop iteration
   inputs:
     $ref: RecordUnknown.yaml
-    description: Inputs supplied to the deterministic single-turn run
+    description: Inputs supplied to the deterministic single-turn run. Values may be explicit null.
   options:
     $ref: TurnOptions.yaml
     description: Canonical turn execution options

@@ -131,7 +131,7 @@ pub struct SessionEvent {
     pub parent_id: Option<String>,
     /// Trace span identifier associated with this event
     pub span_id: Option<String>,
-    /// Event-specific payload. Use the typed payload model matching 'type'.
+    /// Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     pub payload: serde_json::Value,
     /// Redaction state for sensitive payload fields
     pub redaction: Option<RedactionMetadata>,

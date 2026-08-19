@@ -207,7 +207,7 @@ instructions: |-
 | name | string | Human-readable name of the prompt |
 | displayName | string | Display name for UI purposes |
 | description | string | Description of the prompt's purpose |
-| metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties |
+| metadata | dictionary | Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null. |
 | inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/), [UnionProperty](../unionproperty/)) |
 | outputs | [Property[]](../property/) | Expected output format and structure |
 | model | [Model](../model/) | AI model configuration |

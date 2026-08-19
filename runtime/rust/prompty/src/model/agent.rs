@@ -29,7 +29,7 @@ pub struct Agent {
     pub display_name: Option<String>,
     /// Description of the prompt's purpose
     pub description: Option<String>,
-    /// Additional metadata including authors, tags, and other arbitrary properties
+    /// Additional metadata including authors, tags, and other arbitrary properties. Values may be explicit null.
     pub metadata: serde_json::Value,
     /// Input parameters that participate in template rendering
     pub inputs: Option<Vec<Property>>,
