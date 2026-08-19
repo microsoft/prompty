@@ -6174,6 +6174,1351 @@
       "marker": true
     },
     {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Package.swift",
+      "marker": false
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/agent.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/checkpoint_store.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Connectivity/authorization_code_flow.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Connectivity/connection.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Connectivity/device_authorization.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Connectivity/o_auth_token.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Conversation/content_part.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Conversation/message.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Conversation/thread_marker.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Conversation/tool_call.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Conversation/tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Core/file_not_found_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Core/invoker_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Core/property.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Core/validation_error.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Core/validation_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/checkpoint.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/compaction_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/compaction_failed_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/compaction_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/done_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/error_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/harness_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/hook_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/hook_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/host_tool_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/host_tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/llm_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/llm_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/messages_updated_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/permission_completed_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/permission_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/permission_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/permission_requested_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/redacted_field.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/redaction_metadata.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/retry_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_file_ref.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_ref.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_summary.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_trace.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/session_warning_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/status_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/stream_chunk.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/thinking_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/token_event_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/tool_call_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/tool_call_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/tool_execution_complete_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/tool_execution_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/tool_result_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/trajectory_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/turn_end_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/turn_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/turn_start_payload.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/turn_summary.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/turn_trace.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Guardrails/guardrail_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Memory/memory_entry.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Memory/memory_store.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/ai_resource_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/invocation_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/model_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/model_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/model.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/project_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/subscription_info.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Models/token_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/compaction_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/context_candidate.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/context_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/delegated_state_reference.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/engine_checkpoint.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/engine_event.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/engine_permission_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/final_output_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/final_output_policy_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/host_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/host_policy_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/invocation_context_decision.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/invocation_context_state.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_invocation_context_snapshot.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_invocation_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_invocation_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_reconciliation_state.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_tool_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/model_tool_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/replay_journal_record.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/replay_mismatch.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/replay_verification_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/replay_verification_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/resume_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/retry_policy_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/run_turn_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/run_turn_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/turn_commit.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/turn_engine_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/turn_model_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/turn_model_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Pipeline/turn_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Streaming/stream_options.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Templates/format_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Templates/parser_config.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Templates/template.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tooling/binding.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tooling/mcp_approval_mode.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tooling/tool_context.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tooling/tool_dispatch_result.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tooling/tool.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tracing/trace_file.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tracing/trace_span.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Tracing/trace_time.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/discovery_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_durability_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_permission_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_post_commit_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_tool_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/event_journal_writer.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/event_sink.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/executor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/host_tool_executor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/load_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/model_lister.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/parser.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/permission_resolver.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/processor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/renderer.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/turn_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/TypraRuntime.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_image_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_image_source.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_messages_request.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_messages_response.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_text_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_tool_definition.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_tool_result_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_tool_use_block.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_usage.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Wire/Anthropic/anthropic_wire_message.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/AgentTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/ConformanceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/AuthorizationCodeFlowTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/ConnectionTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/DeviceAuthorizationTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/OAuthTokenTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ContentPartTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/MessageTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ThreadMarkerTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ToolCallTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ToolResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/FileNotFoundErrorTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/InvokerErrorTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/PropertyTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/ValidationErrorTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/ValidationResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CheckpointTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionCompletePayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionFailedPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/DoneEventPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ErrorEventPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HarnessContextTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HookEndPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HookStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HostToolRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HostToolResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/LlmCompletePayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/LlmStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/MessagesUpdatedPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionCompletedPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionDecisionTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionRequestedPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/RedactedFieldTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/RedactionMetadataTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/RetryPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionEndPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionEventTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionFileRefTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionRefTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionSummaryTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionTraceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionWarningPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StatusEventPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StreamChunkTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ThinkingEventPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TokenEventPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolCallCompletePayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolCallStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolExecutionCompletePayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolExecutionStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolResultPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TrajectoryEventTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnEndPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnEventTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnStartPayloadTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnSummaryTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnTraceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Guardrails/GuardrailResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Memory/MemoryEntryTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Memory/MemoryStoreTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/AiResourceInfoTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/InvocationUsageTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/ModelInfoTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/ModelOptionsTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/ModelTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/ProjectInfoTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/SubscriptionInfoTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/TokenUsageTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/CompactionConfigTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ContextCandidateTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ContextRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/DelegatedStateReferenceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/EngineCheckpointTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/EngineEventTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/EnginePermissionDecisionTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/FinalOutputPolicyRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/FinalOutputPolicyResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/HostPolicyRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/HostPolicyResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/InvocationContextDecisionTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/InvocationContextStateTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelInvocationContextSnapshotTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelInvocationRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelInvocationResponseTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelReconciliationStateTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelToolRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ModelToolResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayJournalRecordTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayMismatchTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayVerificationRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayVerificationResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ResumeContextTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RetryPolicyRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RunTurnRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RunTurnResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnCommitTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnEngineResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnModelRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnModelResponseTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnOptionsTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Streaming/StreamOptionsTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Templates/FormatConfigTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Templates/ParserConfigTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Templates/TemplateTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/BindingTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/McpApprovalModeTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolContextTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolDispatchResultTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceFileTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceSpanTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceTimeTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicImageBlockTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicImageSourceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicMessagesRequestTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicMessagesResponseTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicTextBlockTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolDefinitionTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolResultBlockTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolUseBlockTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicUsageTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicWireMessageTests.swift",
+      "marker": true
+    },
+    {
       "outputRoot": "../runtime/typescript/packages/core/src",
       "path": "../runtime/typescript/packages/core/src/eslint.config.js",
       "marker": true

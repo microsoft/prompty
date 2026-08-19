@@ -34,5 +34,18 @@ options:
         output-dir: "../runtime/rust/prompty/src/model"
         test-dir: "../runtime/rust/prompty/tests/model"
         import-path: "prompty::model"
+      - type: Swift
+        output-dir: "../runtime/swift/prompty-model"
+        test-dir: "../runtime/swift/prompty-model/Tests/PromptyModelTests"
+        package-name: "PromptyModel"
+        # swift-format is not installed on the schema-repro-check regen runner
+        # (it has no Swift toolchain), and the emitter's Swift driver silently
+        # falls back to its own deterministic formatting when swift-format is
+        # absent (the shell-out is wrapped in a catch that prints no warning).
+        # That makes a swift-format-formatted tree unreproducible: any machine
+        # without swift-format regenerates the compact fallback and the regen
+        # gate reports false drift. Disable the formatter so the emitter's
+        # deterministic output is the single source of truth on every platform.
+        format: false
       - type: markdown
         output-dir: "../web/src/content/docs/reference"

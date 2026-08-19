@@ -726,6 +726,150 @@
     },
     {
       "contract": "CheckpointStore",
+      "target": "swift",
+      "group": "",
+      "symbol": "CheckpointStore",
+      "generatedSource": "Sources/PromptyModel/checkpoint_store.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "DiscoveryConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "DiscoveryConformance",
+      "generatedSource": "Sources/PromptyModel/discovery_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineDurabilityPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "Sources/PromptyModel/engine_durability_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "Sources/PromptyModel/engine_permission_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "Sources/PromptyModel/engine_post_commit_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "Sources/PromptyModel/engine_tool_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventJournalWriter",
+      "target": "swift",
+      "group": "",
+      "symbol": "EventJournalWriter",
+      "generatedSource": "Sources/PromptyModel/event_journal_writer.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EventSink",
+      "target": "swift",
+      "group": "",
+      "symbol": "EventSink",
+      "generatedSource": "Sources/PromptyModel/event_sink.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Executor",
+      "target": "swift",
+      "group": "",
+      "symbol": "Executor",
+      "generatedSource": "Sources/PromptyModel/executor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "HostToolExecutor",
+      "target": "swift",
+      "group": "",
+      "symbol": "HostToolExecutor",
+      "generatedSource": "Sources/PromptyModel/host_tool_executor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "LoadConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "LoadConformance",
+      "generatedSource": "Sources/PromptyModel/load_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "ModelLister",
+      "target": "swift",
+      "group": "",
+      "symbol": "ModelLister",
+      "generatedSource": "Sources/PromptyModel/model_lister.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Parser",
+      "target": "swift",
+      "group": "",
+      "symbol": "Parser",
+      "generatedSource": "Sources/PromptyModel/parser.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "PermissionResolver",
+      "target": "swift",
+      "group": "",
+      "symbol": "PermissionResolver",
+      "generatedSource": "Sources/PromptyModel/permission_resolver.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Processor",
+      "target": "swift",
+      "group": "",
+      "symbol": "Processor",
+      "generatedSource": "Sources/PromptyModel/processor.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "Renderer",
+      "target": "swift",
+      "group": "",
+      "symbol": "Renderer",
+      "generatedSource": "Sources/PromptyModel/renderer.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "TurnConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "TurnConformance",
+      "generatedSource": "Sources/PromptyModel/turn_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "WireConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "WireConformance",
+      "generatedSource": "Sources/PromptyModel/wire_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "CheckpointStore",
       "target": "typescript",
       "group": "",
       "symbol": "CheckpointStore",
