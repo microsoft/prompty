@@ -6480,6 +6480,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/stream_failure.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Contracts/Events/thinking_event_payload.swift",
       "marker": true
     },
@@ -7191,6 +7196,11 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StreamChunkTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StreamFailureTests.swift",
       "marker": true
     },
     {

@@ -11384,6 +11384,7 @@
         "EventJournalWriter",
         "EventSink",
         "Executor",
+        "FailureChunk",
         "FileNotFoundError",
         "FilePart",
         "FinalOutputPolicyRequest",
@@ -11463,6 +11464,7 @@
         "SessionWarningPayload",
         "StatusEventPayload",
         "StreamChunk",
+        "StreamFailure",
         "StreamOptions",
         "SubscriptionInfo",
         "Template",
@@ -11812,6 +11814,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Sources/PromptyModel/contracts/error_event_payload.swift",
+          "protocol": false
+        },
+        {
+          "name": "FailureChunk",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_chunk.swift",
           "protocol": false
         },
         {
@@ -12319,6 +12328,13 @@
           "protocol": false
         },
         {
+          "name": "StreamFailure",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/stream_failure.swift",
+          "protocol": false
+        },
+        {
           "name": "StreamOptions",
           "kind": "value",
           "group": "contracts",
@@ -12691,6 +12707,7 @@
             "EnginePermissionDecision",
             "ErrorChunk",
             "ErrorEventPayload",
+            "FailureChunk",
             "FileNotFoundError",
             "FilePart",
             "FinalOutputPolicyRequest",
@@ -12763,6 +12780,7 @@
             "SessionWarningPayload",
             "StatusEventPayload",
             "StreamChunk",
+            "StreamFailure",
             "StreamOptions",
             "SubscriptionInfo",
             "Template",
@@ -12884,6 +12902,7 @@
             "session_warning_payload.swift",
             "status_event_payload.swift",
             "stream_chunk.swift",
+            "stream_failure.swift",
             "stream_options.swift",
             "subscription_info.swift",
             "template.swift",
@@ -13562,6 +13581,7 @@
         "Sources/PromptyModel/contracts/session_warning_payload.swift",
         "Sources/PromptyModel/contracts/status_event_payload.swift",
         "Sources/PromptyModel/contracts/stream_chunk.swift",
+        "Sources/PromptyModel/contracts/stream_failure.swift",
         "Sources/PromptyModel/contracts/stream_options.swift",
         "Sources/PromptyModel/contracts/subscription_info.swift",
         "Sources/PromptyModel/contracts/template.swift",
