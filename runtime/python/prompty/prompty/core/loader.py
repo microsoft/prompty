@@ -18,7 +18,7 @@ import yaml
 from ..model import Agent, LoadContext, SaveContext
 from .utils import load_prompty, load_prompty_async
 
-__all__ = ["load", "load_async", "default_save_context", "resolve_contained_path"]
+__all__ = ["load", "load_async", "default_save_context"]
 
 
 # ---------------------------------------------------------------------------
@@ -188,7 +188,7 @@ def _resolve_file_reference(
     allowed_file_roots: Sequence[str | Path] | None,
 ) -> Path:
     """Resolve and validate a ``${file:...}`` reference."""
-    return resolve_contained_path(
+    return _resolve_contained_path(
         agent_file.parent,
         reference,
         allowed_file_roots,
@@ -197,7 +197,7 @@ def _resolve_file_reference(
     )
 
 
-def resolve_contained_path(
+def _resolve_contained_path(
     base_dir: str | Path,
     reference: str,
     allowed_file_roots: Sequence[str | Path] | None = None,
