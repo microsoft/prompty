@@ -11275,8 +11275,12 @@
         "DiscoveryConformance",
         "DoneEventPayload",
         "EngineCheckpoint",
+        "EngineDurabilityPort",
         "EngineEvent",
         "EnginePermissionDecision",
+        "EnginePermissionPort",
+        "EnginePostCommitPort",
+        "EngineToolPort",
         "ErrorChunk",
         "ErrorEventPayload",
         "EventJournalWriter",
@@ -11423,6 +11427,34 @@
           "kind": "type",
           "group": "",
           "source": "Sources/PromptyModel/discovery_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "EngineDurabilityPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_durability_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EnginePermissionPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_permission_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_post_commit_port.swift",
+          "protocol": true
+        },
+        {
+          "name": "EngineToolPort",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/engine_tool_port.swift",
           "protocol": true
         },
         {
@@ -12896,6 +12928,100 @@
           ]
         },
         {
+          "name": "EngineDurabilityPort",
+          "group": "",
+          "symbol": "EngineDurabilityPort",
+          "source": "Sources/PromptyModel/engine_durability_port.swift",
+          "methods": [
+            {
+              "name": "append",
+              "returns": "void",
+              "params": {
+                "event": "EngineEvent"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            },
+            {
+              "name": "appendWithCheckpoint",
+              "returns": "void",
+              "params": {
+                "checkpoint": "EngineCheckpoint",
+                "events": "EngineEvent[]"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": true,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePermissionPort",
+          "group": "",
+          "symbol": "EnginePermissionPort",
+          "source": "Sources/PromptyModel/engine_permission_port.swift",
+          "methods": [
+            {
+              "name": "authorize",
+              "returns": "EnginePermissionDecision",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "EnginePostCommitPort",
+          "group": "",
+          "symbol": "EnginePostCommitPort",
+          "source": "Sources/PromptyModel/engine_post_commit_port.swift",
+          "methods": [
+            {
+              "name": "afterCommit",
+              "returns": "void",
+              "params": {
+                "commit": "TurnCommit",
+                "effectId": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": true
+            }
+          ]
+        },
+        {
+          "name": "EngineToolPort",
+          "group": "",
+          "symbol": "EngineToolPort",
+          "source": "Sources/PromptyModel/engine_tool_port.swift",
+          "methods": [
+            {
+              "name": "execute",
+              "returns": "ModelToolResult",
+              "params": {
+                "request": "ModelToolRequest"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": true,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "EventJournalWriter",
           "group": "",
           "symbol": "EventJournalWriter",
@@ -13372,6 +13498,10 @@
         "Sources/PromptyModel/contracts/validation_error.swift",
         "Sources/PromptyModel/contracts/validation_result.swift",
         "Sources/PromptyModel/discovery_conformance.swift",
+        "Sources/PromptyModel/engine_durability_port.swift",
+        "Sources/PromptyModel/engine_permission_port.swift",
+        "Sources/PromptyModel/engine_post_commit_port.swift",
+        "Sources/PromptyModel/engine_tool_port.swift",
         "Sources/PromptyModel/event_journal_writer.swift",
         "Sources/PromptyModel/event_sink.swift",
         "Sources/PromptyModel/executor.swift",

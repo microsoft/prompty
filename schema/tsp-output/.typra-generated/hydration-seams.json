@@ -741,6 +741,38 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "EngineDurabilityPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EngineDurabilityPort",
+      "generatedSource": "Sources/PromptyModel/engine_durability_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePermissionPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EnginePermissionPort",
+      "generatedSource": "Sources/PromptyModel/engine_permission_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EnginePostCommitPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EnginePostCommitPort",
+      "generatedSource": "Sources/PromptyModel/engine_post_commit_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "EngineToolPort",
+      "target": "swift",
+      "group": "",
+      "symbol": "EngineToolPort",
+      "generatedSource": "Sources/PromptyModel/engine_tool_port.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "EventJournalWriter",
       "target": "swift",
       "group": "",

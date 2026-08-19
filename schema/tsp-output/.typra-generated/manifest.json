@@ -6760,6 +6760,26 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_durability_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_permission_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_post_commit_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/engine_tool_port.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/event_journal_writer.swift",
       "marker": true
     },

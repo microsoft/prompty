@@ -22,6 +22,7 @@ public enum Connection: TypraModel {
   case anonymousConnection(AnonymousConnection)
   case oAuthConnection(OAuthConnection)
   case foundryConnection(FoundryConnection)
+  case unknown([String: Any])
 
   public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Connection {
     let normalizedData: Any = data
@@ -37,7 +38,7 @@ public enum Connection: TypraModel {
     case "anonymous": return .anonymousConnection(try AnonymousConnection.load(normalizedData, context: context))
     case "oauth": return .oAuthConnection(try OAuthConnection.load(normalizedData, context: context))
     case "foundry": return .foundryConnection(try FoundryConnection.load(normalizedData, context: context))
-    default: throw TypraRuntimeError.unknownDiscriminator(type: "Connection", field: "kind", value: discriminator)
+    default: return .unknown(object)
     }
   }
 
@@ -49,6 +50,7 @@ public enum Connection: TypraModel {
     case .anonymousConnection(let value): return try value.save(context)
     case .oAuthConnection(let value): return try value.save(context)
     case .foundryConnection(let value): return try value.save(context)
+    case .unknown(let value): return value
     }
   }
 

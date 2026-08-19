@@ -234,10 +234,10 @@ public struct CustomTool: TypraModel {
   public var kind: String = "*"
   public var description: String? = nil
   public var bindings: [Binding]? = nil
-  public var connection: Connection = .referenceConnection(ReferenceConnection())
+  public var connection: Connection = .unknown([:])
   public var options: [String: Any] = [:]
 
-  public init(name: String = "", kind: String = "*", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), options: [String: Any] = [:]) {
+  public init(name: String = "", kind: String = "*", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .unknown([:]), options: [String: Any] = [:]) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -363,13 +363,13 @@ public struct McpTool: TypraModel {
   public var kind: String = "mcp"
   public var description: String? = nil
   public var bindings: [Binding]? = nil
-  public var connection: Connection = .referenceConnection(ReferenceConnection())
+  public var connection: Connection = .unknown([:])
   public var serverName: String = ""
   public var serverDescription: String? = nil
   public var approvalMode: McpApprovalMode? = nil
   public var allowedTools: [String]? = nil
 
-  public init(name: String = "", kind: String = "mcp", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), serverName: String = "", serverDescription: String? = nil, approvalMode: McpApprovalMode? = nil, allowedTools: [String]? = nil) {
+  public init(name: String = "", kind: String = "mcp", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .unknown([:]), serverName: String = "", serverDescription: String? = nil, approvalMode: McpApprovalMode? = nil, allowedTools: [String]? = nil) {
     self.name = name
     self.kind = kind
     self.description = description
@@ -515,10 +515,10 @@ public struct OpenApiTool: TypraModel {
   public var kind: String = "openapi"
   public var description: String? = nil
   public var bindings: [Binding]? = nil
-  public var connection: Connection = .referenceConnection(ReferenceConnection())
+  public var connection: Connection = .unknown([:])
   public var specification: String = ""
 
-  public init(name: String = "", kind: String = "openapi", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .referenceConnection(ReferenceConnection()), specification: String = "") {
+  public init(name: String = "", kind: String = "openapi", description: String? = nil, bindings: [Binding]? = nil, connection: Connection = .unknown([:]), specification: String = "") {
     self.name = name
     self.kind = kind
     self.description = description
