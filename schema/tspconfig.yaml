@@ -20,6 +20,7 @@ options:
         output-dir: "../runtime/python/prompty/prompty/model"
         test-dir: "../runtime/python/prompty/tests/model"
         import-path: "prompty.model"
+        cancellation-token-path: "..core.cancellation.CancellationToken"
       - type: CSharp
         output-dir: "../runtime/csharp/Prompty.Core/Model"
         test-dir: "../runtime/csharp/Prompty.Core.Tests/Model"

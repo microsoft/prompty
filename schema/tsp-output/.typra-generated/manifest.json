@@ -1550,6 +1550,26 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EngineDurabilityPort.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EnginePermissionPort.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EnginePostCommitPort.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/EngineToolPort.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/EventJournalWriter.cs",
       "marker": true
     },
@@ -1975,6 +1995,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_durability_port.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/engine_event_test.go",
       "marker": true
     },
@@ -1991,6 +2016,21 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/engine_permission_decision.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_permission_port.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_post_commit_port.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/engine_tool_port.go",
       "marker": true
     },
     {
@@ -3116,6 +3156,26 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_DiscoveryConformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EngineDurabilityPort.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EnginePermissionPort.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EnginePostCommitPort.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_EngineToolPort.py",
       "marker": true
     },
     {
@@ -5270,6 +5330,26 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/engine_durability_port.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/engine_permission_port.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/engine_post_commit_port.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/engine_tool_port.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/event_journal_writer.rs",
       "marker": true
     },
@@ -6745,6 +6825,26 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/engine-durability-port.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/engine-permission-port.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/engine-post-commit-port.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/engine-tool-port.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/event-journal-writer.ts",
       "marker": true
     },
@@ -7775,12 +7875,32 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EngineDurabilityPort.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/EngineEvent.md",
       "marker": true
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/EnginePermissionDecision.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EnginePermissionPort.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EnginePostCommitPort.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/EngineToolPort.md",
       "marker": true
     },
     {

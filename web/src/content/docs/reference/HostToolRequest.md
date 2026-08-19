@@ -44,5 +44,5 @@ workingDirectory: /workspace/project
 | requestId | string | Stable host execution request identifier |
 | toolCallId | string | Associated model tool call identifier, when available |
 | toolName | string | Name of the host tool being executed |
-| arguments | dictionary | Tool arguments after host-side sanitization |
+| arguments | dictionary | Tool arguments after host-side sanitization. Values may be explicit null. |
 | workingDirectory | string | Working directory or execution scope for the tool |

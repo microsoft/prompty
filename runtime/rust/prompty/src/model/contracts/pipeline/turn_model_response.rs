@@ -25,7 +25,7 @@ pub struct TurnModelResponse {
     pub usage: Option<InvocationUsage>,
     /// Host tool execution requests emitted by the model callback
     pub tool_requests: Option<Vec<HostToolRequest>>,
-    /// Additional deterministic state to merge into the iteration checkpoint
+    /// Additional deterministic state to merge into the iteration checkpoint. Values may be explicit null.
     pub checkpoint_state: serde_json::Value,
 }
 

@@ -69,7 +69,7 @@ public partial class ModelInfo
     public IList<string>? OutputModalities { get; set; }
 
     /// <summary>
-    /// Additional provider-specific properties
+    /// Additional provider-specific properties. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?>? AdditionalProperties { get; set; }
 

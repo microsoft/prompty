@@ -43,7 +43,7 @@ public partial class Message : IMessageHelpers
     public IList<ContentPart> Parts { get; set; } = [];
 
     /// <summary>
-    /// Optional metadata associated with the message
+    /// Optional metadata associated with the message. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?> Metadata { get; set; } = new Dictionary<string, object?>();
 

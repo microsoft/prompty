@@ -91,7 +91,7 @@ model TurnEvent {
   @sample(fileSpanIdSample)
   spanId?: string;
 
-  @doc("Event-specific payload. Use the typed payload model matching 'type'.")
+  @doc("Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.")
   payload: Record<unknown>;
 }
 
@@ -472,7 +472,7 @@ model HostToolRequest {
   @sample(HostToolRequestToolNameSample)
   toolName: string;
 
-  @doc("Tool arguments after host-side sanitization")
+  @doc("Tool arguments after host-side sanitization. Values may be explicit null.")
   arguments?: Record<unknown>;
 
   @doc("Working directory or execution scope for the tool")

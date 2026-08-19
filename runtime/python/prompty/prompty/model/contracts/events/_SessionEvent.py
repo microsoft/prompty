@@ -43,7 +43,7 @@ class SessionEvent:
     span_id : Optional[str]
         Trace span identifier associated with this event
     payload : dict[str, Any]
-        Event-specific payload. Use the typed payload model matching 'type'.
+        Event-specific payload. Values may be explicit null. Use the typed payload model matching 'type'.
     redaction : Optional[RedactionMetadata]
         Redaction state for sensitive payload fields
     """

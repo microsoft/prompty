@@ -5,6 +5,7 @@
 # ANY EDITS WILL BE LOST
 ##########################################
 
+import copy
 from abc import ABC
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Literal
@@ -35,6 +36,7 @@ class Connection(ABC):
     kind: str = field(default="")
     authentication_mode: AuthenticationMode | None = None
     usage_description: str | None = None
+    _raw: dict[str, Any] = field(default_factory=dict, init=False, repr=False)
 
     @staticmethod
     def load(data: Any, context: LoadContext | None = None) -> "Connection":
@@ -88,7 +90,8 @@ class Connection(ABC):
             return FoundryConnection.load(data, context)
 
         else:
-            raise ValueError(f"Unknown Connection discriminator field 'kind' value: {discriminator_value}")
+            # absorb unrecognized discriminator
+            return UnknownConnection.load(data, context)
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Connection instance to a dictionary.
@@ -102,7 +105,7 @@ class Connection(ABC):
         if context is not None:
             obj = context.process_object(obj)
 
-        result: dict[str, Any] = {}
+        result: dict[str, Any] = copy.deepcopy(obj._raw)
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -139,6 +142,26 @@ class Connection(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class UnknownConnection(Connection):
+    """Carries a Connection whose discriminator matches no known subtype.
+
+    The unrecognized value stays on `kind` and every key the
+    schema does not declare is preserved verbatim, so an unknown Connection
+    survives a load/save round-trip unchanged.
+
+    """
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "UnknownConnection":
+        instance = UnknownConnection()
+        instance._raw = copy.deepcopy(data)
+        instance._raw.pop("kind", None)
+        instance._raw.pop("authenticationMode", None)
+        instance._raw.pop("usageDescription", None)
+        return instance
 
 
 @dataclass

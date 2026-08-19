@@ -27,6 +27,26 @@ type Connection struct {
 	Kind               string              `json:"kind" yaml:"kind"`
 	AuthenticationMode *AuthenticationMode `json:"authenticationMode,omitempty" yaml:"authenticationMode,omitempty"`
 	UsageDescription   *string             `json:"usageDescription,omitempty" yaml:"usageDescription,omitempty"`
+	raw                map[string]interface{}
+}
+
+func cloneConnectionRawValue(value interface{}) interface{} {
+	switch value := value.(type) {
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(value))
+		for key, item := range value {
+			result[key] = cloneConnectionRawValue(item)
+		}
+		return result
+	case []interface{}:
+		result := make([]interface{}, len(value))
+		for index, item := range value {
+			result[index] = cloneConnectionRawValue(item)
+		}
+		return result
+	default:
+		return value
+	}
 }
 
 // LoadConnection creates a Connection from a map[string]interface{}
@@ -35,6 +55,8 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 	if ctx == nil {
 		ctx = NewLoadContext()
 	}
+	result := Connection{}
+
 	// Handle polymorphic types based on discriminator
 	if m, ok := data.(map[string]interface{}); ok {
 		if discriminator, ok := m["kind"]; ok {
@@ -56,22 +78,45 @@ func LoadConnection(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadOAuthConnection(data, ctx)
 				case "foundry":
 					return LoadFoundryConnection(data, ctx)
-				default:
-					return nil, fmt.Errorf("unknown Connection discriminator field 'kind' value: %s", discriminator)
 				}
 			default:
-				return nil, fmt.Errorf("unknown Connection discriminator field 'kind' value: %v", discriminator)
+				return nil, fmt.Errorf("invalid Connection discriminator field 'kind': expected non-blank string")
 			}
 		} else {
 			return nil, fmt.Errorf("missing Connection discriminator property: kind")
 		}
 	}
-	return nil, fmt.Errorf("invalid Connection discriminator property 'kind': expected non-blank string")
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["authenticationMode"]; ok && val != nil {
+			v := AuthenticationMode(val.(string))
+			result.AuthenticationMode = &v
+		}
+		if val, ok := m["usageDescription"]; ok && val != nil {
+			v := string(val.(string))
+			result.UsageDescription = &v
+		}
+		result.raw = make(map[string]interface{}, len(m))
+		for key, value := range m {
+			result.raw[key] = cloneConnectionRawValue(value)
+		}
+		delete(result.raw, "kind")
+		delete(result.raw, "authenticationMode")
+		delete(result.raw, "usageDescription")
+	}
+
+	return result, nil
 }
 
 // Save serializes Connection to map[string]interface{}
 func (obj Connection) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
+	for key, value := range obj.raw {
+		result[key] = cloneConnectionRawValue(value)
+	}
 	result["kind"] = obj.Kind
 	if obj.AuthenticationMode != nil {
 		result["authenticationMode"] = string(*obj.AuthenticationMode)

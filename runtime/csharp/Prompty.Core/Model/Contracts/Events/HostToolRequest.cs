@@ -46,7 +46,7 @@ public partial class HostToolRequest
     public string ToolName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Tool arguments after host-side sanitization
+    /// Tool arguments after host-side sanitization. Values may be explicit null.
     /// </summary>
     public IDictionary<string, object?>? Arguments { get; set; }
 

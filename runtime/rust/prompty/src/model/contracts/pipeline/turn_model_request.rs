@@ -25,7 +25,7 @@ pub struct TurnModelRequest {
     pub turn_id: String,
     /// Zero-based model loop iteration
     pub iteration: i32,
-    /// Inputs supplied to the deterministic single-turn run
+    /// Inputs supplied to the deterministic single-turn run. Values may be explicit null.
     pub inputs: serde_json::Value,
     /// Canonical turn execution options
     pub options: Option<TurnOptions>,
