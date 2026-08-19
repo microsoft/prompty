@@ -15,6 +15,8 @@ Two SwiftPM packages live here, and the split is deliberate.
 | `prompty-model` | `PromptyModel` | The domain types and pipeline protocols     | No — generated     |
 | `prompty`       | `Prompty`      | Loader, renderers, parser, registry, harness | Yes                |
 | `prompty`       | `PromptyOpenAI`| The OpenAI executor and processor           | Yes                |
+| `prompty`       | `PromptyAnthropic`| The Anthropic executor, processor, and model discovery | Yes     |
+| `prompty`       | `PromptyFoundry`| Foundry (Azure-family) model discovery      | Yes                |
 
 `prompty-model` is emitted from the TypeSpec definitions in [`schema`](../../schema)
 by the Typra emitter. **Never edit anything under `prompty-model/Sources` by hand.**
@@ -189,28 +191,54 @@ cannot express, such as Windows line endings.
 
 ### Coverage against the shared vectors
 
-This port is **not parity-complete**. Six of the ten shared vector files are
-exercised, and two of those six run only their OpenAI subset. The other four
-describe surface area this runtime does not implement. That is a deliberate
-scoping decision for an initial port, not an oversight.
+This port is **not parity-complete**. Nine of the ten shared vector files are
+exercised, and two of those run only their OpenAI subset. The remaining file —
+the durable turn engine — describes surface area this runtime does not yet
+implement. That is a deliberate scoping decision, not an oversight.
 
 | Vector file                             |   Cases | Status                                |
 | --------------------------------------- | ------: | ------------------------------------- |
 | `load/load_vectors.json`                |      25 | Run                                   |
 | `render/render_vectors.json`            |      23 | Run                                   |
 | `parse/parse_vectors.json`              |      15 | Run                                   |
-| `wire/wire_vectors.json`                | 22 / 27 | Run — 5 Anthropic cases skipped       |
-| `process/process_vectors.json`          | 17 / 21 | Run — 4 Anthropic cases skipped       |
+| `wire/wire_vectors.json`                |      28 | Run — OpenAI and Anthropic            |
+| `process/process_vectors.json`          |      21 | Run — OpenAI and Anthropic            |
 | `harness/replay_vectors.json`           |       5 | Run                                   |
+| `discovery/discovery_vectors.json`      |       7 | Run — OpenAI, Anthropic, and Foundry  |
+| `discovery/enrichment_vectors.json`     |       9 | Run                                   |
+| `agent/agent_vectors.json`              |      28 | Run — basic loop and all extensions   |
 | `engine/turn_vectors.json`              |       5 | **Not wired** — engine incomplete     |
-| `agent/agent_vectors.json`              |      28 | **Not implemented** — no agent layer  |
-| `discovery/discovery_vectors.json`      |       7 | **Not implemented** — no discovery    |
-| `discovery/enrichment_vectors.json`     |       9 | **Not implemented** — no enrichment   |
 
-The nine skipped Anthropic cases are provider coverage, not a contract gap: this
-package ships the OpenAI provider only, so `WireVectorTests` and
-`ProcessVectorTests` filter on `input.provider`. An Anthropic package would pick
-them up unchanged.
+The Anthropic provider is now complete: `PromptyAnthropic` ships a wire executor
+(`AnthropicWire` + `AnthropicExecutor`) and response processor
+(`AnthropicProcessor`) alongside its model discovery, so the dedicated
+`AnthropicWireVectorTests` and `AnthropicProcessVectorTests` assert all nine
+Anthropic wire/process cases. `WireVectorTests` and `ProcessVectorTests` still
+own the OpenAI cases; each suite filters on `input.provider`.
+
+Model discovery (the `discovery` and `enrichment` stages) is fully implemented.
+`PromptyOpenAI`, `PromptyAnthropic`, and `PromptyFoundry` each map their raw
+`/models` payloads into the provider-neutral `ModelInfo` contract, and the shared
+`Discovery.enrich` in the core `Prompty` module applies the vendored
+`model_capabilities.json` dataset (fill-only-missing, longest-prefix match). A
+`DatasetDriftTests` guard keeps the vendored copy identical to the canonical
+`spec/data/model_capabilities.json`.
+
+The agent stage (`agent/agent_vectors.json`) is fully implemented. `AgentLoop`
+provides `Pipeline.turn`, the model→tool→model loop the `agent` vectors are
+written against, and `AgentExtensions` layers on cancellation, guardrails
+(input/output/tool), steering injection, context-budget trimming, parallel tool
+calls, and lifecycle events. `AgentVectorTests` replays all 28 cases — the 11
+basic control-flow vectors plus the 17 extension vectors — against a mock
+executor/processor, asserting the same lenient contract Python and TypeScript
+use (final result, error type and reason, denied/executed tools, and a subset
+match on emitted event types with a terminal `done`/`cancelled`).
+
+The `turn` engine stage stays intentionally out of scope, matching Python and
+TypeScript: the durable journal engine with checkpointing and delegated provider
+state remains Rust-only. Swift implements the same agent surface those runtimes
+do, so it is at parity with them — the engine gap below is shared, not
+Swift-specific.
 
 The turn engine is the substantive gap. `ReferenceTurnRunner` already implements
 the iteration loop, permission mediation, host tool execution, and checkpointing,
