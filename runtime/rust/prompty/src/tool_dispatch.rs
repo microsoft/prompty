@@ -11,7 +11,6 @@
 
 use std::collections::HashMap;
 use std::future::Future;
-use std::path::Path;
 use std::pin::Pin;
 use std::sync::{Arc, OnceLock, RwLock};
 
@@ -442,125 +441,6 @@ impl ToolHandlerTrait for FunctionToolHandler {
     }
 }
 
-/// Handler for `kind: "prompty"` tools — loads a child `.prompty` file
-/// relative to the parent agent and executes it.
-///
-/// - `mode === "single"` (default): `prepare()` → `run()` (via `invoke()`)
-/// - `mode === "agentic"`: `turn()`
-pub struct PromptyToolHandler;
-
-#[async_trait::async_trait]
-impl ToolHandlerTrait for PromptyToolHandler {
-    async fn execute_tool(
-        &self,
-        tool_def: &serde_json::Value,
-        args: serde_json::Value,
-        agent: &Agent,
-        _parent_inputs: Option<&serde_json::Value>,
-    ) -> Result<String, ToolHandlerError> {
-        let tool_name = tool_def
-            .get("name")
-            .and_then(|n| n.as_str())
-            .unwrap_or("<unknown>");
-
-        // Get parent source path from metadata
-        let parent_path = agent
-            .metadata
-            .get("__source_path")
-            .and_then(|p| p.as_str())
-            .ok_or_else(|| {
-                ToolHandlerError::Execution(format!(
-                    "cannot resolve PromptyTool '{tool_name}': parent has no __source_path"
-                ))
-            })?;
-
-        // Get the child path from tool_def.path
-        let child_relative = tool_def
-            .get("path")
-            .and_then(|p| p.as_str())
-            .ok_or_else(|| {
-                ToolHandlerError::Execution(format!(
-                    "PromptyTool '{tool_name}' is missing 'path' field"
-                ))
-            })?;
-
-        let parent_dir = Path::new(parent_path).parent().unwrap_or(Path::new("."));
-        let child_path = parent_dir.join(child_relative);
-
-        // Circular reference detection
-        let stack: Vec<String> = agent
-            .metadata
-            .get("__prompty_tool_stack")
-            .and_then(|s| serde_json::from_value(s.clone()).ok())
-            .unwrap_or_default();
-
-        let normalized_child = child_path
-            .canonicalize()
-            .unwrap_or_else(|_| child_path.clone());
-        let normalized_parent = Path::new(parent_path)
-            .canonicalize()
-            .unwrap_or_else(|_| Path::new(parent_path).to_path_buf());
-
-        let mut visited = std::collections::HashSet::new();
-        visited.insert(normalized_parent.to_string_lossy().to_string());
-        for p in &stack {
-            let np = Path::new(p)
-                .canonicalize()
-                .unwrap_or_else(|_| Path::new(p).to_path_buf());
-            visited.insert(np.to_string_lossy().to_string());
-        }
-
-        if visited.contains(&*normalized_child.to_string_lossy()) {
-            let chain_parts: Vec<&str> = stack
-                .iter()
-                .map(|s| s.as_str())
-                .chain(std::iter::once(parent_path))
-                .chain(std::iter::once(child_relative))
-                .collect();
-            return Err(ToolHandlerError::Execution(format!(
-                "circular reference detected: {}",
-                chain_parts.join(" → ")
-            )));
-        }
-
-        // Load the child .prompty file
-        let mut child = crate::loader::load(&child_path).map_err(|e| {
-            ToolHandlerError::Execution(format!("failed to load PromptyTool '{tool_name}': {e}"))
-        })?;
-
-        // Propagate visited-path stack
-        if let Some(meta) = child.metadata.as_object_mut() {
-            let mut new_stack = stack;
-            new_stack.push(parent_path.to_string());
-            meta.insert(
-                "__prompty_tool_stack".to_string(),
-                serde_json::to_value(new_stack).unwrap_or_default(),
-            );
-        }
-
-        let mode = tool_def
-            .get("mode")
-            .and_then(|m| m.as_str())
-            .unwrap_or("single");
-
-        let result = if mode == "agentic" {
-            crate::pipeline::turn(&child, Some(&args), None)
-                .await
-                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
-        } else {
-            crate::pipeline::invoke(&child, Some(&args))
-                .await
-                .map_err(|e| ToolHandlerError::Execution(e.to_string()))?
-        };
-
-        Ok(if let Some(s) = result.as_str() {
-            s.to_string()
-        } else {
-            serde_json::to_string(&result).unwrap_or_default()
-        })
-    }
-}
-
 /// Placeholder handler for `kind: "mcp"` tools.
 /// MCP tool dispatch is not yet implemented.
 pub struct McpToolHandler;
@@ -627,7 +507,6 @@ impl ToolHandlerTrait for CustomToolHandler {
 /// Called by `register_defaults()` in pipeline.rs.
 pub fn register_builtin_handlers() {
     register_tool_handler("function", FunctionToolHandler);
-    register_tool_handler("prompty", PromptyToolHandler);
     register_tool_handler("mcp", McpToolHandler);
     register_tool_handler("openapi", OpenApiToolHandler);
     register_tool_handler("*", CustomToolHandler);
@@ -781,7 +660,6 @@ mod tests {
         clear_tool_handlers();
         register_builtin_handlers();
         assert!(has_tool_handler("function"));
-        assert!(has_tool_handler("prompty"));
         assert!(has_tool_handler("mcp"));
         assert!(has_tool_handler("openapi"));
         assert!(has_tool_handler("*"));
@@ -951,95 +829,6 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
         assert_eq!(parsed["city"], "Paris");
         assert_eq!(parsed["unit"], "celsius");
-    }
-
-    // --- PromptyToolHandler tests ---
-
-    #[tokio::test]
-    #[serial]
-    async fn test_prompty_handler_missing_source_path() {
-        let handler = PromptyToolHandler;
-        // Agent without __source_path metadata
-        let agent = default_agent();
-        let tool_def =
-            serde_json::json!({"kind": "prompty", "name": "child", "path": "child.prompty"});
-        let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
-            .await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("__source_path"));
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_prompty_handler_missing_path_field() {
-        let handler = PromptyToolHandler;
-        let mut agent = default_agent();
-        agent.metadata = serde_json::json!({"__source_path": "/fake/parent.prompty"});
-        // tool_def missing 'path' field
-        let tool_def = serde_json::json!({"kind": "prompty", "name": "child"});
-        let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
-            .await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("missing 'path'"));
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_prompty_handler_circular_reference_detection() {
-        let handler = PromptyToolHandler;
-        let mut agent = default_agent();
-
-        // Simulate: parent.prompty loads child.prompty, and child already visited parent
-        let parent_path = if cfg!(windows) {
-            "C:\\fake\\parent.prompty"
-        } else {
-            "/fake/parent.prompty"
-        };
-        agent.metadata = serde_json::json!({
-            "__source_path": parent_path,
-            "__prompty_tool_stack": []
-        });
-
-        // The tool "path" resolves to the same as __source_path → circular
-        let tool_def = serde_json::json!({
-            "kind": "prompty",
-            "name": "self_ref",
-            "path": "parent.prompty"  // resolves to same dir as parent
-        });
-
-        let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
-            .await;
-        // This will either detect circular reference or fail to load the file.
-        // Either way it should be an error, not a hang.
-        assert!(result.is_err());
-    }
-
-    #[tokio::test]
-    #[serial]
-    async fn test_prompty_handler_nonexistent_child() {
-        let handler = PromptyToolHandler;
-        let mut agent = default_agent();
-        // Use a real directory but point to a nonexistent child
-        let parent_path = std::env::current_dir()
-            .unwrap()
-            .join("nonexistent_parent.prompty");
-        agent.metadata = serde_json::json!({
-            "__source_path": parent_path.to_string_lossy()
-        });
-
-        let tool_def = serde_json::json!({
-            "kind": "prompty",
-            "name": "missing",
-            "path": "does_not_exist.prompty"
-        });
-        let result = handler
-            .execute_tool(&tool_def, serde_json::json!({}), &agent, None)
-            .await;
-        assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("failed to load"));
     }
 
     // --- Kind handler dispatch via dispatch_tool (layer 3) ---

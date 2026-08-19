@@ -52,7 +52,6 @@ import "./conformance/samples/template/template.tsp";
 import "./conformance/samples/tools/dispatch.tsp";
 import "./conformance/samples/tools/mcp.tsp";
 import "./conformance/samples/tools/openapi.tsp";
-import "./conformance/samples/tools/prompty.tsp";
 import "./conformance/samples/tools/tool.tsp";
 import "./conformance/samples/tracing/tracer.tsp";
 import "./conformance/samples/wire/anthropic-types.tsp";
@@ -117,7 +116,6 @@ import "./contracts/tracing/tracer.tsp";
 import "./contracts/tooling/tool.tsp";
 import "./contracts/tooling/mcp.tsp";
 import "./contracts/tooling/openapi.tsp";
-import "./contracts/tooling/prompty.tsp";
 import "./contracts/tooling/dispatch.tsp";
 
 // Connections

@@ -6,8 +6,6 @@
 
 import type { Agent } from "@prompty/core";
 import type { ContentPart, Message } from "@prompty/core";
-import { load as loadPrompty } from "@prompty/core";
-import { dirname, resolve } from "node:path";
 
 /**
  * Convert an abstract Message to OpenAI wire format.
@@ -416,73 +414,10 @@ function toolsToWire(agent: Agent): Record<string, unknown>[] {
       }
 
       result.push({ type: "function", function: funcDef });
-    } else if (t.kind === "prompty") {
-      const funcDef = projectPromptyTool(
-        t as unknown as Record<string, unknown>,
-        agent,
-      );
-      result.push({ type: "function", function: funcDef });
     }
   }
 
   return result;
-}
-
-/**
- * Project a PromptyTool as an OpenAI function definition.
- *
- * Loads the child `.prompty` file, uses its `inputs` as the
- * function parameters, and applies binding/strict stripping.
- */
-function projectPromptyTool(
-  tool: Record<string, unknown>,
-  parent: Agent,
-): Record<string, unknown> {
-  const toolPath = tool.path as string | undefined;
-  if (!toolPath) {
-    throw new Error(`PromptyTool '${tool.name}' has no path`);
-  }
-
-  // Resolve child path relative to the parent .prompty file
-  const parentPath = (parent.metadata ?? {}).__source_path as
-    string | undefined;
-  if (!parentPath) {
-    throw new Error(
-      `Cannot resolve PromptyTool '${tool.name}': parent agent has no __source_path in metadata`,
-    );
-  }
-  const childPath = resolve(dirname(parentPath), toolPath);
-  const child = loadPrompty(childPath);
-
-  const funcDef: Record<string, unknown> = { name: tool.name };
-  funcDef.description = (tool.description as string) || child.description || "";
-
-  // Use child's inputs as parameters, stripping bound params
-  const bindings = (tool as { bindings?: { name: string }[] }).bindings;
-  const boundNames = new Set((bindings ?? []).map((b) => b.name));
-
-  const childInputs = child.inputs ?? [];
-  let params: unknown[] = childInputs;
-  if (boundNames.size > 0) {
-    params = params.filter(
-      (p) => !boundNames.has((p as Record<string, unknown>).name as string),
-    );
-  }
-  funcDef.parameters = schemaToWire(
-    params,
-    Boolean((tool as { strict?: boolean }).strict),
-  );
-
-  const strict = (tool as { strict?: boolean }).strict;
-  if (strict) {
-    funcDef.strict = true;
-    if (funcDef.parameters) {
-      (funcDef.parameters as Record<string, unknown>).additionalProperties =
-        false;
-    }
-  }
-
-  return funcDef;
 }
 
 function outputsToWire(agent: Agent): Record<string, unknown> | null {
@@ -646,29 +581,6 @@ function responsesToolsToWire(agent: Agent): Record<string, unknown>[] {
       }
 
       const strict = (t as { strict?: boolean }).strict;
-      if (strict) {
-        tool.strict = true;
-        if (tool.parameters) {
-          (tool.parameters as Record<string, unknown>).additionalProperties =
-            false;
-        }
-      }
-
-      result.push(tool);
-    } else if (t.kind === "prompty") {
-      // Project prompty tool as a flat function definition (Responses API format)
-      const projected = projectPromptyTool(
-        t as unknown as Record<string, unknown>,
-        agent,
-      );
-      const tool: Record<string, unknown> = {
-        type: "function",
-        name: projected.name,
-      };
-      if (projected.description) tool.description = projected.description;
-      if (projected.parameters) tool.parameters = projected.parameters;
-
-      const strict = (projected as Record<string, unknown>).strict;
       if (strict) {
         tool.strict = true;
         if (tool.parameters) {

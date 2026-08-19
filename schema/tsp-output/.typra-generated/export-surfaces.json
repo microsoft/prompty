@@ -133,7 +133,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -848,13 +847,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "contracts/Tool.cs",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -1450,7 +1442,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -2443,7 +2434,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -3158,13 +3148,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "tool.go",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -3760,7 +3743,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -4753,7 +4735,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -5468,13 +5449,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "Tool.java",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -6070,7 +6044,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -7062,7 +7035,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -7777,13 +7749,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "Tool",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -8379,7 +8344,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -9372,7 +9336,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -10087,13 +10050,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": ".contracts",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -10689,7 +10645,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -11559,7 +11514,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -12274,13 +12228,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "contracts::tool",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -12876,7 +12823,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -13748,7 +13694,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -14463,13 +14408,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "Sources/PromptyModel/contracts/tool.swift",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -15065,7 +15003,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -16058,7 +15995,6 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
-        "PromptyTool",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -16773,13 +16709,6 @@
           "protocol": false
         },
         {
-          "name": "PromptyTool",
-          "kind": "value",
-          "group": "contracts",
-          "source": "./contracts/tool",
-          "protocol": false
-        },
-        {
           "name": "Property",
           "kind": "value",
           "group": "contracts",
@@ -17375,7 +17304,6 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
-            "PromptyTool",
             "Property",
             "RedactedField",
             "RedactionMetadata",

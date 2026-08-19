@@ -106,7 +106,6 @@ final class GeneratedModelRoundTripTests: XCTestCase {
       ["kind": "function", "parameters": [["name": "city", "kind": "string"]]],
       ["kind": "mcp", "serverName": "files", "connection": connection],
       ["kind": "openapi", "specification": "./api.json", "connection": connection],
-      ["kind": "prompty", "path": "./child.prompty"],
       // Unknown kinds fall through to the wildcard CustomTool case.
       ["kind": "vendor_specific", "connection": connection],
     ]

@@ -26,7 +26,6 @@ public final class TypraGeneratedTests {
     McpApprovalModeGeneratedTest.run();
     McpToolGeneratedTest.run();
     OpenApiToolGeneratedTest.run();
-    PromptyToolGeneratedTest.run();
     FormatConfigGeneratedTest.run();
     ParserConfigGeneratedTest.run();
     TemplateGeneratedTest.run();

@@ -193,11 +193,6 @@ classDiagram
         +Property[] parameters
         +boolean strict
     }
-    class PromptyTool {
-        +string kind
-        +string path
-        +string mode
-    }
     class McpTool {
         +string kind
         +Connection connection
@@ -241,7 +236,6 @@ classDiagram
     Tool <|-- CustomTool
     Tool <|-- McpTool
     Tool <|-- OpenApiTool
-    Tool <|-- PromptyTool
     Tool *-- Binding
     FunctionTool *-- Property
     CustomTool *-- Connection

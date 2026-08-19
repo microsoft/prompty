@@ -103,7 +103,6 @@ extension Tool {
     case .functionTool(let tool): return tool.bindings ?? []
     case .mcpTool(let tool): return tool.bindings ?? []
     case .openApiTool(let tool): return tool.bindings ?? []
-    case .promptyTool(let tool): return tool.bindings ?? []
     case .customTool(let tool, _): return tool.bindings ?? []
     }
   }

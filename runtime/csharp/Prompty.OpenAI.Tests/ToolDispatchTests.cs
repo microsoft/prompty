@@ -392,6 +392,5 @@ public class ToolDispatchTests : IDisposable
         Assert.NotNull(ToolDispatch.GetToolHandler("mcp"));
         Assert.NotNull(ToolDispatch.GetToolHandler("openapi"));
         Assert.NotNull(ToolDispatch.GetToolHandler("function"));
-        Assert.NotNull(ToolDispatch.GetToolHandler("prompty"));
     }
 }

@@ -665,11 +665,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tooling/PromptyToolConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tooling/ToolContextConversionTests.cs",
       "marker": true
     },
@@ -1531,11 +1526,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Tooling/OpenApiTool.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
-      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Tooling/PromptyTool.cs",
       "marker": true
     },
     {
@@ -2551,11 +2541,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/project_info.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/prompty_tool_test.go",
       "marker": true
     },
     {
@@ -3725,11 +3710,6 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PromptyTool.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Property.java",
       "marker": true
     },
@@ -4571,11 +4551,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProjectInfoGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PromptyToolGeneratedTest.java",
       "marker": true
     },
     {
@@ -6361,11 +6336,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/tooling/test_open_api_tool.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tooling/test_prompty_tool.py",
       "marker": true
     },
     {
@@ -10780,11 +10750,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tooling/prompty-tool.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/tooling/tool-context.test.ts",
       "marker": true
     },
@@ -11366,11 +11331,6 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ProjectInfo.md",
-      "marker": true
-    },
-    {
-      "outputRoot": "../web/src/content/docs/reference",
-      "path": "../web/src/content/docs/reference/PromptyTool.md",
       "marker": true
     },
     {

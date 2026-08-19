@@ -194,7 +194,7 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Age
     // 7. Load via emitter-generated typed constructor with context
     let agent = Agent::load_from_value(&value, &ctx);
 
-    // 7. Store source path in metadata for PromptyTool resolution
+    // 8. Store source path in metadata for relative reference resolution
     let mut result = agent;
     let meta = ensure_metadata_object(&mut result);
     meta.insert(

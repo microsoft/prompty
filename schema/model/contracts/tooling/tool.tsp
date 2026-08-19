@@ -28,7 +28,6 @@ union ToolTypes {
   functionType: "function",
   mcpType: "mcp",
   openapiType: "openapi",
-  promptyType: "prompty",
   string,
 }
 

@@ -18,6 +18,7 @@ public delegate Task<string> ToolHandler(Agent agent, Tool tool, Dictionary<stri
 public class ToolHandlerError : InvalidOperationException
 {
     public ToolHandlerError(string message) : base(message) { }
+    public ToolHandlerError(string message, Exception innerException) : base(message, innerException) { }
 }
 
 /// <summary>
@@ -98,7 +99,6 @@ public static class ToolDispatch
     public static void RegisterBuiltins()
     {
         RegisterToolHandler("function", FunctionToolHandler);
-        RegisterToolHandler("prompty", PromptyToolHandler);
         RegisterToolHandler("mcp", McpToolHandler);
         RegisterToolHandler("openapi", OpenApiToolHandler);
     }
@@ -114,27 +114,6 @@ public static class ToolDispatch
         throw new ToolHandlerError(
             $"Function tool '{tool.Name}' has no registered callable. " +
             "Register it via ToolDispatch.RegisterTool() or pass it as a user tool.");
-    }
-
-    /// <summary>
-    /// Built-in handler for kind="prompty".
-    /// Loads and executes a child .prompty file as a tool.
-    /// </summary>
-    private static async Task<string> PromptyToolHandler(Agent agent, Tool tool, Dictionary<string, object?> arguments)
-    {
-        if (tool is not PromptyTool promptyTool || string.IsNullOrEmpty(promptyTool.Path))
-            throw new ToolHandlerError($"Prompty tool '{tool.Name}' has no path.");
-
-        // Resolve path relative to the parent agent's source
-        var parentDir = agent.Metadata?.TryGetValue("__source_path", out var sp) == true && sp is string srcPath
-            ? System.IO.Path.GetDirectoryName(srcPath)
-            : Directory.GetCurrentDirectory();
-        var childPath = System.IO.Path.Combine(parentDir ?? ".", promptyTool.Path);
-        var childAgent = PromptyLoader.Load(childPath);
-
-        // Execute as single-shot by default
-        var result = await Pipeline.InvokeAsync(childAgent, arguments);
-        return result?.ToString() ?? "";
     }
 
     /// <summary>

@@ -6,7 +6,6 @@ import "./contracts/core/properties.tsp";
 import "./contracts/tooling/tool.tsp";
 import "./contracts/tooling/mcp.tsp";
 import "./contracts/tooling/openapi.tsp";
-import "./contracts/tooling/prompty.tsp";
 import "./contracts/tooling/dispatch.tsp";
 import "./contracts/templates/template.tsp";
 

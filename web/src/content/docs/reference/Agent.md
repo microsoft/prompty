@@ -211,7 +211,7 @@ instructions: |-
 | inputs | [Property[]](../property/) | Input parameters that participate in template rendering(Related Types: [ArrayProperty](../arrayproperty/), [ObjectProperty](../objectproperty/), [UnionProperty](../unionproperty/)) |
 | outputs | [Property[]](../property/) | Expected output format and structure |
 | model | [Model](../model/) | AI model configuration |
-| tools | [Tool[]](../tool/) | Tools available for extended functionality(Related Types: [FunctionTool](../functiontool/), [CustomTool](../customtool/), [McpTool](../mcptool/), [OpenApiTool](../openapitool/), [PromptyTool](../promptytool/)) |
+| tools | [Tool[]](../tool/) | Tools available for extended functionality(Related Types: [FunctionTool](../functiontool/), [CustomTool](../customtool/), [McpTool](../mcptool/), [OpenApiTool](../openapitool/)) |
 | template | [Template](../template/) | Template configuration for prompt rendering |
 | instructions | string | Clear directions on what the prompt should do. In .prompty files, this comes from the markdown body. |
 

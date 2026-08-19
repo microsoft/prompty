@@ -5957,122 +5957,6 @@
                 "isNamedCollection": false
               }
             ]
-          },
-          {
-            "typeName": {
-              "namespace": "Prompty.Contracts.Tooling",
-              "name": "PromptyTool"
-            },
-            "description": "A tool that references another .prompty file to be invoked as a tool.\n\nThe child prompty is executed as a single prompt invocation. Nested agent\nloops are intentionally not started from PromptyTool.",
-            "base": {
-              "namespace": "Prompty.Contracts.Tooling",
-              "name": "Tool"
-            },
-            "isAbstract": false,
-            "isProtocol": false,
-            "entryShorthand": null,
-            "coercions": [],
-            "factories": [],
-            "methods": [],
-            "childTypes": [],
-            "properties": [
-              {
-                "name": "kind",
-                "typeName": {
-                  "namespace": "",
-                  "name": "string"
-                },
-                "description": "The kind identifier for prompty tools",
-                "samples": [
-                  {
-                    "sample": {
-                      "kind": "prompty"
-                    },
-                    "title": "",
-                    "description": ""
-                  }
-                ],
-                "knownAs": [],
-                "defaultFor": [],
-                "isScalar": true,
-                "isOptional": false,
-                "isCollection": false,
-                "isAny": false,
-                "isDict": false,
-                "dictValueType": null,
-                "defaultValue": "prompty",
-                "hasExplicitDefault": false,
-                "allowedValues": [],
-                "parseAliases": {},
-                "enumName": null,
-                "isOpenEnum": false,
-                "isNamedCollection": false
-              },
-              {
-                "name": "path",
-                "typeName": {
-                  "namespace": "",
-                  "name": "string"
-                },
-                "description": "Path to the child .prompty file, relative to the parent",
-                "samples": [
-                  {
-                    "sample": {
-                      "path": "./summarize.prompty"
-                    },
-                    "title": "",
-                    "description": ""
-                  }
-                ],
-                "knownAs": [],
-                "defaultFor": [],
-                "isScalar": true,
-                "isOptional": false,
-                "isCollection": false,
-                "isAny": false,
-                "isDict": false,
-                "dictValueType": null,
-                "defaultValue": "null",
-                "hasExplicitDefault": false,
-                "allowedValues": [],
-                "parseAliases": {},
-                "enumName": null,
-                "isOpenEnum": false,
-                "isNamedCollection": false
-              },
-              {
-                "name": "mode",
-                "typeName": {
-                  "namespace": "",
-                  "name": "string"
-                },
-                "description": "Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.",
-                "samples": [
-                  {
-                    "sample": {
-                      "mode": "single"
-                    },
-                    "title": "",
-                    "description": ""
-                  }
-                ],
-                "knownAs": [],
-                "defaultFor": [],
-                "isScalar": true,
-                "isOptional": false,
-                "isCollection": false,
-                "isAny": false,
-                "isDict": false,
-                "dictValueType": null,
-                "defaultValue": "single",
-                "hasExplicitDefault": true,
-                "allowedValues": [],
-                "parseAliases": {},
-                "enumName": null,
-                "isOpenEnum": false,
-                "isNamedCollection": false
-              }
-            ]
           }
         ],
         "properties": [
@@ -6137,8 +6021,7 @@
             "allowedValues": [
               "function",
               "mcp",
-              "openapi",
-              "prompty"
+              "openapi"
             ],
             "parseAliases": {},
             "enumName": "ToolTypes",

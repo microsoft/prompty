@@ -6,7 +6,7 @@
  * API: {@link registerTool}, {@link getTool}, {@link clearTools}.
  *
  * **Layer 2 — Kind handlers**: per-kind handlers keyed by tool kind
- * (`"function"`, `"prompty"`, `"mcp"`, `"openapi"`, `"*"`).
+ * (`"function"`, `"mcp"`, `"openapi"`, `"*"`).
  * Extensible fallbacks that handle entire categories of tools.
  * API: {@link registerToolHandler}, {@link getToolHandler},
  * {@link clearToolHandlers}.
@@ -21,7 +21,6 @@
  * @module
  */
 
-import { dirname, resolve } from "node:path";
 import type { Agent } from "../model/agent.js";
 
 // ---------------------------------------------------------------------------
@@ -155,68 +154,6 @@ class FunctionToolHandler implements ToolHandler {
       `Function tool '${name}' declared but no callable provided. ` +
         `Pass it via tools: { '${name}': fn } in turn().`,
     );
-  }
-}
-
-/**
- * Handles `kind: "prompty"` tools by loading a child `.prompty` file
- * relative to the parent agent and executing it.
- *
- * - `mode === "single"` (default): `prepare()` → `run()`
- * - `mode === "agentic"`: `turn()`
- */
-class PromptyToolHandler implements ToolHandler {
-  async executeTool(
-    tool: Record<string, unknown>,
-    args: Record<string, unknown>,
-    agent: Agent,
-    _parentInputs: Record<string, unknown>,
-  ): Promise<string> {
-    // Dynamic imports to break circular dependency with pipeline.ts
-    const { load } = await import("./loader.js");
-    const { prepare, run, turn } = await import("./pipeline.js");
-
-    const parentPath = (agent.metadata ?? {}).__source_path as
-      string | undefined;
-    if (!parentPath) {
-      return `Error: cannot resolve PromptyTool '${tool.name}': parent has no __source_path`;
-    }
-
-    const childPath = resolve(dirname(parentPath), tool.path as string);
-
-    // Circular reference detection
-    const stack =
-      ((agent.metadata ?? {}).__prompty_tool_stack as string[] | undefined) ??
-      [];
-    const normalizedChild = resolve(childPath);
-    const visited = new Set([
-      ...stack.map((p) => resolve(p)),
-      resolve(parentPath),
-    ]);
-    if (visited.has(normalizedChild)) {
-      const chain = [...stack, parentPath, childPath].join(" → ");
-      return `Error executing PromptyTool '${tool.name}': circular reference detected: ${chain}`;
-    }
-
-    try {
-      const child = load(childPath);
-      // Propagate visited-path stack to the child
-      if (!child.metadata) child.metadata = {};
-      child.metadata.__prompty_tool_stack = [...stack, parentPath];
-
-      const mode = (tool.mode as string) ?? "single";
-
-      if (mode === "agentic") {
-        const result = await turn(child, args);
-        return typeof result === "string" ? result : JSON.stringify(result);
-      } else {
-        const messages = await prepare(child, args);
-        const result = await run(child, messages);
-        return typeof result === "string" ? result : JSON.stringify(result);
-      }
-    } catch (err) {
-      return `Error executing PromptyTool '${tool.name}': ${err instanceof Error ? err.message : String(err)}`;
-    }
   }
 }
 
@@ -448,7 +385,6 @@ export async function dispatchTool(
 // ---------------------------------------------------------------------------
 
 registerToolHandler("function", new FunctionToolHandler());
-registerToolHandler("prompty", new PromptyToolHandler());
 registerToolHandler("mcp", new McpToolHandler());
 registerToolHandler("openapi", new OpenApiToolHandler());
 registerToolHandler("*", new CustomToolHandler());

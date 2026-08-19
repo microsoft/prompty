@@ -171,8 +171,20 @@ final class LoadVectorTests: XCTestCase {
       let directory = try makeTempDirectory("file_res")
       defer { try? FileManager.default.removeItem(at: directory) }
 
+      // The prompt file lives in `agent_subdir` (when set) so that `..` file
+      // references can escape the agent directory into the temp root — this is
+      // how the path-traversal containment vectors place a target outside the
+      // allowed root.
+      let agentDir: URL
+      if let subdir = input["agent_subdir"] as? String {
+        agentDir = directory.appendingPathComponent(subdir)
+        try FileManager.default.createDirectory(at: agentDir, withIntermediateDirectories: true)
+      } else {
+        agentDir = directory
+      }
+
       for (relative, content) in files {
-        let target = directory.appendingPathComponent(relative)
+        let target = agentDir.appendingPathComponent(relative)
         try FileManager.default.createDirectory(
           at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
         let text: String
@@ -187,7 +199,7 @@ final class LoadVectorTests: XCTestCase {
 
       let raw = try promptyDocument(frontmatter: input["frontmatter"])
       return try Loader.load(
-        contents: raw, basePath: directory.appendingPathComponent("virtual.prompty").path)
+        contents: raw, basePath: agentDir.appendingPathComponent("virtual.prompty").path)
     }
 
     if let raw = input["frontmatter_raw"] as? String {

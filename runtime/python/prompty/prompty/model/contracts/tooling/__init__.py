@@ -11,7 +11,6 @@ from ._Tool import (
     FunctionTool,
     McpTool,
     OpenApiTool,
-    PromptyTool,
     Tool,
 )
 from ._ToolContext import ToolContext
@@ -24,7 +23,6 @@ __all__ = [
     "CustomTool",
     "McpTool",
     "OpenApiTool",
-    "PromptyTool",
     "McpApprovalMode",
     "ToolContext",
     "ToolDispatchResult",

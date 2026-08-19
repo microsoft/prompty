@@ -50,13 +50,6 @@ pub enum ToolKind {
         /// The full OpenAPI specification
         specification: String,
     },
-    /// `kind` = `"prompty"`
-    Prompty {
-        /// Path to the child .prompty file, relative to the parent
-        path: String,
-        /// Execution mode. Only 'single' is supported; nested agent loops are not started from PromptyTool.
-        mode: String,
-    },
     /// Wildcard / catch-all variant for unrecognized `kind` values.
     Custom {
         /// Connection configuration for the server tool
@@ -166,18 +159,6 @@ impl Tool {
                     .unwrap_or(serde_json::Value::Null),
                 specification: value
                     .get("specification")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or_default()
-                    .to_string(),
-            },
-            "prompty" => ToolKind::Prompty {
-                path: value
-                    .get("path")
-                    .and_then(|v| v.as_str())
-                    .unwrap_or_default()
-                    .to_string(),
-                mode: value
-                    .get("mode")
                     .and_then(|v| v.as_str())
                     .unwrap_or_default()
                     .to_string(),
@@ -342,7 +323,6 @@ impl Tool {
                     .ok_or_else(|| format!("{}: missing required field", child_path))?;
                 Connection::validate_input_at(child, &child_path)?;
             }
-            "prompty" => {}
             _ => {
                 let child_path = if path.is_empty() {
                     "connection".to_string()
@@ -365,7 +345,6 @@ impl Tool {
             ToolKind::Function { .. } => "function",
             ToolKind::Mcp { .. } => "mcp",
             ToolKind::OpenApi { .. } => "openapi",
-            ToolKind::Prompty { .. } => "prompty",
             ToolKind::Custom { kind_name, .. } => kind_name.as_str(),
         }
     }
@@ -446,10 +425,6 @@ impl Tool {
                     "specification".to_string(),
                     serde_json::Value::String(specification.clone()),
                 );
-            }
-            ToolKind::Prompty { path, mode, .. } => {
-                result.insert("path".to_string(), serde_json::Value::String(path.clone()));
-                result.insert("mode".to_string(), serde_json::Value::String(mode.clone()));
             }
             ToolKind::Custom {
                 connection,
