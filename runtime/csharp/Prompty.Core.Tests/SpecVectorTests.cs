@@ -342,12 +342,12 @@ public class SpecVectorTests
     /// </summary>
     private static Agent MaterializeAndLoad(JsonElement input)
     {
-        var tempBase = Path.Combine(Path.GetTempPath(), "prompty-vec-" + Guid.NewGuid().ToString("N"));
+        var tempBase = Path.Join(Path.GetTempPath(), "prompty-vec-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempBase);
         try
         {
             var agentDir = input.TryGetProperty("agent_subdir", out var sd)
-                ? Path.Combine(tempBase, sd.GetString()!)
+                ? Path.Join(tempBase, sd.GetString()!)
                 : tempBase;
             Directory.CreateDirectory(agentDir);
 
@@ -355,7 +355,10 @@ public class SpecVectorTests
             {
                 foreach (var f in filesEl.EnumerateObject())
                 {
-                    var fpath = Path.Combine(agentDir, f.Name);
+                    // Path.Join (not Path.Combine) so keys containing ".." keep their
+                    // relative traversal semantics instead of being dropped when rooted;
+                    // the loader under test is responsible for rejecting escapes.
+                    var fpath = Path.Join(agentDir, f.Name);
                     var parent = Path.GetDirectoryName(fpath);
                     if (parent != null)
                         Directory.CreateDirectory(parent);
@@ -367,14 +370,15 @@ public class SpecVectorTests
             }
 
             var frontmatter = input.GetProperty("frontmatter").GetRawText();
-            var agentPath = Path.Combine(agentDir, "test.prompty");
+            var agentPath = Path.Join(agentDir, "test.prompty");
             File.WriteAllText(agentPath, $"---\n{frontmatter}\n---\n");
             return PromptyLoader.Load(agentPath);
         }
         finally
         {
             try { Directory.Delete(tempBase, recursive: true); }
-            catch { /* best-effort cleanup */ }
+            catch (IOException) { /* best-effort cleanup */ }
+            catch (UnauthorizedAccessException) { /* best-effort cleanup */ }
         }
     }
 
