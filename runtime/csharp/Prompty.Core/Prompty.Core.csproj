@@ -24,6 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="..\..\..\spec\data\model_capabilities.json" Link="Data\model_capabilities.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Prompty.Core.Tests" />
   </ItemGroup>
 
