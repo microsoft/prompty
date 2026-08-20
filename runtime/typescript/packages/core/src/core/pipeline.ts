@@ -1364,7 +1364,7 @@ function streamFailureFrom(item: unknown): StreamFailure | undefined {
  * Expand thread markers: replace nonce strings in message text
  * with actual conversation messages from inputs.
  */
-function expandThreads(
+export function expandThreads(
   messages: Message[],
   nonces: Map<string, string>,
   inputs: Record<string, unknown>,

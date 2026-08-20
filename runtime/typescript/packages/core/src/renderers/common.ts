@@ -30,7 +30,12 @@ export function prepareRenderInputs(
 
   for (const [name, kind] of Object.entries(richNames)) {
     if (kind === "thread" || RICH_KINDS.has(kind)) {
-      const nonce = `__prompty_nonce_${randomUUID().replace(/-/g, "")}__`;
+      // Canonical cross-runtime nonce format: __PROMPTY_THREAD_{8hex}_{name}__
+      // (matches the Python reference and the schema's thread_nonce vector).
+      // Expansion and trace sanitization key off the name→nonce map below, not
+      // string parsing, so the exact format is safe to pin to the spec shape.
+      const hex = randomUUID().replace(/-/g, "").slice(0, 8);
+      const nonce = `__PROMPTY_THREAD_${hex}_${name}__`;
       nonces.set(name, nonce);
       modified[name] = nonce;
     }

@@ -691,6 +691,100 @@ const LoadVectors = """
           }
         }
       }
+    },
+    {
+      "name": "structured_outputs_load",
+      "description": "Outputs load as a list of properties preserving kind, description, and required flags",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "structured-output",
+          "model": {
+            "id": "gpt-4",
+            "apiType": "chat"
+          },
+          "outputs": [
+            {
+              "name": "temperature",
+              "kind": "integer",
+              "description": "Temperature in Fahrenheit",
+              "required": true
+            },
+            {
+              "name": "condition",
+              "kind": "string",
+              "description": "Weather condition",
+              "required": true
+            },
+            {
+              "name": "city",
+              "kind": "string",
+              "description": "City name",
+              "required": true
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "prompt",
+        "name": "structured-output",
+        "outputs": [
+          {
+            "name": "temperature",
+            "kind": "integer",
+            "description": "Temperature in Fahrenheit",
+            "required": true
+          },
+          {
+            "name": "condition",
+            "kind": "string",
+            "description": "Weather condition",
+            "required": true
+          },
+          {
+            "name": "city",
+            "kind": "string",
+            "description": "City name",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "name": "image_apitype_load",
+      "description": "An image-generation prompt loads with apiType image and passthrough additionalProperties model options",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "image-gen",
+          "model": {
+            "id": "dall-e-3",
+            "provider": "openai",
+            "apiType": "image",
+            "options": {
+              "additionalProperties": {
+                "size": "1024x1024",
+                "quality": "standard"
+              }
+            }
+          }
+        }
+      },
+      "expected": {
+        "kind": "prompt",
+        "name": "image-gen",
+        "model": {
+          "id": "dall-e-3",
+          "provider": "openai",
+          "apiType": "image",
+          "options": {
+            "additionalProperties": {
+              "size": "1024x1024",
+              "quality": "standard"
+            }
+          }
+        }
+      }
     }
   ]
   """;

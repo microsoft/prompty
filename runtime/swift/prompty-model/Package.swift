@@ -9,12 +9,7 @@ let package = Package(
     .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3")
   ],
   targets: [
-    .target(
-      name: "PromptyModel",
-      dependencies: [.product(name: "Yams", package: "Yams")],
-      path: "Sources/PromptyModel",
-      resources: [.process("Resources")]
-    ),
+    .target(name: "PromptyModel", dependencies: [.product(name: "Yams", package: "Yams")], path: "Sources/PromptyModel"),
     .testTarget(name: "PromptyModelTests", dependencies: ["PromptyModel"], path: "Tests/PromptyModelTests")
   ]
 )
