@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
@@ -86,7 +87,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
         var lines = rendered.Split('\n');
         string? currentRole = null;
         var currentContent = new List<string>();
-        Dictionary<string, string>? currentAttrs = null;
+        Dictionary<string, object?>? currentAttrs = null;
 
         foreach (var line in lines)
         {
@@ -135,12 +136,13 @@ public partial class PromptyChatParser : IParser, IPreRenderable
     // Helpers
     // -----------------------------------------------------------------------
 
-    private Message CreateMessage(string role, List<string> contentLines, Dictionary<string, string>? attrs)
+    private Message CreateMessage(string role, List<string> contentLines, Dictionary<string, object?>? attrs)
     {
         // Validate nonce if strict mode was used
         if (_renderNonce.Value is not null && attrs is not null)
         {
-            if (!attrs.TryGetValue("nonce", out var foundNonce) || foundNonce != _renderNonce.Value)
+            // Compare as strings — coercion may turn an all-digit nonce into a number.
+            if (!attrs.TryGetValue("nonce", out var foundNonce) || foundNonce?.ToString() != _renderNonce.Value)
             {
                 throw new InvalidOperationException(
                     $"Role marker injection detected: nonce mismatch for '{role}:' marker.");
@@ -168,7 +170,7 @@ public partial class PromptyChatParser : IParser, IPreRenderable
         return message;
     }
 
-    private static Dictionary<string, string>? ParseAttributes(string attrGroup)
+    private static Dictionary<string, object?>? ParseAttributes(string attrGroup)
     {
         if (string.IsNullOrEmpty(attrGroup))
             return null;
@@ -177,13 +179,32 @@ public partial class PromptyChatParser : IParser, IPreRenderable
         if (string.IsNullOrWhiteSpace(inner))
             return null;
 
-        var attrs = new Dictionary<string, string>();
+        var attrs = new Dictionary<string, object?>();
         foreach (Match m in AttrsRegex().Matches(inner))
         {
-            attrs[m.Groups[1].Value] = m.Groups[2].Value;
+            attrs[m.Groups[1].Value] = CoerceAttrValue(m.Groups[2].Value);
         }
 
         return attrs.Count > 0 ? attrs : null;
+    }
+
+    /// <summary>
+    /// Coerce a role-attribute value string to a typed value (bool, int, double)
+    /// with a string fallback. Mirrors the Python reference parser so unquoted
+    /// numeric/boolean attributes (e.g. <c>user[id=7]</c>) become typed metadata.
+    /// </summary>
+    private static object? CoerceAttrValue(string raw)
+    {
+        var value = raw.Trim();
+        if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+            return intValue;
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
+            return doubleValue;
+        return value;
     }
 
     private static string GenerateNonce()
