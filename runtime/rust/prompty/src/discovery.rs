@@ -309,90 +309,12 @@ fn get_string_array(value: &Value, key: &str) -> Option<Vec<String>> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn lookup_matches_longest_prefix() {
-        // gpt-4o-mini is more specific than gpt-4o and must win.
-        let caps = lookup("openai", "gpt-4o-mini-2024-07-18").unwrap();
-        assert_eq!(caps.context_window, Some(128_000));
-        assert_eq!(
-            caps.input_modalities.as_deref(),
-            Some(["text".to_string(), "image".to_string()].as_slice())
-        );
-    }
-
-    #[test]
-    fn lookup_unknown_id_returns_none() {
-        assert!(lookup("openai", "some-custom-model").is_none());
-    }
-
-    #[test]
-    fn lookup_requires_token_boundary() {
-        // A real dated id matches at a `-` boundary.
-        assert!(lookup("openai", "gpt-4-0613").is_some());
-        // A hypothetical dense family must NOT be captured by the `gpt-4`
-        // prefix: the char after the prefix is alphanumeric, not a separator.
-        assert!(lookup("openai", "gpt-45").is_none());
-    }
-
-    #[test]
-    fn lookup_unknown_provider_returns_none() {
-        assert!(lookup("nonexistent", "gpt-4o").is_none());
-    }
-
-    #[test]
-    fn lookup_embedding_has_empty_output_modalities() {
-        let caps = lookup("openai", "text-embedding-3-small").unwrap();
-        assert_eq!(caps.context_window, Some(8_191));
-        assert_eq!(caps.output_modalities.as_deref(), Some([].as_slice()));
-    }
-
-    #[test]
-    fn enrich_fills_missing_fields_only() {
-        let info = ModelInfo {
-            id: "gpt-4o".to_string(),
-            ..Default::default()
-        };
-        let info = enrich(info, "openai");
-        assert_eq!(info.context_window, Some(128_000));
-        assert_eq!(
-            info.input_modalities.as_deref(),
-            Some(["text".to_string(), "image".to_string()].as_slice())
-        );
-    }
-
-    #[test]
-    fn enrich_never_overwrites_provider_fields() {
-        // Provider already supplied a context window and modalities: keep them.
-        let info = ModelInfo {
-            id: "gpt-4o".to_string(),
-            context_window: Some(999),
-            input_modalities: Some(vec!["text".to_string()]),
-            ..Default::default()
-        };
-        let info = enrich(info, "openai");
-        assert_eq!(info.context_window, Some(999));
-        assert_eq!(
-            info.input_modalities.as_deref(),
-            Some(["text".to_string()].as_slice())
-        );
-        // output_modalities was empty, so the dataset fills it.
-        assert_eq!(
-            info.output_modalities.as_deref(),
-            Some(["text".to_string()].as_slice())
-        );
-    }
-
-    #[test]
-    fn enrich_unknown_model_is_noop() {
-        let info = ModelInfo {
-            id: "ft:custom:user-123".to_string(),
-            ..Default::default()
-        };
-        let info = enrich(info, "openai");
-        assert!(info.context_window.is_none());
-        assert!(info.input_modalities.is_none());
-        assert!(info.output_modalities.is_none());
-    }
+    // NOTE: Behavioral unit tests for `lookup`/`enrich`/`map_model` were removed
+    // in favor of the shared TypeSpec `@vector` conformance suite
+    // (DiscoveryConformance.enrich / .mapModel in tests/model/), which exercises
+    // this exact module across every runtime. Only the vendored-dataset drift
+    // guard below is kept, as it verifies repo infrastructure rather than
+    // behavior and has no vector equivalent.
 
     /// The crate's vendored dataset copy (embedded via `include_str!`) MUST stay
     /// byte-for-byte in sync with the canonical cross-runtime source in `spec/`.
@@ -414,51 +336,6 @@ mod tests {
             vendored_json, spec_json,
             "runtime/rust/prompty/src/model_capabilities.json is out of sync with \
              spec/data/model_capabilities.json — re-copy the canonical file",
-        );
-    }
-
-    #[test]
-    fn map_model_openai_preserves_raw_payload() {
-        let raw = serde_json::json!({
-            "id": "o3-mini",
-            "object": "model",
-            "created": 1715367049,
-            "owned_by": "system"
-        });
-        let info = map_model(&raw, "openai");
-        assert_eq!(info.id, "o3-mini");
-        assert_eq!(info.owned_by.as_deref(), Some("system"));
-        assert_eq!(info.additional_properties, raw);
-    }
-
-    #[test]
-    fn map_model_foundry_nested_arm() {
-        let raw = serde_json::json!({
-            "name": "my-gpt4",
-            "properties": {
-                "model": {
-                    "name": "gpt-4",
-                    "publisher": "OpenAI",
-                    "maxContextLength": 8192
-                },
-                "capabilities": {
-                    "supportedInputModalities": ["text"],
-                    "supportedOutputModalities": ["text"]
-                }
-            }
-        });
-        let info = map_model(&raw, "foundry");
-        assert_eq!(info.id, "my-gpt4");
-        assert_eq!(info.display_name.as_deref(), Some("gpt-4"));
-        assert_eq!(info.owned_by.as_deref(), Some("OpenAI"));
-        assert_eq!(info.context_window, Some(8192));
-        assert_eq!(
-            info.input_modalities.as_deref(),
-            Some(["text".to_string()].as_slice())
-        );
-        assert_eq!(
-            info.output_modalities.as_deref(),
-            Some(["text".to_string()].as_slice())
         );
     }
 }
