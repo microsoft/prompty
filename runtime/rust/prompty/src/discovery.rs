@@ -13,7 +13,7 @@
 //! **Canonical source vs. vendored copy.** The cross-runtime source of truth is
 //! `spec/data/model_capabilities.json`. Because a packaged crate
 //! (`cargo publish`) can only bundle files *inside* the crate directory, this
-//! crate embeds a **vendored copy** at `runtime/rust/prompty/data/` via
+//! crate embeds a **vendored copy** at `runtime/rust/prompty/src/` via
 //! [`include_str!`] — so a shipped crate has no filesystem dependency on the
 //! repo's `spec/` directory. The two files MUST stay byte-identical; the
 //! `vendored_copy_matches_spec` test enforces this whenever the repo layout is
@@ -23,7 +23,7 @@
 //! keeps them convergent.
 //!
 //! To refresh: edit `spec/data/model_capabilities.json`, then copy it to
-//! `runtime/rust/prompty/data/model_capabilities.json` (the drift test will fail
+//! `runtime/rust/prompty/src/model_capabilities.json` (the drift test will fail
 //! until you do).
 //!
 //! This dataset is intentionally **not** emitted from TypeSpec: it is volatile
@@ -41,7 +41,7 @@ use crate::model::ModelInfo;
 /// vendored copy so the runtime has no filesystem dependency on the repo's
 /// `spec/` directory. Canonical source: `spec/data/model_capabilities.json`
 /// (kept byte-identical by the `vendored_copy_matches_spec` test).
-const CAPABILITY_DATASET: &str = include_str!("../data/model_capabilities.json");
+const CAPABILITY_DATASET: &str = include_str!("model_capabilities.json");
 
 /// Fallback capability fields for a single model, as looked up from the shared
 /// dataset. All fields are optional; `None` means "the dataset does not supply
@@ -164,33 +164,145 @@ pub fn lookup(provider: &str, id: &str) -> Option<ModelCapabilities> {
     TABLE.lookup(provider, id).cloned()
 }
 
-/// Enrich a [`ModelInfo`] in place using the shared capability dataset.
+/// Enrich a [`ModelInfo`] using the shared capability dataset.
 ///
 /// Applies the cross-runtime fill-only-missing rule: a dataset field is written
 /// only when the corresponding [`ModelInfo`] field is still empty
 /// (`context_window` is `None`; a modality list is `None`). Provider-supplied
 /// values are never overwritten. A dataset modality of `Some(vec![])` (e.g.
 /// embeddings) is a valid fill and will replace a `None` list.
-pub fn enrich(provider: &str, info: &mut ModelInfo) {
-    let Some(caps) = TABLE.lookup(provider, &info.id) else {
-        return;
+pub trait EnrichArgs {
+    fn enrich(self) -> ModelInfo;
+}
+
+impl EnrichArgs for (ModelInfo, &str) {
+    fn enrich(self) -> ModelInfo {
+        let (base, provider) = self;
+        enrich_model_info(base, provider)
+    }
+}
+
+impl EnrichArgs for (&str, &mut ModelInfo) {
+    fn enrich(self) -> ModelInfo {
+        let (provider, info) = self;
+        let enriched = enrich_model_info(info.clone(), provider);
+        *info = enriched.clone();
+        enriched
+    }
+}
+
+pub fn enrich<A, B>(a: A, b: B) -> ModelInfo
+where
+    (A, B): EnrichArgs,
+{
+    (a, b).enrich()
+}
+
+fn enrich_model_info(mut base: ModelInfo, provider: &str) -> ModelInfo {
+    let Some(caps) = TABLE.lookup(provider, &base.id) else {
+        return base;
     };
 
-    if info.context_window.is_none() {
+    if base.context_window.is_none() {
         if let Some(window) = caps.context_window {
-            info.context_window = Some(window);
+            base.context_window = Some(window);
         }
     }
-    if info.input_modalities.is_none() {
+    if base.input_modalities.is_none() {
         if let Some(ref modalities) = caps.input_modalities {
-            info.input_modalities = Some(modalities.clone());
+            base.input_modalities = Some(modalities.clone());
         }
     }
-    if info.output_modalities.is_none() {
+    if base.output_modalities.is_none() {
         if let Some(ref modalities) = caps.output_modalities {
-            info.output_modalities = Some(modalities.clone());
+            base.output_modalities = Some(modalities.clone());
         }
     }
+
+    base
+}
+
+/// Map a raw provider model/deployment/catalog payload to canonical [`ModelInfo`].
+///
+/// This is a mechanical cross-runtime adapter over provider discovery response
+/// shapes. It copies the full raw payload into `additional_properties` and only
+/// populates canonical fields that the provider actually supplied.
+pub fn map_model(raw: &Value, provider: &str) -> ModelInfo {
+    let data = raw.as_object();
+    let mut info = ModelInfo {
+        additional_properties: if data.is_some() {
+            raw.clone()
+        } else {
+            Value::Null
+        },
+        ..Default::default()
+    };
+
+    match provider {
+        "anthropic" => {
+            info.id = get_str(raw, "id").unwrap_or_default();
+            info.display_name = get_str(raw, "display_name");
+            info.owned_by = Some("anthropic".to_string());
+            info.context_window = get_i32(raw, "context_length");
+            info.input_modalities = get_string_array(raw, "input_modalities");
+            info.output_modalities = get_string_array(raw, "output_modalities");
+        }
+        "foundry" => map_foundry_model(raw, &mut info),
+        _ => {
+            info.id = get_str(raw, "id").unwrap_or_default();
+            info.owned_by = get_str(raw, "owned_by");
+        }
+    }
+
+    if info.id.is_empty() {
+        info.id = String::new();
+    }
+
+    info
+}
+
+fn map_foundry_model(raw: &Value, info: &mut ModelInfo) {
+    if let Some(props) = raw.get("properties") {
+        let model = props.get("model").unwrap_or(&Value::Null);
+        let caps = props.get("capabilities").unwrap_or(&Value::Null);
+
+        info.id = get_str(raw, "name").unwrap_or_default();
+        info.display_name = get_str(model, "name");
+        info.owned_by = get_str(model, "publisher");
+        info.context_window = get_i32(model, "maxContextLength");
+        info.input_modalities = get_string_array(caps, "supportedInputModalities");
+        info.output_modalities = get_string_array(caps, "supportedOutputModalities");
+    } else if raw.get("modelName").is_some()
+        || get_str(raw, "type").as_deref() == Some("ModelDeployment")
+    {
+        info.id = get_str(raw, "name").unwrap_or_default();
+        info.display_name = get_str(raw, "modelName");
+        info.owned_by = get_str(raw, "modelPublisher");
+        info.context_window = get_i32(raw, "maxContextLength");
+    } else {
+        info.id = get_str(raw, "id").unwrap_or_default();
+        info.owned_by = get_str(raw, "owned_by");
+        info.context_window = get_i32(raw, "maxContextLength");
+    }
+}
+
+fn get_str(value: &Value, key: &str) -> Option<String> {
+    value
+        .get(key)
+        .and_then(Value::as_str)
+        .map(ToString::to_string)
+}
+
+fn get_i32(value: &Value, key: &str) -> Option<i32> {
+    value.get(key).and_then(Value::as_i64).map(|v| v as i32)
+}
+
+fn get_string_array(value: &Value, key: &str) -> Option<Vec<String>> {
+    value.get(key).and_then(Value::as_array).map(|arr| {
+        arr.iter()
+            .filter_map(|v| v.as_str().map(ToString::to_string))
+            .collect()
+    })
 }
 
 #[cfg(test)]
@@ -236,11 +348,11 @@ mod tests {
 
     #[test]
     fn enrich_fills_missing_fields_only() {
-        let mut info = ModelInfo {
+        let info = ModelInfo {
             id: "gpt-4o".to_string(),
             ..Default::default()
         };
-        enrich("openai", &mut info);
+        let info = enrich(info, "openai");
         assert_eq!(info.context_window, Some(128_000));
         assert_eq!(
             info.input_modalities.as_deref(),
@@ -251,13 +363,13 @@ mod tests {
     #[test]
     fn enrich_never_overwrites_provider_fields() {
         // Provider already supplied a context window and modalities: keep them.
-        let mut info = ModelInfo {
+        let info = ModelInfo {
             id: "gpt-4o".to_string(),
             context_window: Some(999),
             input_modalities: Some(vec!["text".to_string()]),
             ..Default::default()
         };
-        enrich("openai", &mut info);
+        let info = enrich(info, "openai");
         assert_eq!(info.context_window, Some(999));
         assert_eq!(
             info.input_modalities.as_deref(),
@@ -272,11 +384,11 @@ mod tests {
 
     #[test]
     fn enrich_unknown_model_is_noop() {
-        let mut info = ModelInfo {
+        let info = ModelInfo {
             id: "ft:custom:user-123".to_string(),
             ..Default::default()
         };
-        enrich("openai", &mut info);
+        let info = enrich(info, "openai");
         assert!(info.context_window.is_none());
         assert!(info.input_modalities.is_none());
         assert!(info.output_modalities.is_none());
@@ -300,8 +412,53 @@ mod tests {
             .expect("vendored data/model_capabilities.json must be valid JSON");
         assert_eq!(
             vendored_json, spec_json,
-            "runtime/rust/prompty/data/model_capabilities.json is out of sync with \
+            "runtime/rust/prompty/src/model_capabilities.json is out of sync with \
              spec/data/model_capabilities.json — re-copy the canonical file",
+        );
+    }
+
+    #[test]
+    fn map_model_openai_preserves_raw_payload() {
+        let raw = serde_json::json!({
+            "id": "o3-mini",
+            "object": "model",
+            "created": 1715367049,
+            "owned_by": "system"
+        });
+        let info = map_model(&raw, "openai");
+        assert_eq!(info.id, "o3-mini");
+        assert_eq!(info.owned_by.as_deref(), Some("system"));
+        assert_eq!(info.additional_properties, raw);
+    }
+
+    #[test]
+    fn map_model_foundry_nested_arm() {
+        let raw = serde_json::json!({
+            "name": "my-gpt4",
+            "properties": {
+                "model": {
+                    "name": "gpt-4",
+                    "publisher": "OpenAI",
+                    "maxContextLength": 8192
+                },
+                "capabilities": {
+                    "supportedInputModalities": ["text"],
+                    "supportedOutputModalities": ["text"]
+                }
+            }
+        });
+        let info = map_model(&raw, "foundry");
+        assert_eq!(info.id, "my-gpt4");
+        assert_eq!(info.display_name.as_deref(), Some("gpt-4"));
+        assert_eq!(info.owned_by.as_deref(), Some("OpenAI"));
+        assert_eq!(info.context_window, Some(8192));
+        assert_eq!(
+            info.input_modalities.as_deref(),
+            Some(["text".to_string()].as_slice())
+        );
+        assert_eq!(
+            info.output_modalities.as_deref(),
+            Some(["text".to_string()].as_slice())
         );
     }
 }
