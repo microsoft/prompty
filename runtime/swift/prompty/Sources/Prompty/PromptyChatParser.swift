@@ -2,10 +2,11 @@ import Foundation
 
 /// Splits rendered text at role markers into messages.
 ///
-/// A role marker is a line that consists solely of `system:`, `user:`, or
-/// `assistant:` — optionally preceded by whitespace and a `#`, and optionally
-/// carrying an attribute block such as `system[nonce="abc"]:`. Case is ignored.
-/// `developer:` is deliberately not a role marker.
+/// A role marker is a line that consists solely of `system:`, `user:`,
+/// `assistant:`, or `developer:` — optionally preceded by whitespace and a `#`,
+/// and optionally carrying an attribute block such as `system[nonce="abc"]:`.
+/// Case is ignored. The recognized roles mirror the Python reference's `ROLES`
+/// set so every runtime parses the same markers.
 ///
 /// # Strict mode
 ///
@@ -25,7 +26,7 @@ public struct PromptyChatParser: Parser {
 
   // A role marker occupying an entire line, with an optional attribute block.
   private static let boundary = try! NSRegularExpression(
-    pattern: #"^\s*#?\s*(system|user|assistant)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#,
+    pattern: #"^\s*#?\s*(assistant|developer|system|user)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#,
     options: [.caseInsensitive]
   )
 
