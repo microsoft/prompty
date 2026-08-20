@@ -107,7 +107,7 @@ class ParseVectorsTest {
   /** Guards against a silent regression where every vector is skipped. */
   @org.junit.jupiter.api.Test
   void suiteIsComplete() {
-    assertEquals(15, SpecVectors.readArray("parse/parse_vectors.json").size(), "parse vector count");
+    assertEquals(19, SpecVectors.readArray("parse/parse_vectors.json").size(), "parse vector count");
   }
 
   /**
