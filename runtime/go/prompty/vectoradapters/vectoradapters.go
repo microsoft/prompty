@@ -38,16 +38,27 @@ var VectorAdapters = map[string]Adapter{
 }
 
 // VectorWaivers records explicit, honest conformance gaps.
+//
+// The Go runtime currently ships the generated model layer (load/save), the
+// discovery mapper (enrich/mapModel, wired above), and a reference turn/replay
+// engine (ReferenceTurnRunner). The .prompty document loader, template
+// renderer, chat parser, provider wire-mapping, and response processor are not
+// yet implemented in Go, so there is genuinely no runtime code to drive those
+// vectors — these are absent-layer gaps, not wiring deferrals.
 var VectorWaivers = map[string]string{
-	"LoadConformance.load": "Not yet wired (deferred). The Go loader is synchronous and wireable; scheduled for a follow-up increment.",
-	"Renderer.render": "Not yet wired (deferred). The Go pipeline API is synchronous and directly wireable; scheduled for a follow-up increment. Not wired here to avoid reimplementing runtime logic in the adapter.",
-	"Parser.parse": "Not yet wired (deferred). The Go pipeline API is synchronous and directly wireable; scheduled for a follow-up increment. Not wired here to avoid reimplementing runtime logic in the adapter.",
-	"WireConformance.toRequest": "Not yet wired (deferred). The Go pipeline API is synchronous and directly wireable; scheduled for a follow-up increment. Not wired here to avoid reimplementing runtime logic in the adapter.",
-	"Processor.process": "Not yet wired (deferred). The Go pipeline API is synchronous and directly wireable; scheduled for a follow-up increment. Not wired here to avoid reimplementing runtime logic in the adapter.",
-	"TurnConformance.replay": "Not yet wired (deferred). Directly wireable (Go is synchronous); scheduled for a follow-up increment.",
-	"TurnConformance.run": "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas) not yet matched by the runtime. Same honest gap as the Python reference.",
-	"TurnConformance.runTurn": "Requires the not-yet-implemented snapshot/portability turn engine. Same gap as the Python reference.",
+	"LoadConformance.load":      absentPipeline,
+	"Renderer.render":           absentPipeline,
+	"Parser.parse":              absentPipeline,
+	"WireConformance.toRequest": absentPipeline,
+	"Processor.process":         absentPipeline,
+	"TurnConformance.replay": "Implemented by ReferenceTurnRunner and exercised against the shared `replay` vectors by TestReferenceTurnRunnerMatchesSharedGoldenReplayVectors in turn_runner_test.go. Not driven through this generated adapter because the replay contract uses the reconstructed journal/scenario object shape the dedicated runner already asserts (mirrors the Rust reference).",
+	"TurnConformance.run":     "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas). The Go runtime does not implement that LLM agent loop, so this stays waived — same honest gap as the Python reference.",
+	"TurnConformance.runTurn": "Requires the not-yet-implemented snapshot/portability turn engine contract. Same gap as the Python reference.",
 }
+
+// absentPipeline is the shared honest reason for the load/render/parse/wire/
+// process operations that the Go runtime does not yet implement.
+const absentPipeline = "Not implemented in the Go runtime. Go currently ships the generated model layer, the discovery mapper (enrich/mapModel), and a reference turn/replay engine; the .prompty loader, template renderer, chat parser, provider wire-mapping, and response processor do not exist yet, so there is no runtime code to drive this vector. Absent-layer gap, not a wiring deferral."
 
 // VectorDoubles is reserved for deterministic test doubles.
 var VectorDoubles = map[string]any{}
