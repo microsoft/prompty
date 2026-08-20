@@ -7,7 +7,7 @@ from prompty.model import MemoryEntry
 
 
 def test_load_json_memoryentry():
-    json_data = r'''
+    json_data = r"""
     {
       "content": "The user prefers concise answers.",
       "category": "core",
@@ -17,7 +17,7 @@ def test_load_json_memoryentry():
         "tone"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(data)
     assert instance is not None
@@ -25,8 +25,9 @@ def test_load_json_memoryentry():
     assert instance.category == "core"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_load_yaml_memoryentry():
-    yaml_data = r'''
+    yaml_data = r"""
     content: The user prefers concise answers.
     category: core
     createdAt: "2026-06-09T20:00:00Z"
@@ -34,7 +35,7 @@ def test_load_yaml_memoryentry():
       - preference
       - tone
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = MemoryEntry.load(data)
     assert instance is not None
@@ -42,9 +43,10 @@ def test_load_yaml_memoryentry():
     assert instance.category == "core"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_roundtrip_json_memoryentry():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "content": "The user prefers concise answers.",
       "category": "core",
@@ -54,7 +56,7 @@ def test_roundtrip_json_memoryentry():
         "tone"
       ]
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(original_data)
     saved_data = instance.save()
@@ -64,9 +66,10 @@ def test_roundtrip_json_memoryentry():
     assert reloaded.category == "core"
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_to_json_memoryentry():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "content": "The user prefers concise answers.",
       "category": "core",
@@ -76,7 +79,7 @@ def test_to_json_memoryentry():
         "tone"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(data)
     json_output = instance.to_json()
@@ -84,9 +87,10 @@ def test_to_json_memoryentry():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_memoryentry():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "content": "The user prefers concise answers.",
       "category": "core",
@@ -96,7 +100,7 @@ def test_to_yaml_memoryentry():
         "tone"
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MemoryEntry.load(data)
     yaml_output = instance.to_yaml()

@@ -23,7 +23,9 @@ describe("AnonymousConnection", () => {
       const instance = AnonymousConnection.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("anonymous");
-      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
+      expect(instance.endpoint).toEqual(
+        "https://{your-custom-endpoint}.openai.azure.com/",
+      );
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -42,7 +44,9 @@ describe("AnonymousConnection", () => {
       const instance = AnonymousConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("anonymous");
-      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
+      expect(instance.endpoint).toEqual(
+        "https://{your-custom-endpoint}.openai.azure.com/",
+      );
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -57,7 +61,9 @@ describe("AnonymousConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "anonymous",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "anonymous",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/"\n}`,
+      ) as Record<string, unknown>;
       const instance = AnonymousConnection.load(data);
       expect(instance).toBeDefined();
     });

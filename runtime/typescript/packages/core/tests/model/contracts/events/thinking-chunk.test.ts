@@ -53,7 +53,9 @@ describe("ThinkingChunk", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "value": "Let me consider..."\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "value": "Let me consider..."\n}`,
+      ) as Record<string, unknown>;
       const instance = ThinkingChunk.load(data);
       expect(instance).toBeDefined();
     });

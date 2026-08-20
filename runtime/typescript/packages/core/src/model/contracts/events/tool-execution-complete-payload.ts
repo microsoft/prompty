@@ -50,7 +50,10 @@ export class ToolExecutionCompletePayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolExecutionCompletePayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolExecutionCompletePayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -86,7 +89,10 @@ export class ToolExecutionCompletePayload {
       instance.telemetry = data["telemetry"] as Record<string, unknown>;
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
+      instance.redaction = RedactionMetadata.load(
+        data["redaction"] as Record<string, unknown>,
+        context.at("redaction"),
+      );
     }
 
     if (context) {
@@ -154,15 +160,27 @@ export class ToolExecutionCompletePayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): ToolExecutionCompletePayload {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): ToolExecutionCompletePayload {
     const data = JSON.parse(json);
-    return ToolExecutionCompletePayload.load(data as Record<string, unknown>, context);
+    return ToolExecutionCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): ToolExecutionCompletePayload {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): ToolExecutionCompletePayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ToolExecutionCompletePayload.load(data as Record<string, unknown>, context);
+    return ToolExecutionCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

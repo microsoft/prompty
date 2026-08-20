@@ -7,5 +7,9 @@ import { Agent } from "./agent";
 /** Renders a template string with input values to produce the final prompt text. */
 export interface Renderer {
   /** Render the template string with input values */
-  render(agent: Agent, template: string, inputs: Record<string, unknown>): Promise<string>;
+  render(
+    agent: Agent,
+    template: string,
+    inputs: Record<string, unknown>,
+  ): Promise<string>;
 }

@@ -7,33 +7,35 @@ from prompty.model import EnginePermissionDecision
 
 
 def test_load_json_enginepermissiondecision():
-    json_data = r'''
+    json_data = r"""
     {
       "approved": true
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = EnginePermissionDecision.load(data)
     assert instance is not None
     assert instance.approved
 
+
 def test_load_yaml_enginepermissiondecision():
-    yaml_data = r'''
+    yaml_data = r"""
     approved: true
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = EnginePermissionDecision.load(data)
     assert instance is not None
     assert instance.approved
 
+
 def test_roundtrip_json_enginepermissiondecision():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "approved": true
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = EnginePermissionDecision.load(original_data)
     saved_data = instance.save()
@@ -41,13 +43,14 @@ def test_roundtrip_json_enginepermissiondecision():
     assert reloaded is not None
     assert reloaded.approved
 
+
 def test_to_json_enginepermissiondecision():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "approved": true
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = EnginePermissionDecision.load(data)
     json_output = instance.to_json()
@@ -55,13 +58,14 @@ def test_to_json_enginepermissiondecision():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_enginepermissiondecision():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "approved": true
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = EnginePermissionDecision.load(data)
     yaml_output = instance.to_yaml()

@@ -7,38 +7,40 @@ from prompty.model import StreamFailure
 
 
 def test_load_json_streamfailure():
-    json_data = r'''
+    json_data = r"""
     {
       "outcome": "indeterminate",
       "message": "SSE stream error: connection reset"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamFailure.load(data)
     assert instance is not None
     assert instance.outcome == "indeterminate"
     assert instance.message == "SSE stream error: connection reset"
 
+
 def test_load_yaml_streamfailure():
-    yaml_data = r'''
+    yaml_data = r"""
     outcome: indeterminate
     message: "SSE stream error: connection reset"
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = StreamFailure.load(data)
     assert instance is not None
     assert instance.outcome == "indeterminate"
     assert instance.message == "SSE stream error: connection reset"
 
+
 def test_roundtrip_json_streamfailure():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "outcome": "indeterminate",
       "message": "SSE stream error: connection reset"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = StreamFailure.load(original_data)
     saved_data = instance.save()
@@ -47,14 +49,15 @@ def test_roundtrip_json_streamfailure():
     assert reloaded.outcome == "indeterminate"
     assert reloaded.message == "SSE stream error: connection reset"
 
+
 def test_to_json_streamfailure():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "outcome": "indeterminate",
       "message": "SSE stream error: connection reset"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamFailure.load(data)
     json_output = instance.to_json()
@@ -62,14 +65,15 @@ def test_to_json_streamfailure():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_streamfailure():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "outcome": "indeterminate",
       "message": "SSE stream error: connection reset"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamFailure.load(data)
     yaml_output = instance.to_yaml()

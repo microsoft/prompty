@@ -65,7 +65,9 @@ describe("SessionTrace", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "session_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_001",\n      "parentId": "evt_parent",\n      "spanId": "span_hook_001",\n      "payload": {}\n    }\n  ]\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "sessionId": "sess_abc123",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "session_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_001",\n      "parentId": "evt_parent",\n      "spanId": "span_hook_001",\n      "payload": {}\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = SessionTrace.load(data);
       expect(instance).toBeDefined();
     });

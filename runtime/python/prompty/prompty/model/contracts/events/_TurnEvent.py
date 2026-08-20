@@ -10,7 +10,32 @@ from typing import Any, ClassVar, Literal
 
 from ..._context import LoadContext, SaveContext
 
-TurnEventType = Literal["turn_start", "turn_end", "llm_start", "llm_complete", "retry", "permission_requested", "permission_completed", "token", "thinking", "tool_call_start", "tool_call_complete", "tool_execution_start", "tool_execution_complete", "tool_result", "hook_start", "hook_end", "status", "messages_updated", "done", "error", "cancelled", "compaction_start", "compaction_complete", "compaction_failed"]
+TurnEventType = Literal[
+    "turn_start",
+    "turn_end",
+    "llm_start",
+    "llm_complete",
+    "retry",
+    "permission_requested",
+    "permission_completed",
+    "token",
+    "thinking",
+    "tool_call_start",
+    "tool_call_complete",
+    "tool_execution_start",
+    "tool_execution_complete",
+    "tool_result",
+    "hook_start",
+    "hook_end",
+    "status",
+    "messages_updated",
+    "done",
+    "error",
+    "cancelled",
+    "compaction_start",
+    "compaction_complete",
+    "compaction_failed",
+]
 
 
 @dataclass
@@ -91,8 +116,6 @@ class TurnEvent:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the TurnEvent instance to a dictionary.
         Args:
@@ -104,7 +127,6 @@ class TurnEvent:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

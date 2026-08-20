@@ -7,7 +7,7 @@ from prompty.model import TraceFile
 
 
 def test_load_json_tracefile():
-    json_data = r'''
+    json_data = r"""
     {
       "runtime": "python",
       "version": "2.0.0",
@@ -22,15 +22,16 @@ def test_load_json_tracefile():
         "error": "Connection refused"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = TraceFile.load(data)
     assert instance is not None
     assert instance.runtime == "python"
     assert instance.version == "2.0.0"
 
+
 def test_load_yaml_tracefile():
-    yaml_data = r'''
+    yaml_data = r"""
     runtime: python
     version: 2.0.0
     trace:
@@ -42,16 +43,17 @@ def test_load_yaml_tracefile():
       signature: prompty.core.pipeline.run
       error: Connection refused
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TraceFile.load(data)
     assert instance is not None
     assert instance.runtime == "python"
     assert instance.version == "2.0.0"
 
+
 def test_roundtrip_json_tracefile():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "runtime": "python",
       "version": "2.0.0",
@@ -66,7 +68,7 @@ def test_roundtrip_json_tracefile():
         "error": "Connection refused"
       }
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = TraceFile.load(original_data)
     saved_data = instance.save()
@@ -75,9 +77,10 @@ def test_roundtrip_json_tracefile():
     assert reloaded.runtime == "python"
     assert reloaded.version == "2.0.0"
 
+
 def test_to_json_tracefile():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "runtime": "python",
       "version": "2.0.0",
@@ -92,7 +95,7 @@ def test_to_json_tracefile():
         "error": "Connection refused"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = TraceFile.load(data)
     json_output = instance.to_json()
@@ -100,9 +103,10 @@ def test_to_json_tracefile():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_tracefile():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "runtime": "python",
       "version": "2.0.0",
@@ -117,7 +121,7 @@ def test_to_yaml_tracefile():
         "error": "Connection refused"
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = TraceFile.load(data)
     yaml_output = instance.to_yaml()

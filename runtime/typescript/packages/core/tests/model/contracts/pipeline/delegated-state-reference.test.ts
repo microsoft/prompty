@@ -61,7 +61,9 @@ describe("DelegatedStateReference", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "provider": "openai",\n  "kind": "response",\n  "id": "resp_abc123"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "provider": "openai",\n  "kind": "response",\n  "id": "resp_abc123"\n}`,
+      ) as Record<string, unknown>;
       const instance = DelegatedStateReference.load(data);
       expect(instance).toBeDefined();
     });

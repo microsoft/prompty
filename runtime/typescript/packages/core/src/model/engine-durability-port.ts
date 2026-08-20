@@ -10,5 +10,8 @@ export interface EngineDurabilityPort {
   /** Append one semantic engine event durably */
   append(event: EngineEvent): Promise<void>;
   /** Atomically append semantic engine events and persist the checkpoint that reflects them */
-  appendWithCheckpoint(events: EngineEvent[], checkpoint: EngineCheckpoint): Promise<void>;
+  appendWithCheckpoint(
+    events: EngineEvent[],
+    checkpoint: EngineCheckpoint,
+  ): Promise<void>;
 }

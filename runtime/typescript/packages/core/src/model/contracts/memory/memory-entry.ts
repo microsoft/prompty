@@ -27,7 +27,10 @@ export class MemoryEntry {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): MemoryEntry {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): MemoryEntry {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -45,7 +48,7 @@ export class MemoryEntry {
       instance.createdAt = String(data["createdAt"]);
     }
     if (data["tags"] !== undefined && data["tags"] !== null) {
-      instance.tags = (data["tags"] as unknown[]).map(v => String(v));
+      instance.tags = (data["tags"] as unknown[]).map((v) => String(v));
     }
 
     if (context) {

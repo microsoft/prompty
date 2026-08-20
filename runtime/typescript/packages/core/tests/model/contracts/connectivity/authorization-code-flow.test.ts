@@ -57,7 +57,9 @@ describe("AuthorizationCodeFlow", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "authUrl": "sample",\n  "codeVerifier": "sample"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "authUrl": "sample",\n  "codeVerifier": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = AuthorizationCodeFlow.load(data);
       expect(instance).toBeDefined();
     });

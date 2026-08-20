@@ -5,7 +5,14 @@
 import { LoadContext, SaveContext } from "../../context";
 import { RedactionMetadata } from "./redaction-metadata";
 
-export type SessionEventType = "session_start" | "session_end" | "session_warning" | "session_hook_start" | "session_hook_end" | "checkpoint_created" | "trajectory_event";
+export type SessionEventType =
+  | "session_start"
+  | "session_end"
+  | "session_warning"
+  | "session_hook_start"
+  | "session_hook_end"
+  | "checkpoint_created"
+  | "trajectory_event";
 
 export class SessionEvent {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -44,7 +51,10 @@ export class SessionEvent {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): SessionEvent {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SessionEvent {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -77,7 +87,10 @@ export class SessionEvent {
       instance.payload = data["payload"] as Record<string, unknown>;
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
+      instance.redaction = RedactionMetadata.load(
+        data["redaction"] as Record<string, unknown>,
+        context.at("redaction"),
+      );
     }
 
     if (context) {

@@ -57,7 +57,9 @@ describe("ContextCandidate", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "id": "memory:project-plan",\n  "source": "memory",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "id": "memory:project-plan",\n  "source": "memory",\n  "messages": [\n    {\n      "role": "user",\n      "parts": [\n        {\n          "kind": "text",\n          "value": "Hello!"\n        }\n      ],\n      "metadata": {\n        "source": "user-input"\n      }\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = ContextCandidate.load(data);
       expect(instance).toBeDefined();
     });

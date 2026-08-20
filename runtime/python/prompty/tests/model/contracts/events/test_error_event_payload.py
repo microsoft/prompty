@@ -7,13 +7,13 @@ from prompty.model import ErrorEventPayload
 
 
 def test_load_json_erroreventpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "message": "Rate limit exceeded",
       "errorKind": "rate_limit",
       "phase": "llm"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ErrorEventPayload.load(data)
     assert instance is not None
@@ -21,13 +21,14 @@ def test_load_json_erroreventpayload():
     assert instance.error_kind == "rate_limit"
     assert instance.phase == "llm"
 
+
 def test_load_yaml_erroreventpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     message: Rate limit exceeded
     errorKind: rate_limit
     phase: llm
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ErrorEventPayload.load(data)
     assert instance is not None
@@ -35,15 +36,16 @@ def test_load_yaml_erroreventpayload():
     assert instance.error_kind == "rate_limit"
     assert instance.phase == "llm"
 
+
 def test_roundtrip_json_erroreventpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "message": "Rate limit exceeded",
       "errorKind": "rate_limit",
       "phase": "llm"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ErrorEventPayload.load(original_data)
     saved_data = instance.save()
@@ -53,15 +55,16 @@ def test_roundtrip_json_erroreventpayload():
     assert reloaded.error_kind == "rate_limit"
     assert reloaded.phase == "llm"
 
+
 def test_to_json_erroreventpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "message": "Rate limit exceeded",
       "errorKind": "rate_limit",
       "phase": "llm"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ErrorEventPayload.load(data)
     json_output = instance.to_json()
@@ -69,15 +72,16 @@ def test_to_json_erroreventpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_erroreventpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "message": "Rate limit exceeded",
       "errorKind": "rate_limit",
       "phase": "llm"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ErrorEventPayload.load(data)
     yaml_output = instance.to_yaml()

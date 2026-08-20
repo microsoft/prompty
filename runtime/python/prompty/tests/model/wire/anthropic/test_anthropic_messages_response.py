@@ -7,7 +7,7 @@ from prompty.model import AnthropicMessagesResponse
 
 
 def test_load_json_anthropicmessagesresponse():
-    json_data = r'''
+    json_data = r"""
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
@@ -17,7 +17,7 @@ def test_load_json_anthropicmessagesresponse():
         "output_tokens": 42
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesResponse.load(data)
     assert instance is not None
@@ -25,8 +25,9 @@ def test_load_json_anthropicmessagesresponse():
     assert instance.model == "claude-sonnet-4-20250514"
     assert instance.stop_reason == "end_turn"
 
+
 def test_load_yaml_anthropicmessagesresponse():
-    yaml_data = r'''
+    yaml_data = r"""
     id: msg_01XFDUDYJgAACzvnptvVoYEL
     model: claude-sonnet-4-20250514
     stop_reason: end_turn
@@ -34,7 +35,7 @@ def test_load_yaml_anthropicmessagesresponse():
       input_tokens: 150
       output_tokens: 42
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicMessagesResponse.load(data)
     assert instance is not None
@@ -42,9 +43,10 @@ def test_load_yaml_anthropicmessagesresponse():
     assert instance.model == "claude-sonnet-4-20250514"
     assert instance.stop_reason == "end_turn"
 
+
 def test_roundtrip_json_anthropicmessagesresponse():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
@@ -54,7 +56,7 @@ def test_roundtrip_json_anthropicmessagesresponse():
         "output_tokens": 42
       }
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesResponse.load(original_data)
     saved_data = instance.save()
@@ -64,9 +66,10 @@ def test_roundtrip_json_anthropicmessagesresponse():
     assert reloaded.model == "claude-sonnet-4-20250514"
     assert reloaded.stop_reason == "end_turn"
 
+
 def test_to_json_anthropicmessagesresponse():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
@@ -76,7 +79,7 @@ def test_to_json_anthropicmessagesresponse():
         "output_tokens": 42
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesResponse.load(data)
     json_output = instance.to_json()
@@ -84,9 +87,10 @@ def test_to_json_anthropicmessagesresponse():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_anthropicmessagesresponse():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
       "model": "claude-sonnet-4-20250514",
@@ -96,7 +100,7 @@ def test_to_yaml_anthropicmessagesresponse():
         "output_tokens": 42
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesResponse.load(data)
     yaml_output = instance.to_yaml()

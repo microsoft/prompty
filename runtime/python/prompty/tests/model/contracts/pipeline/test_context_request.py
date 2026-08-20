@@ -7,7 +7,7 @@ from prompty.model import ContextRequest
 
 
 def test_load_json_contextrequest():
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sample",
       "turnId": "sample",
@@ -16,7 +16,7 @@ def test_load_json_contextrequest():
       "messages": [],
       "contextState": {}
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ContextRequest.load(data)
     assert instance is not None
@@ -25,8 +25,9 @@ def test_load_json_contextrequest():
     assert instance.invocation_id == "sample"
     assert instance.iteration == 1
 
+
 def test_load_yaml_contextrequest():
-    yaml_data = r'''
+    yaml_data = r"""
     sessionId: sample
     turnId: sample
     invocationId: sample
@@ -34,7 +35,7 @@ def test_load_yaml_contextrequest():
     messages: []
     contextState: {}
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ContextRequest.load(data)
     assert instance is not None
@@ -43,9 +44,10 @@ def test_load_yaml_contextrequest():
     assert instance.invocation_id == "sample"
     assert instance.iteration == 1
 
+
 def test_roundtrip_json_contextrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sample",
       "turnId": "sample",
@@ -54,7 +56,7 @@ def test_roundtrip_json_contextrequest():
       "messages": [],
       "contextState": {}
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ContextRequest.load(original_data)
     saved_data = instance.save()
@@ -65,9 +67,10 @@ def test_roundtrip_json_contextrequest():
     assert reloaded.invocation_id == "sample"
     assert reloaded.iteration == 1
 
+
 def test_to_json_contextrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sample",
       "turnId": "sample",
@@ -76,7 +79,7 @@ def test_to_json_contextrequest():
       "messages": [],
       "contextState": {}
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ContextRequest.load(data)
     json_output = instance.to_json()
@@ -84,9 +87,10 @@ def test_to_json_contextrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_contextrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sample",
       "turnId": "sample",
@@ -95,7 +99,7 @@ def test_to_yaml_contextrequest():
       "messages": [],
       "contextState": {}
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ContextRequest.load(data)
     yaml_output = instance.to_yaml()

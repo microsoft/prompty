@@ -7,7 +7,7 @@ from prompty.model import SessionRef
 
 
 def test_load_json_sessionref():
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "refType": "issue",
@@ -15,7 +15,7 @@ def test_load_json_sessionref():
       "turnIndex": 2,
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionRef.load(data)
     assert instance is not None
@@ -25,15 +25,16 @@ def test_load_json_sessionref():
     assert instance.turn_index == 2
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_load_yaml_sessionref():
-    yaml_data = r'''
+    yaml_data = r"""
     sessionId: sess_abc123
     refType: issue
     refValue: "owner/repo#123"
     turnIndex: 2
     createdAt: "2026-06-09T20:00:00Z"
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SessionRef.load(data)
     assert instance is not None
@@ -43,9 +44,10 @@ def test_load_yaml_sessionref():
     assert instance.turn_index == 2
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_roundtrip_json_sessionref():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "refType": "issue",
@@ -53,7 +55,7 @@ def test_roundtrip_json_sessionref():
       "turnIndex": 2,
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = SessionRef.load(original_data)
     saved_data = instance.save()
@@ -65,9 +67,10 @@ def test_roundtrip_json_sessionref():
     assert reloaded.turn_index == 2
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
 
+
 def test_to_json_sessionref():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "refType": "issue",
@@ -75,7 +78,7 @@ def test_to_json_sessionref():
       "turnIndex": 2,
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionRef.load(data)
     json_output = instance.to_json()
@@ -83,9 +86,10 @@ def test_to_json_sessionref():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_sessionref():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "refType": "issue",
@@ -93,7 +97,7 @@ def test_to_yaml_sessionref():
       "turnIndex": 2,
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionRef.load(data)
     yaml_output = instance.to_yaml()

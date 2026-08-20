@@ -61,7 +61,9 @@ describe("ReferenceConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "reference",\n  "name": "my-reference-connection",\n  "target": "my-target-resource"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "reference",\n  "name": "my-reference-connection",\n  "target": "my-target-resource"\n}`,
+      ) as Record<string, unknown>;
       const instance = ReferenceConnection.load(data);
       expect(instance).toBeDefined();
     });

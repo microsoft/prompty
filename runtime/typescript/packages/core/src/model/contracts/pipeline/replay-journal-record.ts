@@ -62,7 +62,10 @@ export class ReplayJournalRecord {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ReplayJournalRecord {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ReplayJournalRecord {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

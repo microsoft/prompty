@@ -7,7 +7,7 @@ from prompty.model import PermissionRequestedPayload
 
 
 def test_load_json_permissionrequestedpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "requestId": "perm_abc123",
       "toolCallId": "call_abc123",
@@ -15,7 +15,7 @@ def test_load_json_permissionrequestedpayload():
       "target": "shell",
       "promptRequest": "Allow shell to run tests?"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = PermissionRequestedPayload.load(data)
     assert instance is not None
@@ -25,15 +25,16 @@ def test_load_json_permissionrequestedpayload():
     assert instance.target == "shell"
     assert instance.prompt_request == "Allow shell to run tests?"
 
+
 def test_load_yaml_permissionrequestedpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     requestId: perm_abc123
     toolCallId: call_abc123
     permission: tool.execute
     target: shell
     promptRequest: Allow shell to run tests?
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = PermissionRequestedPayload.load(data)
     assert instance is not None
@@ -43,9 +44,10 @@ def test_load_yaml_permissionrequestedpayload():
     assert instance.target == "shell"
     assert instance.prompt_request == "Allow shell to run tests?"
 
+
 def test_roundtrip_json_permissionrequestedpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "requestId": "perm_abc123",
       "toolCallId": "call_abc123",
@@ -53,7 +55,7 @@ def test_roundtrip_json_permissionrequestedpayload():
       "target": "shell",
       "promptRequest": "Allow shell to run tests?"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = PermissionRequestedPayload.load(original_data)
     saved_data = instance.save()
@@ -65,9 +67,10 @@ def test_roundtrip_json_permissionrequestedpayload():
     assert reloaded.target == "shell"
     assert reloaded.prompt_request == "Allow shell to run tests?"
 
+
 def test_to_json_permissionrequestedpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "requestId": "perm_abc123",
       "toolCallId": "call_abc123",
@@ -75,7 +78,7 @@ def test_to_json_permissionrequestedpayload():
       "target": "shell",
       "promptRequest": "Allow shell to run tests?"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = PermissionRequestedPayload.load(data)
     json_output = instance.to_json()
@@ -83,9 +86,10 @@ def test_to_json_permissionrequestedpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_permissionrequestedpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "requestId": "perm_abc123",
       "toolCallId": "call_abc123",
@@ -93,7 +97,7 @@ def test_to_yaml_permissionrequestedpayload():
       "target": "shell",
       "promptRequest": "Allow shell to run tests?"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = PermissionRequestedPayload.load(data)
     yaml_output = instance.to_yaml()

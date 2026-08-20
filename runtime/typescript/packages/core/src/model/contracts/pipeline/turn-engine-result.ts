@@ -32,7 +32,10 @@ export class TurnEngineResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): TurnEngineResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): TurnEngineResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -44,15 +47,27 @@ export class TurnEngineResult {
     const instance = new TurnEngineResult();
 
     if (data["commit"] !== undefined && data["commit"] !== null) {
-      instance.commit = TurnCommit.load(data["commit"] as Record<string, unknown>, context.at("commit"));
+      instance.commit = TurnCommit.load(
+        data["commit"] as Record<string, unknown>,
+        context.at("commit"),
+      );
     }
     if (data["snapshots"] !== undefined && data["snapshots"] !== null) {
-      instance.snapshots = TurnEngineResult.loadSnapshots(data["snapshots"] as unknown[], context.at("snapshots"));
+      instance.snapshots = TurnEngineResult.loadSnapshots(
+        data["snapshots"] as unknown[],
+        context.at("snapshots"),
+      );
     }
     if (data["toolResults"] !== undefined && data["toolResults"] !== null) {
-      instance.toolResults = TurnEngineResult.loadToolResults(data["toolResults"] as unknown[], context.at("toolResults"));
+      instance.toolResults = TurnEngineResult.loadToolResults(
+        data["toolResults"] as unknown[],
+        context.at("toolResults"),
+      );
     }
-    if (data["postCommitError"] !== undefined && data["postCommitError"] !== null) {
+    if (
+      data["postCommitError"] !== undefined &&
+      data["postCommitError"] !== null
+    ) {
       instance.postCommitError = String(data["postCommitError"]);
     }
 
@@ -62,60 +77,105 @@ export class TurnEngineResult {
     return instance;
   }
 
-  static loadSnapshots(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ModelInvocationContextSnapshot[] {
+  static loadSnapshots(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ModelInvocationContextSnapshot[] {
     context ??= new LoadContext({ path: "snapshots" });
     if (!Array.isArray(data)) {
       const result: ModelInvocationContextSnapshot[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(ModelInvocationContextSnapshot.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            ModelInvocationContextSnapshot.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(ModelInvocationContextSnapshot.load({ name: k, "id": v }, context.at(k)));
+          result.push(
+            ModelInvocationContextSnapshot.load(
+              { name: k, id: v },
+              context.at(k),
+            ),
+          );
         }
       }
       return result;
     }
-    return data.map((item, index) => ModelInvocationContextSnapshot.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      ModelInvocationContextSnapshot.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveSnapshots(items: ModelInvocationContextSnapshot[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveSnapshots(
+    items: ModelInvocationContextSnapshot[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadToolResults(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ModelToolResult[] {
+  static loadToolResults(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ModelToolResult[] {
     context ??= new LoadContext({ path: "toolResults" });
     if (!Array.isArray(data)) {
       const result: ModelToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(ModelToolResult.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            ModelToolResult.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(ModelToolResult.load({ name: k, "requestId": v }, context.at(k)));
+          result.push(
+            ModelToolResult.load({ name: k, requestId: v }, context.at(k)),
+          );
         }
       }
       return result;
     }
-    return data.map((item, index) => ModelToolResult.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      ModelToolResult.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveToolResults(items: ModelToolResult[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveToolResults(
+    items: ModelToolResult[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -134,10 +194,16 @@ export class TurnEngineResult {
       result["commit"] = obj.commit.save(context);
     }
     if (obj.snapshots !== undefined && obj.snapshots !== null) {
-      result["snapshots"] = TurnEngineResult.saveSnapshots(obj.snapshots, context);
+      result["snapshots"] = TurnEngineResult.saveSnapshots(
+        obj.snapshots,
+        context,
+      );
     }
     if (obj.toolResults !== undefined && obj.toolResults !== null) {
-      result["toolResults"] = TurnEngineResult.saveToolResults(obj.toolResults, context);
+      result["toolResults"] = TurnEngineResult.saveToolResults(
+        obj.toolResults,
+        context,
+      );
     }
     if (obj.postCommitError !== undefined && obj.postCommitError !== null) {
       result["postCommitError"] = obj.postCommitError;

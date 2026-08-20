@@ -63,7 +63,9 @@ describe("McpApprovalMode", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "never",\n  "alwaysRequireApprovalTools": [\n    "operation1"\n  ],\n  "neverRequireApprovalTools": [\n    "operation2"\n  ]\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "never",\n  "alwaysRequireApprovalTools": [\n    "operation1"\n  ],\n  "neverRequireApprovalTools": [\n    "operation2"\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = McpApprovalMode.load(data);
       expect(instance).toBeDefined();
     });

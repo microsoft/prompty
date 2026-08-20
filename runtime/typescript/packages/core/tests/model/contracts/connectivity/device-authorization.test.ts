@@ -69,7 +69,9 @@ describe("DeviceAuthorization", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`,
+      ) as Record<string, unknown>;
       const instance = DeviceAuthorization.load(data);
       expect(instance).toBeDefined();
     });

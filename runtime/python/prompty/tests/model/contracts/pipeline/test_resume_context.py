@@ -7,7 +7,7 @@ from prompty.model import ResumeContext
 
 
 def test_load_json_resumecontext():
-    json_data = r'''
+    json_data = r"""
     {
       "lastJournalSequence": 12,
       "checkpoint": {
@@ -21,14 +21,15 @@ def test_load_json_resumecontext():
         "contextState": {}
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ResumeContext.load(data)
     assert instance is not None
     assert instance.last_journal_sequence == 12
 
+
 def test_load_yaml_resumecontext():
-    yaml_data = r'''
+    yaml_data = r"""
     lastJournalSequence: 12
     checkpoint:
       id: ckpt_abc123
@@ -40,15 +41,16 @@ def test_load_yaml_resumecontext():
       messages: []
       contextState: {}
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ResumeContext.load(data)
     assert instance is not None
     assert instance.last_journal_sequence == 12
 
+
 def test_roundtrip_json_resumecontext():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "lastJournalSequence": 12,
       "checkpoint": {
@@ -62,7 +64,7 @@ def test_roundtrip_json_resumecontext():
         "contextState": {}
       }
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ResumeContext.load(original_data)
     saved_data = instance.save()
@@ -70,9 +72,10 @@ def test_roundtrip_json_resumecontext():
     assert reloaded is not None
     assert reloaded.last_journal_sequence == 12
 
+
 def test_to_json_resumecontext():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "lastJournalSequence": 12,
       "checkpoint": {
@@ -86,7 +89,7 @@ def test_to_json_resumecontext():
         "contextState": {}
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ResumeContext.load(data)
     json_output = instance.to_json()
@@ -94,9 +97,10 @@ def test_to_json_resumecontext():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_resumecontext():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "lastJournalSequence": 12,
       "checkpoint": {
@@ -110,7 +114,7 @@ def test_to_yaml_resumecontext():
         "contextState": {}
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ResumeContext.load(data)
     yaml_output = instance.to_yaml()

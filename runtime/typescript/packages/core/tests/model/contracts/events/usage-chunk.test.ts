@@ -53,7 +53,9 @@ describe("UsageChunk", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "usage",\n  "usage": {\n    "inputTokens": 150,\n    "outputTokens": 42,\n    "totalTokens": 192\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "usage",\n  "usage": {\n    "inputTokens": 150,\n    "outputTokens": 42,\n    "totalTokens": 192\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = UsageChunk.load(data);
       expect(instance).toBeDefined();
     });

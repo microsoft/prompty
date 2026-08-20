@@ -14,8 +14,7 @@ from .contracts.conversation._ToolCall import ToolCall
 
 @runtime_checkable
 class Executor(Protocol):
-    """Calls an LLM provider with messages and returns the raw provider response.
-    """
+    """Calls an LLM provider with messages and returns the raw provider response."""
 
     def execute(self, agent: Agent, messages: list[Message]) -> Any:
         """Call an LLM provider with messages and return the raw response"""
@@ -33,6 +32,8 @@ class Executor(Protocol):
         """Call an LLM provider and return a streaming response. Returns a language-specific async iterable/stream of raw chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
         raise NotImplementedError
 
-    def format_tool_messages(self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None) -> list[Message]:
+    def format_tool_messages(
+        self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
+    ) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
         raise NotImplementedError

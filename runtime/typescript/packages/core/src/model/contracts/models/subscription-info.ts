@@ -19,7 +19,10 @@ export class SubscriptionInfo {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): SubscriptionInfo {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SubscriptionInfo {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -27,7 +30,10 @@ export class SubscriptionInfo {
 
     const instance = new SubscriptionInfo();
 
-    if (data["subscriptionId"] !== undefined && data["subscriptionId"] !== null) {
+    if (
+      data["subscriptionId"] !== undefined &&
+      data["subscriptionId"] !== null
+    ) {
       instance.subscriptionId = String(data["subscriptionId"]);
     }
     if (data["displayName"] !== undefined && data["displayName"] !== null) {
@@ -75,9 +81,9 @@ export class SubscriptionInfo {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "subscriptionId": { "foundry": "subscription_id" },
-      "displayName": { "foundry": "display_name" },
-      "state": { "foundry": "state" },
+      subscriptionId: { foundry: "subscription_id" },
+      displayName: { foundry: "display_name" },
+      state: { foundry: "state" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

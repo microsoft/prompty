@@ -5,7 +5,6 @@
 import { StreamChunk } from "../../../../src/model/index";
 
 describe("StreamChunk", () => {
-
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
       const json = `{\n  "kind": "text",\n  "value": "Hello"\n}`;
@@ -39,5 +38,4 @@ describe("StreamChunk", () => {
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
-
 });

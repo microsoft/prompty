@@ -57,7 +57,9 @@ describe("ReplayMismatch", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "index": 1,\n  "message": "sample"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "index": 1,\n  "message": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = ReplayMismatch.load(data);
       expect(instance).toBeDefined();
     });

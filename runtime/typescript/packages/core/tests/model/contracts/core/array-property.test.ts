@@ -51,7 +51,9 @@ describe("ArrayProperty", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "items": {\n    "kind": "string"\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "items": {\n    "kind": "string"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ArrayProperty.load(data);
       expect(instance).toBeDefined();
     });

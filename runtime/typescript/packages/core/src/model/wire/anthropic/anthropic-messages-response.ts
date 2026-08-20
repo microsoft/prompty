@@ -30,7 +30,10 @@ export class AnthropicMessagesResponse {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnthropicMessagesResponse {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnthropicMessagesResponse {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -60,7 +63,10 @@ export class AnthropicMessagesResponse {
       instance.stop_reason = String(data["stop_reason"]);
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = AnthropicUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
+      instance.usage = AnthropicUsage.load(
+        data["usage"] as Record<string, unknown>,
+        context.at("usage"),
+      );
     }
 
     if (context) {
@@ -119,15 +125,27 @@ export class AnthropicMessagesResponse {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): AnthropicMessagesResponse {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): AnthropicMessagesResponse {
     const data = JSON.parse(json);
-    return AnthropicMessagesResponse.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesResponse.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): AnthropicMessagesResponse {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): AnthropicMessagesResponse {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return AnthropicMessagesResponse.load(data as Record<string, unknown>, context);
+    return AnthropicMessagesResponse.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

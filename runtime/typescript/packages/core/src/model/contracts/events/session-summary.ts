@@ -5,7 +5,8 @@
 import { LoadContext, SaveContext } from "../../context";
 import { TokenUsage } from "../../contracts/models/token-usage";
 
-export type SessionSummaryStatus = "success" | "error" | "cancelled" | "interrupted";
+export type SessionSummaryStatus =
+  "success" | "error" | "cancelled" | "interrupted";
 
 export class SessionSummary {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -38,7 +39,10 @@ export class SessionSummary {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): SessionSummary {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SessionSummary {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -59,7 +63,10 @@ export class SessionSummary {
       instance.checkpoints = Number(data["checkpoints"]);
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = TokenUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
+      instance.usage = TokenUsage.load(
+        data["usage"] as Record<string, unknown>,
+        context.at("usage"),
+      );
     }
     if (data["durationMs"] !== undefined && data["durationMs"] !== null) {
       instance.durationMs = Number(data["durationMs"]);

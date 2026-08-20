@@ -53,7 +53,10 @@ describe("TextPart", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "value": "Hello, world!"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "value": "Hello, world!"\n}`) as Record<
+        string,
+        unknown
+      >;
       const instance = TextPart.load(data);
       expect(instance).toBeDefined();
     });

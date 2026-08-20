@@ -17,14 +17,21 @@ let cachedDataset: CapabilityDataset | undefined;
 
 function getDataset(): CapabilityDataset {
   if (cachedDataset === undefined) {
-    const contents = fs.readFileSync(new URL("./model_capabilities.json", import.meta.url), "utf-8");
+    const contents = fs.readFileSync(
+      new URL("./model_capabilities.json", import.meta.url),
+      "utf-8",
+    );
     cachedDataset = JSON.parse(contents) as CapabilityDataset;
   }
   return cachedDataset;
 }
 
 function isTokenBoundary(modelId: string, prefix: string): boolean {
-  return modelId === prefix || (modelId.startsWith(prefix) && !/[A-Za-z0-9]/.test(modelId[prefix.length] ?? ""));
+  return (
+    modelId === prefix ||
+    (modelId.startsWith(prefix) &&
+      !/[A-Za-z0-9]/.test(modelId[prefix.length] ?? ""))
+  );
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -34,13 +41,21 @@ function asRecord(value: unknown): Record<string, unknown> {
   return {};
 }
 
-function setStringField(target: ModelInfo, field: "id" | "displayName" | "ownedBy", value: unknown): void {
+function setStringField(
+  target: ModelInfo,
+  field: "id" | "displayName" | "ownedBy",
+  value: unknown,
+): void {
   if (value !== undefined && value !== null) {
     target[field] = String(value);
   }
 }
 
-function setNumberField(target: ModelInfo, field: "contextWindow", value: unknown): void {
+function setNumberField(
+  target: ModelInfo,
+  field: "contextWindow",
+  value: unknown,
+): void {
   if (value !== undefined && value !== null) {
     target[field] = Number(value);
   }
@@ -52,11 +67,16 @@ function setStringArrayField(
   value: unknown,
 ): void {
   if (value !== undefined && value !== null) {
-    target[field] = Array.isArray(value) ? value.map(item => String(item)) : [];
+    target[field] = Array.isArray(value)
+      ? value.map((item) => String(item))
+      : [];
   }
 }
 
-export function matchCapabilities(modelId: string, provider: string): CapabilityEntry | null {
+export function matchCapabilities(
+  modelId: string,
+  provider: string,
+): CapabilityEntry | null {
   const entries = getDataset().providers?.[provider];
   if (!entries) {
     return null;
@@ -68,7 +88,10 @@ export function matchCapabilities(modelId: string, provider: string): Capability
     if (typeof entry.prefix !== "string") {
       continue;
     }
-    if (entry.prefix.length > bestLength && isTokenBoundary(modelId, entry.prefix)) {
+    if (
+      entry.prefix.length > bestLength &&
+      isTokenBoundary(modelId, entry.prefix)
+    ) {
       best = entry;
       bestLength = entry.prefix.length;
     }
@@ -93,8 +116,13 @@ export function enrich(base: ModelInfo, provider: string): ModelInfo {
     }
   }
   if (base.outputModalities === undefined || base.outputModalities === null) {
-    if (entry.outputModalities !== undefined && entry.outputModalities !== null) {
-      base.outputModalities = structuredClone(entry.outputModalities) as string[];
+    if (
+      entry.outputModalities !== undefined &&
+      entry.outputModalities !== null
+    ) {
+      base.outputModalities = structuredClone(
+        entry.outputModalities,
+      ) as string[];
     }
   }
   return base;
@@ -123,8 +151,16 @@ export function mapModel(raw: unknown, provider: string): ModelInfo {
         setStringField(info, "displayName", model.name);
         setStringField(info, "ownedBy", model.publisher);
         setNumberField(info, "contextWindow", model.maxContextLength);
-        setStringArrayField(info, "inputModalities", caps.supportedInputModalities);
-        setStringArrayField(info, "outputModalities", caps.supportedOutputModalities);
+        setStringArrayField(
+          info,
+          "inputModalities",
+          caps.supportedInputModalities,
+        );
+        setStringArrayField(
+          info,
+          "outputModalities",
+          caps.supportedOutputModalities,
+        );
       } else if ("modelName" in data || data.type === "ModelDeployment") {
         setStringField(info, "id", data.name);
         setStringField(info, "displayName", data.modelName);

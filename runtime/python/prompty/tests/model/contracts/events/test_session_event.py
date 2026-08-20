@@ -7,7 +7,7 @@ from prompty.model import SessionEvent
 
 
 def test_load_json_sessionevent():
-    json_data = r'''
+    json_data = r"""
     {
       "id": "evt_abc123",
       "timestamp": "2026-06-09T20:00:00Z",
@@ -16,7 +16,7 @@ def test_load_json_sessionevent():
       "parentId": "evt_parent",
       "spanId": "span_hook_001"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionEvent.load(data)
     assert instance is not None
@@ -27,8 +27,9 @@ def test_load_json_sessionevent():
     assert instance.parent_id == "evt_parent"
     assert instance.span_id == "span_hook_001"
 
+
 def test_load_yaml_sessionevent():
-    yaml_data = r'''
+    yaml_data = r"""
     id: evt_abc123
     timestamp: "2026-06-09T20:00:00Z"
     sessionId: sess_abc123
@@ -36,7 +37,7 @@ def test_load_yaml_sessionevent():
     parentId: evt_parent
     spanId: span_hook_001
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SessionEvent.load(data)
     assert instance is not None
@@ -47,9 +48,10 @@ def test_load_yaml_sessionevent():
     assert instance.parent_id == "evt_parent"
     assert instance.span_id == "span_hook_001"
 
+
 def test_roundtrip_json_sessionevent():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "evt_abc123",
       "timestamp": "2026-06-09T20:00:00Z",
@@ -58,7 +60,7 @@ def test_roundtrip_json_sessionevent():
       "parentId": "evt_parent",
       "spanId": "span_hook_001"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = SessionEvent.load(original_data)
     saved_data = instance.save()
@@ -71,9 +73,10 @@ def test_roundtrip_json_sessionevent():
     assert reloaded.parent_id == "evt_parent"
     assert reloaded.span_id == "span_hook_001"
 
+
 def test_to_json_sessionevent():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "evt_abc123",
       "timestamp": "2026-06-09T20:00:00Z",
@@ -82,7 +85,7 @@ def test_to_json_sessionevent():
       "parentId": "evt_parent",
       "spanId": "span_hook_001"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionEvent.load(data)
     json_output = instance.to_json()
@@ -90,9 +93,10 @@ def test_to_json_sessionevent():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_sessionevent():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "id": "evt_abc123",
       "timestamp": "2026-06-09T20:00:00Z",
@@ -101,7 +105,7 @@ def test_to_yaml_sessionevent():
       "parentId": "evt_parent",
       "spanId": "span_hook_001"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionEvent.load(data)
     yaml_output = instance.to_yaml()

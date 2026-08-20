@@ -7,7 +7,7 @@ from prompty.model import SessionStartPayload
 
 
 def test_load_json_sessionstartpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "schemaVersion": "1",
@@ -18,7 +18,7 @@ def test_load_json_sessionstartpayload():
       "selectedModel": "gpt-4o-mini",
       "reasoningEffort": "medium"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionStartPayload.load(data)
     assert instance is not None
@@ -31,8 +31,9 @@ def test_load_json_sessionstartpayload():
     assert instance.selected_model == "gpt-4o-mini"
     assert instance.reasoning_effort == "medium"
 
+
 def test_load_yaml_sessionstartpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     sessionId: sess_abc123
     schemaVersion: "1"
     producer: prompty-agent
@@ -42,7 +43,7 @@ def test_load_yaml_sessionstartpayload():
     selectedModel: gpt-4o-mini
     reasoningEffort: medium
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SessionStartPayload.load(data)
     assert instance is not None
@@ -55,9 +56,10 @@ def test_load_yaml_sessionstartpayload():
     assert instance.selected_model == "gpt-4o-mini"
     assert instance.reasoning_effort == "medium"
 
+
 def test_roundtrip_json_sessionstartpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "schemaVersion": "1",
@@ -68,7 +70,7 @@ def test_roundtrip_json_sessionstartpayload():
       "selectedModel": "gpt-4o-mini",
       "reasoningEffort": "medium"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = SessionStartPayload.load(original_data)
     saved_data = instance.save()
@@ -83,9 +85,10 @@ def test_roundtrip_json_sessionstartpayload():
     assert reloaded.selected_model == "gpt-4o-mini"
     assert reloaded.reasoning_effort == "medium"
 
+
 def test_to_json_sessionstartpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "schemaVersion": "1",
@@ -96,7 +99,7 @@ def test_to_json_sessionstartpayload():
       "selectedModel": "gpt-4o-mini",
       "reasoningEffort": "medium"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionStartPayload.load(data)
     json_output = instance.to_json()
@@ -104,9 +107,10 @@ def test_to_json_sessionstartpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_sessionstartpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "sessionId": "sess_abc123",
       "schemaVersion": "1",
@@ -117,7 +121,7 @@ def test_to_yaml_sessionstartpayload():
       "selectedModel": "gpt-4o-mini",
       "reasoningEffort": "medium"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionStartPayload.load(data)
     yaml_output = instance.to_yaml()

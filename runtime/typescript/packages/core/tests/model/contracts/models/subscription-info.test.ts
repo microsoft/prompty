@@ -61,7 +61,9 @@ describe("SubscriptionInfo", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "subscriptionId": "sample",\n  "displayName": "sample",\n  "state": "sample"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "subscriptionId": "sample",\n  "displayName": "sample",\n  "state": "sample"\n}`,
+      ) as Record<string, unknown>;
       const instance = SubscriptionInfo.load(data);
       expect(instance).toBeDefined();
     });

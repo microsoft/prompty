@@ -51,7 +51,9 @@ describe("FailureChunk", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "failure": {\n    "outcome": "indeterminate",\n    "message": "SSE stream error: connection reset"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = FailureChunk.load(data);
       expect(instance).toBeDefined();
     });

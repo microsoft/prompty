@@ -7,7 +7,7 @@ from prompty.model import ToolContext
 
 
 def test_load_json_toolcontext():
-    json_data = r'''
+    json_data = r"""
     {
       "metadata": {
         "userId": "user-123"
@@ -27,13 +27,14 @@ def test_load_json_toolcontext():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolContext.load(data)
     assert instance is not None
 
+
 def test_load_yaml_toolcontext():
-    yaml_data = r'''
+    yaml_data = r"""
     metadata:
       userId: user-123
     messages:
@@ -44,14 +45,15 @@ def test_load_yaml_toolcontext():
         metadata:
           source: user-input
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ToolContext.load(data)
     assert instance is not None
 
+
 def test_roundtrip_json_toolcontext():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "metadata": {
         "userId": "user-123"
@@ -71,16 +73,17 @@ def test_roundtrip_json_toolcontext():
         }
       ]
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ToolContext.load(original_data)
     saved_data = instance.save()
     reloaded = ToolContext.load(saved_data)
     assert reloaded is not None
 
+
 def test_to_json_toolcontext():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "metadata": {
         "userId": "user-123"
@@ -100,7 +103,7 @@ def test_to_json_toolcontext():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolContext.load(data)
     json_output = instance.to_json()
@@ -108,9 +111,10 @@ def test_to_json_toolcontext():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_toolcontext():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "metadata": {
         "userId": "user-123"
@@ -130,7 +134,7 @@ def test_to_yaml_toolcontext():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ToolContext.load(data)
     yaml_output = instance.to_yaml()

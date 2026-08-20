@@ -30,7 +30,9 @@ describe("ResumeContext", () => {
       const instance = ResumeContext.fromJson(json);
       const output = instance.toJson();
       const reloaded = ResumeContext.fromJson(output);
-      expect(reloaded.lastJournalSequence).toEqual(instance.lastJournalSequence);
+      expect(reloaded.lastJournalSequence).toEqual(
+        instance.lastJournalSequence,
+      );
     });
   });
 
@@ -47,13 +49,17 @@ describe("ResumeContext", () => {
       const instance = ResumeContext.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ResumeContext.fromYaml(output);
-      expect(reloaded.lastJournalSequence).toEqual(instance.lastJournalSequence);
+      expect(reloaded.lastJournalSequence).toEqual(
+        instance.lastJournalSequence,
+      );
     });
   });
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "lastJournalSequence": 12,\n  "checkpoint": {\n    "id": "ckpt_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "runId": "run_abc123",\n    "iteration": 1,\n    "lastSequence": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "lastJournalSequence": 12,\n  "checkpoint": {\n    "id": "ckpt_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "runId": "run_abc123",\n    "iteration": 1,\n    "lastSequence": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ResumeContext.load(data);
       expect(instance).toBeDefined();
     });

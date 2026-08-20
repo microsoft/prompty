@@ -23,7 +23,10 @@ export class FormatConfig {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FormatConfig {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FormatConfig {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

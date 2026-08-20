@@ -7,38 +7,40 @@ from prompty.model import MessagesUpdatedPayload
 
 
 def test_load_json_messagesupdatedpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "reason": "tool_results",
       "removed": 2
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MessagesUpdatedPayload.load(data)
     assert instance is not None
     assert instance.reason == "tool_results"
     assert instance.removed == 2
 
+
 def test_load_yaml_messagesupdatedpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     reason: tool_results
     removed: 2
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = MessagesUpdatedPayload.load(data)
     assert instance is not None
     assert instance.reason == "tool_results"
     assert instance.removed == 2
 
+
 def test_roundtrip_json_messagesupdatedpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "reason": "tool_results",
       "removed": 2
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = MessagesUpdatedPayload.load(original_data)
     saved_data = instance.save()
@@ -47,14 +49,15 @@ def test_roundtrip_json_messagesupdatedpayload():
     assert reloaded.reason == "tool_results"
     assert reloaded.removed == 2
 
+
 def test_to_json_messagesupdatedpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "reason": "tool_results",
       "removed": 2
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MessagesUpdatedPayload.load(data)
     json_output = instance.to_json()
@@ -62,14 +65,15 @@ def test_to_json_messagesupdatedpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_messagesupdatedpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "reason": "tool_results",
       "removed": 2
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = MessagesUpdatedPayload.load(data)
     yaml_output = instance.to_yaml()

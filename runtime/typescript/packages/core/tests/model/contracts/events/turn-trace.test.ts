@@ -61,7 +61,9 @@ describe("TurnTrace", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "turn_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "turnId": "turn_001",\n      "iteration": 0,\n      "parentId": "evt_parent",\n      "spanId": "span_tool_001",\n      "payload": {}\n    }\n  ]\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "version": "1",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "events": [\n    {\n      "id": "evt_abc123",\n      "type": "turn_start",\n      "timestamp": "2026-06-09T20:00:00Z",\n      "turnId": "turn_001",\n      "iteration": 0,\n      "parentId": "evt_parent",\n      "spanId": "span_tool_001",\n      "payload": {}\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = TurnTrace.load(data);
       expect(instance).toBeDefined();
     });

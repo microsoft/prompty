@@ -67,7 +67,9 @@ describe("Binding", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "name": "my-tool",\n  "input": "input-variable"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "name": "my-tool",\n  "input": "input-variable"\n}`,
+      ) as Record<string, unknown>;
       const instance = Binding.load(data);
       expect(instance).toBeDefined();
     });

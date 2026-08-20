@@ -69,7 +69,9 @@ describe("PermissionCompletedPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "requestId": "perm_abc123",\n  "toolCallId": "call_abc123",\n  "permission": "tool.execute",\n  "approved": true,\n  "reason": "user_approved"\n}`,
+      ) as Record<string, unknown>;
       const instance = PermissionCompletedPayload.load(data);
       expect(instance).toBeDefined();
     });

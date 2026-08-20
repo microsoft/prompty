@@ -65,7 +65,9 @@ describe("LlmStartPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "provider": "openai",\n  "modelId": "gpt-4o-mini",\n  "messageCount": 4,\n  "attempt": 0\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "provider": "openai",\n  "modelId": "gpt-4o-mini",\n  "messageCount": 4,\n  "attempt": 0\n}`,
+      ) as Record<string, unknown>;
       const instance = LlmStartPayload.load(data);
       expect(instance).toBeDefined();
     });

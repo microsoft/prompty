@@ -64,7 +64,10 @@ export class TraceSpan {
       instance.name = String(data["name"]);
     }
     if (data["__time"] !== undefined && data["__time"] !== null) {
-      instance.__time = TraceTime.load(data["__time"] as Record<string, unknown>, context.at("__time"));
+      instance.__time = TraceTime.load(
+        data["__time"] as Record<string, unknown>,
+        context.at("__time"),
+      );
     }
     if (data["signature"] !== undefined && data["signature"] !== null) {
       instance.signature = String(data["signature"]);
@@ -79,7 +82,10 @@ export class TraceSpan {
       instance.error = String(data["error"]);
     }
     if (data["__usage"] !== undefined && data["__usage"] !== null) {
-      instance.__usage = TokenUsage.load(data["__usage"] as Record<string, unknown>, context.at("__usage"));
+      instance.__usage = TokenUsage.load(
+        data["__usage"] as Record<string, unknown>,
+        context.at("__usage"),
+      );
     }
     if (data["attributes"] !== undefined && data["attributes"] !== null) {
       instance.attributes = data["attributes"] as Record<string, unknown>;

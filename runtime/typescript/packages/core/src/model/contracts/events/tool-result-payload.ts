@@ -20,7 +20,10 @@ export class ToolResultPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolResultPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolResultPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -35,7 +38,10 @@ export class ToolResultPayload {
       instance.name = String(data["name"]);
     }
     if (data["result"] !== undefined && data["result"] !== null) {
-      instance.result = ToolResult.load(data["result"] as Record<string, unknown>, context.at("result"));
+      instance.result = ToolResult.load(
+        data["result"] as Record<string, unknown>,
+        context.at("result"),
+      );
     }
 
     if (context) {

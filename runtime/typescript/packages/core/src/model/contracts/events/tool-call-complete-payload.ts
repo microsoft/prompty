@@ -34,7 +34,10 @@ export class ToolCallCompletePayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ToolCallCompletePayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ToolCallCompletePayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -52,7 +55,10 @@ export class ToolCallCompletePayload {
       instance.success = Boolean(data["success"]);
     }
     if (data["result"] !== undefined && data["result"] !== null) {
-      instance.result = ToolResult.load(data["result"] as Record<string, unknown>, context.at("result"));
+      instance.result = ToolResult.load(
+        data["result"] as Record<string, unknown>,
+        context.at("result"),
+      );
     }
     if (data["durationMs"] !== undefined && data["durationMs"] !== null) {
       instance.durationMs = Number(data["durationMs"]);
@@ -114,15 +120,27 @@ export class ToolCallCompletePayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(json: string, context?: LoadContext): ToolCallCompletePayload {
+  static fromJson(
+    json: string,
+    context?: LoadContext,
+  ): ToolCallCompletePayload {
     const data = JSON.parse(json);
-    return ToolCallCompletePayload.load(data as Record<string, unknown>, context);
+    return ToolCallCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
-  static fromYaml(yaml: string, context?: LoadContext): ToolCallCompletePayload {
+  static fromYaml(
+    yaml: string,
+    context?: LoadContext,
+  ): ToolCallCompletePayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ToolCallCompletePayload.load(data as Record<string, unknown>, context);
+    return ToolCallCompletePayload.load(
+      data as Record<string, unknown>,
+      context,
+    );
   }
 
   //#endregion

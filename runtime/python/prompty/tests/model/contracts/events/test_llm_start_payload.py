@@ -7,14 +7,14 @@ from prompty.model import LlmStartPayload
 
 
 def test_load_json_llmstartpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "provider": "openai",
       "modelId": "gpt-4o-mini",
       "messageCount": 4,
       "attempt": 0
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = LlmStartPayload.load(data)
     assert instance is not None
@@ -23,14 +23,15 @@ def test_load_json_llmstartpayload():
     assert instance.message_count == 4
     assert instance.attempt == 0
 
+
 def test_load_yaml_llmstartpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     provider: openai
     modelId: gpt-4o-mini
     messageCount: 4
     attempt: 0
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = LlmStartPayload.load(data)
     assert instance is not None
@@ -39,16 +40,17 @@ def test_load_yaml_llmstartpayload():
     assert instance.message_count == 4
     assert instance.attempt == 0
 
+
 def test_roundtrip_json_llmstartpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "provider": "openai",
       "modelId": "gpt-4o-mini",
       "messageCount": 4,
       "attempt": 0
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = LlmStartPayload.load(original_data)
     saved_data = instance.save()
@@ -59,16 +61,17 @@ def test_roundtrip_json_llmstartpayload():
     assert reloaded.message_count == 4
     assert reloaded.attempt == 0
 
+
 def test_to_json_llmstartpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "provider": "openai",
       "modelId": "gpt-4o-mini",
       "messageCount": 4,
       "attempt": 0
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = LlmStartPayload.load(data)
     json_output = instance.to_json()
@@ -76,16 +79,17 @@ def test_to_json_llmstartpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_llmstartpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "provider": "openai",
       "modelId": "gpt-4o-mini",
       "messageCount": 4,
       "attempt": 0
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = LlmStartPayload.load(data)
     yaml_output = instance.to_yaml()

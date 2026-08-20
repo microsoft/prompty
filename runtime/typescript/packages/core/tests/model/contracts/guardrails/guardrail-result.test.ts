@@ -78,7 +78,9 @@ describe("GuardrailResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "allowed": true,\n  "reason": "Content is safe"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "allowed": true,\n  "reason": "Content is safe"\n}`,
+      ) as Record<string, unknown>;
       const instance = GuardrailResult.load(data);
       expect(instance).toBeDefined();
     });

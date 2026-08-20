@@ -89,7 +89,9 @@ describe("FunctionTool", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "function",\n  "parameters": {\n    "firstName": {\n      "kind": "string",\n      "default": "Jane"\n    },\n    "lastName": {\n      "kind": "string",\n      "default": "Doe"\n    },\n    "question": {\n      "kind": "string",\n      "default": "What is the meaning of life?"\n    }\n  },\n  "strict": true\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "function",\n  "parameters": {\n    "firstName": {\n      "kind": "string",\n      "default": "Jane"\n    },\n    "lastName": {\n      "kind": "string",\n      "default": "Doe"\n    },\n    "question": {\n      "kind": "string",\n      "default": "What is the meaning of life?"\n    }\n  },\n  "strict": true\n}`,
+      ) as Record<string, unknown>;
       const instance = FunctionTool.load(data);
       expect(instance).toBeDefined();
     });

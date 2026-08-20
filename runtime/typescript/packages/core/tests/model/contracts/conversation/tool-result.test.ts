@@ -23,7 +23,9 @@ describe("ToolResult", () => {
       const instance = ToolResult.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.errorKind).toEqual("missing_tool");
-      expect(instance.errorMessage).toEqual("Tool 'get_weather' is not registered");
+      expect(instance.errorMessage).toEqual(
+        "Tool 'get_weather' is not registered",
+      );
       expect(instance.durationMs).toEqual(42);
     });
 
@@ -44,7 +46,9 @@ describe("ToolResult", () => {
       const instance = ToolResult.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.errorKind).toEqual("missing_tool");
-      expect(instance.errorMessage).toEqual("Tool 'get_weather' is not registered");
+      expect(instance.errorMessage).toEqual(
+        "Tool 'get_weather' is not registered",
+      );
       expect(instance.durationMs).toEqual(42);
     });
 
@@ -69,7 +73,9 @@ describe("ToolResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "parts": [\n    {\n      "kind": "text",\n      "value": "72°F and sunny"\n    }\n  ],\n  "errorKind": "missing_tool",\n  "errorMessage": "Tool 'get_weather' is not registered",\n  "durationMs": 42\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "parts": [\n    {\n      "kind": "text",\n      "value": "72°F and sunny"\n    }\n  ],\n  "errorKind": "missing_tool",\n  "errorMessage": "Tool 'get_weather' is not registered",\n  "durationMs": 42\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolResult.load(data);
       expect(instance).toBeDefined();
     });

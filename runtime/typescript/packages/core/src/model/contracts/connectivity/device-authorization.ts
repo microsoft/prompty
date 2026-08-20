@@ -25,7 +25,10 @@ export class DeviceAuthorization {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): DeviceAuthorization {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): DeviceAuthorization {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -39,7 +42,10 @@ export class DeviceAuthorization {
     if (data["userCode"] !== undefined && data["userCode"] !== null) {
       instance.userCode = String(data["userCode"]);
     }
-    if (data["verificationUri"] !== undefined && data["verificationUri"] !== null) {
+    if (
+      data["verificationUri"] !== undefined &&
+      data["verificationUri"] !== null
+    ) {
       instance.verificationUri = String(data["verificationUri"]);
     }
     if (data["expiresIn"] !== undefined && data["expiresIn"] !== null) {
@@ -99,12 +105,12 @@ export class DeviceAuthorization {
     const data = this.save();
     const result: Record<string, unknown> = {};
     const wireMap: Record<string, Record<string, string>> = {
-      "deviceCode": { "foundry": "device_code" },
-      "userCode": { "foundry": "user_code" },
-      "verificationUri": { "foundry": "verification_uri" },
-      "expiresIn": { "foundry": "expires_in" },
-      "interval": { "foundry": "interval" },
-      "message": { "foundry": "message" },
+      deviceCode: { foundry: "device_code" },
+      userCode: { foundry: "user_code" },
+      verificationUri: { foundry: "verification_uri" },
+      expiresIn: { foundry: "expires_in" },
+      interval: { foundry: "interval" },
+      message: { foundry: "message" },
     };
     for (const [key, value] of Object.entries(data)) {
       const mapping = wireMap[key];

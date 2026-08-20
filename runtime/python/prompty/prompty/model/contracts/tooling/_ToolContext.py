@@ -60,8 +60,6 @@ class ToolContext:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
         if context is None:
@@ -100,7 +98,6 @@ class ToolContext:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

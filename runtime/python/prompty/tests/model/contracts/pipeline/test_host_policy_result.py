@@ -7,44 +7,47 @@ from prompty.model import HostPolicyResult
 
 
 def test_load_json_hostpolicyresult():
-    json_data = r'''
+    json_data = r"""
     {
       "messages": []
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HostPolicyResult.load(data)
     assert instance is not None
 
+
 def test_load_yaml_hostpolicyresult():
-    yaml_data = r'''
+    yaml_data = r"""
     messages: []
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = HostPolicyResult.load(data)
     assert instance is not None
 
+
 def test_roundtrip_json_hostpolicyresult():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "messages": []
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = HostPolicyResult.load(original_data)
     saved_data = instance.save()
     reloaded = HostPolicyResult.load(saved_data)
     assert reloaded is not None
 
+
 def test_to_json_hostpolicyresult():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "messages": []
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HostPolicyResult.load(data)
     json_output = instance.to_json()
@@ -52,13 +55,14 @@ def test_to_json_hostpolicyresult():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_hostpolicyresult():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "messages": []
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HostPolicyResult.load(data)
     yaml_output = instance.to_yaml()

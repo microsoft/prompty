@@ -7,36 +7,38 @@ from prompty.model import StreamChunk
 
 
 def test_load_json_streamchunk():
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "text",
       "value": "Hello"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamChunk.load(data)
     assert instance is not None
     assert instance.kind == "text"
 
+
 def test_load_yaml_streamchunk():
-    yaml_data = r'''
+    yaml_data = r"""
     kind: text
     value: Hello
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = StreamChunk.load(data)
     assert instance is not None
     assert instance.kind == "text"
 
+
 def test_roundtrip_json_streamchunk():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "text",
       "value": "Hello"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = StreamChunk.load(original_data)
     saved_data = instance.save()
@@ -44,14 +46,15 @@ def test_roundtrip_json_streamchunk():
     assert reloaded is not None
     assert reloaded.kind == "text"
 
+
 def test_to_json_streamchunk():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "text",
       "value": "Hello"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamChunk.load(data)
     json_output = instance.to_json()
@@ -59,14 +62,15 @@ def test_to_json_streamchunk():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_streamchunk():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "kind": "text",
       "value": "Hello"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = StreamChunk.load(data)
     yaml_output = instance.to_yaml()

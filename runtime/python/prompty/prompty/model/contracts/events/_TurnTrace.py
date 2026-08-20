@@ -74,8 +74,6 @@ class TurnTrace:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_events(data: dict | list, context: LoadContext | None) -> list[TurnEvent]:
         if context is None:
@@ -114,7 +112,6 @@ class TurnTrace:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

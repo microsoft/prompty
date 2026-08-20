@@ -87,14 +87,19 @@ export class EngineCheckpoint {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): EngineCheckpoint {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): EngineCheckpoint {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
     if (data["contextState"] === undefined || data["contextState"] === null) {
-      throw new Error(`${context.at("contextState").path}: missing required field`);
+      throw new Error(
+        `${context.at("contextState").path}: missing required field`,
+      );
     }
     const instance = new EngineCheckpoint();
 
@@ -113,7 +118,10 @@ export class EngineCheckpoint {
     if (data["parentRunId"] !== undefined && data["parentRunId"] !== null) {
       instance.parentRunId = String(data["parentRunId"]);
     }
-    if (data["delegationDepth"] !== undefined && data["delegationDepth"] !== null) {
+    if (
+      data["delegationDepth"] !== undefined &&
+      data["delegationDepth"] !== null
+    ) {
       instance.delegationDepth = Number(data["delegationDepth"]);
     }
     if (data["iteration"] !== undefined && data["iteration"] !== null) {
@@ -123,49 +131,104 @@ export class EngineCheckpoint {
       instance.lastSequence = Number(data["lastSequence"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = EngineCheckpoint.loadMessages(data["messages"] as unknown[], context.at("messages"));
+      instance.messages = EngineCheckpoint.loadMessages(
+        data["messages"] as unknown[],
+        context.at("messages"),
+      );
     }
-    if (data["stablePrefixMessages"] !== undefined && data["stablePrefixMessages"] !== null) {
+    if (
+      data["stablePrefixMessages"] !== undefined &&
+      data["stablePrefixMessages"] !== null
+    ) {
       instance.stablePrefixMessages = Number(data["stablePrefixMessages"]);
     }
     if (data["inputs"] !== undefined && data["inputs"] !== null) {
       instance.inputs = data["inputs"] as unknown;
     }
-    if (data["activeInvocationId"] !== undefined && data["activeInvocationId"] !== null) {
+    if (
+      data["activeInvocationId"] !== undefined &&
+      data["activeInvocationId"] !== null
+    ) {
       instance.activeInvocationId = String(data["activeInvocationId"]);
     }
-    if (data["pendingToolRequests"] !== undefined && data["pendingToolRequests"] !== null) {
-      instance.pendingToolRequests = EngineCheckpoint.loadPendingToolRequests(data["pendingToolRequests"] as unknown[], context.at("pendingToolRequests"));
+    if (
+      data["pendingToolRequests"] !== undefined &&
+      data["pendingToolRequests"] !== null
+    ) {
+      instance.pendingToolRequests = EngineCheckpoint.loadPendingToolRequests(
+        data["pendingToolRequests"] as unknown[],
+        context.at("pendingToolRequests"),
+      );
     }
-    if (data["completedToolResults"] !== undefined && data["completedToolResults"] !== null) {
-      instance.completedToolResults = EngineCheckpoint.loadCompletedToolResults(data["completedToolResults"] as unknown[], context.at("completedToolResults"));
+    if (
+      data["completedToolResults"] !== undefined &&
+      data["completedToolResults"] !== null
+    ) {
+      instance.completedToolResults = EngineCheckpoint.loadCompletedToolResults(
+        data["completedToolResults"] as unknown[],
+        context.at("completedToolResults"),
+      );
     }
-    if (data["completedModelIterations"] !== undefined && data["completedModelIterations"] !== null) {
-      instance.completedModelIterations = Number(data["completedModelIterations"]);
+    if (
+      data["completedModelIterations"] !== undefined &&
+      data["completedModelIterations"] !== null
+    ) {
+      instance.completedModelIterations = Number(
+        data["completedModelIterations"],
+      );
     }
-    if (data["reconciliationRequired"] !== undefined && data["reconciliationRequired"] !== null) {
+    if (
+      data["reconciliationRequired"] !== undefined &&
+      data["reconciliationRequired"] !== null
+    ) {
       instance.reconciliationRequired = Boolean(data["reconciliationRequired"]);
     }
-    if (data["modelReconciliation"] !== undefined && data["modelReconciliation"] !== null) {
-      instance.modelReconciliation = ModelReconciliationState.load(data["modelReconciliation"] as Record<string, unknown>, context.at("modelReconciliation"));
+    if (
+      data["modelReconciliation"] !== undefined &&
+      data["modelReconciliation"] !== null
+    ) {
+      instance.modelReconciliation = ModelReconciliationState.load(
+        data["modelReconciliation"] as Record<string, unknown>,
+        context.at("modelReconciliation"),
+      );
     }
     if (data["pendingOutput"] !== undefined && data["pendingOutput"] !== null) {
       instance.pendingOutput = data["pendingOutput"] as unknown;
     }
-    if (data["finalOutputReady"] !== undefined && data["finalOutputReady"] !== null) {
+    if (
+      data["finalOutputReady"] !== undefined &&
+      data["finalOutputReady"] !== null
+    ) {
       instance.finalOutputReady = Boolean(data["finalOutputReady"]);
     }
-    if (data["pendingModelResponse"] !== undefined && data["pendingModelResponse"] !== null) {
-      instance.pendingModelResponse = ModelInvocationResponse.load(data["pendingModelResponse"] as Record<string, unknown>, context.at("pendingModelResponse"));
+    if (
+      data["pendingModelResponse"] !== undefined &&
+      data["pendingModelResponse"] !== null
+    ) {
+      instance.pendingModelResponse = ModelInvocationResponse.load(
+        data["pendingModelResponse"] as Record<string, unknown>,
+        context.at("pendingModelResponse"),
+      );
     }
-    if (data["resumeSameIteration"] !== undefined && data["resumeSameIteration"] !== null) {
+    if (
+      data["resumeSameIteration"] !== undefined &&
+      data["resumeSameIteration"] !== null
+    ) {
       instance.resumeSameIteration = Boolean(data["resumeSameIteration"]);
     }
-    if (data["policyAppliedForIteration"] !== undefined && data["policyAppliedForIteration"] !== null) {
-      instance.policyAppliedForIteration = Boolean(data["policyAppliedForIteration"]);
+    if (
+      data["policyAppliedForIteration"] !== undefined &&
+      data["policyAppliedForIteration"] !== null
+    ) {
+      instance.policyAppliedForIteration = Boolean(
+        data["policyAppliedForIteration"],
+      );
     }
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
-      instance.contextState = InvocationContextState.load(data["contextState"] as Record<string, unknown>, context.at("contextState"));
+      instance.contextState = InvocationContextState.load(
+        data["contextState"] as Record<string, unknown>,
+        context.at("contextState"),
+      );
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -177,88 +240,144 @@ export class EngineCheckpoint {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Message[] {
     context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
       const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Message.load({ name: k, "role": v }, context.at(k)));
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => Message.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: Message[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadPendingToolRequests(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ModelToolRequest[] {
+  static loadPendingToolRequests(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ModelToolRequest[] {
     context ??= new LoadContext({ path: "pendingToolRequests" });
     if (!Array.isArray(data)) {
       const result: ModelToolRequest[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(ModelToolRequest.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            ModelToolRequest.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(ModelToolRequest.load({ name: k, "id": v }, context.at(k)));
+          result.push(ModelToolRequest.load({ name: k, id: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => ModelToolRequest.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      ModelToolRequest.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static savePendingToolRequests(items: ModelToolRequest[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static savePendingToolRequests(
+    items: ModelToolRequest[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadCompletedToolResults(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ModelToolResult[] {
+  static loadCompletedToolResults(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): ModelToolResult[] {
     context ??= new LoadContext({ path: "completedToolResults" });
     if (!Array.isArray(data)) {
       const result: ModelToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(ModelToolResult.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            ModelToolResult.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(ModelToolResult.load({ name: k, "requestId": v }, context.at(k)));
+          result.push(
+            ModelToolResult.load({ name: k, requestId: v }, context.at(k)),
+          );
         }
       }
       return result;
     }
-    return data.map((item, index) => ModelToolResult.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      ModelToolResult.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveCompletedToolResults(items: ModelToolResult[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveCompletedToolResults(
+    items: ModelToolResult[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -300,28 +419,56 @@ export class EngineCheckpoint {
     if (obj.messages !== undefined && obj.messages !== null) {
       result["messages"] = EngineCheckpoint.saveMessages(obj.messages, context);
     }
-    if (obj.stablePrefixMessages !== undefined && obj.stablePrefixMessages !== null) {
+    if (
+      obj.stablePrefixMessages !== undefined &&
+      obj.stablePrefixMessages !== null
+    ) {
       result["stablePrefixMessages"] = obj.stablePrefixMessages;
     }
     if (obj.inputs !== undefined && obj.inputs !== null) {
       result["inputs"] = obj.inputs;
     }
-    if (obj.activeInvocationId !== undefined && obj.activeInvocationId !== null) {
+    if (
+      obj.activeInvocationId !== undefined &&
+      obj.activeInvocationId !== null
+    ) {
       result["activeInvocationId"] = obj.activeInvocationId;
     }
-    if (obj.pendingToolRequests !== undefined && obj.pendingToolRequests !== null) {
-      result["pendingToolRequests"] = EngineCheckpoint.savePendingToolRequests(obj.pendingToolRequests, context);
+    if (
+      obj.pendingToolRequests !== undefined &&
+      obj.pendingToolRequests !== null
+    ) {
+      result["pendingToolRequests"] = EngineCheckpoint.savePendingToolRequests(
+        obj.pendingToolRequests,
+        context,
+      );
     }
-    if (obj.completedToolResults !== undefined && obj.completedToolResults !== null) {
-      result["completedToolResults"] = EngineCheckpoint.saveCompletedToolResults(obj.completedToolResults, context);
+    if (
+      obj.completedToolResults !== undefined &&
+      obj.completedToolResults !== null
+    ) {
+      result["completedToolResults"] =
+        EngineCheckpoint.saveCompletedToolResults(
+          obj.completedToolResults,
+          context,
+        );
     }
-    if (obj.completedModelIterations !== undefined && obj.completedModelIterations !== null) {
+    if (
+      obj.completedModelIterations !== undefined &&
+      obj.completedModelIterations !== null
+    ) {
       result["completedModelIterations"] = obj.completedModelIterations;
     }
-    if (obj.reconciliationRequired !== undefined && obj.reconciliationRequired !== null) {
+    if (
+      obj.reconciliationRequired !== undefined &&
+      obj.reconciliationRequired !== null
+    ) {
       result["reconciliationRequired"] = obj.reconciliationRequired;
     }
-    if (obj.modelReconciliation !== undefined && obj.modelReconciliation !== null) {
+    if (
+      obj.modelReconciliation !== undefined &&
+      obj.modelReconciliation !== null
+    ) {
       result["modelReconciliation"] = obj.modelReconciliation.save(context);
     }
     if (obj.pendingOutput !== undefined && obj.pendingOutput !== null) {
@@ -330,13 +477,22 @@ export class EngineCheckpoint {
     if (obj.finalOutputReady !== undefined && obj.finalOutputReady !== null) {
       result["finalOutputReady"] = obj.finalOutputReady;
     }
-    if (obj.pendingModelResponse !== undefined && obj.pendingModelResponse !== null) {
+    if (
+      obj.pendingModelResponse !== undefined &&
+      obj.pendingModelResponse !== null
+    ) {
       result["pendingModelResponse"] = obj.pendingModelResponse.save(context);
     }
-    if (obj.resumeSameIteration !== undefined && obj.resumeSameIteration !== null) {
+    if (
+      obj.resumeSameIteration !== undefined &&
+      obj.resumeSameIteration !== null
+    ) {
       result["resumeSameIteration"] = obj.resumeSameIteration;
     }
-    if (obj.policyAppliedForIteration !== undefined && obj.policyAppliedForIteration !== null) {
+    if (
+      obj.policyAppliedForIteration !== undefined &&
+      obj.policyAppliedForIteration !== null
+    ) {
       result["policyAppliedForIteration"] = obj.policyAppliedForIteration;
     }
     if (obj.contextState !== undefined && obj.contextState !== null) {

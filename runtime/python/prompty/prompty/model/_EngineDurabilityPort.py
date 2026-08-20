@@ -13,8 +13,7 @@ from .contracts.pipeline._EngineEvent import EngineEvent
 
 @runtime_checkable
 class EngineDurabilityPort(Protocol):
-    """Persists semantic engine events and checkpoints without runtime cancellation.
-    """
+    """Persists semantic engine events and checkpoints without runtime cancellation."""
 
     def append(self, event: EngineEvent) -> None:
         """Append one semantic engine event durably"""

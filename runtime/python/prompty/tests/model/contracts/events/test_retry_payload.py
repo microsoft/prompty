@@ -7,7 +7,7 @@ from prompty.model import RetryPayload
 
 
 def test_load_json_retrypayload():
-    json_data = r'''
+    json_data = r"""
     {
       "operation": "llm",
       "attempt": 2,
@@ -15,7 +15,7 @@ def test_load_json_retrypayload():
       "delayMs": 1250,
       "reason": "rate_limit"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RetryPayload.load(data)
     assert instance is not None
@@ -25,15 +25,16 @@ def test_load_json_retrypayload():
     assert instance.delay_ms == 1250
     assert instance.reason == "rate_limit"
 
+
 def test_load_yaml_retrypayload():
-    yaml_data = r'''
+    yaml_data = r"""
     operation: llm
     attempt: 2
     maxAttempts: 3
     delayMs: 1250
     reason: rate_limit
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = RetryPayload.load(data)
     assert instance is not None
@@ -43,9 +44,10 @@ def test_load_yaml_retrypayload():
     assert instance.delay_ms == 1250
     assert instance.reason == "rate_limit"
 
+
 def test_roundtrip_json_retrypayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "operation": "llm",
       "attempt": 2,
@@ -53,7 +55,7 @@ def test_roundtrip_json_retrypayload():
       "delayMs": 1250,
       "reason": "rate_limit"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = RetryPayload.load(original_data)
     saved_data = instance.save()
@@ -65,9 +67,10 @@ def test_roundtrip_json_retrypayload():
     assert reloaded.delay_ms == 1250
     assert reloaded.reason == "rate_limit"
 
+
 def test_to_json_retrypayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "operation": "llm",
       "attempt": 2,
@@ -75,7 +78,7 @@ def test_to_json_retrypayload():
       "delayMs": 1250,
       "reason": "rate_limit"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RetryPayload.load(data)
     json_output = instance.to_json()
@@ -83,9 +86,10 @@ def test_to_json_retrypayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_retrypayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "operation": "llm",
       "attempt": 2,
@@ -93,7 +97,7 @@ def test_to_yaml_retrypayload():
       "delayMs": 1250,
       "reason": "rate_limit"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RetryPayload.load(data)
     yaml_output = instance.to_yaml()

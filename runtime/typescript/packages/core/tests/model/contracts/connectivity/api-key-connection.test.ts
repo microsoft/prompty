@@ -23,7 +23,9 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("key");
-      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
+      expect(instance.endpoint).toEqual(
+        "https://{your-custom-endpoint}.openai.azure.com/",
+      );
       expect(instance.apiKey).toEqual("your-api-key");
     });
 
@@ -44,7 +46,9 @@ describe("ApiKeyConnection", () => {
       const instance = ApiKeyConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("key");
-      expect(instance.endpoint).toEqual("https://{your-custom-endpoint}.openai.azure.com/");
+      expect(instance.endpoint).toEqual(
+        "https://{your-custom-endpoint}.openai.azure.com/",
+      );
       expect(instance.apiKey).toEqual("your-api-key");
     });
 
@@ -61,7 +65,9 @@ describe("ApiKeyConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "key",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n  "apiKey": "your-api-key"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "kind": "key",\n  "endpoint": "https://{your-custom-endpoint}.openai.azure.com/",\n  "apiKey": "your-api-key"\n}`,
+      ) as Record<string, unknown>;
       const instance = ApiKeyConnection.load(data);
       expect(instance).toBeDefined();
     });

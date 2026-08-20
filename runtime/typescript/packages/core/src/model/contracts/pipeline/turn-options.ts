@@ -42,7 +42,10 @@ export class TurnOptions {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): TurnOptions {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): TurnOptions {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -59,7 +62,10 @@ export class TurnOptions {
     if (data["contextBudget"] !== undefined && data["contextBudget"] !== null) {
       instance.contextBudget = Number(data["contextBudget"]);
     }
-    if (data["parallelToolCalls"] !== undefined && data["parallelToolCalls"] !== null) {
+    if (
+      data["parallelToolCalls"] !== undefined &&
+      data["parallelToolCalls"] !== null
+    ) {
       instance.parallelToolCalls = Boolean(data["parallelToolCalls"]);
     }
     if (data["raw"] !== undefined && data["raw"] !== null) {
@@ -69,7 +75,10 @@ export class TurnOptions {
       instance.turn = Number(data["turn"]);
     }
     if (data["compaction"] !== undefined && data["compaction"] !== null) {
-      instance.compaction = CompactionConfig.load(data["compaction"] as Record<string, unknown>, context.at("compaction"));
+      instance.compaction = CompactionConfig.load(
+        data["compaction"] as Record<string, unknown>,
+        context.at("compaction"),
+      );
     }
 
     if (context) {

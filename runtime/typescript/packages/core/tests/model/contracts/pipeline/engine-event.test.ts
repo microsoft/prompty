@@ -69,7 +69,9 @@ describe("EngineEvent", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "id": "evt_abc123",\n  "timestamp": "2025-01-01T00:00:00Z",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "id": "evt_abc123",\n  "timestamp": "2025-01-01T00:00:00Z",\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "runId": "run_abc123"\n}`,
+      ) as Record<string, unknown>;
       const instance = EngineEvent.load(data);
       expect(instance).toBeDefined();
     });

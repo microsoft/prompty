@@ -61,7 +61,9 @@ describe("RedactedField", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "path": "$.arguments.apiKey",\n  "mode": "redacted",\n  "reason": "secret"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "path": "$.arguments.apiKey",\n  "mode": "redacted",\n  "reason": "secret"\n}`,
+      ) as Record<string, unknown>;
       const instance = RedactedField.load(data);
       expect(instance).toBeDefined();
     });

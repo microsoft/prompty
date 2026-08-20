@@ -93,7 +93,9 @@ class ModelInvocationContextSnapshot:
         if data is not None and "messages" in data:
             instance.messages = ModelInvocationContextSnapshot.load_messages(data["messages"], context.at("messages"))
         if data is not None and "decisions" in data:
-            instance.decisions = ModelInvocationContextSnapshot.load_decisions(data["decisions"], context.at("decisions"))
+            instance.decisions = ModelInvocationContextSnapshot.load_decisions(
+                data["decisions"], context.at("decisions")
+            )
         if data is not None and "stablePrefixMessages" in data:
             instance.stable_prefix_messages = data["stablePrefixMessages"]
         if data is not None and "contextState" in data:
@@ -103,8 +105,6 @@ class ModelInvocationContextSnapshot:
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -153,7 +153,9 @@ class ModelInvocationContextSnapshot:
         return [InvocationContextDecision.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_decisions(items: list[InvocationContextDecision], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_decisions(
+        items: list[InvocationContextDecision], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -171,7 +173,6 @@ class ModelInvocationContextSnapshot:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

@@ -57,7 +57,9 @@ describe("AnthropicToolUseBlock", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "id": "toolu_01A09q90qw90lq917835lq9",\n  "name": "get_weather",\n  "input": {\n    "city": "Paris"\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "id": "toolu_01A09q90qw90lq917835lq9",\n  "name": "get_weather",\n  "input": {\n    "city": "Paris"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicToolUseBlock.load(data);
       expect(instance).toBeDefined();
     });

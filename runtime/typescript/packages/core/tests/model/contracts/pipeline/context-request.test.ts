@@ -65,7 +65,9 @@ describe("ContextRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "invocationId": "sample",\n  "iteration": 1,\n  "messages": [],\n  "contextState": {}\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "invocationId": "sample",\n  "iteration": 1,\n  "messages": [],\n  "contextState": {}\n}`,
+      ) as Record<string, unknown>;
       const instance = ContextRequest.load(data);
       expect(instance).toBeDefined();
     });

@@ -61,7 +61,9 @@ describe("AnthropicMessagesResponse", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn",\n  "usage": {\n    "input_tokens": 150,\n    "output_tokens": 42\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "id": "msg_01XFDUDYJgAACzvnptvVoYEL",\n  "model": "claude-sonnet-4-20250514",\n  "stop_reason": "end_turn",\n  "usage": {\n    "input_tokens": 150,\n    "output_tokens": 42\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicMessagesResponse.load(data);
       expect(instance).toBeDefined();
     });

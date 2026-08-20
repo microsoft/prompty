@@ -53,7 +53,9 @@ describe("AnthropicTextBlock", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "text": "Hello, how can I help?"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "text": "Hello, how can I help?"\n}`,
+      ) as Record<string, unknown>;
       const instance = AnthropicTextBlock.load(data);
       expect(instance).toBeDefined();
     });

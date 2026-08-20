@@ -16,11 +16,13 @@ export abstract class Connection {
 
   protected static cloneRawValue(value: unknown): unknown {
     if (Array.isArray(value)) {
-      return value.map(item => this.cloneRawValue(item));
+      return value.map((item) => this.cloneRawValue(item));
     }
     if (value !== null && typeof value === "object") {
       const result: Record<string, unknown> = {};
-      for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      for (const [key, item] of Object.entries(
+        value as Record<string, unknown>,
+      )) {
         result[key] = this.cloneRawValue(item);
       }
       return result;
@@ -40,7 +42,10 @@ export abstract class Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): Connection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Connection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -52,10 +57,18 @@ export abstract class Connection {
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
     }
-    if (data["authenticationMode"] !== undefined && data["authenticationMode"] !== null) {
-      instance.authenticationMode = String(data["authenticationMode"]) as AuthenticationMode;
+    if (
+      data["authenticationMode"] !== undefined &&
+      data["authenticationMode"] !== null
+    ) {
+      instance.authenticationMode = String(
+        data["authenticationMode"],
+      ) as AuthenticationMode;
     }
-    if (data["usageDescription"] !== undefined && data["usageDescription"] !== null) {
+    if (
+      data["usageDescription"] !== undefined &&
+      data["usageDescription"] !== null
+    ) {
       instance.usageDescription = String(data["usageDescription"]);
     }
 
@@ -65,31 +78,38 @@ export abstract class Connection {
     return instance;
   }
 
-  private static loadKind(data: Record<string, unknown>, context?: LoadContext): Connection {
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Connection {
     const discriminatorValue = data["kind"];
     if (typeof discriminatorValue !== "string") {
-      throw new Error("Invalid Connection discriminator field 'kind': expected non-blank string");
+      throw new Error(
+        "Invalid Connection discriminator field 'kind': expected non-blank string",
+      );
     }
     if (discriminatorValue === "") {
-      throw new Error("Invalid Connection discriminator field 'kind': expected non-blank string");
+      throw new Error(
+        "Invalid Connection discriminator field 'kind': expected non-blank string",
+      );
     }
     const discriminator = discriminatorValue;
-      switch (discriminator) {
-        case "reference":
-          return ReferenceConnection.load(data, context);
-        case "remote":
-          return RemoteConnection.load(data, context);
-        case "key":
-          return ApiKeyConnection.load(data, context);
-        case "anonymous":
-          return AnonymousConnection.load(data, context);
-        case "oauth":
-          return OAuthConnection.load(data, context);
-        case "foundry":
-          return FoundryConnection.load(data, context);
-        default:
-          return UnknownConnection.load(data, context);
-      }
+    switch (discriminator) {
+      case "reference":
+        return ReferenceConnection.load(data, context);
+      case "remote":
+        return RemoteConnection.load(data, context);
+      case "key":
+        return ApiKeyConnection.load(data, context);
+      case "anonymous":
+        return AnonymousConnection.load(data, context);
+      case "oauth":
+        return OAuthConnection.load(data, context);
+      case "foundry":
+        return FoundryConnection.load(data, context);
+      default:
+        return UnknownConnection.load(data, context);
+    }
   }
 
   //#endregion
@@ -107,7 +127,10 @@ export abstract class Connection {
     if (obj.kind !== undefined && obj.kind !== null) {
       result["kind"] = obj.kind;
     }
-    if (obj.authenticationMode !== undefined && obj.authenticationMode !== null) {
+    if (
+      obj.authenticationMode !== undefined &&
+      obj.authenticationMode !== null
+    ) {
       result["authenticationMode"] = obj.authenticationMode;
     }
     if (obj.usageDescription !== undefined && obj.usageDescription !== null) {
@@ -152,7 +175,10 @@ export abstract class Connection {
  * survives a load/save round-trip unchanged.
  */
 export class UnknownConnection extends Connection {
-  static load(data: Record<string, unknown>, _context?: LoadContext): UnknownConnection {
+  static load(
+    data: Record<string, unknown>,
+    _context?: LoadContext,
+  ): UnknownConnection {
     const instance = new UnknownConnection();
     instance.raw = Connection.cloneRawValue(data) as Record<string, unknown>;
     delete instance.raw["kind"];
@@ -180,7 +206,10 @@ export class ReferenceConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ReferenceConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ReferenceConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -269,7 +298,10 @@ export class RemoteConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): RemoteConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): RemoteConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -358,7 +390,10 @@ export class ApiKeyConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): ApiKeyConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ApiKeyConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -445,7 +480,10 @@ export class AnonymousConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): AnonymousConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AnonymousConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -536,7 +574,10 @@ export class OAuthConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): OAuthConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OAuthConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -560,7 +601,7 @@ export class OAuthConnection extends Connection {
       instance.tokenUrl = String(data["tokenUrl"]);
     }
     if (data["scopes"] !== undefined && data["scopes"] !== null) {
-      instance.scopes = (data["scopes"] as unknown[]).map(v => String(v));
+      instance.scopes = (data["scopes"] as unknown[]).map((v) => String(v));
     }
 
     if (context) {
@@ -649,7 +690,10 @@ export class FoundryConnection extends Connection {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): FoundryConnection {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FoundryConnection {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -666,7 +710,10 @@ export class FoundryConnection extends Connection {
     if (data["name"] !== undefined && data["name"] !== null) {
       instance.name = String(data["name"]);
     }
-    if (data["connectionType"] !== undefined && data["connectionType"] !== null) {
+    if (
+      data["connectionType"] !== undefined &&
+      data["connectionType"] !== null
+    ) {
       instance.connectionType = String(data["connectionType"]);
     }
 

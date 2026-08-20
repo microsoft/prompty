@@ -7,7 +7,7 @@ from prompty.model import SessionTrace
 
 
 def test_load_json_sessiontrace():
-    json_data = r'''
+    json_data = r"""
     {
       "version": "1",
       "runtime": "typescript",
@@ -26,7 +26,7 @@ def test_load_json_sessiontrace():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionTrace.load(data)
     assert instance is not None
@@ -35,8 +35,9 @@ def test_load_json_sessiontrace():
     assert instance.prompty_version == "2.0.0"
     assert instance.session_id == "sess_abc123"
 
+
 def test_load_yaml_sessiontrace():
-    yaml_data = r'''
+    yaml_data = r"""
     version: "1"
     runtime: typescript
     promptyVersion: 2.0.0
@@ -51,7 +52,7 @@ def test_load_yaml_sessiontrace():
         spanId: span_hook_001
         payload: {}
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SessionTrace.load(data)
     assert instance is not None
@@ -60,9 +61,10 @@ def test_load_yaml_sessiontrace():
     assert instance.prompty_version == "2.0.0"
     assert instance.session_id == "sess_abc123"
 
+
 def test_roundtrip_json_sessiontrace():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "version": "1",
       "runtime": "typescript",
@@ -81,7 +83,7 @@ def test_roundtrip_json_sessiontrace():
         }
       ]
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = SessionTrace.load(original_data)
     saved_data = instance.save()
@@ -92,9 +94,10 @@ def test_roundtrip_json_sessiontrace():
     assert reloaded.prompty_version == "2.0.0"
     assert reloaded.session_id == "sess_abc123"
 
+
 def test_to_json_sessiontrace():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "version": "1",
       "runtime": "typescript",
@@ -113,7 +116,7 @@ def test_to_json_sessiontrace():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionTrace.load(data)
     json_output = instance.to_json()
@@ -121,9 +124,10 @@ def test_to_json_sessiontrace():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_sessiontrace():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "version": "1",
       "runtime": "typescript",
@@ -142,7 +146,7 @@ def test_to_yaml_sessiontrace():
         }
       ]
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SessionTrace.load(data)
     yaml_output = instance.to_yaml()

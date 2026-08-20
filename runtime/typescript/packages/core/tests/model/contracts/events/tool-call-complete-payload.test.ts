@@ -69,7 +69,9 @@ describe("ToolCallCompletePayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "success": true,\n  "durationMs": 42,\n  "errorKind": "timeout"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "id": "call_abc123",\n  "name": "get_weather",\n  "success": true,\n  "durationMs": 42,\n  "errorKind": "timeout"\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolCallCompletePayload.load(data);
       expect(instance).toBeDefined();
     });

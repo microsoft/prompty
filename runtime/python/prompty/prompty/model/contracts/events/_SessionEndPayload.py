@@ -69,8 +69,6 @@ class SessionEndPayload:
             instance = context.process_output(instance)
         return instance
 
-
-
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the SessionEndPayload instance to a dictionary.
         Args:
@@ -82,7 +80,6 @@ class SessionEndPayload:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

@@ -5,13 +5,19 @@ type AdapterContext = {
   provider?: string;
 };
 
-function discoveryEnrichInvoke(input: unknown, context: AdapterContext): Record<string, unknown> {
+function discoveryEnrichInvoke(
+  input: unknown,
+  context: AdapterContext,
+): Record<string, unknown> {
   const provider = context.provider ?? "";
   const base = ModelInfo.load(input as Record<string, unknown>);
   return enrich(base, provider).save();
 }
 
-function discoveryMapInvoke(input: unknown, context: AdapterContext): Record<string, unknown> {
+function discoveryMapInvoke(
+  input: unknown,
+  context: AdapterContext,
+): Record<string, unknown> {
   const provider = context.provider ?? "";
   return mapModel(input, provider).save();
 }

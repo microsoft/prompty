@@ -13,13 +13,14 @@ from .contracts.pipeline._TurnCommit import TurnCommit
 
 @runtime_checkable
 class EnginePostCommitPort(Protocol):
-    """Runs non-fatal host effects after a turn is durably committed.
-    """
+    """Runs non-fatal host effects after a turn is durably committed."""
 
     def after_commit(self, effect_id: str, commit: TurnCommit, cancellation: CancellationToken | None = None) -> None:
         """Run one idempotent host effect after the turn is durably committed"""
         raise NotImplementedError
 
-    async def after_commit_async(self, effect_id: str, commit: TurnCommit, cancellation: CancellationToken | None = None) -> None:
+    async def after_commit_async(
+        self, effect_id: str, commit: TurnCommit, cancellation: CancellationToken | None = None
+    ) -> None:
         """Run one idempotent host effect after the turn is durably committed (async variant)"""
         raise NotImplementedError

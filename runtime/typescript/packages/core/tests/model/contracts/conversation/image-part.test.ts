@@ -61,7 +61,9 @@ describe("ImagePart", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "source": "https://example.com/image.png",\n  "detail": "auto",\n  "mediaType": "image/png"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "source": "https://example.com/image.png",\n  "detail": "auto",\n  "mediaType": "image/png"\n}`,
+      ) as Record<string, unknown>;
       const instance = ImagePart.load(data);
       expect(instance).toBeDefined();
     });

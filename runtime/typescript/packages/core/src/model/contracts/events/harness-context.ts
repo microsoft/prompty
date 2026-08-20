@@ -25,7 +25,10 @@ export class HarnessContext {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): HarnessContext {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): HarnessContext {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

@@ -81,7 +81,9 @@ describe("SessionStartPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "sessionId": "sess_abc123",\n  "schemaVersion": "1",\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "sessionId": "sess_abc123",\n  "schemaVersion": "1",\n  "producer": "prompty-agent",\n  "runtime": "typescript",\n  "promptyVersion": "2.0.0",\n  "startTime": "2026-06-09T20:00:00Z",\n  "selectedModel": "gpt-4o-mini",\n  "reasoningEffort": "medium"\n}`,
+      ) as Record<string, unknown>;
       const instance = SessionStartPayload.load(data);
       expect(instance).toBeDefined();
     });

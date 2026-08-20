@@ -60,7 +60,10 @@ export class SessionTrace {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): SessionTrace {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SessionTrace {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -74,32 +77,56 @@ export class SessionTrace {
     if (data["runtime"] !== undefined && data["runtime"] !== null) {
       instance.runtime = String(data["runtime"]);
     }
-    if (data["promptyVersion"] !== undefined && data["promptyVersion"] !== null) {
+    if (
+      data["promptyVersion"] !== undefined &&
+      data["promptyVersion"] !== null
+    ) {
       instance.promptyVersion = String(data["promptyVersion"]);
     }
     if (data["sessionId"] !== undefined && data["sessionId"] !== null) {
       instance.sessionId = String(data["sessionId"]);
     }
     if (data["events"] !== undefined && data["events"] !== null) {
-      instance.events = SessionTrace.loadEvents(data["events"] as unknown[], context.at("events"));
+      instance.events = SessionTrace.loadEvents(
+        data["events"] as unknown[],
+        context.at("events"),
+      );
     }
     if (data["turns"] !== undefined && data["turns"] !== null) {
-      instance.turns = SessionTrace.loadTurns(data["turns"] as unknown[], context.at("turns"));
+      instance.turns = SessionTrace.loadTurns(
+        data["turns"] as unknown[],
+        context.at("turns"),
+      );
     }
     if (data["checkpoints"] !== undefined && data["checkpoints"] !== null) {
-      instance.checkpoints = SessionTrace.loadCheckpoints(data["checkpoints"] as unknown[], context.at("checkpoints"));
+      instance.checkpoints = SessionTrace.loadCheckpoints(
+        data["checkpoints"] as unknown[],
+        context.at("checkpoints"),
+      );
     }
     if (data["trajectory"] !== undefined && data["trajectory"] !== null) {
-      instance.trajectory = SessionTrace.loadTrajectory(data["trajectory"] as unknown[], context.at("trajectory"));
+      instance.trajectory = SessionTrace.loadTrajectory(
+        data["trajectory"] as unknown[],
+        context.at("trajectory"),
+      );
     }
     if (data["files"] !== undefined && data["files"] !== null) {
-      instance.files = SessionTrace.loadFiles(data["files"] as unknown[], context.at("files"));
+      instance.files = SessionTrace.loadFiles(
+        data["files"] as unknown[],
+        context.at("files"),
+      );
     }
     if (data["refs"] !== undefined && data["refs"] !== null) {
-      instance.refs = SessionTrace.loadRefs(data["refs"] as unknown[], context.at("refs"));
+      instance.refs = SessionTrace.loadRefs(
+        data["refs"] as unknown[],
+        context.at("refs"),
+      );
     }
     if (data["summary"] !== undefined && data["summary"] !== null) {
-      instance.summary = SessionSummary.load(data["summary"] as Record<string, unknown>, context.at("summary"));
+      instance.summary = SessionSummary.load(
+        data["summary"] as Record<string, unknown>,
+        context.at("summary"),
+      );
     }
 
     if (context) {
@@ -108,172 +135,281 @@ export class SessionTrace {
     return instance;
   }
 
-  static loadEvents(data: Record<string, unknown>[] | unknown[], context?: LoadContext): SessionEvent[] {
+  static loadEvents(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): SessionEvent[] {
     context ??= new LoadContext({ path: "events" });
     if (!Array.isArray(data)) {
       const result: SessionEvent[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(SessionEvent.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            SessionEvent.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(SessionEvent.load({ name: k, "id": v }, context.at(k)));
+          result.push(SessionEvent.load({ name: k, id: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => SessionEvent.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      SessionEvent.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveEvents(items: SessionEvent[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveEvents(
+    items: SessionEvent[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadTurns(data: Record<string, unknown>[] | unknown[], context?: LoadContext): TurnTrace[] {
+  static loadTurns(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): TurnTrace[] {
     context ??= new LoadContext({ path: "turns" });
     if (!Array.isArray(data)) {
       const result: TurnTrace[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(TurnTrace.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            TurnTrace.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(TurnTrace.load({ name: k, "version": v }, context.at(k)));
+          result.push(TurnTrace.load({ name: k, version: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => TurnTrace.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      TurnTrace.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveTurns(items: TurnTrace[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveTurns(
+    items: TurnTrace[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadCheckpoints(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Checkpoint[] {
+  static loadCheckpoints(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Checkpoint[] {
     context ??= new LoadContext({ path: "checkpoints" });
     if (!Array.isArray(data)) {
       const result: Checkpoint[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Checkpoint.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Checkpoint.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Checkpoint.load({ name: k, "id": v }, context.at(k)));
+          result.push(Checkpoint.load({ name: k, id: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => Checkpoint.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      Checkpoint.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveCheckpoints(items: Checkpoint[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveCheckpoints(
+    items: Checkpoint[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadTrajectory(data: Record<string, unknown>[] | unknown[], context?: LoadContext): TrajectoryEvent[] {
+  static loadTrajectory(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): TrajectoryEvent[] {
     context ??= new LoadContext({ path: "trajectory" });
     if (!Array.isArray(data)) {
       const result: TrajectoryEvent[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(TrajectoryEvent.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            TrajectoryEvent.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(TrajectoryEvent.load({ name: k, "id": v }, context.at(k)));
+          result.push(TrajectoryEvent.load({ name: k, id: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => TrajectoryEvent.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      TrajectoryEvent.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveTrajectory(items: TrajectoryEvent[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveTrajectory(
+    items: TrajectoryEvent[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadFiles(data: Record<string, unknown>[] | unknown[], context?: LoadContext): SessionFileRef[] {
+  static loadFiles(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): SessionFileRef[] {
     context ??= new LoadContext({ path: "files" });
     if (!Array.isArray(data)) {
       const result: SessionFileRef[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(SessionFileRef.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            SessionFileRef.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(SessionFileRef.load({ name: k, "sessionId": v }, context.at(k)));
+          result.push(
+            SessionFileRef.load({ name: k, sessionId: v }, context.at(k)),
+          );
         }
       }
       return result;
     }
-    return data.map((item, index) => SessionFileRef.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      SessionFileRef.load(
+        item as Record<string, unknown>,
+        context.atIndex(index),
+      ),
+    );
   }
 
-  static saveFiles(items: SessionFileRef[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveFiles(
+    items: SessionFileRef[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
-  static loadRefs(data: Record<string, unknown>[] | unknown[], context?: LoadContext): SessionRef[] {
+  static loadRefs(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): SessionRef[] {
     context ??= new LoadContext({ path: "refs" });
     if (!Array.isArray(data)) {
       const result: SessionRef[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(SessionRef.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            SessionRef.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(SessionRef.load({ name: k, "sessionId": v }, context.at(k)));
+          result.push(
+            SessionRef.load({ name: k, sessionId: v }, context.at(k)),
+          );
         }
       }
       return result;
     }
-    return data.map((item, index) => SessionRef.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      SessionRef.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveRefs(items: SessionRef[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveRefs(
+    items: SessionRef[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -307,10 +443,16 @@ export class SessionTrace {
       result["turns"] = SessionTrace.saveTurns(obj.turns, context);
     }
     if (obj.checkpoints !== undefined && obj.checkpoints !== null) {
-      result["checkpoints"] = SessionTrace.saveCheckpoints(obj.checkpoints, context);
+      result["checkpoints"] = SessionTrace.saveCheckpoints(
+        obj.checkpoints,
+        context,
+      );
     }
     if (obj.trajectory !== undefined && obj.trajectory !== null) {
-      result["trajectory"] = SessionTrace.saveTrajectory(obj.trajectory, context);
+      result["trajectory"] = SessionTrace.saveTrajectory(
+        obj.trajectory,
+        context,
+      );
     }
     if (obj.files !== undefined && obj.files !== null) {
       result["files"] = SessionTrace.saveFiles(obj.files, context);

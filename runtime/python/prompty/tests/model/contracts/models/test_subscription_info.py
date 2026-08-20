@@ -7,13 +7,13 @@ from prompty.model import SubscriptionInfo
 
 
 def test_load_json_subscriptioninfo():
-    json_data = r'''
+    json_data = r"""
     {
       "subscriptionId": "sample",
       "displayName": "sample",
       "state": "sample"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SubscriptionInfo.load(data)
     assert instance is not None
@@ -21,13 +21,14 @@ def test_load_json_subscriptioninfo():
     assert instance.display_name == "sample"
     assert instance.state == "sample"
 
+
 def test_load_yaml_subscriptioninfo():
-    yaml_data = r'''
+    yaml_data = r"""
     subscriptionId: sample
     displayName: sample
     state: sample
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SubscriptionInfo.load(data)
     assert instance is not None
@@ -35,15 +36,16 @@ def test_load_yaml_subscriptioninfo():
     assert instance.display_name == "sample"
     assert instance.state == "sample"
 
+
 def test_roundtrip_json_subscriptioninfo():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "subscriptionId": "sample",
       "displayName": "sample",
       "state": "sample"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = SubscriptionInfo.load(original_data)
     saved_data = instance.save()
@@ -53,15 +55,16 @@ def test_roundtrip_json_subscriptioninfo():
     assert reloaded.display_name == "sample"
     assert reloaded.state == "sample"
 
+
 def test_to_json_subscriptioninfo():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "subscriptionId": "sample",
       "displayName": "sample",
       "state": "sample"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SubscriptionInfo.load(data)
     json_output = instance.to_json()
@@ -69,15 +72,16 @@ def test_to_json_subscriptioninfo():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_subscriptioninfo():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "subscriptionId": "sample",
       "displayName": "sample",
       "state": "sample"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = SubscriptionInfo.load(data)
     yaml_output = instance.to_yaml()

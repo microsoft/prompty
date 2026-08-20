@@ -7,38 +7,40 @@ from prompty.model import RedactionMetadata
 
 
 def test_load_json_redactionmetadata():
-    json_data = r'''
+    json_data = r"""
     {
       "sanitized": true,
       "policy": "default-v1"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RedactionMetadata.load(data)
     assert instance is not None
     assert instance.sanitized
     assert instance.policy == "default-v1"
 
+
 def test_load_yaml_redactionmetadata():
-    yaml_data = r'''
+    yaml_data = r"""
     sanitized: true
     policy: default-v1
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = RedactionMetadata.load(data)
     assert instance is not None
     assert instance.sanitized
     assert instance.policy == "default-v1"
 
+
 def test_roundtrip_json_redactionmetadata():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "sanitized": true,
       "policy": "default-v1"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = RedactionMetadata.load(original_data)
     saved_data = instance.save()
@@ -47,14 +49,15 @@ def test_roundtrip_json_redactionmetadata():
     assert reloaded.sanitized
     assert reloaded.policy == "default-v1"
 
+
 def test_to_json_redactionmetadata():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "sanitized": true,
       "policy": "default-v1"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RedactionMetadata.load(data)
     json_output = instance.to_json()
@@ -62,14 +65,15 @@ def test_to_json_redactionmetadata():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_redactionmetadata():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "sanitized": true,
       "policy": "default-v1"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = RedactionMetadata.load(data)
     yaml_output = instance.to_yaml()

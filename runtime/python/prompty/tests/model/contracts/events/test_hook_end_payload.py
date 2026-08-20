@@ -7,7 +7,7 @@ from prompty.model import HookEndPayload
 
 
 def test_load_json_hookendpayload():
-    json_data = r'''
+    json_data = r"""
     {
       "hookInvocationId": "hook_abc123",
       "hookType": "preToolUse",
@@ -15,7 +15,7 @@ def test_load_json_hookendpayload():
       "durationMs": 12,
       "error": "hook failed"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HookEndPayload.load(data)
     assert instance is not None
@@ -25,15 +25,16 @@ def test_load_json_hookendpayload():
     assert instance.duration_ms == 12
     assert instance.error == "hook failed"
 
+
 def test_load_yaml_hookendpayload():
-    yaml_data = r'''
+    yaml_data = r"""
     hookInvocationId: hook_abc123
     hookType: preToolUse
     success: true
     durationMs: 12
     error: hook failed
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = HookEndPayload.load(data)
     assert instance is not None
@@ -43,9 +44,10 @@ def test_load_yaml_hookendpayload():
     assert instance.duration_ms == 12
     assert instance.error == "hook failed"
 
+
 def test_roundtrip_json_hookendpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "hookInvocationId": "hook_abc123",
       "hookType": "preToolUse",
@@ -53,7 +55,7 @@ def test_roundtrip_json_hookendpayload():
       "durationMs": 12,
       "error": "hook failed"
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = HookEndPayload.load(original_data)
     saved_data = instance.save()
@@ -65,9 +67,10 @@ def test_roundtrip_json_hookendpayload():
     assert reloaded.duration_ms == 12
     assert reloaded.error == "hook failed"
 
+
 def test_to_json_hookendpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "hookInvocationId": "hook_abc123",
       "hookType": "preToolUse",
@@ -75,7 +78,7 @@ def test_to_json_hookendpayload():
       "durationMs": 12,
       "error": "hook failed"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HookEndPayload.load(data)
     json_output = instance.to_json()
@@ -83,9 +86,10 @@ def test_to_json_hookendpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_hookendpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "hookInvocationId": "hook_abc123",
       "hookType": "preToolUse",
@@ -93,7 +97,7 @@ def test_to_yaml_hookendpayload():
       "durationMs": 12,
       "error": "hook failed"
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = HookEndPayload.load(data)
     yaml_output = instance.to_yaml()

@@ -22,7 +22,10 @@ export class HostPolicyResult {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): HostPolicyResult {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): HostPolicyResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -31,9 +34,15 @@ export class HostPolicyResult {
     const instance = new HostPolicyResult();
 
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = HostPolicyResult.loadMessages(data["messages"] as unknown[], context.at("messages"));
+      instance.messages = HostPolicyResult.loadMessages(
+        data["messages"] as unknown[],
+        context.at("messages"),
+      );
     }
-    if (data["stablePrefixMessages"] !== undefined && data["stablePrefixMessages"] !== null) {
+    if (
+      data["stablePrefixMessages"] !== undefined &&
+      data["stablePrefixMessages"] !== null
+    ) {
       instance.stablePrefixMessages = Number(data["stablePrefixMessages"]);
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
@@ -46,32 +55,48 @@ export class HostPolicyResult {
     return instance;
   }
 
-  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
+  static loadMessages(
+    data: Record<string, unknown>[] | unknown[],
+    context?: LoadContext,
+  ): Message[] {
     context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
       const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
+          throw new TypeError(
+            context.at(k).path +
+              ": invalid named collection entry category array",
+          );
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
+          result.push(
+            Message.load(
+              { name: k, ...(v as Record<string, unknown>) },
+              context.at(k),
+            ),
+          );
         } else {
-          result.push(Message.load({ name: k, "role": v }, context.at(k)));
+          result.push(Message.load({ name: k, role: v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) => Message.load(item as Record<string, unknown>, context.atIndex(index)));
+    return data.map((item, index) =>
+      Message.load(item as Record<string, unknown>, context.atIndex(index)),
+    );
   }
 
-  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(
+    items: Message[],
+    context?: SaveContext,
+  ): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map(item => item.save(context));
+    return items.map((item) => item.save(context));
   }
 
   //#endregion
@@ -89,7 +114,10 @@ export class HostPolicyResult {
     if (obj.messages !== undefined && obj.messages !== null) {
       result["messages"] = HostPolicyResult.saveMessages(obj.messages, context);
     }
-    if (obj.stablePrefixMessages !== undefined && obj.stablePrefixMessages !== null) {
+    if (
+      obj.stablePrefixMessages !== undefined &&
+      obj.stablePrefixMessages !== null
+    ) {
       result["stablePrefixMessages"] = obj.stablePrefixMessages;
     }
     if (obj.metadata !== undefined && obj.metadata !== null) {

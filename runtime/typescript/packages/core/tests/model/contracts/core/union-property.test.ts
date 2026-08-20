@@ -51,7 +51,9 @@ describe("UnionProperty", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "anyOf": [\n    {\n      "kind": "string"\n    },\n    {\n      "kind": "boolean"\n    }\n  ]\n}`,
+      ) as Record<string, unknown>;
       const instance = UnionProperty.load(data);
       expect(instance).toBeDefined();
     });

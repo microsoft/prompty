@@ -8,5 +8,8 @@ import { ModelToolResult } from "./contracts/pipeline/model-tool-result";
 /** Executes authorized model-requested tools at a runtime cancellation boundary. */
 export interface EngineToolPort {
   /** Execute one authorized model-requested tool */
-  execute(request: ModelToolRequest, signal?: AbortSignal): Promise<ModelToolResult>;
+  execute(
+    request: ModelToolRequest,
+    signal?: AbortSignal,
+  ): Promise<ModelToolResult>;
 }

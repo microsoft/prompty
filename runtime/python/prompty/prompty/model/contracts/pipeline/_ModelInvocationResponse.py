@@ -73,18 +73,22 @@ class ModelInvocationResponse:
         if data is not None and "usage" in data:
             instance.usage = InvocationUsage.load(data["usage"], context.at("usage"))
         if data is not None and "assistantMessages" in data:
-            instance.assistant_messages = ModelInvocationResponse.load_assistant_messages(data["assistantMessages"], context.at("assistantMessages"))
+            instance.assistant_messages = ModelInvocationResponse.load_assistant_messages(
+                data["assistantMessages"], context.at("assistantMessages")
+            )
         if data is not None and "toolRequests" in data:
-            instance.tool_requests = ModelInvocationResponse.load_tool_requests(data["toolRequests"], context.at("toolRequests"))
+            instance.tool_requests = ModelInvocationResponse.load_tool_requests(
+                data["toolRequests"], context.at("toolRequests")
+            )
         if data is not None and "nextContextState" in data:
-            instance.next_context_state = InvocationContextState.load(data["nextContextState"], context.at("nextContextState"))
+            instance.next_context_state = InvocationContextState.load(
+                data["nextContextState"], context.at("nextContextState")
+            )
         if data is not None and "metadata" in data:
             instance.metadata = data["metadata"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
-
-
 
     @staticmethod
     def load_assistant_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -106,7 +110,9 @@ class ModelInvocationResponse:
         return [Message.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_assistant_messages(items: list[Message], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_assistant_messages(
+        items: list[Message], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -133,7 +139,9 @@ class ModelInvocationResponse:
         return [ModelToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_tool_requests(items: list[ModelToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_requests(
+        items: list[ModelToolRequest], context: SaveContext | None
+    ) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -152,7 +160,6 @@ class ModelInvocationResponse:
         if context is not None:
             obj = context.process_object(obj)
 
-
         result: dict[str, Any] = {}
 
         if obj.output is not None:
@@ -160,7 +167,9 @@ class ModelInvocationResponse:
         if obj.usage is not None:
             result["usage"] = obj.usage.save(context)
         if obj.assistant_messages is not None:
-            result["assistantMessages"] = ModelInvocationResponse.save_assistant_messages(obj.assistant_messages, context)
+            result["assistantMessages"] = ModelInvocationResponse.save_assistant_messages(
+                obj.assistant_messages, context
+            )
         if obj.tool_requests is not None:
             result["toolRequests"] = ModelInvocationResponse.save_tool_requests(obj.tool_requests, context)
         if obj.next_context_state is not None:

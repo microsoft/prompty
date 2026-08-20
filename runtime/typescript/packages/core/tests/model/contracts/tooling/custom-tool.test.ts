@@ -51,7 +51,9 @@ describe("CustomTool", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "connection": {\n    "kind": "reference"\n  },\n  "options": {\n    "timeout": 30,\n    "retries": 3\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "connection": {\n    "kind": "reference"\n  },\n  "options": {\n    "timeout": 30,\n    "retries": 3\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = CustomTool.load(data);
       expect(instance).toBeDefined();
     });

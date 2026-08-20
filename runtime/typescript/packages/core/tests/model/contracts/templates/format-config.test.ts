@@ -66,7 +66,6 @@ describe("FormatConfig", () => {
   });
 
   describe("load and save", () => {
-
     it("should save to dictionary", () => {
       const instance = new FormatConfig();
       const data = instance.save();

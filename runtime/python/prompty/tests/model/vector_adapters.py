@@ -23,7 +23,6 @@ Design notes
 
 from __future__ import annotations
 
-import asyncio
 import json
 import os
 import tempfile
@@ -649,7 +648,9 @@ def _replay_normalize_journal(records: list[dict[str, Any]]) -> list[str]:
             case "tool_execution_start":
                 normalized.append(f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}")
             case "tool_execution_complete" | "tool_result":
-                value = f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}:{str(payload['success']).lower()}"
+                value = (
+                    f"turn:{event['type']}:{event['iteration']}:{payload['toolName']}:{str(payload['success']).lower()}"
+                )
                 if payload.get("errorKind"):
                     value = f"{value}:{payload['errorKind']}"
                 normalized.append(value)
@@ -688,7 +689,7 @@ def _replay_model_for_scenario(name: str):
     return invoke_model
 
 
-def _replay_invoke(resolved_input: Any, context: dict[str, Any]) -> list[str]:
+async def _replay_invoke(resolved_input: Any, context: dict[str, Any]) -> list[str]:
     name = context["vector"]["name"]
 
     def fail(args: dict[str, Any], request: HostToolRequest) -> object:
@@ -710,14 +711,12 @@ def _replay_invoke(resolved_input: Any, context: dict[str, Any]) -> list[str]:
             now=lambda: resolved_input["clock"],
             next_id=_replay_fixed_ids(),
         )
-        asyncio.run(
-            runner.run(
-                RunTurnRequest(
-                    session_id=resolved_input["sessionId"],
-                    turn_id=resolved_input["turnId"],
-                    inputs=resolved_input.get("inputs"),
-                    options=TurnOptions(max_iterations=resolved_input.get("maxIterations")),
-                )
+        await runner.run(
+            RunTurnRequest(
+                session_id=resolved_input["sessionId"],
+                turn_id=resolved_input["turnId"],
+                inputs=resolved_input.get("inputs"),
+                options=TurnOptions(max_iterations=resolved_input.get("maxIterations")),
             )
         )
         return _replay_normalize_journal(_replay_records(journal_path))

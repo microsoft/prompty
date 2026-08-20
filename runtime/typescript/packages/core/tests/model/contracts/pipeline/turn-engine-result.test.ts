@@ -51,7 +51,9 @@ describe("TurnEngineResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "commit": {\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "status": "success",\n    "messages": [],\n    "iterations": 1,\n    "lastSequence": 1,\n    "contextState": {}\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "commit": {\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "status": "success",\n    "messages": [],\n    "iterations": 1,\n    "lastSequence": 1,\n    "contextState": {}\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = TurnEngineResult.load(data);
       expect(instance).toBeDefined();
     });

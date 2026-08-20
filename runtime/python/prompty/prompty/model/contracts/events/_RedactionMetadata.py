@@ -63,8 +63,6 @@ class RedactionMetadata:
             instance = context.process_output(instance)
         return instance
 
-
-
     @staticmethod
     def load_fields(data: dict | list, context: LoadContext | None) -> list[RedactedField]:
         if context is None:
@@ -103,7 +101,6 @@ class RedactionMetadata:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
-
 
         result: dict[str, Any] = {}
 

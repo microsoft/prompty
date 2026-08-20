@@ -7,7 +7,7 @@ from prompty.model import ModelReconciliationState
 
 
 def test_load_json_modelreconciliationstate():
-    json_data = r'''
+    json_data = r"""
     {
       "invocationId": "inv_abc123",
       "message": "provider connection dropped after request was sent",
@@ -23,15 +23,16 @@ def test_load_json_modelreconciliationstate():
         }
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ModelReconciliationState.load(data)
     assert instance is not None
     assert instance.invocation_id == "inv_abc123"
     assert instance.message == "provider connection dropped after request was sent"
 
+
 def test_load_yaml_modelreconciliationstate():
-    yaml_data = r'''
+    yaml_data = r"""
     invocationId: inv_abc123
     message: provider connection dropped after request was sent
     request:
@@ -44,16 +45,17 @@ def test_load_yaml_modelreconciliationstate():
         messages: []
         contextState: {}
 
-    '''
+    """
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ModelReconciliationState.load(data)
     assert instance is not None
     assert instance.invocation_id == "inv_abc123"
     assert instance.message == "provider connection dropped after request was sent"
 
+
 def test_roundtrip_json_modelreconciliationstate():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r'''
+    json_data = r"""
     {
       "invocationId": "inv_abc123",
       "message": "provider connection dropped after request was sent",
@@ -69,7 +71,7 @@ def test_roundtrip_json_modelreconciliationstate():
         }
       }
     }
-    '''
+    """
     original_data = json.loads(json_data, strict=False)
     instance = ModelReconciliationState.load(original_data)
     saved_data = instance.save()
@@ -78,9 +80,10 @@ def test_roundtrip_json_modelreconciliationstate():
     assert reloaded.invocation_id == "inv_abc123"
     assert reloaded.message == "provider connection dropped after request was sent"
 
+
 def test_to_json_modelreconciliationstate():
     """Test that to_json produces valid JSON."""
-    json_data = r'''
+    json_data = r"""
     {
       "invocationId": "inv_abc123",
       "message": "provider connection dropped after request was sent",
@@ -96,7 +99,7 @@ def test_to_json_modelreconciliationstate():
         }
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ModelReconciliationState.load(data)
     json_output = instance.to_json()
@@ -104,9 +107,10 @@ def test_to_json_modelreconciliationstate():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
+
 def test_to_yaml_modelreconciliationstate():
     """Test that to_yaml produces valid YAML."""
-    json_data = r'''
+    json_data = r"""
     {
       "invocationId": "inv_abc123",
       "message": "provider connection dropped after request was sent",
@@ -122,7 +126,7 @@ def test_to_yaml_modelreconciliationstate():
         }
       }
     }
-    '''
+    """
     data = json.loads(json_data, strict=False)
     instance = ModelReconciliationState.load(data)
     yaml_output = instance.to_yaml()

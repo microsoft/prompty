@@ -51,7 +51,9 @@ describe("ToolChunk", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "toolCall": {\n    "id": "call_abc123",\n    "name": "get_weather",\n    "arguments": "{\\"city\\": \\"Paris\\"}"\n  }\n}`) as Record<string, unknown>;
+      const data = JSON.parse(
+        `{\n  "toolCall": {\n    "id": "call_abc123",\n    "name": "get_weather",\n    "arguments": "{\\"city\\": \\"Paris\\"}"\n  }\n}`,
+      ) as Record<string, unknown>;
       const instance = ToolChunk.load(data);
       expect(instance).toBeDefined();
     });

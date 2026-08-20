@@ -42,7 +42,10 @@ export class HookEndPayload {
 
   //#region Load Methods
 
-  static load(data: Record<string, unknown>, context?: LoadContext): HookEndPayload {
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): HookEndPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -50,7 +53,10 @@ export class HookEndPayload {
 
     const instance = new HookEndPayload();
 
-    if (data["hookInvocationId"] !== undefined && data["hookInvocationId"] !== null) {
+    if (
+      data["hookInvocationId"] !== undefined &&
+      data["hookInvocationId"] !== null
+    ) {
       instance.hookInvocationId = String(data["hookInvocationId"]);
     }
     if (data["hookType"] !== undefined && data["hookType"] !== null) {
@@ -72,7 +78,10 @@ export class HookEndPayload {
       instance.error = String(data["error"]);
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
+      instance.redaction = RedactionMetadata.load(
+        data["redaction"] as Record<string, unknown>,
+        context.at("redaction"),
+      );
     }
 
     if (context) {
