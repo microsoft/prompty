@@ -57,9 +57,7 @@ describe("InvocationContextDecision", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "candidateId": "memory:project-plan",\n  "reason": "included by relevance ranking"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "candidateId": "memory:project-plan",\n  "reason": "included by relevance ranking"\n}`) as Record<string, unknown>;
       const instance = InvocationContextDecision.load(data);
       expect(instance).toBeDefined();
     });

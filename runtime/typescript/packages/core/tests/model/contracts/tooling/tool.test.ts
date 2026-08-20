@@ -5,6 +5,7 @@
 import { Tool } from "../../../../src/model/index";
 
 describe("Tool", () => {
+
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
       const json = `{\n  "name": "my-tool",\n  "kind": "function",\n  "description": "A description of the tool",\n  "bindings": {\n    "input": "value"\n  }\n}`;
@@ -46,4 +47,5 @@ describe("Tool", () => {
       expect(reloaded.description).toEqual(instance.description);
     });
   });
+
 });

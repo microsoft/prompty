@@ -13,7 +13,8 @@ from .contracts.conversation._Message import Message
 
 @runtime_checkable
 class Parser(Protocol):
-    """Parses rendered prompt text into an array of structured messages with role markers."""
+    """Parses rendered prompt text into an array of structured messages with role markers.
+    """
 
     def parse(self, agent: Agent, rendered: str, context: dict[str, Any] | None) -> list[Message]:
         """Parse rendered text into a structured message array"""

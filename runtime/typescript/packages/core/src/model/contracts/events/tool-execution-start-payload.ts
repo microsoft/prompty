@@ -36,10 +36,7 @@ export class ToolExecutionStartPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ToolExecutionStartPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): ToolExecutionStartPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -59,17 +56,11 @@ export class ToolExecutionStartPayload {
     if (data["arguments"] !== undefined && data["arguments"] !== null) {
       instance.arguments = data["arguments"] as Record<string, unknown>;
     }
-    if (
-      data["workingDirectory"] !== undefined &&
-      data["workingDirectory"] !== null
-    ) {
+    if (data["workingDirectory"] !== undefined && data["workingDirectory"] !== null) {
       instance.workingDirectory = String(data["workingDirectory"]);
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(
-        data["redaction"] as Record<string, unknown>,
-        context.at("redaction"),
-      );
+      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
     }
 
     if (context) {
@@ -125,27 +116,15 @@ export class ToolExecutionStartPayload {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ToolExecutionStartPayload {
+  static fromJson(json: string, context?: LoadContext): ToolExecutionStartPayload {
     const data = JSON.parse(json);
-    return ToolExecutionStartPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ToolExecutionStartPayload.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ToolExecutionStartPayload {
+  static fromYaml(yaml: string, context?: LoadContext): ToolExecutionStartPayload {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ToolExecutionStartPayload.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ToolExecutionStartPayload.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

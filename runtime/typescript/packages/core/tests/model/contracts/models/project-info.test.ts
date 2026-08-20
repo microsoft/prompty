@@ -61,9 +61,7 @@ describe("ProjectInfo", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "name": "sample",\n  "displayName": "sample",\n  "endpoint": "sample"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "name": "sample",\n  "displayName": "sample",\n  "endpoint": "sample"\n}`) as Record<string, unknown>;
       const instance = ProjectInfo.load(data);
       expect(instance).toBeDefined();
     });

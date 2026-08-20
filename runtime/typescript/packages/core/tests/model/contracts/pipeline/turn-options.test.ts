@@ -73,9 +73,7 @@ describe("TurnOptions", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "maxIterations": 10,\n  "maxLlmRetries": 3,\n  "contextBudget": 100000,\n  "parallelToolCalls": true,\n  "raw": false,\n  "turn": 1,\n  "compaction": {\n    "strategy": "summarize"\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "maxIterations": 10,\n  "maxLlmRetries": 3,\n  "contextBudget": 100000,\n  "parallelToolCalls": true,\n  "raw": false,\n  "turn": 1,\n  "compaction": {\n    "strategy": "summarize"\n  }\n}`) as Record<string, unknown>;
       const instance = TurnOptions.load(data);
       expect(instance).toBeDefined();
     });

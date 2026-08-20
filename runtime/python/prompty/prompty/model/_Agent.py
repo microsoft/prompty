@@ -113,6 +113,8 @@ class Agent:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_inputs(data: dict | list, context: LoadContext | None) -> list[Property]:
         if context is None:
@@ -157,7 +159,7 @@ class Agent:
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
@@ -209,7 +211,7 @@ class Agent:
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
@@ -261,7 +263,7 @@ class Agent:
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
@@ -280,6 +282,7 @@ class Agent:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

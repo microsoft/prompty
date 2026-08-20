@@ -40,10 +40,7 @@ export class TurnSummary {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TurnSummary {
+  static load(data: Record<string, unknown>, context?: LoadContext): TurnSummary {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -70,10 +67,7 @@ export class TurnSummary {
       instance.retries = Number(data["retries"]);
     }
     if (data["usage"] !== undefined && data["usage"] !== null) {
-      instance.usage = TokenUsage.load(
-        data["usage"] as Record<string, unknown>,
-        context.at("usage"),
-      );
+      instance.usage = TokenUsage.load(data["usage"] as Record<string, unknown>, context.at("usage"));
     }
     if (data["durationMs"] !== undefined && data["durationMs"] !== null) {
       instance.durationMs = Number(data["durationMs"]);

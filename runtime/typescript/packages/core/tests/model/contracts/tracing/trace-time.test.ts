@@ -61,9 +61,7 @@ describe("TraceTime", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "start": "2026-04-04T12:00:00Z",\n  "end": "2026-04-04T12:00:01Z",\n  "duration": 1000\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "start": "2026-04-04T12:00:00Z",\n  "end": "2026-04-04T12:00:01Z",\n  "duration": 1000\n}`) as Record<string, unknown>;
       const instance = TraceTime.load(data);
       expect(instance).toBeDefined();
     });

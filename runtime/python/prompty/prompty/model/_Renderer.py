@@ -12,7 +12,8 @@ from ._Agent import Agent
 
 @runtime_checkable
 class Renderer(Protocol):
-    """Renders a template string with input values to produce the final prompt text."""
+    """Renders a template string with input values to produce the final prompt text.
+    """
 
     def render(self, agent: Agent, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values"""

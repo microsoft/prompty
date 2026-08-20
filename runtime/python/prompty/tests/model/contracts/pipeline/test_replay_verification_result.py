@@ -7,13 +7,13 @@ from prompty.model import ReplayVerificationResult
 
 
 def test_load_json_replayverificationresult():
-    json_data = r"""
+    json_data = r'''
     {
       "status": "passed",
       "expectedCount": 1,
       "actualCount": 1
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationResult.load(data)
     assert instance is not None
@@ -21,14 +21,13 @@ def test_load_json_replayverificationresult():
     assert instance.expected_count == 1
     assert instance.actual_count == 1
 
-
 def test_load_yaml_replayverificationresult():
-    yaml_data = r"""
+    yaml_data = r'''
     status: passed
     expectedCount: 1
     actualCount: 1
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ReplayVerificationResult.load(data)
     assert instance is not None
@@ -36,16 +35,15 @@ def test_load_yaml_replayverificationresult():
     assert instance.expected_count == 1
     assert instance.actual_count == 1
 
-
 def test_roundtrip_json_replayverificationresult():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "status": "passed",
       "expectedCount": 1,
       "actualCount": 1
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = ReplayVerificationResult.load(original_data)
     saved_data = instance.save()
@@ -55,16 +53,15 @@ def test_roundtrip_json_replayverificationresult():
     assert reloaded.expected_count == 1
     assert reloaded.actual_count == 1
 
-
 def test_to_json_replayverificationresult():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "status": "passed",
       "expectedCount": 1,
       "actualCount": 1
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationResult.load(data)
     json_output = instance.to_json()
@@ -72,16 +69,15 @@ def test_to_json_replayverificationresult():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_replayverificationresult():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "status": "passed",
       "expectedCount": 1,
       "actualCount": 1
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationResult.load(data)
     yaml_output = instance.to_yaml()

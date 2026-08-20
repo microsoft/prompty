@@ -64,6 +64,8 @@ class GuardrailResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the GuardrailResult instance to a dictionary.
         Args:
@@ -75,6 +77,7 @@ class GuardrailResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -113,6 +116,7 @@ class GuardrailResult:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
 
     @classmethod
     def create_rewrite(cls, rewrite: Any) -> "GuardrailResult":

@@ -57,9 +57,7 @@ describe("SessionWarningPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "warningType": "remote",\n  "message": "Remote session disabled"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "warningType": "remote",\n  "message": "Remote session disabled"\n}`) as Record<string, unknown>;
       const instance = SessionWarningPayload.load(data);
       expect(instance).toBeDefined();
     });

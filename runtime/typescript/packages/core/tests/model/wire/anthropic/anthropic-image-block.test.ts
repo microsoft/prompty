@@ -53,9 +53,7 @@ describe("AnthropicImageBlock", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "type": "image",\n  "source": {\n    "type": "base64",\n    "media_type": "image/png",\n    "data": "iVBORw0KGgo..."\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "type": "image",\n  "source": {\n    "type": "base64",\n    "media_type": "image/png",\n    "data": "iVBORw0KGgo..."\n  }\n}`) as Record<string, unknown>;
       const instance = AnthropicImageBlock.load(data);
       expect(instance).toBeDefined();
     });

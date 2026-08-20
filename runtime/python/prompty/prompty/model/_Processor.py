@@ -12,7 +12,8 @@ from ._Agent import Agent
 
 @runtime_checkable
 class Processor(Protocol):
-    """Extracts a clean, typed result from a raw LLM provider response."""
+    """Extracts a clean, typed result from a raw LLM provider response.
+    """
 
     def process(self, agent: Agent, response: Any) -> Any:
         """Extract a clean result from a raw LLM response"""

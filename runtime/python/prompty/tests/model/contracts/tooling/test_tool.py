@@ -7,7 +7,7 @@ from prompty.model import Tool
 
 
 def test_load_json_tool():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "my-tool",
       "kind": "function",
@@ -16,7 +16,7 @@ def test_load_json_tool():
         "input": "value"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Tool.load(data)
     assert instance is not None
@@ -24,16 +24,15 @@ def test_load_json_tool():
     assert instance.kind == "function"
     assert instance.description == "A description of the tool"
 
-
 def test_load_yaml_tool():
-    yaml_data = r"""
+    yaml_data = r'''
     name: my-tool
     kind: function
     description: A description of the tool
     bindings:
       input: value
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Tool.load(data)
     assert instance is not None
@@ -41,10 +40,9 @@ def test_load_yaml_tool():
     assert instance.kind == "function"
     assert instance.description == "A description of the tool"
 
-
 def test_roundtrip_json_tool():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "my-tool",
       "kind": "function",
@@ -53,7 +51,7 @@ def test_roundtrip_json_tool():
         "input": "value"
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Tool.load(original_data)
     saved_data = instance.save()
@@ -63,10 +61,9 @@ def test_roundtrip_json_tool():
     assert reloaded.kind == "function"
     assert reloaded.description == "A description of the tool"
 
-
 def test_to_json_tool():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "my-tool",
       "kind": "function",
@@ -75,7 +72,7 @@ def test_to_json_tool():
         "input": "value"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Tool.load(data)
     json_output = instance.to_json()
@@ -83,10 +80,9 @@ def test_to_json_tool():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_tool():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "my-tool",
       "kind": "function",
@@ -95,7 +91,7 @@ def test_to_yaml_tool():
         "input": "value"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Tool.load(data)
     yaml_output = instance.to_yaml()

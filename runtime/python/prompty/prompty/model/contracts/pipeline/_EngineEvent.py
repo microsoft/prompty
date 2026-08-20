@@ -10,31 +10,7 @@ from typing import Any, ClassVar, Literal
 
 from ..._context import LoadContext, SaveContext
 
-EngineEventKind = Literal[
-    "turn_started",
-    "policy_applied",
-    "context_prepared",
-    "model_invocation_started",
-    "model_invocation_completed",
-    "model_invocation_failed",
-    "model_reconciliation_required",
-    "model_invocation_reconciled",
-    "permission_requested",
-    "permission_resolved",
-    "tool_execution_started",
-    "tool_execution_completed",
-    "tool_result_committed",
-    "tool_result_reconciled",
-    "conversation_updated",
-    "checkpoint_created",
-    "turn_committed",
-    "turn_cancelled",
-    "turn_failed",
-    "turn_reconciliation_required",
-    "post_commit_started",
-    "post_commit_completed",
-    "post_commit_failed",
-]
+EngineEventKind = Literal["turn_started", "policy_applied", "context_prepared", "model_invocation_started", "model_invocation_completed", "model_invocation_failed", "model_reconciliation_required", "model_invocation_reconciled", "permission_requested", "permission_resolved", "tool_execution_started", "tool_execution_completed", "tool_result_committed", "tool_result_reconciled", "conversation_updated", "checkpoint_created", "turn_committed", "turn_cancelled", "turn_failed", "turn_reconciliation_required", "post_commit_started", "post_commit_completed", "post_commit_failed"]
 
 
 @dataclass
@@ -137,6 +113,8 @@ class EngineEvent:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the EngineEvent instance to a dictionary.
         Args:
@@ -148,6 +126,7 @@ class EngineEvent:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

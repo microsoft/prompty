@@ -7,7 +7,7 @@ from prompty.model import TurnTrace
 
 
 def test_load_json_turntrace():
-    json_data = r"""
+    json_data = r'''
     {
       "version": "1",
       "runtime": "typescript",
@@ -25,7 +25,7 @@ def test_load_json_turntrace():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnTrace.load(data)
     assert instance is not None
@@ -33,9 +33,8 @@ def test_load_json_turntrace():
     assert instance.runtime == "typescript"
     assert instance.prompty_version == "2.0.0"
 
-
 def test_load_yaml_turntrace():
-    yaml_data = r"""
+    yaml_data = r'''
     version: "1"
     runtime: typescript
     promptyVersion: 2.0.0
@@ -49,7 +48,7 @@ def test_load_yaml_turntrace():
         spanId: span_tool_001
         payload: {}
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnTrace.load(data)
     assert instance is not None
@@ -57,10 +56,9 @@ def test_load_yaml_turntrace():
     assert instance.runtime == "typescript"
     assert instance.prompty_version == "2.0.0"
 
-
 def test_roundtrip_json_turntrace():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "version": "1",
       "runtime": "typescript",
@@ -78,7 +76,7 @@ def test_roundtrip_json_turntrace():
         }
       ]
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TurnTrace.load(original_data)
     saved_data = instance.save()
@@ -88,10 +86,9 @@ def test_roundtrip_json_turntrace():
     assert reloaded.runtime == "typescript"
     assert reloaded.prompty_version == "2.0.0"
 
-
 def test_to_json_turntrace():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "version": "1",
       "runtime": "typescript",
@@ -109,7 +106,7 @@ def test_to_json_turntrace():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnTrace.load(data)
     json_output = instance.to_json()
@@ -117,10 +114,9 @@ def test_to_json_turntrace():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_turntrace():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "version": "1",
       "runtime": "typescript",
@@ -138,7 +134,7 @@ def test_to_yaml_turntrace():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnTrace.load(data)
     yaml_output = instance.to_yaml()

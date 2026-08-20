@@ -61,9 +61,7 @@ describe("TurnModelRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "iteration": 0\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sessionId": "sess_abc123",\n  "turnId": "turn_abc123",\n  "iteration": 0\n}`) as Record<string, unknown>;
       const instance = TurnModelRequest.load(data);
       expect(instance).toBeDefined();
     });

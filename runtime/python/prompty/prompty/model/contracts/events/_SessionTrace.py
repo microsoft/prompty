@@ -109,6 +109,8 @@ class SessionTrace:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_events(data: dict | list, context: LoadContext | None) -> list[SessionEvent]:
         if context is None:
@@ -210,9 +212,7 @@ class SessionTrace:
         return [TrajectoryEvent.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_trajectory(
-        items: list[TrajectoryEvent], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_trajectory(items: list[TrajectoryEvent], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -284,6 +284,7 @@ class SessionTrace:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

@@ -7,7 +7,7 @@ from prompty.model import ContextCandidate
 
 
 def test_load_json_contextcandidate():
-    json_data = r"""
+    json_data = r'''
     {
       "id": "memory:project-plan",
       "source": "memory",
@@ -26,16 +26,15 @@ def test_load_json_contextcandidate():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ContextCandidate.load(data)
     assert instance is not None
     assert instance.id == "memory:project-plan"
     assert instance.source == "memory"
 
-
 def test_load_yaml_contextcandidate():
-    yaml_data = r"""
+    yaml_data = r'''
     id: "memory:project-plan"
     source: memory
     messages:
@@ -46,17 +45,16 @@ def test_load_yaml_contextcandidate():
         metadata:
           source: user-input
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ContextCandidate.load(data)
     assert instance is not None
     assert instance.id == "memory:project-plan"
     assert instance.source == "memory"
 
-
 def test_roundtrip_json_contextcandidate():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "memory:project-plan",
       "source": "memory",
@@ -75,7 +73,7 @@ def test_roundtrip_json_contextcandidate():
         }
       ]
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = ContextCandidate.load(original_data)
     saved_data = instance.save()
@@ -84,10 +82,9 @@ def test_roundtrip_json_contextcandidate():
     assert reloaded.id == "memory:project-plan"
     assert reloaded.source == "memory"
 
-
 def test_to_json_contextcandidate():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "memory:project-plan",
       "source": "memory",
@@ -106,7 +103,7 @@ def test_to_json_contextcandidate():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ContextCandidate.load(data)
     json_output = instance.to_json()
@@ -114,10 +111,9 @@ def test_to_json_contextcandidate():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_contextcandidate():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "memory:project-plan",
       "source": "memory",
@@ -136,7 +132,7 @@ def test_to_yaml_contextcandidate():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ContextCandidate.load(data)
     yaml_output = instance.to_yaml()

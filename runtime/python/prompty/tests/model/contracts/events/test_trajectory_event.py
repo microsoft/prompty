@@ -7,7 +7,7 @@ from prompty.model import TrajectoryEvent
 
 
 def test_load_json_trajectoryevent():
-    json_data = r"""
+    json_data = r'''
     {
       "id": "traj_abc123",
       "sessionId": "sess_abc123",
@@ -17,7 +17,7 @@ def test_load_json_trajectoryevent():
       "eventType": "command",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TrajectoryEvent.load(data)
     assert instance is not None
@@ -29,9 +29,8 @@ def test_load_json_trajectoryevent():
     assert instance.event_type == "command"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_load_yaml_trajectoryevent():
-    yaml_data = r"""
+    yaml_data = r'''
     id: traj_abc123
     sessionId: sess_abc123
     turnId: turn_001
@@ -40,7 +39,7 @@ def test_load_yaml_trajectoryevent():
     eventType: command
     createdAt: "2026-06-09T20:00:00Z"
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TrajectoryEvent.load(data)
     assert instance is not None
@@ -52,10 +51,9 @@ def test_load_yaml_trajectoryevent():
     assert instance.event_type == "command"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_roundtrip_json_trajectoryevent():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "traj_abc123",
       "sessionId": "sess_abc123",
@@ -65,7 +63,7 @@ def test_roundtrip_json_trajectoryevent():
       "eventType": "command",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TrajectoryEvent.load(original_data)
     saved_data = instance.save()
@@ -79,10 +77,9 @@ def test_roundtrip_json_trajectoryevent():
     assert reloaded.event_type == "command"
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_to_json_trajectoryevent():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "traj_abc123",
       "sessionId": "sess_abc123",
@@ -92,7 +89,7 @@ def test_to_json_trajectoryevent():
       "eventType": "command",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TrajectoryEvent.load(data)
     json_output = instance.to_json()
@@ -100,10 +97,9 @@ def test_to_json_trajectoryevent():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_trajectoryevent():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "traj_abc123",
       "sessionId": "sess_abc123",
@@ -113,7 +109,7 @@ def test_to_yaml_trajectoryevent():
       "eventType": "command",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TrajectoryEvent.load(data)
     yaml_output = instance.to_yaml()

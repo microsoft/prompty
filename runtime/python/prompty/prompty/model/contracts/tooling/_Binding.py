@@ -65,6 +65,8 @@ class Binding:
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Binding instance to a dictionary.
         Args:
@@ -76,6 +78,7 @@ class Binding:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

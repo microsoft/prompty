@@ -7,7 +7,7 @@ from prompty.model import HostToolResult
 
 
 def test_load_json_hosttoolresult():
-    json_data = r"""
+    json_data = r'''
     {
       "requestId": "exec_abc123",
       "toolCallId": "call_abc123",
@@ -17,7 +17,7 @@ def test_load_json_hosttoolresult():
       "durationMs": 250,
       "errorKind": "timeout"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = HostToolResult.load(data)
     assert instance is not None
@@ -29,9 +29,8 @@ def test_load_json_hosttoolresult():
     assert instance.duration_ms == 250
     assert instance.error_kind == "timeout"
 
-
 def test_load_yaml_hosttoolresult():
-    yaml_data = r"""
+    yaml_data = r'''
     requestId: exec_abc123
     toolCallId: call_abc123
     toolName: powershell
@@ -40,7 +39,7 @@ def test_load_yaml_hosttoolresult():
     durationMs: 250
     errorKind: timeout
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = HostToolResult.load(data)
     assert instance is not None
@@ -52,10 +51,9 @@ def test_load_yaml_hosttoolresult():
     assert instance.duration_ms == 250
     assert instance.error_kind == "timeout"
 
-
 def test_roundtrip_json_hosttoolresult():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "requestId": "exec_abc123",
       "toolCallId": "call_abc123",
@@ -65,7 +63,7 @@ def test_roundtrip_json_hosttoolresult():
       "durationMs": 250,
       "errorKind": "timeout"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = HostToolResult.load(original_data)
     saved_data = instance.save()
@@ -79,10 +77,9 @@ def test_roundtrip_json_hosttoolresult():
     assert reloaded.duration_ms == 250
     assert reloaded.error_kind == "timeout"
 
-
 def test_to_json_hosttoolresult():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "requestId": "exec_abc123",
       "toolCallId": "call_abc123",
@@ -92,7 +89,7 @@ def test_to_json_hosttoolresult():
       "durationMs": 250,
       "errorKind": "timeout"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = HostToolResult.load(data)
     json_output = instance.to_json()
@@ -100,10 +97,9 @@ def test_to_json_hosttoolresult():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_hosttoolresult():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "requestId": "exec_abc123",
       "toolCallId": "call_abc123",
@@ -113,7 +109,7 @@ def test_to_yaml_hosttoolresult():
       "durationMs": 250,
       "errorKind": "timeout"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = HostToolResult.load(data)
     yaml_output = instance.to_yaml()

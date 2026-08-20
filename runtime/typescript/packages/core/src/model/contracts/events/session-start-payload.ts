@@ -48,10 +48,7 @@ export class SessionStartPayload {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): SessionStartPayload {
+  static load(data: Record<string, unknown>, context?: LoadContext): SessionStartPayload {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -71,10 +68,7 @@ export class SessionStartPayload {
     if (data["runtime"] !== undefined && data["runtime"] !== null) {
       instance.runtime = String(data["runtime"]);
     }
-    if (
-      data["promptyVersion"] !== undefined &&
-      data["promptyVersion"] !== null
-    ) {
+    if (data["promptyVersion"] !== undefined && data["promptyVersion"] !== null) {
       instance.promptyVersion = String(data["promptyVersion"]);
     }
     if (data["startTime"] !== undefined && data["startTime"] !== null) {
@@ -83,17 +77,11 @@ export class SessionStartPayload {
     if (data["selectedModel"] !== undefined && data["selectedModel"] !== null) {
       instance.selectedModel = String(data["selectedModel"]);
     }
-    if (
-      data["reasoningEffort"] !== undefined &&
-      data["reasoningEffort"] !== null
-    ) {
+    if (data["reasoningEffort"] !== undefined && data["reasoningEffort"] !== null) {
       instance.reasoningEffort = String(data["reasoningEffort"]);
     }
     if (data["context"] !== undefined && data["context"] !== null) {
-      instance.context = HarnessContext.load(
-        data["context"] as Record<string, unknown>,
-        context.at("context"),
-      );
+      instance.context = HarnessContext.load(data["context"] as Record<string, unknown>, context.at("context"));
     }
 
     if (context) {

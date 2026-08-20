@@ -152,29 +152,21 @@ class EngineCheckpoint:
         if data is not None and "activeInvocationId" in data:
             instance.active_invocation_id = data["activeInvocationId"]
         if data is not None and "pendingToolRequests" in data:
-            instance.pending_tool_requests = EngineCheckpoint.load_pending_tool_requests(
-                data["pendingToolRequests"], context.at("pendingToolRequests")
-            )
+            instance.pending_tool_requests = EngineCheckpoint.load_pending_tool_requests(data["pendingToolRequests"], context.at("pendingToolRequests"))
         if data is not None and "completedToolResults" in data:
-            instance.completed_tool_results = EngineCheckpoint.load_completed_tool_results(
-                data["completedToolResults"], context.at("completedToolResults")
-            )
+            instance.completed_tool_results = EngineCheckpoint.load_completed_tool_results(data["completedToolResults"], context.at("completedToolResults"))
         if data is not None and "completedModelIterations" in data:
             instance.completed_model_iterations = data["completedModelIterations"]
         if data is not None and "reconciliationRequired" in data:
             instance.reconciliation_required = data["reconciliationRequired"]
         if data is not None and "modelReconciliation" in data:
-            instance.model_reconciliation = ModelReconciliationState.load(
-                data["modelReconciliation"], context.at("modelReconciliation")
-            )
+            instance.model_reconciliation = ModelReconciliationState.load(data["modelReconciliation"], context.at("modelReconciliation"))
         if data is not None and "pendingOutput" in data:
             instance.pending_output = data["pendingOutput"]
         if data is not None and "finalOutputReady" in data:
             instance.final_output_ready = data["finalOutputReady"]
         if data is not None and "pendingModelResponse" in data:
-            instance.pending_model_response = ModelInvocationResponse.load(
-                data["pendingModelResponse"], context.at("pendingModelResponse")
-            )
+            instance.pending_model_response = ModelInvocationResponse.load(data["pendingModelResponse"], context.at("pendingModelResponse"))
         if data is not None and "resumeSameIteration" in data:
             instance.resume_same_iteration = data["resumeSameIteration"]
         if data is not None and "policyAppliedForIteration" in data:
@@ -186,6 +178,8 @@ class EngineCheckpoint:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[Message]:
@@ -234,9 +228,7 @@ class EngineCheckpoint:
         return [ModelToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_pending_tool_requests(
-        items: list[ModelToolRequest], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_pending_tool_requests(items: list[ModelToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -263,9 +255,7 @@ class EngineCheckpoint:
         return [ModelToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_completed_tool_results(
-        items: list[ModelToolResult], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_completed_tool_results(items: list[ModelToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -283,6 +273,7 @@ class EngineCheckpoint:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -311,13 +302,9 @@ class EngineCheckpoint:
         if obj.active_invocation_id is not None:
             result["activeInvocationId"] = obj.active_invocation_id
         if obj.pending_tool_requests is not None:
-            result["pendingToolRequests"] = EngineCheckpoint.save_pending_tool_requests(
-                obj.pending_tool_requests, context
-            )
+            result["pendingToolRequests"] = EngineCheckpoint.save_pending_tool_requests(obj.pending_tool_requests, context)
         if obj.completed_tool_results is not None:
-            result["completedToolResults"] = EngineCheckpoint.save_completed_tool_results(
-                obj.completed_tool_results, context
-            )
+            result["completedToolResults"] = EngineCheckpoint.save_completed_tool_results(obj.completed_tool_results, context)
         if obj.completed_model_iterations is not None:
             result["completedModelIterations"] = obj.completed_model_iterations
         if obj.reconciliation_required is not None:

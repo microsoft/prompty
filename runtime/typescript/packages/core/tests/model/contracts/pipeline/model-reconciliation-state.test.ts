@@ -23,9 +23,7 @@ describe("ModelReconciliationState", () => {
       const instance = ModelReconciliationState.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual(
-        "provider connection dropped after request was sent",
-      );
+      expect(instance.message).toEqual("provider connection dropped after request was sent");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -44,9 +42,7 @@ describe("ModelReconciliationState", () => {
       const instance = ModelReconciliationState.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.invocationId).toEqual("inv_abc123");
-      expect(instance.message).toEqual(
-        "provider connection dropped after request was sent",
-      );
+      expect(instance.message).toEqual("provider connection dropped after request was sent");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -61,9 +57,7 @@ describe("ModelReconciliationState", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent",\n  "request": {\n    "context": {\n      "id": "context:inv_abc123",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_abc123",\n      "invocationId": "inv_abc123",\n      "iteration": 1,\n      "messages": [],\n      "contextState": {}\n    }\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "invocationId": "inv_abc123",\n  "message": "provider connection dropped after request was sent",\n  "request": {\n    "context": {\n      "id": "context:inv_abc123",\n      "sessionId": "sess_abc123",\n      "turnId": "turn_abc123",\n      "invocationId": "inv_abc123",\n      "iteration": 1,\n      "messages": [],\n      "contextState": {}\n    }\n  }\n}`) as Record<string, unknown>;
       const instance = ModelReconciliationState.load(data);
       expect(instance).toBeDefined();
     });

@@ -65,9 +65,7 @@ describe("SessionEndPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sessionId": "sess_abc123",\n  "status": "success",\n  "reason": "complete",\n  "durationMs": 12500\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sessionId": "sess_abc123",\n  "status": "success",\n  "reason": "complete",\n  "durationMs": 12500\n}`) as Record<string, unknown>;
       const instance = SessionEndPayload.load(data);
       expect(instance).toBeDefined();
     });

@@ -5,6 +5,7 @@
 import { ContentPart } from "../../../../src/model/index";
 
 describe("ContentPart", () => {
+
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
       const json = `{\n  "kind": "text",\n  "value": "Hello, world!"\n}`;
@@ -38,4 +39,5 @@ describe("ContentPart", () => {
       expect(reloaded.kind).toEqual(instance.kind);
     });
   });
+
 });

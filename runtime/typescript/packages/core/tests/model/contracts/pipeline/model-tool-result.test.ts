@@ -57,9 +57,7 @@ describe("ModelToolResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "requestId": "call_abc123",\n  "name": "get_weather"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "requestId": "call_abc123",\n  "name": "get_weather"\n}`) as Record<string, unknown>;
       const instance = ModelToolResult.load(data);
       expect(instance).toBeDefined();
     });

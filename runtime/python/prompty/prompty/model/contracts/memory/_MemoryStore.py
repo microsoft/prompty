@@ -58,6 +58,8 @@ class MemoryStore:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_entries(data: dict | list, context: LoadContext | None) -> list[MemoryEntry]:
         if context is None:
@@ -96,6 +98,7 @@ class MemoryStore:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

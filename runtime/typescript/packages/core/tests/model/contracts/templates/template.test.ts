@@ -51,9 +51,7 @@ describe("Template", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "format": {\n    "kind": "mustache"\n  },\n  "parser": {\n    "kind": "mustache"\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "format": {\n    "kind": "mustache"\n  },\n  "parser": {\n    "kind": "mustache"\n  }\n}`) as Record<string, unknown>;
       const instance = Template.load(data);
       expect(instance).toBeDefined();
     });

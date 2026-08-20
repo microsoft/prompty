@@ -53,9 +53,7 @@ describe("ErrorChunk", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "message": "Rate limit exceeded"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "message": "Rate limit exceeded"\n}`) as Record<string, unknown>;
       const instance = ErrorChunk.load(data);
       expect(instance).toBeDefined();
     });

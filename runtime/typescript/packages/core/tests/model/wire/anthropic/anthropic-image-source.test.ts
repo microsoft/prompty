@@ -57,9 +57,7 @@ describe("AnthropicImageSource", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "media_type": "image/png",\n  "data": "iVBORw0KGgo..."\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "media_type": "image/png",\n  "data": "iVBORw0KGgo..."\n}`) as Record<string, unknown>;
       const instance = AnthropicImageSource.load(data);
       expect(instance).toBeDefined();
     });

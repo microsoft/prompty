@@ -61,9 +61,7 @@ describe("HostPolicyRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "iteration": 1,\n  "messages": []\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sessionId": "sample",\n  "turnId": "sample",\n  "iteration": 1,\n  "messages": []\n}`) as Record<string, unknown>;
       const instance = HostPolicyRequest.load(data);
       expect(instance).toBeDefined();
     });

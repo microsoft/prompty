@@ -23,9 +23,7 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("foundry");
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
       expect(instance.connectionType).toEqual("model");
     });
@@ -48,9 +46,7 @@ describe("FoundryConnection", () => {
       const instance = FoundryConnection.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("foundry");
-      expect(instance.endpoint).toEqual(
-        "https://myresource.services.ai.azure.com/api/projects/myproject",
-      );
+      expect(instance.endpoint).toEqual("https://myresource.services.ai.azure.com/api/projects/myproject");
       expect(instance.name).toEqual("my-openai-connection");
       expect(instance.connectionType).toEqual("model");
     });
@@ -69,9 +65,7 @@ describe("FoundryConnection", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "kind": "foundry",\n  "endpoint": "https://myresource.services.ai.azure.com/api/projects/myproject",\n  "name": "my-openai-connection",\n  "connectionType": "model"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "kind": "foundry",\n  "endpoint": "https://myresource.services.ai.azure.com/api/projects/myproject",\n  "name": "my-openai-connection",\n  "connectionType": "model"\n}`) as Record<string, unknown>;
       const instance = FoundryConnection.load(data);
       expect(instance).toBeDefined();
     });

@@ -13,7 +13,8 @@ from .contracts.events._HostToolResult import HostToolResult
 
 @runtime_checkable
 class HostToolExecutor(Protocol):
-    """Executes host tools after policy and permission checks."""
+    """Executes host tools after policy and permission checks.
+    """
 
     def execute(self, request: HostToolRequest) -> HostToolResult:
         """Execute a concrete host tool request and return its completion payload"""

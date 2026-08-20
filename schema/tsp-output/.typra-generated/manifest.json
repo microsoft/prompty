@@ -695,6 +695,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/VectorConformanceTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicImageBlockConversionTests.cs",
       "marker": true
     },
@@ -3151,6 +3156,11 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/validation_result.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/vector_conformance_test.go",
       "marker": true
     },
     {
@@ -7880,6 +7890,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/vector_conformance_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_image_block_test.rs",
       "marker": true
     },
@@ -9241,6 +9256,11 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceTimeTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/VectorConformanceTests.swift",
       "marker": true
     },
     {

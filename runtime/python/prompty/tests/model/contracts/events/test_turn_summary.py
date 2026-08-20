@@ -7,7 +7,7 @@ from prompty.model import TurnSummary
 
 
 def test_load_json_turnsummary():
-    json_data = r"""
+    json_data = r'''
     {
       "turnId": "turn_001",
       "status": "success",
@@ -17,7 +17,7 @@ def test_load_json_turnsummary():
       "retries": 1,
       "durationMs": 2500
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnSummary.load(data)
     assert instance is not None
@@ -29,9 +29,8 @@ def test_load_json_turnsummary():
     assert instance.retries == 1
     assert instance.duration_ms == 2500
 
-
 def test_load_yaml_turnsummary():
-    yaml_data = r"""
+    yaml_data = r'''
     turnId: turn_001
     status: success
     iterations: 2
@@ -40,7 +39,7 @@ def test_load_yaml_turnsummary():
     retries: 1
     durationMs: 2500
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnSummary.load(data)
     assert instance is not None
@@ -52,10 +51,9 @@ def test_load_yaml_turnsummary():
     assert instance.retries == 1
     assert instance.duration_ms == 2500
 
-
 def test_roundtrip_json_turnsummary():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "turnId": "turn_001",
       "status": "success",
@@ -65,7 +63,7 @@ def test_roundtrip_json_turnsummary():
       "retries": 1,
       "durationMs": 2500
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TurnSummary.load(original_data)
     saved_data = instance.save()
@@ -79,10 +77,9 @@ def test_roundtrip_json_turnsummary():
     assert reloaded.retries == 1
     assert reloaded.duration_ms == 2500
 
-
 def test_to_json_turnsummary():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "turnId": "turn_001",
       "status": "success",
@@ -92,7 +89,7 @@ def test_to_json_turnsummary():
       "retries": 1,
       "durationMs": 2500
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnSummary.load(data)
     json_output = instance.to_json()
@@ -100,10 +97,9 @@ def test_to_json_turnsummary():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_turnsummary():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "turnId": "turn_001",
       "status": "success",
@@ -113,7 +109,7 @@ def test_to_yaml_turnsummary():
       "retries": 1,
       "durationMs": 2500
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnSummary.load(data)
     yaml_output = instance.to_yaml()

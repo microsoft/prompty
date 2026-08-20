@@ -53,10 +53,7 @@ describe("ReplayJournalRecord", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "kind": "session"\n}`) as Record<
-        string,
-        unknown
-      >;
+      const data = JSON.parse(`{\n  "kind": "session"\n}`) as Record<string, unknown>;
       const instance = ReplayJournalRecord.load(data);
       expect(instance).toBeDefined();
     });

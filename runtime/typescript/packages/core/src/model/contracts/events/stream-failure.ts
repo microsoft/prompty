@@ -19,10 +19,7 @@ export class StreamFailure {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): StreamFailure {
+  static load(data: Record<string, unknown>, context?: LoadContext): StreamFailure {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

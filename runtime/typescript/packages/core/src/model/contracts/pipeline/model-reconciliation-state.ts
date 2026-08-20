@@ -28,10 +28,7 @@ export class ModelReconciliationState {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelReconciliationState {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelReconciliationState {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -46,10 +43,7 @@ export class ModelReconciliationState {
       instance.invocationId = String(data["invocationId"]);
     }
     if (data["request"] !== undefined && data["request"] !== null) {
-      instance.request = ModelInvocationRequest.load(
-        data["request"] as Record<string, unknown>,
-        context.at("request"),
-      );
+      instance.request = ModelInvocationRequest.load(data["request"] as Record<string, unknown>, context.at("request"));
     }
     if (data["failedAttempt"] !== undefined && data["failedAttempt"] !== null) {
       instance.failedAttempt = Number(data["failedAttempt"]);
@@ -111,27 +105,15 @@ export class ModelReconciliationState {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): ModelReconciliationState {
+  static fromJson(json: string, context?: LoadContext): ModelReconciliationState {
     const data = JSON.parse(json);
-    return ModelReconciliationState.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelReconciliationState.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): ModelReconciliationState {
+  static fromYaml(yaml: string, context?: LoadContext): ModelReconciliationState {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return ModelReconciliationState.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return ModelReconciliationState.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

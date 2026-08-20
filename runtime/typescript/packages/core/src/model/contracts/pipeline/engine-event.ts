@@ -4,30 +4,7 @@
 
 import { LoadContext, SaveContext } from "../../context";
 
-export type EngineEventKind =
-  | "turn_started"
-  | "policy_applied"
-  | "context_prepared"
-  | "model_invocation_started"
-  | "model_invocation_completed"
-  | "model_invocation_failed"
-  | "model_reconciliation_required"
-  | "model_invocation_reconciled"
-  | "permission_requested"
-  | "permission_resolved"
-  | "tool_execution_started"
-  | "tool_execution_completed"
-  | "tool_result_committed"
-  | "tool_result_reconciled"
-  | "conversation_updated"
-  | "checkpoint_created"
-  | "turn_committed"
-  | "turn_cancelled"
-  | "turn_failed"
-  | "turn_reconciliation_required"
-  | "post_commit_started"
-  | "post_commit_completed"
-  | "post_commit_failed";
+export type EngineEventKind = "turn_started" | "policy_applied" | "context_prepared" | "model_invocation_started" | "model_invocation_completed" | "model_invocation_failed" | "model_reconciliation_required" | "model_invocation_reconciled" | "permission_requested" | "permission_resolved" | "tool_execution_started" | "tool_execution_completed" | "tool_result_committed" | "tool_result_reconciled" | "conversation_updated" | "checkpoint_created" | "turn_committed" | "turn_cancelled" | "turn_failed" | "turn_reconciliation_required" | "post_commit_started" | "post_commit_completed" | "post_commit_failed";
 
 export class EngineEvent {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -70,10 +47,7 @@ export class EngineEvent {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): EngineEvent {
+  static load(data: Record<string, unknown>, context?: LoadContext): EngineEvent {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -102,10 +76,7 @@ export class EngineEvent {
     if (data["parentRunId"] !== undefined && data["parentRunId"] !== null) {
       instance.parentRunId = String(data["parentRunId"]);
     }
-    if (
-      data["delegationDepth"] !== undefined &&
-      data["delegationDepth"] !== null
-    ) {
+    if (data["delegationDepth"] !== undefined && data["delegationDepth"] !== null) {
       instance.delegationDepth = Number(data["delegationDepth"]);
     }
     if (data["invocationId"] !== undefined && data["invocationId"] !== null) {

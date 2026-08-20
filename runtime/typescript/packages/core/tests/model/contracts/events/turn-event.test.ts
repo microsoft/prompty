@@ -73,9 +73,7 @@ describe("TurnEvent", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "id": "evt_abc123",\n  "timestamp": "2026-06-09T20:00:00Z",\n  "turnId": "turn_001",\n  "iteration": 0,\n  "parentId": "evt_parent",\n  "spanId": "span_tool_001"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "id": "evt_abc123",\n  "timestamp": "2026-06-09T20:00:00Z",\n  "turnId": "turn_001",\n  "iteration": 0,\n  "parentId": "evt_parent",\n  "spanId": "span_tool_001"\n}`) as Record<string, unknown>;
       const instance = TurnEvent.load(data);
       expect(instance).toBeDefined();
     });

@@ -23,10 +23,7 @@ export class DelegatedStateReference {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): DelegatedStateReference {
+  static load(data: Record<string, unknown>, context?: LoadContext): DelegatedStateReference {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -94,27 +91,15 @@ export class DelegatedStateReference {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): DelegatedStateReference {
+  static fromJson(json: string, context?: LoadContext): DelegatedStateReference {
     const data = JSON.parse(json);
-    return DelegatedStateReference.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return DelegatedStateReference.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): DelegatedStateReference {
+  static fromYaml(yaml: string, context?: LoadContext): DelegatedStateReference {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return DelegatedStateReference.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return DelegatedStateReference.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

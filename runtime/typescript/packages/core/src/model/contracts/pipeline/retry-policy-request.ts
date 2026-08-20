@@ -21,10 +21,7 @@ export class RetryPolicyRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RetryPolicyRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): RetryPolicyRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -32,10 +29,7 @@ export class RetryPolicyRequest {
 
     const instance = new RetryPolicyRequest();
 
-    if (
-      data["failedAttempts"] !== undefined &&
-      data["failedAttempts"] !== null
-    ) {
+    if (data["failedAttempts"] !== undefined && data["failedAttempts"] !== null) {
       instance.failedAttempts = Number(data["failedAttempts"]);
     }
     if (data["nextAttempt"] !== undefined && data["nextAttempt"] !== null) {

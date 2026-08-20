@@ -57,9 +57,7 @@ describe("AnthropicUsage", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "input_tokens": 150,\n  "output_tokens": 42\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "input_tokens": 150,\n  "output_tokens": 42\n}`) as Record<string, unknown>;
       const instance = AnthropicUsage.load(data);
       expect(instance).toBeDefined();
     });

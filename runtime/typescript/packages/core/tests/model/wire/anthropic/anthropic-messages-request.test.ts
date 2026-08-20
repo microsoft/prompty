@@ -73,9 +73,7 @@ describe("AnthropicMessagesRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ],\n  "messages": [\n    {\n      "role": "user",\n      "content": []\n    }\n  ]\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "model": "claude-sonnet-4-20250514",\n  "max_tokens": 4096,\n  "system": "You are a helpful assistant.",\n  "temperature": 0.7,\n  "top_p": 0.9,\n  "top_k": 40,\n  "stop_sequences": [\n    "\\n\\nHuman:"\n  ],\n  "messages": [\n    {\n      "role": "user",\n      "content": []\n    }\n  ]\n}`) as Record<string, unknown>;
       const instance = AnthropicMessagesRequest.load(data);
       expect(instance).toBeDefined();
     });

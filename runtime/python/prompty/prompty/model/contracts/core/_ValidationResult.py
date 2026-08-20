@@ -60,6 +60,8 @@ class ValidationResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_errors(data: dict | list, context: LoadContext | None) -> list[ValidationError]:
         if context is None:
@@ -98,6 +100,7 @@ class ValidationResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

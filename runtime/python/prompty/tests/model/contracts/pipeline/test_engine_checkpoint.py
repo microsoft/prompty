@@ -7,7 +7,7 @@ from prompty.model import EngineCheckpoint
 
 
 def test_load_json_enginecheckpoint():
-    json_data = r"""
+    json_data = r'''
     {
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
@@ -29,7 +29,7 @@ def test_load_json_enginecheckpoint():
       ],
       "contextState": {}
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = EngineCheckpoint.load(data)
     assert instance is not None
@@ -38,9 +38,8 @@ def test_load_json_enginecheckpoint():
     assert instance.turn_id == "turn_abc123"
     assert instance.run_id == "run_abc123"
 
-
 def test_load_yaml_enginecheckpoint():
-    yaml_data = r"""
+    yaml_data = r'''
     id: ckpt_abc123
     sessionId: sess_abc123
     turnId: turn_abc123
@@ -54,7 +53,7 @@ def test_load_yaml_enginecheckpoint():
           source: user-input
     contextState: {}
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = EngineCheckpoint.load(data)
     assert instance is not None
@@ -63,10 +62,9 @@ def test_load_yaml_enginecheckpoint():
     assert instance.turn_id == "turn_abc123"
     assert instance.run_id == "run_abc123"
 
-
 def test_roundtrip_json_enginecheckpoint():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
@@ -88,7 +86,7 @@ def test_roundtrip_json_enginecheckpoint():
       ],
       "contextState": {}
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = EngineCheckpoint.load(original_data)
     saved_data = instance.save()
@@ -99,10 +97,9 @@ def test_roundtrip_json_enginecheckpoint():
     assert reloaded.turn_id == "turn_abc123"
     assert reloaded.run_id == "run_abc123"
 
-
 def test_to_json_enginecheckpoint():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
@@ -124,7 +121,7 @@ def test_to_json_enginecheckpoint():
       ],
       "contextState": {}
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = EngineCheckpoint.load(data)
     json_output = instance.to_json()
@@ -132,10 +129,9 @@ def test_to_json_enginecheckpoint():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_enginecheckpoint():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "ckpt_abc123",
       "sessionId": "sess_abc123",
@@ -157,7 +153,7 @@ def test_to_yaml_enginecheckpoint():
       ],
       "contextState": {}
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = EngineCheckpoint.load(data)
     yaml_output = instance.to_yaml()

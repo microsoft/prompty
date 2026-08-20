@@ -51,9 +51,7 @@ describe("DoneEventPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "response": {},\n  "messages": []\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "response": {},\n  "messages": []\n}`) as Record<string, unknown>;
       const instance = DoneEventPayload.load(data);
       expect(instance).toBeDefined();
     });

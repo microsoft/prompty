@@ -57,9 +57,7 @@ describe("TurnEndPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "iterations": 2,\n  "durationMs": 1500\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "iterations": 2,\n  "durationMs": 1500\n}`) as Record<string, unknown>;
       const instance = TurnEndPayload.load(data);
       expect(instance).toBeDefined();
     });

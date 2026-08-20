@@ -7,13 +7,13 @@ from prompty.model import TurnModelRequest
 
 
 def test_load_json_turnmodelrequest():
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
       "iteration": 0
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelRequest.load(data)
     assert instance is not None
@@ -21,14 +21,13 @@ def test_load_json_turnmodelrequest():
     assert instance.turn_id == "turn_abc123"
     assert instance.iteration == 0
 
-
 def test_load_yaml_turnmodelrequest():
-    yaml_data = r"""
+    yaml_data = r'''
     sessionId: sess_abc123
     turnId: turn_abc123
     iteration: 0
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnModelRequest.load(data)
     assert instance is not None
@@ -36,16 +35,15 @@ def test_load_yaml_turnmodelrequest():
     assert instance.turn_id == "turn_abc123"
     assert instance.iteration == 0
 
-
 def test_roundtrip_json_turnmodelrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
       "iteration": 0
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TurnModelRequest.load(original_data)
     saved_data = instance.save()
@@ -55,16 +53,15 @@ def test_roundtrip_json_turnmodelrequest():
     assert reloaded.turn_id == "turn_abc123"
     assert reloaded.iteration == 0
 
-
 def test_to_json_turnmodelrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
       "iteration": 0
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelRequest.load(data)
     json_output = instance.to_json()
@@ -72,16 +69,15 @@ def test_to_json_turnmodelrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_turnmodelrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sess_abc123",
       "turnId": "turn_abc123",
       "iteration": 0
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelRequest.load(data)
     yaml_output = instance.to_yaml()

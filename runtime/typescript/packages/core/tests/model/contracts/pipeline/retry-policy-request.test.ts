@@ -65,9 +65,7 @@ describe("RetryPolicyRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "failedAttempts": 1,\n  "nextAttempt": 1,\n  "maxAttempts": 1,\n  "reason": "sample"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "failedAttempts": 1,\n  "nextAttempt": 1,\n  "maxAttempts": 1,\n  "reason": "sample"\n}`) as Record<string, unknown>;
       const instance = RetryPolicyRequest.load(data);
       expect(instance).toBeDefined();
     });

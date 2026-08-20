@@ -34,10 +34,7 @@ export class Message {
       instance.role = String(data["role"]) as Role;
     }
     if (data["parts"] !== undefined && data["parts"] !== null) {
-      instance.parts = Message.loadParts(
-        data["parts"] as unknown[],
-        context.at("parts"),
-      );
+      instance.parts = Message.loadParts(data["parts"] as unknown[], context.at("parts"));
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
       instance.metadata = data["metadata"] as Record<string, unknown>;
@@ -49,48 +46,32 @@ export class Message {
     return instance;
   }
 
-  static loadParts(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): ContentPart[] {
+  static loadParts(data: Record<string, unknown>[] | unknown[], context?: LoadContext): ContentPart[] {
     context ??= new LoadContext({ path: "parts" });
     if (!Array.isArray(data)) {
       const result: ContentPart[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(
-            context.at(k).path +
-              ": invalid named collection entry category array",
-          );
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(
-            ContentPart.load(
-              { name: k, ...(v as Record<string, unknown>) },
-              context.at(k),
-            ),
-          );
+          result.push(ContentPart.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push(ContentPart.load({ name: k, kind: v }, context.at(k)));
+          result.push(ContentPart.load({ name: k, "kind": v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) =>
-      ContentPart.load(item as Record<string, unknown>, context.atIndex(index)),
-    );
+    return data.map((item, index) => ContentPart.load(item as Record<string, unknown>, context.atIndex(index)));
   }
 
-  static saveParts(
-    items: ContentPart[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveParts(items: ContentPart[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -145,25 +126,17 @@ export class Message {
   //#endregion
 
   static assistant(text: string): Message {
-    return new Message({
-      role: "assistant",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message({ role: "assistant", parts: [new TextPart({ value: text })] });
   }
 
   static system(text: string): Message {
-    return new Message({
-      role: "system",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message({ role: "system", parts: [new TextPart({ value: text })] });
   }
 
   static user(text: string): Message {
-    return new Message({
-      role: "user",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message({ role: "user", parts: [new TextPart({ value: text })] });
   }
+
 }
 
 /**

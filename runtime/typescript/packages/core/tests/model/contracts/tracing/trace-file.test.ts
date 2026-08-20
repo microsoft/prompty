@@ -57,9 +57,7 @@ describe("TraceFile", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "runtime": "python",\n  "version": "2.0.0",\n  "trace": {\n    "name": "prompty.core.pipeline.run",\n    "__time": {\n      "start": "2026-04-04T12:00:00Z",\n      "end": "2026-04-04T12:00:01Z",\n      "duration": 1000\n    },\n    "signature": "prompty.core.pipeline.run",\n    "error": "Connection refused"\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "runtime": "python",\n  "version": "2.0.0",\n  "trace": {\n    "name": "prompty.core.pipeline.run",\n    "__time": {\n      "start": "2026-04-04T12:00:00Z",\n      "end": "2026-04-04T12:00:01Z",\n      "duration": 1000\n    },\n    "signature": "prompty.core.pipeline.run",\n    "error": "Connection refused"\n  }\n}`) as Record<string, unknown>;
       const instance = TraceFile.load(data);
       expect(instance).toBeDefined();
     });

@@ -7,7 +7,7 @@ from prompty.model import Checkpoint
 
 
 def test_load_json_checkpoint():
-    json_data = r"""
+    json_data = r'''
     {
       "id": "chk_abc123",
       "sessionId": "sess_abc123",
@@ -16,7 +16,7 @@ def test_load_json_checkpoint():
       "title": "Added harness contracts",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Checkpoint.load(data)
     assert instance is not None
@@ -27,9 +27,8 @@ def test_load_json_checkpoint():
     assert instance.title == "Added harness contracts"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_load_yaml_checkpoint():
-    yaml_data = r"""
+    yaml_data = r'''
     id: chk_abc123
     sessionId: sess_abc123
     turnId: turn_001
@@ -37,7 +36,7 @@ def test_load_yaml_checkpoint():
     title: Added harness contracts
     createdAt: "2026-06-09T20:00:00Z"
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = Checkpoint.load(data)
     assert instance is not None
@@ -48,10 +47,9 @@ def test_load_yaml_checkpoint():
     assert instance.title == "Added harness contracts"
     assert instance.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_roundtrip_json_checkpoint():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "chk_abc123",
       "sessionId": "sess_abc123",
@@ -60,7 +58,7 @@ def test_roundtrip_json_checkpoint():
       "title": "Added harness contracts",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = Checkpoint.load(original_data)
     saved_data = instance.save()
@@ -73,10 +71,9 @@ def test_roundtrip_json_checkpoint():
     assert reloaded.title == "Added harness contracts"
     assert reloaded.created_at == "2026-06-09T20:00:00Z"
 
-
 def test_to_json_checkpoint():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "chk_abc123",
       "sessionId": "sess_abc123",
@@ -85,7 +82,7 @@ def test_to_json_checkpoint():
       "title": "Added harness contracts",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Checkpoint.load(data)
     json_output = instance.to_json()
@@ -93,10 +90,9 @@ def test_to_json_checkpoint():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_checkpoint():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "id": "chk_abc123",
       "sessionId": "sess_abc123",
@@ -105,7 +101,7 @@ def test_to_yaml_checkpoint():
       "title": "Added harness contracts",
       "createdAt": "2026-06-09T20:00:00Z"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = Checkpoint.load(data)
     yaml_output = instance.to_yaml()

@@ -61,9 +61,7 @@ describe("MemoryEntry", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "content": "The user prefers concise answers.",\n  "category": "core",\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ]\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "content": "The user prefers concise answers.",\n  "category": "core",\n  "createdAt": "2026-06-09T20:00:00Z",\n  "tags": [\n    "preference",\n    "tone"\n  ]\n}`) as Record<string, unknown>;
       const instance = MemoryEntry.load(data);
       expect(instance).toBeDefined();
     });

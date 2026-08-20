@@ -104,6 +104,7 @@ class Property:
         # load polymorphic Property instance
         instance = Property.load_kind(data, context)
 
+
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "kind" in data:
@@ -127,6 +128,9 @@ class Property:
             instance = context.process_output(instance)
         return instance
 
+
+
+
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Property":
         # load polymorphic Property instance
@@ -145,6 +149,7 @@ class Property:
             # create new instance (stop recursion)
             return Property()
 
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Property instance to a dictionary.
         Args:
@@ -156,6 +161,7 @@ class Property:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = copy.deepcopy(obj._raw)
 
@@ -204,6 +210,8 @@ class Property:
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -255,6 +263,8 @@ class ArrayProperty(Property):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ArrayProperty instance to a dictionary.
         Args:
@@ -267,8 +277,10 @@ class ArrayProperty(Property):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -300,6 +312,8 @@ class ArrayProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -349,6 +363,8 @@ class ObjectProperty(Property):
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_properties(data: dict | list, context: LoadContext | None) -> list[Property]:
         if context is None:
@@ -393,7 +409,7 @@ class ObjectProperty(Property):
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
@@ -413,8 +429,10 @@ class ObjectProperty(Property):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -446,6 +464,8 @@ class ObjectProperty(Property):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -504,6 +524,8 @@ class UnionProperty(Property):
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_one_of(data: dict | list, context: LoadContext | None) -> list[Property]:
@@ -571,8 +593,10 @@ class UnionProperty(Property):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind

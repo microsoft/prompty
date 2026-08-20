@@ -12,7 +12,8 @@ from .contracts.events._Checkpoint import Checkpoint
 
 @runtime_checkable
 class CheckpointStore(Protocol):
-    """Stores and retrieves resumable session checkpoints."""
+    """Stores and retrieves resumable session checkpoints.
+    """
 
     def list_checkpoints(self, session_id: str) -> list[Checkpoint]:
         """List checkpoints for a session"""

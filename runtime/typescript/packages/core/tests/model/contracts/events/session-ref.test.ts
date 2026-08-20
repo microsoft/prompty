@@ -69,9 +69,7 @@ describe("SessionRef", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sessionId": "sess_abc123",\n  "refType": "issue",\n  "refValue": "owner/repo#123",\n  "turnIndex": 2,\n  "createdAt": "2026-06-09T20:00:00Z"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sessionId": "sess_abc123",\n  "refType": "issue",\n  "refValue": "owner/repo#123",\n  "turnIndex": 2,\n  "createdAt": "2026-06-09T20:00:00Z"\n}`) as Record<string, unknown>;
       const instance = SessionRef.load(data);
       expect(instance).toBeDefined();
     });

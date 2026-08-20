@@ -56,10 +56,7 @@ export class Checkpoint {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): Checkpoint {
+  static load(data: Record<string, unknown>, context?: LoadContext): Checkpoint {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -76,10 +73,7 @@ export class Checkpoint {
     if (data["turnId"] !== undefined && data["turnId"] !== null) {
       instance.turnId = String(data["turnId"]);
     }
-    if (
-      data["checkpointNumber"] !== undefined &&
-      data["checkpointNumber"] !== null
-    ) {
+    if (data["checkpointNumber"] !== undefined && data["checkpointNumber"] !== null) {
       instance.checkpointNumber = Number(data["checkpointNumber"]);
     }
     if (data["title"] !== undefined && data["title"] !== null) {
@@ -101,10 +95,7 @@ export class Checkpoint {
       instance.createdAt = String(data["createdAt"]);
     }
     if (data["redaction"] !== undefined && data["redaction"] !== null) {
-      instance.redaction = RedactionMetadata.load(
-        data["redaction"] as Record<string, unknown>,
-        context.at("redaction"),
-      );
+      instance.redaction = RedactionMetadata.load(data["redaction"] as Record<string, unknown>, context.at("redaction"));
     }
 
     if (context) {

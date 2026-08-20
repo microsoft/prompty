@@ -7,51 +7,48 @@ from prompty.model import ReplayVerificationRequest
 
 
 def test_load_json_replayverificationrequest():
-    json_data = r"""
+    json_data = r'''
     {
       "expected": [],
       "actual": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationRequest.load(data)
     assert instance is not None
 
-
 def test_load_yaml_replayverificationrequest():
-    yaml_data = r"""
+    yaml_data = r'''
     expected: []
     actual: []
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ReplayVerificationRequest.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_replayverificationrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "expected": [],
       "actual": []
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = ReplayVerificationRequest.load(original_data)
     saved_data = instance.save()
     reloaded = ReplayVerificationRequest.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_replayverificationrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "expected": [],
       "actual": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationRequest.load(data)
     json_output = instance.to_json()
@@ -59,15 +56,14 @@ def test_to_json_replayverificationrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_replayverificationrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "expected": [],
       "actual": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ReplayVerificationRequest.load(data)
     yaml_output = instance.to_yaml()

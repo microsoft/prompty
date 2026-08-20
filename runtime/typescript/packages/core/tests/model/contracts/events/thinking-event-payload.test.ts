@@ -53,9 +53,7 @@ describe("ThinkingEventPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "token": "Let me consider..."\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "token": "Let me consider..."\n}`) as Record<string, unknown>;
       const instance = ThinkingEventPayload.load(data);
       expect(instance).toBeDefined();
     });

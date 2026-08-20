@@ -94,6 +94,8 @@ class AnthropicMessagesRequest:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_messages(data: dict | list, context: LoadContext | None) -> list[AnthropicWireMessage]:
         if context is None:
@@ -114,9 +116,7 @@ class AnthropicMessagesRequest:
         return [AnthropicWireMessage.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_messages(
-        items: list[AnthropicWireMessage], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_messages(items: list[AnthropicWireMessage], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -143,9 +143,7 @@ class AnthropicMessagesRequest:
         return [AnthropicToolDefinition.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_tools(
-        items: list[AnthropicToolDefinition], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tools(items: list[AnthropicToolDefinition], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -163,6 +161,7 @@ class AnthropicMessagesRequest:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

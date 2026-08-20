@@ -60,6 +60,7 @@ class Tool(ABC):
         # load polymorphic Tool instance
         instance = Tool.load_kind(data, context)
 
+
         if data is not None and "name" in data:
             instance.name = data["name"]
         if data is not None and "kind" in data:
@@ -71,6 +72,8 @@ class Tool(ABC):
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_bindings(data: dict | list, context: LoadContext | None) -> list[Binding]:
@@ -116,13 +119,14 @@ class Tool(ABC):
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
                     continue
             result[name] = item_data
         return result
+
 
     @staticmethod
     def load_kind(data: dict, context: LoadContext | None) -> "Tool":
@@ -139,8 +143,10 @@ class Tool(ABC):
             return OpenApiTool.load(data, context)
 
         else:
+
             # load default instance
             return CustomTool.load(data, context)
+
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Tool instance to a dictionary.
@@ -153,6 +159,7 @@ class Tool(ABC):
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -193,6 +200,8 @@ class Tool(ABC):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -246,6 +255,8 @@ class FunctionTool(Tool):
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_parameters(data: dict | list, context: LoadContext | None) -> list[Property]:
         if context is None:
@@ -290,7 +301,7 @@ class FunctionTool(Tool):
         for item, item_data in zip(items, serialized):
             name = item_data.pop("name")
             # Check if we can use shorthand (only primary property set)
-            if context.use_shorthand and hasattr(item, "_shorthand_property"):
+            if context.use_shorthand and hasattr(item, '_shorthand_property'):
                 shorthand_prop = item._shorthand_property
                 if shorthand_prop and len(item_data) == 1 and shorthand_prop in item_data:
                     result[name] = item_data[shorthand_prop]
@@ -310,8 +321,10 @@ class FunctionTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -345,6 +358,8 @@ class FunctionTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -404,6 +419,8 @@ class CustomTool(Tool):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the CustomTool instance to a dictionary.
         Args:
@@ -416,8 +433,10 @@ class CustomTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -451,6 +470,8 @@ class CustomTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -521,6 +542,8 @@ class McpTool(Tool):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the McpTool instance to a dictionary.
         Args:
@@ -533,8 +556,10 @@ class McpTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind
@@ -574,6 +599,8 @@ class McpTool(Tool):
         if context is None:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
+
+
 
 
 @dataclass
@@ -629,6 +656,8 @@ class OpenApiTool(Tool):
             instance = context.process_output(instance)
         return instance
 
+
+
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the OpenApiTool instance to a dictionary.
         Args:
@@ -641,8 +670,10 @@ class OpenApiTool(Tool):
         if context is not None:
             obj = context.process_object(obj)
 
+
         # Start with parent class properties
         result = super().save(context)
+
 
         if obj.kind is not None:
             result["kind"] = obj.kind

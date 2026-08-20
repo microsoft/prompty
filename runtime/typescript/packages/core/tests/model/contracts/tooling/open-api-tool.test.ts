@@ -57,9 +57,7 @@ describe("OpenApiTool", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "kind": "openapi",\n  "connection": {\n    "kind": "reference"\n  },\n  "specification": "./openapi.json"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "kind": "openapi",\n  "connection": {\n    "kind": "reference"\n  },\n  "specification": "./openapi.json"\n}`) as Record<string, unknown>;
       const instance = OpenApiTool.load(data);
       expect(instance).toBeDefined();
     });

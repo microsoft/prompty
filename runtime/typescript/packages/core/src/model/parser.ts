@@ -8,11 +8,7 @@ import { Message } from "./contracts/conversation/message";
 /** Parses rendered prompt text into an array of structured messages with role markers. */
 export interface Parser {
   /** Parse rendered text into a structured message array */
-  parse(
-    agent: Agent,
-    rendered: string,
-    context: Record<string, unknown> | null,
-  ): Promise<Message[]>;
+  parse(agent: Agent, rendered: string, context: Record<string, unknown> | null): Promise<Message[]>;
   /** Pre-process a template before rendering, returning modified template and context */
   preRender?(template: string): unknown | null;
 }

@@ -57,9 +57,7 @@ describe("CompactionConfig", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "strategy": "summarize",\n  "budget": 50000,\n  "options": {\n    "preserveSystemMessages": true\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "strategy": "summarize",\n  "budget": 50000,\n  "options": {\n    "preserveSystemMessages": true\n  }\n}`) as Record<string, unknown>;
       const instance = CompactionConfig.load(data);
       expect(instance).toBeDefined();
     });

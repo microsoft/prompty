@@ -7,7 +7,7 @@ from prompty.model import UnionProperty
 
 
 def test_load_json_unionproperty():
-    json_data = r"""
+    json_data = r'''
     {
       "anyOf": [
         {
@@ -18,27 +18,25 @@ def test_load_json_unionproperty():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = UnionProperty.load(data)
     assert instance is not None
 
-
 def test_load_yaml_unionproperty():
-    yaml_data = r"""
+    yaml_data = r'''
     anyOf:
       - kind: string
       - kind: boolean
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = UnionProperty.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_unionproperty():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "anyOf": [
         {
@@ -49,17 +47,16 @@ def test_roundtrip_json_unionproperty():
         }
       ]
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = UnionProperty.load(original_data)
     saved_data = instance.save()
     reloaded = UnionProperty.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_unionproperty():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "anyOf": [
         {
@@ -70,7 +67,7 @@ def test_to_json_unionproperty():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = UnionProperty.load(data)
     json_output = instance.to_json()
@@ -78,10 +75,9 @@ def test_to_json_unionproperty():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_unionproperty():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "anyOf": [
         {
@@ -92,7 +88,7 @@ def test_to_yaml_unionproperty():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = UnionProperty.load(data)
     yaml_output = instance.to_yaml()

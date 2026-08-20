@@ -53,10 +53,7 @@ describe("AnthropicWireMessage", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "role": "user"\n}`) as Record<
-        string,
-        unknown
-      >;
+      const data = JSON.parse(`{\n  "role": "user"\n}`) as Record<string, unknown>;
       const instance = AnthropicWireMessage.load(data);
       expect(instance).toBeDefined();
     });

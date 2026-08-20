@@ -69,9 +69,7 @@ describe("HookEndPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "hookInvocationId": "hook_abc123",\n  "hookType": "preToolUse",\n  "success": true,\n  "durationMs": 12,\n  "error": "hook failed"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "hookInvocationId": "hook_abc123",\n  "hookType": "preToolUse",\n  "success": true,\n  "durationMs": 12,\n  "error": "hook failed"\n}`) as Record<string, unknown>;
       const instance = HookEndPayload.load(data);
       expect(instance).toBeDefined();
     });

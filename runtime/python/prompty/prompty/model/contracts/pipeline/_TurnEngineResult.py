@@ -72,6 +72,8 @@ class TurnEngineResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_snapshots(data: dict | list, context: LoadContext | None) -> list[ModelInvocationContextSnapshot]:
         if context is None:
@@ -92,9 +94,7 @@ class TurnEngineResult:
         return [ModelInvocationContextSnapshot.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_snapshots(
-        items: list[ModelInvocationContextSnapshot], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_snapshots(items: list[ModelInvocationContextSnapshot], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -121,9 +121,7 @@ class TurnEngineResult:
         return [ModelToolResult.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_tool_results(
-        items: list[ModelToolResult], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_results(items: list[ModelToolResult], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -141,6 +139,7 @@ class TurnEngineResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

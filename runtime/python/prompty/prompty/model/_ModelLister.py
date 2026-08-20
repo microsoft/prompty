@@ -12,7 +12,8 @@ from .contracts.models._ModelInfo import ModelInfo
 
 @runtime_checkable
 class ModelLister(Protocol):
-    """Lists models available through a provider connection."""
+    """Lists models available through a provider connection.
+    """
 
     def list_models(self, connection: Any) -> list[ModelInfo]:
         """List models available through a provider connection"""

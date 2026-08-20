@@ -79,6 +79,8 @@ class ToolResult:
             instance = context.process_output(instance)
         return instance
 
+
+
     @staticmethod
     def load_parts(data: dict | list, context: LoadContext | None) -> list[ContentPart]:
         if context is None:
@@ -117,6 +119,7 @@ class ToolResult:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 
@@ -160,10 +163,13 @@ class ToolResult:
             context = SaveContext()
         return context.to_json(self.save(context), indent)
 
+
     @classmethod
     def text(cls, value: str) -> "ToolResult":
         """Create a ToolResult with preset field values."""
         return ToolResult(parts=[TextPart(value=value)])
+
+
 
 
 @runtime_checkable

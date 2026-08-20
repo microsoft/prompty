@@ -53,10 +53,7 @@ describe("StreamOptions", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "includeUsage": true\n}`) as Record<
-        string,
-        unknown
-      >;
+      const data = JSON.parse(`{\n  "includeUsage": true\n}`) as Record<string, unknown>;
       const instance = StreamOptions.load(data);
       expect(instance).toBeDefined();
     });

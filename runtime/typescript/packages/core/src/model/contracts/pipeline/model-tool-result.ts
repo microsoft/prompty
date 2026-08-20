@@ -33,10 +33,7 @@ export class ModelToolResult {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ModelToolResult {
+  static load(data: Record<string, unknown>, context?: LoadContext): ModelToolResult {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

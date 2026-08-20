@@ -69,9 +69,7 @@ describe("SessionSummary", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sessionId": "sess_abc123",\n  "status": "success",\n  "turns": 5,\n  "checkpoints": 2,\n  "durationMs": 12500\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sessionId": "sess_abc123",\n  "status": "success",\n  "turns": 5,\n  "checkpoints": 2,\n  "durationMs": 12500\n}`) as Record<string, unknown>;
       const instance = SessionSummary.load(data);
       expect(instance).toBeDefined();
     });

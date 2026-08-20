@@ -57,9 +57,7 @@ describe("RedactionMetadata", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "sanitized": true,\n  "policy": "default-v1"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "sanitized": true,\n  "policy": "default-v1"\n}`) as Record<string, unknown>;
       const instance = RedactionMetadata.load(data);
       expect(instance).toBeDefined();
     });

@@ -77,9 +77,7 @@ describe("ToolExecutionCompletePayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "requestId": "exec_abc123",\n  "toolCallId": "call_abc123",\n  "toolName": "powershell",\n  "success": true,\n  "exitCode": 0,\n  "durationMs": 250,\n  "errorKind": "timeout"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "requestId": "exec_abc123",\n  "toolCallId": "call_abc123",\n  "toolName": "powershell",\n  "success": true,\n  "exitCode": 0,\n  "durationMs": 250,\n  "errorKind": "timeout"\n}`) as Record<string, unknown>;
       const instance = ToolExecutionCompletePayload.load(data);
       expect(instance).toBeDefined();
     });

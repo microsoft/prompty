@@ -22,9 +22,7 @@ describe("AiResourceInfo", () => {
       const json = `{\n  "serviceUrl": "https://my-resource.services.ai.azure.com"\n}`;
       const instance = AiResourceInfo.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.serviceUrl).toEqual(
-        "https://my-resource.services.ai.azure.com",
-      );
+      expect(instance.serviceUrl).toEqual("https://my-resource.services.ai.azure.com");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -41,9 +39,7 @@ describe("AiResourceInfo", () => {
       const yaml = `serviceUrl: "https://my-resource.services.ai.azure.com"\n`;
       const instance = AiResourceInfo.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.serviceUrl).toEqual(
-        "https://my-resource.services.ai.azure.com",
-      );
+      expect(instance.serviceUrl).toEqual("https://my-resource.services.ai.azure.com");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -57,9 +53,7 @@ describe("AiResourceInfo", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "serviceUrl": "https://my-resource.services.ai.azure.com"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "serviceUrl": "https://my-resource.services.ai.azure.com"\n}`) as Record<string, unknown>;
       const instance = AiResourceInfo.load(data);
       expect(instance).toBeDefined();
     });

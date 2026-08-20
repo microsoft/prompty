@@ -7,41 +7,38 @@ from prompty.model import TurnModelResponse
 
 
 def test_load_json_turnmodelresponse():
-    json_data = r"""
+    json_data = r'''
     {}
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelResponse.load(data)
     assert instance is not None
 
-
 def test_load_yaml_turnmodelresponse():
-    yaml_data = r"""
+    yaml_data = r'''
     {}
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnModelResponse.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_turnmodelresponse():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {}
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TurnModelResponse.load(original_data)
     saved_data = instance.save()
     reloaded = TurnModelResponse.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_turnmodelresponse():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {}
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelResponse.load(data)
     json_output = instance.to_json()
@@ -49,12 +46,11 @@ def test_to_json_turnmodelresponse():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_turnmodelresponse():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {}
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnModelResponse.load(data)
     yaml_output = instance.to_yaml()

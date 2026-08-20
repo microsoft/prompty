@@ -14,16 +14,13 @@ from .contracts.pipeline._ModelToolRequest import ModelToolRequest
 
 @runtime_checkable
 class EnginePermissionPort(Protocol):
-    """Authorizes model-requested tools at a runtime cancellation boundary."""
+    """Authorizes model-requested tools at a runtime cancellation boundary.
+    """
 
-    def authorize(
-        self, request: ModelToolRequest, cancellation: CancellationToken | None = None
-    ) -> EnginePermissionDecision:
+    def authorize(self, request: ModelToolRequest, cancellation: CancellationToken | None = None) -> EnginePermissionDecision:
         """Authorize one model-requested tool before execution"""
         raise NotImplementedError
 
-    async def authorize_async(
-        self, request: ModelToolRequest, cancellation: CancellationToken | None = None
-    ) -> EnginePermissionDecision:
+    async def authorize_async(self, request: ModelToolRequest, cancellation: CancellationToken | None = None) -> EnginePermissionDecision:
         """Authorize one model-requested tool before execution (async variant)"""
         raise NotImplementedError

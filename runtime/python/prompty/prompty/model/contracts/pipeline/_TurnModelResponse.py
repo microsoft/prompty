@@ -62,14 +62,14 @@ class TurnModelResponse:
         if data is not None and "usage" in data:
             instance.usage = InvocationUsage.load(data["usage"], context.at("usage"))
         if data is not None and "toolRequests" in data:
-            instance.tool_requests = TurnModelResponse.load_tool_requests(
-                data["toolRequests"], context.at("toolRequests")
-            )
+            instance.tool_requests = TurnModelResponse.load_tool_requests(data["toolRequests"], context.at("toolRequests"))
         if data is not None and "checkpointState" in data:
             instance.checkpoint_state = data["checkpointState"]
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_tool_requests(data: dict | list, context: LoadContext | None) -> list[HostToolRequest]:
@@ -91,9 +91,7 @@ class TurnModelResponse:
         return [HostToolRequest.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_tool_requests(
-        items: list[HostToolRequest], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_tool_requests(items: list[HostToolRequest], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -111,6 +109,7 @@ class TurnModelResponse:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

@@ -78,19 +78,16 @@ def _build_client_kwargs(connection: Connection) -> dict[str, Any]:
 
 
 def _enrich(model_id: str, info: ModelInfo) -> ModelInfo:
-    """Enrich a ModelInfo with data from the built-in lookup table."""
-    known = _KNOWN_MODELS.get(model_id)
-    if known is None:
-        return info
+    """Enrich a ModelInfo with data from the shared capability dataset.
 
-    if info.context_window is None and known.get("context_window") is not None:
-        info.context_window = known["context_window"]
-    if not info.input_modalities and known.get("input_modalities") is not None:
-        info.input_modalities = known["input_modalities"]
-    if not info.output_modalities and known.get("output_modalities") is not None:
-        info.output_modalities = known["output_modalities"]
+    Delegates to the cross-provider :func:`prompty.providers.discovery.enrich`,
+    which applies longest-prefix, token-boundary matching against the embedded
+    ``model_capabilities.json`` dataset (fill-only-missing). The built-in
+    ``_KNOWN_MODELS`` table is retained for reference and backward compatibility.
+    """
+    from ..discovery import enrich as _shared_enrich
 
-    return info
+    return _shared_enrich(info, "openai")
 
 
 def _map_model(m: Any) -> ModelInfo:

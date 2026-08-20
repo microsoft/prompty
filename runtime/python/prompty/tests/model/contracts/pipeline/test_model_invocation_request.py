@@ -7,7 +7,7 @@ from prompty.model import ModelInvocationRequest
 
 
 def test_load_json_modelinvocationrequest():
-    json_data = r"""
+    json_data = r'''
     {
       "context": {
         "id": "context:inv_abc123",
@@ -19,14 +19,13 @@ def test_load_json_modelinvocationrequest():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ModelInvocationRequest.load(data)
     assert instance is not None
 
-
 def test_load_yaml_modelinvocationrequest():
-    yaml_data = r"""
+    yaml_data = r'''
     context:
       id: "context:inv_abc123"
       sessionId: sess_abc123
@@ -36,15 +35,14 @@ def test_load_yaml_modelinvocationrequest():
       messages: []
       contextState: {}
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = ModelInvocationRequest.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_modelinvocationrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "context": {
         "id": "context:inv_abc123",
@@ -56,17 +54,16 @@ def test_roundtrip_json_modelinvocationrequest():
         "contextState": {}
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = ModelInvocationRequest.load(original_data)
     saved_data = instance.save()
     reloaded = ModelInvocationRequest.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_modelinvocationrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "context": {
         "id": "context:inv_abc123",
@@ -78,7 +75,7 @@ def test_to_json_modelinvocationrequest():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ModelInvocationRequest.load(data)
     json_output = instance.to_json()
@@ -86,10 +83,9 @@ def test_to_json_modelinvocationrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_modelinvocationrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "context": {
         "id": "context:inv_abc123",
@@ -101,7 +97,7 @@ def test_to_yaml_modelinvocationrequest():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = ModelInvocationRequest.load(data)
     yaml_output = instance.to_yaml()

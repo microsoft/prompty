@@ -7,13 +7,13 @@ from prompty.model import DelegatedStateReference
 
 
 def test_load_json_delegatedstatereference():
-    json_data = r"""
+    json_data = r'''
     {
       "provider": "openai",
       "kind": "response",
       "id": "resp_abc123"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = DelegatedStateReference.load(data)
     assert instance is not None
@@ -21,14 +21,13 @@ def test_load_json_delegatedstatereference():
     assert instance.kind == "response"
     assert instance.id == "resp_abc123"
 
-
 def test_load_yaml_delegatedstatereference():
-    yaml_data = r"""
+    yaml_data = r'''
     provider: openai
     kind: response
     id: resp_abc123
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = DelegatedStateReference.load(data)
     assert instance is not None
@@ -36,16 +35,15 @@ def test_load_yaml_delegatedstatereference():
     assert instance.kind == "response"
     assert instance.id == "resp_abc123"
 
-
 def test_roundtrip_json_delegatedstatereference():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "provider": "openai",
       "kind": "response",
       "id": "resp_abc123"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = DelegatedStateReference.load(original_data)
     saved_data = instance.save()
@@ -55,16 +53,15 @@ def test_roundtrip_json_delegatedstatereference():
     assert reloaded.kind == "response"
     assert reloaded.id == "resp_abc123"
 
-
 def test_to_json_delegatedstatereference():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "provider": "openai",
       "kind": "response",
       "id": "resp_abc123"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = DelegatedStateReference.load(data)
     json_output = instance.to_json()
@@ -72,16 +69,15 @@ def test_to_json_delegatedstatereference():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_delegatedstatereference():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "provider": "openai",
       "kind": "response",
       "id": "resp_abc123"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = DelegatedStateReference.load(data)
     yaml_output = instance.to_yaml()

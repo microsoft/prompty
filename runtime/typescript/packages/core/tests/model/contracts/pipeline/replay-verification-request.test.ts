@@ -51,9 +51,7 @@ describe("ReplayVerificationRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "expected": [],\n  "actual": []\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "expected": [],\n  "actual": []\n}`) as Record<string, unknown>;
       const instance = ReplayVerificationRequest.load(data);
       expect(instance).toBeDefined();
     });

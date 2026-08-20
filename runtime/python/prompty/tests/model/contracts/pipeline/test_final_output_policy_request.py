@@ -7,14 +7,14 @@ from prompty.model import FinalOutputPolicyRequest
 
 
 def test_load_json_finaloutputpolicyrequest():
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sample",
       "turnId": "sample",
       "iteration": 1,
       "messages": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FinalOutputPolicyRequest.load(data)
     assert instance is not None
@@ -22,15 +22,14 @@ def test_load_json_finaloutputpolicyrequest():
     assert instance.turn_id == "sample"
     assert instance.iteration == 1
 
-
 def test_load_yaml_finaloutputpolicyrequest():
-    yaml_data = r"""
+    yaml_data = r'''
     sessionId: sample
     turnId: sample
     iteration: 1
     messages: []
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FinalOutputPolicyRequest.load(data)
     assert instance is not None
@@ -38,17 +37,16 @@ def test_load_yaml_finaloutputpolicyrequest():
     assert instance.turn_id == "sample"
     assert instance.iteration == 1
 
-
 def test_roundtrip_json_finaloutputpolicyrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sample",
       "turnId": "sample",
       "iteration": 1,
       "messages": []
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = FinalOutputPolicyRequest.load(original_data)
     saved_data = instance.save()
@@ -58,17 +56,16 @@ def test_roundtrip_json_finaloutputpolicyrequest():
     assert reloaded.turn_id == "sample"
     assert reloaded.iteration == 1
 
-
 def test_to_json_finaloutputpolicyrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sample",
       "turnId": "sample",
       "iteration": 1,
       "messages": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FinalOutputPolicyRequest.load(data)
     json_output = instance.to_json()
@@ -76,17 +73,16 @@ def test_to_json_finaloutputpolicyrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_finaloutputpolicyrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "sessionId": "sample",
       "turnId": "sample",
       "iteration": 1,
       "messages": []
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FinalOutputPolicyRequest.load(data)
     yaml_output = instance.to_yaml()

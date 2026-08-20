@@ -7,7 +7,7 @@ from prompty.model import TurnEngineResult
 
 
 def test_load_json_turnengineresult():
-    json_data = r"""
+    json_data = r'''
     {
       "commit": {
         "sessionId": "sess_abc123",
@@ -19,14 +19,13 @@ def test_load_json_turnengineresult():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnEngineResult.load(data)
     assert instance is not None
 
-
 def test_load_yaml_turnengineresult():
-    yaml_data = r"""
+    yaml_data = r'''
     commit:
       sessionId: sess_abc123
       turnId: turn_abc123
@@ -36,15 +35,14 @@ def test_load_yaml_turnengineresult():
       lastSequence: 1
       contextState: {}
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TurnEngineResult.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_turnengineresult():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "commit": {
         "sessionId": "sess_abc123",
@@ -56,17 +54,16 @@ def test_roundtrip_json_turnengineresult():
         "contextState": {}
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TurnEngineResult.load(original_data)
     saved_data = instance.save()
     reloaded = TurnEngineResult.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_turnengineresult():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "commit": {
         "sessionId": "sess_abc123",
@@ -78,7 +75,7 @@ def test_to_json_turnengineresult():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnEngineResult.load(data)
     json_output = instance.to_json()
@@ -86,10 +83,9 @@ def test_to_json_turnengineresult():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_turnengineresult():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "commit": {
         "sessionId": "sess_abc123",
@@ -101,7 +97,7 @@ def test_to_yaml_turnengineresult():
         "contextState": {}
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TurnEngineResult.load(data)
     yaml_output = instance.to_yaml()

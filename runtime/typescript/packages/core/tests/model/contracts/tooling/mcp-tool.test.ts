@@ -24,9 +24,7 @@ describe("McpTool", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("mcp");
       expect(instance.serverName).toEqual("My MCP Server");
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -47,9 +45,7 @@ describe("McpTool", () => {
       expect(instance).toBeDefined();
       expect(instance.kind).toEqual("mcp");
       expect(instance.serverName).toEqual("My MCP Server");
-      expect(instance.serverDescription).toEqual(
-        "This tool allows access to MCP services.",
-      );
+      expect(instance.serverDescription).toEqual("This tool allows access to MCP services.");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -65,9 +61,7 @@ describe("McpTool", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "kind": "mcp",\n  "connection": {\n    "kind": "reference"\n  },\n  "serverName": "My MCP Server",\n  "serverDescription": "This tool allows access to MCP services.",\n  "approvalMode": {\n    "kind": "always"\n  },\n  "allowedTools": [\n    "operation1",\n    "operation2"\n  ]\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "kind": "mcp",\n  "connection": {\n    "kind": "reference"\n  },\n  "serverName": "My MCP Server",\n  "serverDescription": "This tool allows access to MCP services.",\n  "approvalMode": {\n    "kind": "always"\n  },\n  "allowedTools": [\n    "operation1",\n    "operation2"\n  ]\n}`) as Record<string, unknown>;
       const instance = McpTool.load(data);
       expect(instance).toBeDefined();
     });

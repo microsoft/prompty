@@ -7,7 +7,7 @@ from prompty.model import AnthropicMessagesRequest
 
 
 def test_load_json_anthropicmessagesrequest():
-    json_data = r"""
+    json_data = r'''
     {
       "model": "claude-sonnet-4-20250514",
       "max_tokens": 4096,
@@ -25,7 +25,7 @@ def test_load_json_anthropicmessagesrequest():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesRequest.load(data)
     assert instance is not None
@@ -36,9 +36,8 @@ def test_load_json_anthropicmessagesrequest():
     assert instance.top_p == 0.9
     assert instance.top_k == 40
 
-
 def test_load_yaml_anthropicmessagesrequest():
-    yaml_data = r"""
+    yaml_data = r'''
     model: claude-sonnet-4-20250514
     max_tokens: 4096
     system: You are a helpful assistant.
@@ -51,7 +50,7 @@ def test_load_yaml_anthropicmessagesrequest():
       - role: user
         content: []
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = AnthropicMessagesRequest.load(data)
     assert instance is not None
@@ -62,10 +61,9 @@ def test_load_yaml_anthropicmessagesrequest():
     assert instance.top_p == 0.9
     assert instance.top_k == 40
 
-
 def test_roundtrip_json_anthropicmessagesrequest():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "model": "claude-sonnet-4-20250514",
       "max_tokens": 4096,
@@ -83,7 +81,7 @@ def test_roundtrip_json_anthropicmessagesrequest():
         }
       ]
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesRequest.load(original_data)
     saved_data = instance.save()
@@ -96,10 +94,9 @@ def test_roundtrip_json_anthropicmessagesrequest():
     assert reloaded.top_p == 0.9
     assert reloaded.top_k == 40
 
-
 def test_to_json_anthropicmessagesrequest():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "model": "claude-sonnet-4-20250514",
       "max_tokens": 4096,
@@ -117,7 +114,7 @@ def test_to_json_anthropicmessagesrequest():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesRequest.load(data)
     json_output = instance.to_json()
@@ -125,10 +122,9 @@ def test_to_json_anthropicmessagesrequest():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_anthropicmessagesrequest():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "model": "claude-sonnet-4-20250514",
       "max_tokens": 4096,
@@ -146,7 +142,7 @@ def test_to_yaml_anthropicmessagesrequest():
         }
       ]
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = AnthropicMessagesRequest.load(data)
     yaml_output = instance.to_yaml()

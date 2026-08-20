@@ -4,8 +4,7 @@
 
 import { LoadContext, SaveContext } from "../../context";
 
-export type RedactionMode =
-  "none" | "redacted" | "hashed" | "summary" | "reference";
+export type RedactionMode = "none" | "redacted" | "hashed" | "summary" | "reference";
 
 export class RedactedField {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -24,10 +23,7 @@ export class RedactedField {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): RedactedField {
+  static load(data: Record<string, unknown>, context?: LoadContext): RedactedField {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;

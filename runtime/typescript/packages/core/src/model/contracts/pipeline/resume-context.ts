@@ -28,41 +28,27 @@ export class ResumeContext {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ResumeContext {
+  static load(data: Record<string, unknown>, context?: LoadContext): ResumeContext {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
     }
 
     if (data["checkpoint"] === undefined || data["checkpoint"] === null) {
-      throw new Error(
-        `${context.at("checkpoint").path}: missing required field`,
-      );
+      throw new Error(`${context.at("checkpoint").path}: missing required field`);
     }
     const instance = new ResumeContext();
 
     if (data["checkpoint"] !== undefined && data["checkpoint"] !== null) {
-      instance.checkpoint = EngineCheckpoint.load(
-        data["checkpoint"] as Record<string, unknown>,
-        context.at("checkpoint"),
-      );
+      instance.checkpoint = EngineCheckpoint.load(data["checkpoint"] as Record<string, unknown>, context.at("checkpoint"));
     }
     if (data["maxIterations"] !== undefined && data["maxIterations"] !== null) {
       instance.maxIterations = Number(data["maxIterations"]);
     }
-    if (
-      data["maxModelAttempts"] !== undefined &&
-      data["maxModelAttempts"] !== null
-    ) {
+    if (data["maxModelAttempts"] !== undefined && data["maxModelAttempts"] !== null) {
       instance.maxModelAttempts = Number(data["maxModelAttempts"]);
     }
-    if (
-      data["lastJournalSequence"] !== undefined &&
-      data["lastJournalSequence"] !== null
-    ) {
+    if (data["lastJournalSequence"] !== undefined && data["lastJournalSequence"] !== null) {
       instance.lastJournalSequence = Number(data["lastJournalSequence"]);
     }
     if (data["metadata"] !== undefined && data["metadata"] !== null) {
@@ -96,10 +82,7 @@ export class ResumeContext {
     if (obj.maxModelAttempts !== undefined && obj.maxModelAttempts !== null) {
       result["maxModelAttempts"] = obj.maxModelAttempts;
     }
-    if (
-      obj.lastJournalSequence !== undefined &&
-      obj.lastJournalSequence !== null
-    ) {
+    if (obj.lastJournalSequence !== undefined && obj.lastJournalSequence !== null) {
       result["lastJournalSequence"] = obj.lastJournalSequence;
     }
     if (obj.metadata !== undefined && obj.metadata !== null) {

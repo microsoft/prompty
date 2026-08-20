@@ -14,7 +14,8 @@ from .contracts.events._TurnEvent import TurnEvent
 
 @runtime_checkable
 class EventJournalWriter(Protocol):
-    """Persists typed events to a durable replay journal."""
+    """Persists typed events to a durable replay journal.
+    """
 
     def append_session(self, session_event: SessionEvent) -> bool:
         """Append a session event to a durable replay journal"""

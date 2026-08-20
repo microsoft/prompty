@@ -57,9 +57,7 @@ describe("FilePart", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "source": "https://example.com/document.pdf",\n  "mediaType": "application/pdf"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "source": "https://example.com/document.pdf",\n  "mediaType": "application/pdf"\n}`) as Record<string, unknown>;
       const instance = FilePart.load(data);
       expect(instance).toBeDefined();
     });

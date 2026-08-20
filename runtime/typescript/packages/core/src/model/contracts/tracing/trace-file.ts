@@ -40,10 +40,7 @@ export class TraceFile {
       instance.version = String(data["version"]);
     }
     if (data["trace"] !== undefined && data["trace"] !== null) {
-      instance.trace = TraceSpan.load(
-        data["trace"] as Record<string, unknown>,
-        context.at("trace"),
-      );
+      instance.trace = TraceSpan.load(data["trace"] as Record<string, unknown>, context.at("trace"));
     }
 
     if (context) {

@@ -33,10 +33,7 @@ export class TurnModelRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): TurnModelRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): TurnModelRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -57,16 +54,10 @@ export class TurnModelRequest {
       instance.inputs = data["inputs"] as Record<string, unknown>;
     }
     if (data["options"] !== undefined && data["options"] !== null) {
-      instance.options = TurnOptions.load(
-        data["options"] as Record<string, unknown>,
-        context.at("options"),
-      );
+      instance.options = TurnOptions.load(data["options"] as Record<string, unknown>, context.at("options"));
     }
     if (data["toolResults"] !== undefined && data["toolResults"] !== null) {
-      instance.toolResults = TurnModelRequest.loadToolResults(
-        data["toolResults"] as unknown[],
-        context.at("toolResults"),
-      );
+      instance.toolResults = TurnModelRequest.loadToolResults(data["toolResults"] as unknown[], context.at("toolResults"));
     }
 
     if (context) {
@@ -75,53 +66,32 @@ export class TurnModelRequest {
     return instance;
   }
 
-  static loadToolResults(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): HostToolResult[] {
+  static loadToolResults(data: Record<string, unknown>[] | unknown[], context?: LoadContext): HostToolResult[] {
     context ??= new LoadContext({ path: "toolResults" });
     if (!Array.isArray(data)) {
       const result: HostToolResult[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(
-            context.at(k).path +
-              ": invalid named collection entry category array",
-          );
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(
-            HostToolResult.load(
-              { name: k, ...(v as Record<string, unknown>) },
-              context.at(k),
-            ),
-          );
+          result.push(HostToolResult.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push(
-            HostToolResult.load({ name: k, requestId: v }, context.at(k)),
-          );
+          result.push(HostToolResult.load({ name: k, "requestId": v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) =>
-      HostToolResult.load(
-        item as Record<string, unknown>,
-        context.atIndex(index),
-      ),
-    );
+    return data.map((item, index) => HostToolResult.load(item as Record<string, unknown>, context.atIndex(index)));
   }
 
-  static saveToolResults(
-    items: HostToolResult[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveToolResults(items: HostToolResult[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -152,10 +122,7 @@ export class TurnModelRequest {
       result["options"] = obj.options.save(context);
     }
     if (obj.toolResults !== undefined && obj.toolResults !== null) {
-      result["toolResults"] = TurnModelRequest.saveToolResults(
-        obj.toolResults,
-        context,
-      );
+      result["toolResults"] = TurnModelRequest.saveToolResults(obj.toolResults, context);
     }
 
     if (context) {

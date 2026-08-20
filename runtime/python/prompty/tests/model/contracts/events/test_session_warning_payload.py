@@ -7,40 +7,38 @@ from prompty.model import SessionWarningPayload
 
 
 def test_load_json_sessionwarningpayload():
-    json_data = r"""
+    json_data = r'''
     {
       "warningType": "remote",
       "message": "Remote session disabled"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = SessionWarningPayload.load(data)
     assert instance is not None
     assert instance.warning_type == "remote"
     assert instance.message == "Remote session disabled"
 
-
 def test_load_yaml_sessionwarningpayload():
-    yaml_data = r"""
+    yaml_data = r'''
     warningType: remote
     message: Remote session disabled
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = SessionWarningPayload.load(data)
     assert instance is not None
     assert instance.warning_type == "remote"
     assert instance.message == "Remote session disabled"
 
-
 def test_roundtrip_json_sessionwarningpayload():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "warningType": "remote",
       "message": "Remote session disabled"
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = SessionWarningPayload.load(original_data)
     saved_data = instance.save()
@@ -49,15 +47,14 @@ def test_roundtrip_json_sessionwarningpayload():
     assert reloaded.warning_type == "remote"
     assert reloaded.message == "Remote session disabled"
 
-
 def test_to_json_sessionwarningpayload():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "warningType": "remote",
       "message": "Remote session disabled"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = SessionWarningPayload.load(data)
     json_output = instance.to_json()
@@ -65,15 +62,14 @@ def test_to_json_sessionwarningpayload():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_sessionwarningpayload():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "warningType": "remote",
       "message": "Remote session disabled"
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = SessionWarningPayload.load(data)
     yaml_output = instance.to_yaml()

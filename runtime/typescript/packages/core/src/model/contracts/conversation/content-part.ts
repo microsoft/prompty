@@ -15,10 +15,7 @@ export abstract class ContentPart {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ContentPart {
+  static load(data: Record<string, unknown>, context?: LoadContext): ContentPart {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -37,36 +34,27 @@ export abstract class ContentPart {
     return instance;
   }
 
-  private static loadKind(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): ContentPart {
+  private static loadKind(data: Record<string, unknown>, context?: LoadContext): ContentPart {
     const discriminatorValue = data["kind"];
     if (typeof discriminatorValue !== "string") {
-      throw new Error(
-        "Invalid ContentPart discriminator field 'kind': expected non-blank string",
-      );
+      throw new Error("Invalid ContentPart discriminator field 'kind': expected non-blank string");
     }
     if (discriminatorValue === "") {
-      throw new Error(
-        "Invalid ContentPart discriminator field 'kind': expected non-blank string",
-      );
+      throw new Error("Invalid ContentPart discriminator field 'kind': expected non-blank string");
     }
     const discriminator = discriminatorValue;
-    switch (discriminator) {
-      case "text":
-        return TextPart.load(data, context);
-      case "image":
-        return ImagePart.load(data, context);
-      case "file":
-        return FilePart.load(data, context);
-      case "audio":
-        return AudioPart.load(data, context);
-      default:
-        throw new Error(
-          `Unknown ContentPart discriminator field 'kind' value: ${discriminator}`,
-        );
-    }
+      switch (discriminator) {
+        case "text":
+          return TextPart.load(data, context);
+        case "image":
+          return ImagePart.load(data, context);
+        case "file":
+          return FilePart.load(data, context);
+        case "audio":
+          return AudioPart.load(data, context);
+        default:
+          throw new Error(`Unknown ContentPart discriminator field 'kind' value: ${discriminator}`);
+      }
   }
 
   //#endregion

@@ -30,10 +30,7 @@ export class FinalOutputPolicyRequest {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): FinalOutputPolicyRequest {
+  static load(data: Record<string, unknown>, context?: LoadContext): FinalOutputPolicyRequest {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
@@ -51,10 +48,7 @@ export class FinalOutputPolicyRequest {
       instance.iteration = Number(data["iteration"]);
     }
     if (data["messages"] !== undefined && data["messages"] !== null) {
-      instance.messages = FinalOutputPolicyRequest.loadMessages(
-        data["messages"] as unknown[],
-        context.at("messages"),
-      );
+      instance.messages = FinalOutputPolicyRequest.loadMessages(data["messages"] as unknown[], context.at("messages"));
     }
     if (data["output"] !== undefined && data["output"] !== null) {
       instance.output = data["output"] as unknown;
@@ -69,48 +63,32 @@ export class FinalOutputPolicyRequest {
     return instance;
   }
 
-  static loadMessages(
-    data: Record<string, unknown>[] | unknown[],
-    context?: LoadContext,
-  ): Message[] {
+  static loadMessages(data: Record<string, unknown>[] | unknown[], context?: LoadContext): Message[] {
     context ??= new LoadContext({ path: "messages" });
     if (!Array.isArray(data)) {
       const result: Message[] = [];
       for (const [k, v] of Object.entries(data)) {
         if (Array.isArray(v)) {
-          throw new TypeError(
-            context.at(k).path +
-              ": invalid named collection entry category array",
-          );
+          throw new TypeError(context.at(k).path + ": invalid named collection entry category array");
         }
         if (typeof v === "object" && v !== null && !Array.isArray(v)) {
-          result.push(
-            Message.load(
-              { name: k, ...(v as Record<string, unknown>) },
-              context.at(k),
-            ),
-          );
+          result.push(Message.load({ name: k, ...(v as Record<string, unknown>) }, context.at(k)));
         } else {
-          result.push(Message.load({ name: k, role: v }, context.at(k)));
+          result.push(Message.load({ name: k, "role": v }, context.at(k)));
         }
       }
       return result;
     }
-    return data.map((item, index) =>
-      Message.load(item as Record<string, unknown>, context.atIndex(index)),
-    );
+    return data.map((item, index) => Message.load(item as Record<string, unknown>, context.atIndex(index)));
   }
 
-  static saveMessages(
-    items: Message[],
-    context?: SaveContext,
-  ): Record<string, unknown>[] | Record<string, unknown> {
+  static saveMessages(items: Message[], context?: SaveContext): Record<string, unknown>[] | Record<string, unknown> {
     if (!context) {
       context = new SaveContext();
     }
 
     // This type doesn't have a 'name' property, so always use array format
-    return items.map((item) => item.save(context));
+    return items.map(item => item.save(context));
   }
 
   //#endregion
@@ -135,10 +113,7 @@ export class FinalOutputPolicyRequest {
       result["iteration"] = obj.iteration;
     }
     if (obj.messages !== undefined && obj.messages !== null) {
-      result["messages"] = FinalOutputPolicyRequest.saveMessages(
-        obj.messages,
-        context,
-      );
+      result["messages"] = FinalOutputPolicyRequest.saveMessages(obj.messages, context);
     }
     if (obj.output !== undefined && obj.output !== null) {
       result["output"] = obj.output;
@@ -163,27 +138,15 @@ export class FinalOutputPolicyRequest {
     return context.toJson(this.save(context), indent);
   }
 
-  static fromJson(
-    json: string,
-    context?: LoadContext,
-  ): FinalOutputPolicyRequest {
+  static fromJson(json: string, context?: LoadContext): FinalOutputPolicyRequest {
     const data = JSON.parse(json);
-    return FinalOutputPolicyRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return FinalOutputPolicyRequest.load(data as Record<string, unknown>, context);
   }
 
-  static fromYaml(
-    yaml: string,
-    context?: LoadContext,
-  ): FinalOutputPolicyRequest {
+  static fromYaml(yaml: string, context?: LoadContext): FinalOutputPolicyRequest {
     const { parse } = require("yaml");
     const data = parse(yaml);
-    return FinalOutputPolicyRequest.load(
-      data as Record<string, unknown>,
-      context,
-    );
+    return FinalOutputPolicyRequest.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

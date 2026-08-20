@@ -74,9 +74,7 @@ describe("Message", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "role": "user",\n  "parts": [\n    {\n      "kind": "text",\n      "value": "Hello!"\n    }\n  ],\n  "metadata": {\n    "source": "user-input"\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "role": "user",\n  "parts": [\n    {\n      "kind": "text",\n      "value": "Hello!"\n    }\n  ],\n  "metadata": {\n    "source": "user-input"\n  }\n}`) as Record<string, unknown>;
       const instance = Message.load(data);
       expect(instance).toBeDefined();
     });

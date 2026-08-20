@@ -53,10 +53,7 @@ describe("TokenEventPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(`{\n  "token": "Hello"\n}`) as Record<
-        string,
-        unknown
-      >;
+      const data = JSON.parse(`{\n  "token": "Hello"\n}`) as Record<string, unknown>;
       const instance = TokenEventPayload.load(data);
       expect(instance).toBeDefined();
     });

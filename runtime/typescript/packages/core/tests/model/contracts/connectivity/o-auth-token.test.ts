@@ -22,12 +22,8 @@ describe("OAuthToken", () => {
       const json = `{\n  "refreshToken": "0.AXoAoffline-refresh-token-value",\n  "scope": "https://cognitiveservices.azure.com/.default offline_access"\n}`;
       const instance = OAuthToken.fromJson(json);
       expect(instance).toBeDefined();
-      expect(instance.refreshToken).toEqual(
-        "0.AXoAoffline-refresh-token-value",
-      );
-      expect(instance.scope).toEqual(
-        "https://cognitiveservices.azure.com/.default offline_access",
-      );
+      expect(instance.refreshToken).toEqual("0.AXoAoffline-refresh-token-value");
+      expect(instance.scope).toEqual("https://cognitiveservices.azure.com/.default offline_access");
     });
 
     it("should round-trip JSON - example 1", () => {
@@ -45,12 +41,8 @@ describe("OAuthToken", () => {
       const yaml = `refreshToken: 0.AXoAoffline-refresh-token-value\nscope: "https://cognitiveservices.azure.com/.default offline_access"\n`;
       const instance = OAuthToken.fromYaml(yaml);
       expect(instance).toBeDefined();
-      expect(instance.refreshToken).toEqual(
-        "0.AXoAoffline-refresh-token-value",
-      );
-      expect(instance.scope).toEqual(
-        "https://cognitiveservices.azure.com/.default offline_access",
-      );
+      expect(instance.refreshToken).toEqual("0.AXoAoffline-refresh-token-value");
+      expect(instance.scope).toEqual("https://cognitiveservices.azure.com/.default offline_access");
     });
 
     it("should round-trip YAML - example 1", () => {
@@ -65,9 +57,7 @@ describe("OAuthToken", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "refreshToken": "0.AXoAoffline-refresh-token-value",\n  "scope": "https://cognitiveservices.azure.com/.default offline_access"\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "refreshToken": "0.AXoAoffline-refresh-token-value",\n  "scope": "https://cognitiveservices.azure.com/.default offline_access"\n}`) as Record<string, unknown>;
       const instance = OAuthToken.load(data);
       expect(instance).toBeDefined();
     });

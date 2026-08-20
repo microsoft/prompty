@@ -51,9 +51,7 @@ describe("ModelInvocationRequest", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "context": {\n    "id": "context:inv_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "invocationId": "inv_abc123",\n    "iteration": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "context": {\n    "id": "context:inv_abc123",\n    "sessionId": "sess_abc123",\n    "turnId": "turn_abc123",\n    "invocationId": "inv_abc123",\n    "iteration": 1,\n    "messages": [],\n    "contextState": {}\n  }\n}`) as Record<string, unknown>;
       const instance = ModelInvocationRequest.load(data);
       expect(instance).toBeDefined();
     });

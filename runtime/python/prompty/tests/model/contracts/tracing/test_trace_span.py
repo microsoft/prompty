@@ -7,7 +7,7 @@ from prompty.model import TraceSpan
 
 
 def test_load_json_tracespan():
-    json_data = r"""
+    json_data = r'''
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
@@ -18,7 +18,7 @@ def test_load_json_tracespan():
         "duration": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TraceSpan.load(data)
     assert instance is not None
@@ -26,9 +26,8 @@ def test_load_json_tracespan():
     assert instance.signature == "prompty.core.pipeline.run"
     assert instance.error == "Connection refused"
 
-
 def test_load_yaml_tracespan():
-    yaml_data = r"""
+    yaml_data = r'''
     name: prompty.core.pipeline.run
     signature: prompty.core.pipeline.run
     error: Connection refused
@@ -37,7 +36,7 @@ def test_load_yaml_tracespan():
       end: "2026-04-04T12:00:01Z"
       duration: 1000
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = TraceSpan.load(data)
     assert instance is not None
@@ -45,10 +44,9 @@ def test_load_yaml_tracespan():
     assert instance.signature == "prompty.core.pipeline.run"
     assert instance.error == "Connection refused"
 
-
 def test_roundtrip_json_tracespan():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
@@ -59,7 +57,7 @@ def test_roundtrip_json_tracespan():
         "duration": 1000
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = TraceSpan.load(original_data)
     saved_data = instance.save()
@@ -69,10 +67,9 @@ def test_roundtrip_json_tracespan():
     assert reloaded.signature == "prompty.core.pipeline.run"
     assert reloaded.error == "Connection refused"
 
-
 def test_to_json_tracespan():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
@@ -83,7 +80,7 @@ def test_to_json_tracespan():
         "duration": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TraceSpan.load(data)
     json_output = instance.to_json()
@@ -91,10 +88,9 @@ def test_to_json_tracespan():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_tracespan():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "name": "prompty.core.pipeline.run",
       "signature": "prompty.core.pipeline.run",
@@ -105,7 +101,7 @@ def test_to_yaml_tracespan():
         "duration": 1000
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = TraceSpan.load(data)
     yaml_output = instance.to_yaml()

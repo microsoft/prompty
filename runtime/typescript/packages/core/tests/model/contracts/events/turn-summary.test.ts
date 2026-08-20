@@ -77,9 +77,7 @@ describe("TurnSummary", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "turnId": "turn_001",\n  "status": "success",\n  "iterations": 2,\n  "llmCalls": 3,\n  "toolCalls": 2,\n  "retries": 1,\n  "durationMs": 2500\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "turnId": "turn_001",\n  "status": "success",\n  "iterations": 2,\n  "llmCalls": 3,\n  "toolCalls": 2,\n  "retries": 1,\n  "durationMs": 2500\n}`) as Record<string, unknown>;
       const instance = TurnSummary.load(data);
       expect(instance).toBeDefined();
     });

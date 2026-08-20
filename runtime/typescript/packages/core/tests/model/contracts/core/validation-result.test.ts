@@ -53,9 +53,7 @@ describe("ValidationResult", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "valid": true,\n  "errors": []\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "valid": true,\n  "errors": []\n}`) as Record<string, unknown>;
       const instance = ValidationResult.load(data);
       expect(instance).toBeDefined();
     });

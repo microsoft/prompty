@@ -55,12 +55,12 @@ class InvocationContextState:
         if data is not None and "portability" in data:
             instance.portability = data["portability"]
         if data is not None and "delegatedState" in data:
-            instance.delegated_state = InvocationContextState.load_delegated_state(
-                data["delegatedState"], context.at("delegatedState")
-            )
+            instance.delegated_state = InvocationContextState.load_delegated_state(data["delegatedState"], context.at("delegatedState"))
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+
 
     @staticmethod
     def load_delegated_state(data: dict | list, context: LoadContext | None) -> list[DelegatedStateReference]:
@@ -82,9 +82,7 @@ class InvocationContextState:
         return [DelegatedStateReference.load(item, context.at_index(index)) for index, item in enumerate(data)]
 
     @staticmethod
-    def save_delegated_state(
-        items: list[DelegatedStateReference], context: SaveContext | None
-    ) -> dict[str, Any] | list[dict[str, Any]]:
+    def save_delegated_state(items: list[DelegatedStateReference], context: SaveContext | None) -> dict[str, Any] | list[dict[str, Any]]:
         if context is None:
             context = SaveContext()
 
@@ -102,6 +100,7 @@ class InvocationContextState:
         obj = self
         if context is not None:
             obj = context.process_object(obj)
+
 
         result: dict[str, Any] = {}
 

@@ -57,9 +57,7 @@ describe("TurnStartPayload", () => {
 
   describe("load and save", () => {
     it("should load from dictionary", () => {
-      const data = JSON.parse(
-        `{\n  "agent": "weather-agent",\n  "maxIterations": 10\n}`,
-      ) as Record<string, unknown>;
+      const data = JSON.parse(`{\n  "agent": "weather-agent",\n  "maxIterations": 10\n}`) as Record<string, unknown>;
       const instance = TurnStartPayload.load(data);
       expect(instance).toBeDefined();
     });

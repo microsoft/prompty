@@ -7,58 +7,55 @@ from prompty.model import FailureChunk
 
 
 def test_load_json_failurechunk():
-    json_data = r"""
+    json_data = r'''
     {
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FailureChunk.load(data)
     assert instance is not None
 
-
 def test_load_yaml_failurechunk():
-    yaml_data = r"""
+    yaml_data = r'''
     failure:
       outcome: indeterminate
       message: "SSE stream error: connection reset"
 
-    """
+    '''
     data = yaml.load(yaml_data, Loader=yaml.FullLoader)
     instance = FailureChunk.load(data)
     assert instance is not None
 
-
 def test_roundtrip_json_failurechunk():
     """Test that load -> save -> load produces equivalent data."""
-    json_data = r"""
+    json_data = r'''
     {
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
       }
     }
-    """
+    '''
     original_data = json.loads(json_data, strict=False)
     instance = FailureChunk.load(original_data)
     saved_data = instance.save()
     reloaded = FailureChunk.load(saved_data)
     assert reloaded is not None
 
-
 def test_to_json_failurechunk():
     """Test that to_json produces valid JSON."""
-    json_data = r"""
+    json_data = r'''
     {
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FailureChunk.load(data)
     json_output = instance.to_json()
@@ -66,17 +63,16 @@ def test_to_json_failurechunk():
     parsed = json.loads(json_output)
     assert isinstance(parsed, dict)
 
-
 def test_to_yaml_failurechunk():
     """Test that to_yaml produces valid YAML."""
-    json_data = r"""
+    json_data = r'''
     {
       "failure": {
         "outcome": "indeterminate",
         "message": "SSE stream error: connection reset"
       }
     }
-    """
+    '''
     data = json.loads(json_data, strict=False)
     instance = FailureChunk.load(data)
     yaml_output = instance.to_yaml()

@@ -33,10 +33,7 @@ export class PermissionDecision {
 
   //#region Load Methods
 
-  static load(
-    data: Record<string, unknown>,
-    context?: LoadContext,
-  ): PermissionDecision {
+  static load(data: Record<string, unknown>, context?: LoadContext): PermissionDecision {
     context ??= new LoadContext();
     if (context) {
       data = context.processInput(data) as Record<string, unknown>;
