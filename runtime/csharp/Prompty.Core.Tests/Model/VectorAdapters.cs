@@ -84,6 +84,14 @@ public static class VectorAdapters
             "(SDK-typed response parsers), not referenced by the Prompty.Core conformance harness. " +
             "The same process vectors are driven against the real providers by the provider-level " +
             "SpecVectorProcessTests in Prompty.OpenAI.Tests.",
+        ["Processor.processStream"] =
+            "The processStream vectors assert streaming-failure classification + reconciliation " +
+            "(determinate vs indeterminate failure, preserved partial text, requiresReconciliation, " +
+            "completionCommitted). Streaming lives in the Prompty.OpenAI/Prompty.Anthropic provider " +
+            "assemblies, not referenced by the Prompty.Core conformance harness, and the C# runtime " +
+            "does not yet have a dedicated behavioral stream-failure conformance runner (only " +
+            "model-roundtrip StreamFailureConversionTests). Honest provider-layer gap at the harness " +
+            "boundary.",
         ["TurnConformance.replay"] =
             "The replay verifier consumes a recorded turn journal produced by the turn engine; the " +
             "snapshot/portability turn engine is not yet implemented in the C# runtime. Same gap as the " +

@@ -100,6 +100,11 @@ import "./conformance/vectors/discovery.tsp";
 import "./conformance/vectors/enrichment.tsp";
 import "./conformance/vectors/turn.tsp";
 import "./conformance/vectors/replay.tsp";
+// Streaming-failure classification + reconciliation vectors, bound to
+// Processor.processStream (a real @optionalOperation). Promoted from the standalone
+// spec/vectors/process/stream_failure_vectors.json into the typra vector system so
+// every runtime is held to the same streaming-failure semantics.
+import "./conformance/vectors/stream.tsp";
 
 // Events
 import "./contracts/events/payloads.tsp";

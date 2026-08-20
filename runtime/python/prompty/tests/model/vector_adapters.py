@@ -784,6 +784,16 @@ VECTOR_WAIVERS: dict[str, str] = {
         "implementation yet -- only the generated _TurnConformance protocol exists. "
         "Genuine feature gap."
     ),
+    "Processor.processStream": (
+        "The 2 processStream vectors assert the streaming-failure classification + "
+        "reconciliation contract (determinate vs indeterminate failure, preserved "
+        "partial text, requiresReconciliation, completionCommitted). The Python "
+        "runtime's provider stream generators (providers/openai/processor.py "
+        "_stream_generator) yield text chunks and raise ValueError on refusal/transport "
+        "errors, but do not produce the canonical StreamChunk/StreamFailure "
+        "reconciliation model these vectors compare against, so there is no runtime "
+        "path to drive them. Honest feature gap, not a wiring deferral."
+    ),
 }
 
 VECTOR_DOUBLES: dict[str, Any] = {}

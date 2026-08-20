@@ -51,6 +51,7 @@ var VectorWaivers = map[string]string{
 	"Parser.parse":              absentPipeline,
 	"WireConformance.toRequest": absentPipeline,
 	"Processor.process":         absentPipeline,
+	"Processor.processStream":   absentStream,
 	"TurnConformance.replay": "Implemented by ReferenceTurnRunner and exercised against the shared `replay` vectors by TestReferenceTurnRunnerMatchesSharedGoldenReplayVectors in turn_runner_test.go. Not driven through this generated adapter because the replay contract uses the reconstructed journal/scenario object shape the dedicated runner already asserts (mirrors the Rust reference).",
 	"TurnConformance.run":     "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas). The Go runtime does not implement that LLM agent loop, so this stays waived — same honest gap as the Python reference.",
 	"TurnConformance.runTurn": "Requires the not-yet-implemented snapshot/portability turn engine contract. Same gap as the Python reference.",
@@ -59,6 +60,13 @@ var VectorWaivers = map[string]string{
 // absentPipeline is the shared honest reason for the load/render/parse/wire/
 // process operations that the Go runtime does not yet implement.
 const absentPipeline = "Not implemented in the Go runtime. Go currently ships the generated model layer, the discovery mapper (enrich/mapModel), and a reference turn/replay engine; the .prompty loader, template renderer, chat parser, provider wire-mapping, and response processor do not exist yet, so there is no runtime code to drive this vector. Absent-layer gap, not a wiring deferral."
+
+// absentStream is the honest reason for the streaming-failure processStream
+// vectors: the Go runtime ships the generated StreamFailure/StreamChunk model
+// types (load/save) but no streaming response processor or reconciliation
+// engine, so there is no runtime code to classify chunks or reconcile a
+// determinate/indeterminate stream failure. Absent-layer gap.
+const absentStream = "Not implemented in the Go runtime. The generated StreamFailure/StreamChunk model types exist (load/save), but Go has no streaming response processor or reconciliation engine to classify chunks or produce the determinate/indeterminate + partialText/requiresReconciliation/completionCommitted contract these vectors assert. Absent-layer gap, not a wiring deferral."
 
 // VectorDoubles is reserved for deterministic test doubles.
 var VectorDoubles = map[string]any{}

@@ -3453,6 +3453,108 @@ const vectors = [
     },
   },
   {
+    contract: "Processor",
+    operation: "processStream",
+    params: {
+      stream: "unknown",
+    },
+    returns: "unknown",
+    sync: false,
+    vector: {
+      name: "partial_text_then_indeterminate_failure",
+      description:
+        "A post-open transport failure preserves partial text, requires reconciliation, and never commits a completion",
+      stage: "processStream",
+      input: {
+        provider: "openai",
+        events: [
+          {
+            kind: "provider",
+            value: {
+              choices: [
+                {
+                  delta: {
+                    content: "partial",
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: "transportError",
+            message: "SSE stream error: connection reset",
+          },
+        ],
+      },
+      expected: {
+        chunks: [
+          {
+            kind: "text",
+            value: "partial",
+          },
+          {
+            kind: "failure",
+            failure: {
+              outcome: "indeterminate",
+              message: "SSE stream error: connection reset",
+            },
+          },
+        ],
+        partialText: "partial",
+        requiresReconciliation: true,
+        completionCommitted: false,
+      },
+      operation: "processStream",
+    },
+  },
+  {
+    contract: "Processor",
+    operation: "processStream",
+    params: {
+      stream: "unknown",
+    },
+    returns: "unknown",
+    sync: false,
+    vector: {
+      name: "stream_refusal_is_determinate",
+      description:
+        "A model refusal is a determinate terminal failure and never commits a completion",
+      stage: "processStream",
+      input: {
+        provider: "openai",
+        events: [
+          {
+            kind: "provider",
+            value: {
+              choices: [
+                {
+                  delta: {
+                    refusal: "I cannot help with that",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      expected: {
+        chunks: [
+          {
+            kind: "failure",
+            failure: {
+              outcome: "determinate",
+              message: "Model refused: I cannot help with that",
+            },
+          },
+        ],
+        partialText: "",
+        requiresReconciliation: false,
+        completionCommitted: false,
+      },
+      operation: "processStream",
+    },
+  },
+  {
     contract: "Renderer",
     operation: "render",
     params: {

@@ -4,12 +4,12 @@ use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::Mutex;
 
+use prompty::model::Agent;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
-use prompty::model::Agent;
-use prompty::pipeline::expand_threads;
 use prompty::parsers::parse_chat;
-use prompty::{load, validate_inputs, Message};
+use prompty::pipeline::expand_threads;
+use prompty::{Message, load, validate_inputs};
 use regex::Regex;
 use serde_json::Value;
 
@@ -152,6 +152,10 @@ pub fn waivers() -> HashMap<String, String> {
             "TurnConformance.runTurn".to_string(),
             "Requires the not-yet-implemented snapshot/portability turn engine. Same gap as the Python reference.".to_string(),
         ),
+        (
+            "Processor.processStream".to_string(),
+            "The processStream vectors assert streaming-failure classification + reconciliation (determinate vs indeterminate failure, preserved partial text, requiresReconciliation, completionCommitted). The classification lives in the `prompty-openai` provider crate and the reconciliation lives in the `prompty` pipeline (`src/pipeline/live_turn.rs`) — neither is registered by the core model harness (`register_defaults()` wires no provider stream processor). It is driven against the same generated `vectors.json` by the dedicated runners `prompty-openai/tests/stream_failure_vectors.rs` (chunk classification) and the `live_turn.rs` streaming tests (reconciliation). Provider/pipeline-layer behavior, not a pure model-layer op.".to_string(),
+        ),
     ])
 }
 
@@ -293,9 +297,11 @@ fn canon_floats(v: &Value) -> Value {
             v.clone()
         }
         Value::Array(a) => Value::Array(a.iter().map(canon_floats).collect()),
-        Value::Object(o) => {
-            Value::Object(o.iter().map(|(k, val)| (k.clone(), canon_floats(val))).collect())
-        }
+        Value::Object(o) => Value::Object(
+            o.iter()
+                .map(|(k, val)| (k.clone(), canon_floats(val)))
+                .collect(),
+        ),
         _ => v.clone(),
     }
 }
@@ -330,7 +336,12 @@ fn make_temp_dir() -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    let dir = std::env::temp_dir().join(format!("prompty_vec_{}_{}_{}", std::process::id(), nanos, n));
+    let dir = std::env::temp_dir().join(format!(
+        "prompty_vec_{}_{}_{}",
+        std::process::id(),
+        nanos,
+        n
+    ));
     std::fs::create_dir_all(&dir).expect("create temp dir");
     dir
 }
@@ -363,9 +374,20 @@ fn err_map(msg: &str, expected: &Value) -> Value {
         let el = exp.to_lowercase();
         if exp == msg || msg.contains(exp) {
             matched = true;
-        } else if exp == "invalid frontmatter" && (low.contains("yaml") || low.contains("mapping") || low.contains("frontmatter") || low.contains("flow")) {
+        } else if exp == "invalid frontmatter"
+            && (low.contains("yaml")
+                || low.contains("mapping")
+                || low.contains("frontmatter")
+                || low.contains("flow"))
+        {
             matched = true;
-        } else if exp == "FileNotFoundError" && (low.contains("not found") || low.contains("no such file") || low.contains("cannot find") || low.contains("os error 2") || low.contains("filenotfound")) {
+        } else if exp == "FileNotFoundError"
+            && (low.contains("not found")
+                || low.contains("no such file")
+                || low.contains("cannot find")
+                || low.contains("os error 2")
+                || low.contains("filenotfound"))
+        {
             matched = true;
         } else if exp == "Invalid template format" && low.contains("template") {
             matched = true;
@@ -379,7 +401,10 @@ fn err_map(msg: &str, expected: &Value) -> Value {
         return serde_json::json!({ "error": msg });
     }
     let mut out = serde_json::Map::new();
-    out.insert("error".to_string(), Value::String(exp_err.unwrap_or(msg).to_string()));
+    out.insert(
+        "error".to_string(),
+        Value::String(exp_err.unwrap_or(msg).to_string()),
+    );
     if let Some(f) = field {
         if let Some(fs) = f.as_str() {
             if msg.contains(fs) {
@@ -413,13 +438,16 @@ fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
     let obj = input.as_object().cloned().unwrap_or_default();
 
     // --- input-validation vectors -----------------------------------------
-    let is_validation = expected
-        .get("validated_inputs")
-        .is_some()
-        || (expected.get("error").is_some() && obj.contains_key("inputs") && obj.contains_key("frontmatter"));
+    let is_validation = expected.get("validated_inputs").is_some()
+        || (expected.get("error").is_some()
+            && obj.contains_key("inputs")
+            && obj.contains_key("frontmatter"));
     if is_validation {
         let frontmatter = obj.get("frontmatter").cloned().unwrap_or(Value::Null);
-        let inputs = obj.get("inputs").cloned().unwrap_or(Value::Object(Default::default()));
+        let inputs = obj
+            .get("inputs")
+            .cloned()
+            .unwrap_or(Value::Object(Default::default()));
         let agent = agent_from_frontmatter(&frontmatter);
         return match validate_inputs(&agent, &inputs) {
             Ok(validated) => Ok(serde_json::json!({ "validated_inputs": validated })),

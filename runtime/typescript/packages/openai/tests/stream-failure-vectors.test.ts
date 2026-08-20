@@ -21,9 +21,14 @@ interface StreamFailureVector {
 function loadVectors(): StreamFailureVector[] {
   const path = resolve(
     import.meta.dirname,
-    "../../../../../spec/vectors/process/stream_failure_vectors.json",
+    "../../../../../schema/tsp-output/.typra-generated/vectors.json",
   );
-  return JSON.parse(readFileSync(path, "utf8")) as StreamFailureVector[];
+  const document = JSON.parse(readFileSync(path, "utf8")) as {
+    vectors: Array<{ operation: string; vector: StreamFailureVector }>;
+  };
+  return document.vectors
+    .filter((entry) => entry.operation === "processStream")
+    .map((entry) => entry.vector);
 }
 
 function responseFromVector(

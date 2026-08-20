@@ -51,6 +51,16 @@ enum VectorAdapters {
       "Parser.parse": sdkPipeline,
       "WireConformance.toRequest": providerLayer,
       "Processor.process": providerLayer,
+      "Processor.processStream":
+        "The processStream vectors assert streaming-failure classification + "
+        + "reconciliation (determinate vs indeterminate failure, preserved partial "
+        + "text, requiresReconciliation, completionCommitted). This is a "
+        + "provider/SDK streaming-pipeline behavior, not a pure model-layer op, and "
+        + "the `PromptyModel` target cannot import the provider/SDK packages without a "
+        + "circular dependency. The Swift runtime does not yet have a dedicated "
+        + "behavioral stream-failure conformance runner (only model-roundtrip "
+        + "`StreamFailureTests`), so this is an honest provider-layer gap at the "
+        + "model-harness boundary.",
       "TurnConformance.replay":
         "The async turn/replay runner lives in the `Prompty` SDK package and is "
         + "unreachable from this model-only harness. Driven against the generated "

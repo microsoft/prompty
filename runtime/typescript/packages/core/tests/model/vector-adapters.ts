@@ -857,6 +857,15 @@ export const vectorWaivers: Record<string, string> = {
     "snapshots, portable vs delegated provider state, delegated_provider_state " +
     "resumption, cancel-before-run) that has no runtime implementation yet — only the " +
     "generated protocol exists. Genuine feature gap. Same gap as Python.",
+  "Processor.processStream":
+    "The processStream vectors assert streaming-failure classification + " +
+    "reconciliation (determinate vs indeterminate failure, preserved partial text, " +
+    "requiresReconciliation, completionCommitted). This is a streaming *pipeline* " +
+    "behavior (turn() plus the provider stream processor), not a pure model-layer op, " +
+    "so it is not wired into this model conformance harness. It is driven against the " +
+    "same generated vectors.json by the dedicated runners packages/core " +
+    "stream-failures.test.ts (reconciliation via turn()) and packages/openai " +
+    "stream-failure-vectors.test.ts (chunk classification via the OpenAI processor).",
 };
 
 export const vectorDoubles: Record<string, unknown> = {};
