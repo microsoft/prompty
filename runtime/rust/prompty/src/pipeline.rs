@@ -19,6 +19,7 @@ use serde_json::{Value, json};
 use crate::engine::{DurabilityPort, PermissionPort, PostCommitPort, TurnEngineRequest};
 use crate::interfaces::InvokerError;
 use crate::model::Agent;
+use crate::model::context::LoadContext;
 use crate::parsers::parse_chat;
 use crate::registry;
 use crate::renderers::prepare_render_inputs;
@@ -1067,7 +1068,13 @@ fn extract_text_from_processed(processed: &serde_json::Value) -> Option<String> 
 // ---------------------------------------------------------------------------
 
 /// Expand thread nonce markers in messages with actual conversation history.
-fn expand_threads(
+/// Expand thread-marker nonces in `messages` into their conversation messages.
+///
+/// `nonces` maps each rich-input property name to the nonce string the renderer
+/// emitted for it; `inputs` supplies the thread payloads keyed by that same
+/// name. Exposed (beyond `prepare`) so conformance adapters can exercise the
+/// real expansion logic rather than reimplementing it.
+pub fn expand_threads(
     messages: &[Message],
     nonces: &HashMap<String, String>,
     inputs: &serde_json::Value,
@@ -1135,15 +1142,25 @@ fn expand_threads(
     result
 }
 
-/// Convert a JSON dict `{role, content}` to a `Message`.
+/// Convert a JSON dict `{role, content}` to a `Message`. `content` may be a
+/// plain string (single text part) or an array of structured content parts
+/// (`[{kind, value|source, ...}]`), so thread payloads carrying rich content
+/// round-trip faithfully instead of collapsing to empty text.
 fn dict_to_message(value: &serde_json::Value) -> Option<Message> {
     let obj = value.as_object()?;
     let role_str = obj.get("role")?.as_str()?;
     let role = Role::from_str_opt(role_str)?;
-    let content = obj.get("content").and_then(|v| v.as_str()).unwrap_or("");
+    let parts = match obj.get("content") {
+        Some(serde_json::Value::String(s)) => vec![ContentPart::text(s.clone())],
+        Some(serde_json::Value::Array(arr)) => arr
+            .iter()
+            .map(|p| ContentPart::load_from_value(p, &LoadContext::default()))
+            .collect(),
+        _ => vec![ContentPart::text("")],
+    };
     Some(Message {
         role,
-        parts: vec![ContentPart::text(content)],
+        parts,
         ..Default::default()
     })
 }
