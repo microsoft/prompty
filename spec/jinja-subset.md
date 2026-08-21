@@ -643,6 +643,19 @@ Confirmed by inspecting the emit toolchain
   surface is now uniformly present, ready for real per-runtime adapters — but it does **not**
   itself flip the contract (Phase 4) or add owned engines beyond C# (Phase 3), which remain
   Bucket-B-gated.
+- **Known gap — 5 `renderSegments` vectors currently fail (deliberately deferred).** The v1.0.0
+  regen also emitted **5 new `Renderer.renderSegments` conformance vectors** (injection /
+  role-marker / `strict`-boundary cases, ids 109–113) into every runtime harness. **No runtime
+  registers an adapter for `Renderer.renderSegments`** (no segment-tree renderer exists yet —
+  the default `jinja2` renderer returns a flat string), so those five vectors fail hard by
+  design (`@vector conformance never skips silently`; verified locally on Python:
+  `5 failed, 145 passed, 35 skipped`). This does **not** show red in GitHub today: the
+  per-runtime `prompty-*-check` suites are `pull_request`-triggered and **advisory** (no required
+  status on `main`), and only the two `schema-*` workflows run on branch push. The
+  reproducibility gate is unaffected — it checks generated-code shape, not test execution.
+  Resolution is **deferred by decision** (revisit later); when picked up, the honest fix is a
+  **per-vector waiver** per runtime (typra #265, §7) with a `#492` tracking link — or a real
+  adapter — landed as part of Phase 3, not a blocker for the additive Python reference work.
 
 ---
 
