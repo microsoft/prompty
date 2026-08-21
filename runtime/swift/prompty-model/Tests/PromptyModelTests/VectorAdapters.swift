@@ -15,6 +15,30 @@ enum VectorAdapters {
       "DiscoveryConformance.mapModel": VectorAdapter { input, context in
         let provider = context.provider ?? ""
         return try Discovery.mapModel(input, provider: provider).save()
+      },
+      "Renderer.renderSegments": VectorAdapter { input, _ in
+        guard let object = input as? [String: Any],
+          let template = object["template"] as? String
+        else {
+          throw VectorError("Missing renderSegments input")
+        }
+        let inputs = object["inputs"] as? [String: Any] ?? [:]
+        let strictProps = object["strict_props"] as? [String] ?? []
+        do {
+          let segments = try renderSegments(template: template, inputs: inputs, strictProps: strictProps)
+          return [
+            "segments": segments.map { segment in
+              [
+                "kind": segment.kind,
+                "text": segment.text,
+                "source": segment.source ?? NSNull(),
+                "strict": segment.strict,
+              ] as [String: Any]
+            }
+          ]
+        } catch JinjaError.strictViolation {
+          return ["error": "StrictViolation"]
+        }
       }
     ]
   }
