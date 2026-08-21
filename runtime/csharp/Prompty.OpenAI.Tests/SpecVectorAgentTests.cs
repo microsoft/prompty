@@ -704,6 +704,9 @@ public class SpecVectorAgentTests : IDisposable
     {
         public Task<string> RenderAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
             => Task.FromResult(agent.Instructions ?? "");
+
+        public Task<List<Core.RenderSegment>> RenderSegmentsAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
+            => Task.FromResult(new List<Core.RenderSegment> { new() { Kind = Core.RenderSegmentKind.Literal, Text = agent.Instructions ?? "" } });
     }
 
     private class PassthroughParser : IParser

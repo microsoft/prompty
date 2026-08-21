@@ -316,6 +316,30 @@ def _render_invoke(input: dict, context: dict) -> Any:
     return {"rendered": rendered}
 
 
+def _render_segments_invoke(input: dict, context: dict) -> Any:
+    """Provenance-tagged segment rendering via the owned ``jinja_subset`` engine (§7).
+
+    ``render_segments`` is the provenance-carrying superset of ``render``:
+    concatenating each segment's ``text`` reproduces the flat render, while the
+    ``kind``/``source``/``strict`` tags carry literal-vs-interpolated provenance.
+    A ``strict`` value that forges a role boundary raises ``StrictViolation``,
+    which we surface as ``{"error": "StrictViolation"}`` to match the vector's
+    ``expected`` (the same catch-and-return convention the load-error vectors use).
+    """
+    from dataclasses import asdict
+
+    from prompty.jinja_subset import StrictViolation, render_segments
+
+    template = input["template"]
+    inputs = dict(input.get("inputs", {}))
+    strict_props = input.get("strict_props")
+    try:
+        segments = render_segments(template, inputs, strict_props=strict_props)
+    except StrictViolation:
+        return {"error": "StrictViolation"}
+    return {"segments": [asdict(segment) for segment in segments]}
+
+
 # ---------------------------------------------------------------------------
 # PARSE
 # ---------------------------------------------------------------------------
@@ -749,6 +773,7 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
 VECTOR_ADAPTERS: dict[str, Any] = {
     "LoadConformance.load": {"invoke": _load_invoke, "normalize": _project_normalize},
     "Renderer.render": {"invoke": _render_invoke, "normalize": _project_normalize},
+    "Renderer.renderSegments": {"invoke": _render_segments_invoke, "normalize": _project_normalize},
     "Parser.parse": {"invoke": _parse_invoke, "normalize": _project_normalize},
     "WireConformance.toRequest": {"invoke": _wire_invoke, "normalize": _project_normalize},
     "Processor.process": {"invoke": _process_invoke, "normalize": _project_normalize},

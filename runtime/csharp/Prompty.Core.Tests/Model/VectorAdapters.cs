@@ -68,6 +68,7 @@ public static class VectorAdapters
         }),
         ["LoadConformance.load"] = new(LoadInvoke, ProjectNormalize),
         ["Renderer.render"] = new(RenderInvoke),
+        ["Renderer.renderSegments"] = new(RenderSegmentsInvoke),
         ["Parser.parse"] = new(ParseInvoke),
     };
 
@@ -496,6 +497,48 @@ public static class VectorAdapters
             return new JsonObject { ["rendered"] = rendered };
         }
         return new JsonObject { ["rendered"] = rendered };
+    }
+
+    private static JsonNode? RenderSegmentsInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        // Provenance-tagged segment rendering via the owned JinjaSubset engine (§7).
+        // Concatenating each segment's Text reproduces the flat render, while the
+        // Kind/Source/Strict tags carry literal-vs-interpolated provenance. A strict
+        // value forging a role boundary raises StrictViolationException, surfaced as
+        // { "error": "StrictViolation" } to match the vector's expected (the same
+        // catch-and-return convention the load-error vectors use).
+        var input = inputNode as JsonObject ?? new JsonObject();
+        var template = (input["template"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var inputs = ToObjectDictionary(input["inputs"] as JsonObject ?? new JsonObject());
+
+        List<string>? strictProps = null;
+        if (input["strict_props"] is JsonArray sp)
+        {
+            strictProps = sp.Select(n => (n as JsonValue)?.GetValue<string>() ?? string.Empty).ToList();
+        }
+
+        List<Prompty.Core.JinjaSubset.Segment> segments;
+        try
+        {
+            segments = Prompty.Core.JinjaSubset.Evaluator.RenderSegments(template, inputs, strictProps);
+        }
+        catch (Prompty.Core.JinjaSubset.StrictViolationException)
+        {
+            return new JsonObject { ["error"] = "StrictViolation" };
+        }
+
+        var arr = new JsonArray();
+        foreach (var seg in segments)
+        {
+            arr.Add(new JsonObject
+            {
+                ["kind"] = seg.Kind,
+                ["text"] = seg.Text,
+                ["source"] = seg.Source is null ? null : JsonValue.Create(seg.Source),
+                ["strict"] = seg.Strict,
+            });
+        }
+        return new JsonObject { ["segments"] = arr };
     }
 
     // -----------------------------------------------------------------------

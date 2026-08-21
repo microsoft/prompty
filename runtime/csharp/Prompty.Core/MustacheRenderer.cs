@@ -26,4 +26,25 @@ public class MustacheRenderer : IRenderer
         var rendered = await _stubble.RenderAsync(template, renderInputs);
         return rendered;
     }
+
+    /// <summary>
+    /// Render the template into a provenance-tagged segment tree. Mustache is not the
+    /// Prompty Jinja Subset and carries no interpolation provenance, so the flat render is
+    /// returned as a single <c>literal</c> span. Concatenating the span text still reproduces
+    /// <see cref="RenderAsync"/>, satisfying the render/renderSegments consistency contract.
+    /// </summary>
+    public async Task<List<RenderSegment>> RenderSegmentsAsync(Agent agent, string template, Dictionary<string, object?> inputs)
+    {
+        var rendered = await RenderAsync(agent, template, inputs);
+        return
+        [
+            new RenderSegment
+            {
+                Kind = RenderSegmentKind.Literal,
+                Text = rendered,
+                Source = null,
+                Strict = false,
+            },
+        ];
+    }
 }

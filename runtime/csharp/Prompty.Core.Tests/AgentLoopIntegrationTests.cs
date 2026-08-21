@@ -15,6 +15,9 @@ file class PassthroughRenderer : IRenderer
 {
     public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult(template);
+
+    public Task<List<RenderSegment>> RenderSegmentsAsync(Agent agent, string template, Dictionary<string, object?> inputs)
+        => Task.FromResult(new List<RenderSegment> { new() { Kind = RenderSegmentKind.Literal, Text = template } });
 }
 
 /// <summary>
