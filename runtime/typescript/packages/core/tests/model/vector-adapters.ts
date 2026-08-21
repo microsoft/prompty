@@ -62,10 +62,12 @@ import {
   registerParser,
   registerRenderer,
   render,
+  renderSegments,
   validateInputs,
   MustacheRenderer,
   NunjucksRenderer,
   PromptyChatParser,
+  StrictViolationError,
 } from "../../src/index.js";
 import { defaultSaveContext } from "../../src/core/loader.js";
 import { TurnOptions } from "../../src/model/index.js";
@@ -451,7 +453,30 @@ async function renderInvoke(
     if (match && match.index === 0) return expected;
     return { rendered };
   }
+
   return { rendered };
+}
+
+function renderSegmentsInvoke(input: any, _context: AdapterContext): unknown {
+  try {
+    return {
+      segments: renderSegments(
+        input.template,
+        input.inputs ?? {},
+        input.strict_props ?? [],
+      ).map((segment) => ({
+        kind: segment.kind,
+        text: segment.text,
+        source: segment.source,
+        strict: segment.strict,
+      })),
+    };
+  } catch (error) {
+    if (error instanceof StrictViolationError) {
+      return { error: "StrictViolation" };
+    }
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -824,6 +849,10 @@ function discoveryMapInvoke(
 export const vectorAdapters = {
   "LoadConformance.load": { invoke: loadInvoke, normalize: projectNormalize },
   "Renderer.render": { invoke: renderInvoke, normalize: projectNormalize },
+  "Renderer.renderSegments": {
+    invoke: renderSegmentsInvoke,
+    normalize: projectNormalize,
+  },
   "Parser.parse": { invoke: parseInvoke, normalize: projectNormalize },
   "WireConformance.toRequest": {
     invoke: wireInvoke,
