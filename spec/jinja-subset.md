@@ -622,12 +622,27 @@ Confirmed by inspecting the emit toolchain
   [#259](https://github.com/sethjuarez/typra/issues/259), Swift
   [#260](https://github.com/sethjuarez/typra/issues/260), Go
   [#262](https://github.com/sethjuarez/typra/issues/262)) are **fixed in typra v1.0.0** —
-  verified locally via `scripts/smoke-emit.mjs` (Java/Swift/Go emit cleanly, 199/146/145 files,
-  no crash). A full regen is nonetheless still a **CI/linux** job because the Windows dev
-  environment is separately non-reproducible (path/normalizer noise), unrelated to the emitter.
-  Therefore the `ast.tsp` schema is **authored and typechecked** now but the multi-runtime regen
-  is deferred to Phase 3; the Python reference and its goldens are built as **additive Python**
-  with **zero** emitter dependency.
+  first smoke-checked via `scripts/smoke-emit.mjs`, then **proven end-to-end**: the full
+  multi-runtime `npm run generate` at `@typra/emitter ^1.0.0` was executed on CI/linux and
+  landed byte-clean (**202 files, +4008/−666**), with the `schema-repro-check` reproducibility
+  gate green on the result. A full regen remains a **CI/linux** job because the Windows dev
+  environment is separately non-reproducible (path/normalizer noise), unrelated to the emitter —
+  so the regen was produced by a throwaway `workflow_dispatch` job running the gate's exact
+  pinned toolchain (node 22.23.2, rustfmt 1.97.1, dotnet 9.0.317, gofmt via `go.mod`, ruff,
+  prettier) and applied as a patch, rather than regenerated on Windows.
+  Therefore the `ast.tsp` schema is **authored and typechecked** now but any *further*
+  multi-runtime regen is deferred to Phase 3; the Python reference and its goldens are built as
+  **additive Python** with **zero** emitter dependency.
+- **Milestone — `renderSegments` now emitted across all seven runtimes (typra v1.0.0 regen).**
+  The `Renderer.renderSegments` op (the segment-tree render→parse seam, §8.4/§10.1) previously
+  existed only as a live-interface binding that just C# implemented. The v1.0.0 regen emits its
+  binding **and** generated conformance tests into every runtime (Java `RenderSegment.java`,
+  Rust `render_segment.rs`, Swift `render_segment.swift`, TS `render-segment.ts`, Python
+  `_RenderSegment.py`, Go), alongside the now-emitted Java/Swift/Go `VectorConformanceTests`
+  harnesses. This is infrastructure for Phase 3/4 landing early and cleanly — the segment-tree
+  surface is now uniformly present, ready for real per-runtime adapters — but it does **not**
+  itself flip the contract (Phase 4) or add owned engines beyond C# (Phase 3), which remain
+  Bucket-B-gated.
 
 ---
 
