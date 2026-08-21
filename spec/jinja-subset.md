@@ -28,7 +28,7 @@ root cause of divergence risk: the subset is what these seven engines must agree
 | Runtime    | Engine                          | Kind                        | Renderer source |
 | ---------- | ------------------------------- | --------------------------- | --------------- |
 | Python     | `jinja2` (sandboxed)            | Reference Jinja2            | `runtime/python/prompty/prompty/renderers/jinja2.py` |
-| C#         | `Jinja2.NET` 1.4.1              | Third-party Jinja2 port     | `runtime/csharp/Prompty.Core/Jinja2Renderer.cs` |
+| C#         | **Prompty Jinja Subset (owned)** | Owned recursive-descent    | `runtime/csharp/Prompty.Core/JinjaSubset/*.cs` + `Jinja2Renderer.cs` |
 | Rust       | `minijinja`                     | Jinja2-compatible           | `runtime/rust/prompty/src/renderers/nunjucks.rs` |
 | TypeScript | `nunjucks`                      | Jinja2-compatible           | `runtime/typescript/packages/core/src/renderers/nunjucks.ts` |
 | Java       | `jinjava` (HubSpot)             | Jinja2-compatible           | `runtime/java/prompty/src/main/java/com/microsoft/prompty/renderers/JinjaRenderer.java` |
@@ -517,12 +517,15 @@ Every runtime MUST pass all three, identically.
   escaping, undefined→empty, **significant/preserved whitespace**, and explicit `{%-`/`-%}`
   trim markers. Everything else is OPTIONAL and non-portable.
 - Audit: Python/Rust/TS/Java conformant; Swift conformant to current vectors but lacks trim
-  markers; Go has no renderer (honest absent-layer waiver); **C# `Jinja2.NET` diverges** by
-  dropping whitespace-only inter-tag text nodes (verified).
-- Near-term fix path: prefer an upstream/vendored `Jinja2.NET` whitespace fix (b) over a full
-  engine swap (a); add trim-marker vectors; and add a **per-vector expected-fail waiver** to
-  the upstream Typra harness so the one known C# divergence can be honestly, visibly waived
-  while the 20+ passing render vectors stay enforced.
+  markers; Go has no renderer (honest absent-layer waiver). **C# `Jinja2.NET` diverged** by
+  dropping whitespace-only inter-tag text nodes (verified) — now **RESOLVED**: C# was swapped
+  to an owned recursive-descent Prompty Jinja Subset engine (`JinjaSubset/*.cs`), dropping the
+  `Jinja2.NET` dependency. `Vector95RendererRenderForLoop` and 22 engine-level tests pass.
+- Resolution taken: rather than the near-term upstream/vendored `Jinja2.NET` fix (option b),
+  we took the **owned-engine swap (option a)** for C# — the diverging runtime — because it is
+  also the long-term B2 direction (§8/§10). A **per-vector expected-fail waiver** in the
+  upstream Typra harness ([#265](https://github.com/sethjuarez/typra/issues/265)) remains the
+  mechanism for honestly waiving single divergent vectors as the other runtimes onboard.
 - Longer-term direction (§8, proposal): make the renderer **owned** (B2) with a **structured
   render→parse contract**, which unifies with the T1 AST layer, retires both in-band sentinels
   (`__PROMPTY_THREAD_` markers and the role-boundary nonce), and turns cross-runtime
@@ -621,3 +624,121 @@ Confirmed by inspecting the emit toolchain
   unattended. Therefore the `ast.tsp` schema is **authored and typechecked** now but the
   multi-runtime regen is deferred to Phase 3; the Python reference and its goldens are built as
   **additive Python** with **zero** emitter dependency.
+
+---
+
+## §11 Parsers as providers — a uniform onboarding contract
+
+A template engine is already selected the way a **model provider** is selected: by a
+discriminated `kind` on a config model. `FormatConfig.kind` ("jinja2" / "mustache") is the
+registry key, exactly as `Model.provider` ("openai" / "anthropic") is
+([`schema/model/contracts/templates/template.tsp`](../schema/model/contracts/templates/template.tsp)).
+This section answers the design question that follows from that symmetry: **how do we onboard a
+second template language with the same provable, vector-enforced discipline we already use for
+model providers** — and precisely what that borrows (and does not borrow) from the provider
+machinery (`@@knownAs`, `anthropic-types.tsp`, the wire conformance seam).
+
+### §11.1 The provider abstraction has three tiers
+
+Studying how the wire layer keeps N model providers honest reveals three distinct mechanisms,
+used in escalating order of structural divergence:
+
+| Tier | Mechanism | Use when | Provider example | Emitter support |
+| ---- | --------- | -------- | ---------------- | --------------- |
+| **T1** | `@@knownAs(Field, "provider", "wire_name")` — canonical field, per-provider **rename**; emitter generates `toWire`/`fromWire` | the shape is identical, only **names** differ | `@@knownAs(ModelOptions.maxOutputTokens, "openai", "max_completion_tokens")` ([`wire/openai.tsp`](../schema/model/wire/openai.tsp)) | exists |
+| **T2** | a **dedicated wire model** with a hand-written transform per runtime, pinned by vectors | the shape is **structurally different** | `AnthropicMessagesRequest`, `AnthropicContentBlock` union, flat `input_schema` tools ([`wire/anthropic/anthropic-types.tsp`](../schema/model/wire/anthropic/anthropic-types.tsp)) | exists |
+| **T3** | a **conformance-only seam** — an `interface` carrying a `@vector(...)` op that **no runtime implements** — pure evidence emission, plus a per-vector **tag** for dispatch | you need to *prove* equivalence across N implementations without dictating internals | `interface WireConformance { @vector(WireVectors) toRequest(...) }` ([`conformance/seams/wire-conformance.tsp`](../schema/model/conformance/seams/wire-conformance.tsp)) | exists |
+
+The tiers compose: a provider is renamed where it can be (T1), given its own model where it
+cannot (T2), and pinned by seam vectors either way (T3).
+
+### §11.2 Template parsers are **Tier 2**, not Tier 1
+
+The tempting move is to treat mustache like an alternate wire name for jinja. It is not: **jinja
+and mustache are different languages, not field renames.** Mustache is deliberately *logic-less*
+— its `{{#x}}` token is polymorphic (section / loop / inverted, resolved at render time by the
+runtime value's type), it has no `elif`, no operators, no filters, no `loop` object, but it does
+have partials `{{>p}}` and unescaped `{{{raw}}}`. There is no field-rename that carries one into
+the other.
+
+| Dimension | Jinja subset (§2) | Mustache |
+| --------- | ----------------- | -------- |
+| Conditionals | explicit `{% if %}/{% elif %}/{% else %}` with operators | `{{#x}}…{{/x}}` (truthy section) / `{{^x}}…{{/x}}` (inverted) — **no** elif, **no** operators |
+| Loops | `{% for i in items %}` + `loop.index/first/last/length` | `{{#items}}…{{/items}}` — same token as a section; **no** loop metadata |
+| Substitution | `{{ name }}`, no HTML escaping (§2) | `{{ name }}` **HTML-escaped**; `{{{ name }}}` / `{{& name }}` raw |
+| Filters | six (`upper`/`lower`/`trim`/`join`/`length`/`default`) | **none** (logic-less by design) |
+| Whitespace | significant + explicit `{%- -%}` trim markers (§3) | standalone-tag stripping rules; **no** explicit trim markers |
+| Composition | none in subset | partials `{{> name }}` |
+
+The consequence: a single unified AST would be **lossy in both directions**. Each engine gets
+its own parse tree — `JinjaAst` today (`ast-model.tsp`), a future `MustacheAst` — each its own
+T2 "dedicated model". This is the mustache-analog of `anthropic-types.tsp`.
+
+### §11.3 Two equivalence axes — keep them separate
+
+Provider-style onboarding only stays honest if two very different claims are never conflated:
+
+- **Axis 1 — cross-runtime, same-engine (REAL equivalence).** Python-jinja **==** C#-jinja **==**
+  Rust-jinja, byte-for-byte. This is the entire point of §2–§3 and is enforced *today* by the
+  `@vector(RenderVectors)` set. It is a provable, all-runtimes-agree invariant.
+- **Axis 2 — cross-engine (deliberately NOT equivalence).** jinja **≠** mustache, on purpose.
+  They are different languages; asserting `jinja == mustache` would be a category error.
+
+The contract is therefore: *each engine is internally portable across all runtimes* (Axis 1),
+and *engines are never asserted equal to each other* (Axis 2). The vector set carries an
+**`"engine"` tag per vector** — every render vector today emits `"engine": "jinja2"`
+([`render.tsp`](../schema/model/conformance/vectors/render.tsp)) — and the per-runtime adapter
+**dispatches on that tag**. Onboarding mustache means adding mustache-tagged vectors to the same
+set; the adapter routes each vector to the engine its tag names. This dispatch mechanism already
+exists and is the direct analog of provider-tagged wire vectors (T3).
+
+### §11.4 The uniform onboarding recipe
+
+Onboarding any new template language reduces to four steps, each mapping to an existing tier:
+
+1. **Model the language (T2).** Author its `*-ast.tsp` parse-tree model (discriminated union),
+   the mustache analog of `ast-model.tsp` / `anthropic-types.tsp`.
+2. **Add tagged vectors (T3).** Snapshot golden render vectors from the reference implementation
+   with `"engine": "mustache"`; drop them into the shared render-vector set beside the jinja
+   ones.
+3. **Register the dispatch key (T1-style).** Add the `kind` to `FormatConfig`'s discriminator so
+   `format.kind: "mustache"` selects it — the same `@discriminator("kind")` + `@coerce` registry
+   that already distinguishes providers.
+4. **Implement + prove per runtime.** Each runtime binds its engine to the key and passes the
+   engine-tagged vectors; partial ports use the per-vector waiver (§11.5) until complete.
+
+No step needs a *new* emitter primitive — each reuses one already exercised by the wire layer.
+
+### §11.5 What we need from Typra (and what already exists)
+
+The load-bearing question — *does the emitter already give us enough to onboard parsers
+provider-style?* — resolves to **yes, with one filed gap and a sequencing dependency, not a new
+capability**.
+
+| Need for parsers-as-providers | Typra primitive | Status / evidence |
+| ----------------------------- | --------------- | ----------------- |
+| Parse/evaluate conformance seam | conformance-only `interface` + `@vector` op no runtime implements | **exists** — `WireConformance` / `LoadConformance` / `TurnConformance` (§10.4) |
+| Engine dispatch (jinja vs mustache in one vector set) | per-vector `"engine"` tag + hand-written adapter | **exists** — render vectors already carry `"engine": "jinja2"` ([`render.tsp`](../schema/model/conformance/vectors/render.tsp)) |
+| **Recursive AST tree** (`Expr`→`Expr`, `Node`→`Node[]`) | `@discriminator("kind")` + self-referential fields | **exists — proven.** `Property`/`ObjectProperty`/`ArrayProperty`/`UnionProperty` is a recursive discriminated union already emitted to **all seven** runtimes ([`core/properties.tsp`](../schema/model/contracts/core/properties.tsp): `ObjectProperty.properties: Properties`, `ArrayProperty.items: Property`, `UnionProperty.oneOf: Property[]`). Our AST is the same structural class. |
+| String shorthand (`format: "jinja"` → `{kind}`) | `@coerce(string, #{kind:"{value}"})` | **exists** — live on `FormatConfig` |
+| Per-parser field renaming | `@@knownAs` | **exists but not needed** — parsers are T2 (own model), not T1 renames (§11.2) |
+
+**The one genuine gap (already filed):** per-vector expected-fail waivers
+([typra#265](https://github.com/sethjuarez/typra/issues/265)). Needed for *honest partial
+ports* — a runtime passing 18/20 AST vectors otherwise must waive the **whole** adapter (hiding
+the 18 passing) or go fully red. Not blocking Python/C#; needed the moment the other five
+runtimes onboard incrementally.
+
+**Not new asks — sequencing blockers before the multi-runtime regen:** the parse/evaluate seam
+triggers a full `npm run generate`, which currently trips existing structural harness bugs in
+Java ([#259](https://github.com/sethjuarez/typra/issues/259)), Swift
+([#260](https://github.com/sethjuarez/typra/issues/260)), and Go
+([#262](https://github.com/sethjuarez/typra/issues/262)). These must land **before** the
+coordinated AST regen — not because the AST needs new capability, but because the regen surface
+is already broken in those three runtimes independent of this work.
+
+**Net:** the design + Python reference + the committed C# owned engine all stand on primitives
+that exist today. The only thing we would ever *ask Typra to add* for this design is #265; the
+rest is "land the already-open structural fixes, then regen on CI." As of this writing those
+upstream issues are being wrapped up, which clears the parser-as-provider path to Phase 3
+timing.
