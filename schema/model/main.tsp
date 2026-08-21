@@ -85,6 +85,7 @@ import "./conformance/seams/turn-conformance.tsp";
 
 // Behavior vectors (conformance evidence attached to callable operations)
 import "./conformance/vectors/render.tsp";
+import "./conformance/vectors/render-segments.tsp";
 import "./conformance/vectors/parse.tsp";
 // process vectors are authored as a JSON-STRING set (Typra 0.7.0+ affordance)
 // so they can carry populated agent.model + raw provider wire payloads (both
