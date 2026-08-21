@@ -322,6 +322,12 @@ so C#'s adapter isn't juggling two failures at once.
 
 ## §7 Per-vector waiver mechanism (harness proposal)
 
+> **Filed upstream:** [sethjuarez/typra#265](https://github.com/sethjuarez/typra/issues/265)
+> tracks implementing this in the emitter. It is an **optional / parallel** track — the owned-
+> renderer work (§8) *removes* the C# divergence outright, so this waiver is a transition
+> convenience (honest advisory CI + honest incremental multi-runtime porting), **not** a
+> prerequisite for anything in the roadmap.
+
 **Problem.** The shared vector harness (upstream `sethjuarez/typra`, emitted into each runtime)
 supports **only adapter-level, all-or-nothing** waivers. In the C# harness
 (`VectorConformanceTests.RunVector`), the waiver lookup fires **only when no adapter is
