@@ -325,11 +325,11 @@ so C#'s adapter isn't juggling two failures at once.
 
 ## §7 Per-vector waiver mechanism (harness proposal)
 
-> **Filed upstream:** [sethjuarez/typra#265](https://github.com/sethjuarez/typra/issues/265)
-> tracks implementing this in the emitter. It is an **optional / parallel** track — the owned-
-> renderer work (§8) *removes* the C# divergence outright, so this waiver is a transition
-> convenience (honest advisory CI + honest incremental multi-runtime porting), **not** a
-> prerequisite for anything in the roadmap.
+> **Delivered upstream (typra v1.0.0):** [sethjuarez/typra#265](https://github.com/sethjuarez/typra/issues/265)
+> implemented per-vector expected-fail waivers in the emitter. It is an **optional / parallel**
+> track — the owned-renderer work (§8) *removes* the C# divergence outright, so this waiver is a
+> transition convenience (honest advisory CI + honest incremental multi-runtime porting),
+> **not** a prerequisite for anything in the roadmap. The schema pins `@typra/emitter` `^1.0.0`.
 
 **Problem.** The shared vector harness (upstream `sethjuarez/typra`, emitted into each runtime)
 supports **only adapter-level, all-or-nothing** waivers. In the C# harness
@@ -525,7 +525,8 @@ Every runtime MUST pass all three, identically.
   we took the **owned-engine swap (option a)** for C# — the diverging runtime — because it is
   also the long-term B2 direction (§8/§10). A **per-vector expected-fail waiver** in the
   upstream Typra harness ([#265](https://github.com/sethjuarez/typra/issues/265)) remains the
-  mechanism for honestly waiving single divergent vectors as the other runtimes onboard.
+  mechanism for honestly waiving single divergent vectors as the other runtimes onboard —
+  **now delivered in typra v1.0.0** (§7).
 - Longer-term direction (§8, proposal): make the renderer **owned** (B2) with a **structured
   render→parse contract**, which unifies with the T1 AST layer, retires both in-band sentinels
   (`__PROMPTY_THREAD_` markers and the role-boundary nonce), and turns cross-runtime
@@ -611,19 +612,22 @@ Confirmed by inspecting the emit toolchain
   adapter-level waiver** (the "absent layer" pattern Go already uses for the renderer). The
   Python reference registers a real adapter (green); the other six get an honest adapter-level
   waiver with a tracking link until Phase 3.
-- The **only** thing that needs an upstream Typra change is the **per-vector** expected-fail
+- The **only** thing that needed an upstream Typra change is the **per-vector** expected-fail
   waiver ([`sethjuarez/typra#265`](https://github.com/sethjuarez/typra/issues/265), §7) — used
-  later for *partial* ports where most AST vectors pass but a few don't. It is **not** on the
-  critical path for Phases 0–2.
+  later for *partial* ports where most AST vectors pass but a few don't. **Delivered in typra
+  v1.0.0.** It is **not** on the critical path for Phases 0–2.
 - **Caveat (why Phase 3 is a coordinated gate):** propagating any new seam/vector into the
   runtimes runs the full multi-target `npm run generate`, which rewrites **all seven** runtimes'
-  generated files at once. With the open structural emitter issues (Java
+  generated files at once. The structural emitter issues that made this unsafe (Java
   [#259](https://github.com/sethjuarez/typra/issues/259), Swift
   [#260](https://github.com/sethjuarez/typra/issues/260), Go
-  [#262](https://github.com/sethjuarez/typra/issues/262)) a full regen is not safe to run
-  unattended. Therefore the `ast.tsp` schema is **authored and typechecked** now but the
-  multi-runtime regen is deferred to Phase 3; the Python reference and its goldens are built as
-  **additive Python** with **zero** emitter dependency.
+  [#262](https://github.com/sethjuarez/typra/issues/262)) are **fixed in typra v1.0.0** —
+  verified locally via `scripts/smoke-emit.mjs` (Java/Swift/Go emit cleanly, 199/146/145 files,
+  no crash). A full regen is nonetheless still a **CI/linux** job because the Windows dev
+  environment is separately non-reproducible (path/normalizer noise), unrelated to the emitter.
+  Therefore the `ast.tsp` schema is **authored and typechecked** now but the multi-runtime regen
+  is deferred to Phase 3; the Python reference and its goldens are built as **additive Python**
+  with **zero** emitter dependency.
 
 ---
 
@@ -723,22 +727,24 @@ capability**.
 | String shorthand (`format: "jinja"` → `{kind}`) | `@coerce(string, #{kind:"{value}"})` | **exists** — live on `FormatConfig` |
 | Per-parser field renaming | `@@knownAs` | **exists but not needed** — parsers are T2 (own model), not T1 renames (§11.2) |
 
-**The one genuine gap (already filed):** per-vector expected-fail waivers
+**The one genuine gap — now closed (typra v1.0.0):** per-vector expected-fail waivers
 ([typra#265](https://github.com/sethjuarez/typra/issues/265)). Needed for *honest partial
 ports* — a runtime passing 18/20 AST vectors otherwise must waive the **whole** adapter (hiding
 the 18 passing) or go fully red. Not blocking Python/C#; needed the moment the other five
-runtimes onboard incrementally.
+runtimes onboard incrementally. **Delivered.**
 
-**Not new asks — sequencing blockers before the multi-runtime regen:** the parse/evaluate seam
-triggers a full `npm run generate`, which currently trips existing structural harness bugs in
+**Not new asks — sequencing blockers, also cleared (typra v1.0.0):** the parse/evaluate seam
+triggers a full `npm run generate`, which previously tripped structural harness bugs in
 Java ([#259](https://github.com/sethjuarez/typra/issues/259)), Swift
 ([#260](https://github.com/sethjuarez/typra/issues/260)), and Go
-([#262](https://github.com/sethjuarez/typra/issues/262)). These must land **before** the
-coordinated AST regen — not because the AST needs new capability, but because the regen surface
-is already broken in those three runtimes independent of this work.
+([#262](https://github.com/sethjuarez/typra/issues/262)). These are **fixed in v1.0.0** —
+confirmed locally: `scripts/smoke-emit.mjs Java Swift Go` emits cleanly (199/146/145 files, no
+crash). The coordinated AST regen still runs on **CI/linux** (the Windows dev env is separately
+non-reproducible), but no longer waits on the emitter.
 
 **Net:** the design + Python reference + the committed C# owned engine all stand on primitives
-that exist today. The only thing we would ever *ask Typra to add* for this design is #265; the
-rest is "land the already-open structural fixes, then regen on CI." As of this writing those
-upstream issues are being wrapped up, which clears the parser-as-provider path to Phase 3
-timing.
+that exist today. The only thing we ever needed *Typra to add* for this design was #265 — and
+**typra v1.0.0 delivered it, along with the Java/Swift/Go structural fixes (#259/#260/#262)**.
+The schema now pins `@typra/emitter` `^1.0.0` and typechecks clean; the remaining work is
+"regen on CI, then port the owned renderer + AST layer per runtime" — coordination, not
+capability.
