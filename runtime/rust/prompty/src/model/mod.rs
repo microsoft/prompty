@@ -78,3 +78,5 @@ pub use operations::*;
 
 pub mod wire;
 pub use wire::*;
+
+pub use contracts::pipeline;
