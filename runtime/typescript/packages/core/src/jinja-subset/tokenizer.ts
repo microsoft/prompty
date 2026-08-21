@@ -25,7 +25,12 @@ export function tokenize(template: string): Token[] {
     const opener = OPENERS[two];
     if (opener) {
       if (i > textStart) {
-        raw.push({ type: "text", value: template.slice(textStart, i), trimLeft: false, trimRight: false });
+        raw.push({
+          type: "text",
+          value: template.slice(textStart, i),
+          trimLeft: false,
+          trimRight: false,
+        });
       }
 
       const closeIdx = template.indexOf(opener.close, i + 2);
@@ -54,7 +59,12 @@ export function tokenize(template: string): Token[] {
   }
 
   if (textStart < template.length) {
-    raw.push({ type: "text", value: template.slice(textStart), trimLeft: false, trimRight: false });
+    raw.push({
+      type: "text",
+      value: template.slice(textStart),
+      trimLeft: false,
+      trimRight: false,
+    });
   }
 
   applyTrims(raw);

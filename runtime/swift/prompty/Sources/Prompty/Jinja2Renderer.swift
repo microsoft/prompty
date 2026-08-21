@@ -40,6 +40,26 @@ public struct Jinja2Renderer: Renderer {
     return output
   }
 
+  /// Render the template into a provenance-tagged segment tree (spec/jinja-grammar.md §7).
+  ///
+  /// Delegates to the owned Jinja Subset engine, which tags each span literal-vs-interp and
+  /// carries the originating root property as `source`. Concatenating every segment's `text`
+  /// reproduces ``render(agent:template:inputs:)``'s flat string. No declared input carries a
+  /// strict flag today, so no span is flagged strict at the pipeline level.
+  public func renderSegments(agent: Agent, template: String, inputs: [String: Any]) async throws
+    -> [RenderSegment]
+  {
+    let segments = try PromptyModel.renderSegments(template: template, inputs: inputs)
+    return try segments.map { segment in
+      RenderSegment(
+        kind: try RenderSegmentKind.parse(segment.kind),
+        text: segment.text,
+        source: segment.source,
+        strict: segment.strict
+      )
+    }
+  }
+
   // MARK: - Evaluation
 
   private func emit(_ nodes: [Node], scope: [String: Any], into output: inout String) throws {

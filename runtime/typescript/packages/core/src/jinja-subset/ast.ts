@@ -6,8 +6,7 @@ export type Expr =
   | { kind: "binary"; operator: string; left: Expr; right: Expr };
 
 export type PathSeg =
-  | { kind: "attr"; name: string }
-  | { kind: "index"; expr: Expr };
+  { kind: "attr"; name: string } | { kind: "index"; expr: Expr };
 
 export type Node =
   | { kind: "text"; value: string }

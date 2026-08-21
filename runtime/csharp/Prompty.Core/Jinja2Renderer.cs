@@ -63,4 +63,3 @@ public class Jinja2Renderer : IRenderer
         return Task.FromResult(result);
     }
 }
-

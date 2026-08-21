@@ -254,9 +254,7 @@ def _render_nodes(nodes: Sequence[dict], frame: _Frame, out: list[Segment]) -> N
             source = _interp_source(expr)
             is_strict = source is not None and source in frame.strict_props
             if is_strict and _ROLE_BOUNDARY.search(text):
-                raise StrictViolation(
-                    f"strict input {source!r} produced a forged role boundary: {text!r}"
-                )
+                raise StrictViolation(f"strict input {source!r} produced a forged role boundary: {text!r}")
             out.append(Segment("interp", text, source=source, strict=is_strict))
         elif kind == "if":
             _render_if(node, frame, out)

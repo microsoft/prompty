@@ -47,7 +47,12 @@ function isUndefined(value: RuntimeValue): value is UndefinedValue {
 }
 
 function isPlainObject(value: RuntimeValue): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Map);
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    !(value instanceof Map)
+  );
 }
 
 function isMap(value: RuntimeValue): value is Map<unknown, unknown> {
@@ -77,7 +82,8 @@ function stringify(value: RuntimeValue): string {
     return String(value);
   }
   if (typeof value === "string") return value;
-  if (Array.isArray(value)) return value.map((item) => stringify(item)).join("");
+  if (Array.isArray(value))
+    return value.map((item) => stringify(item)).join("");
   if (isMap(value)) {
     return `{${Array.from(value.entries())
       .map(([key, item]) => `'${String(key)}': ${stringify(item)}`)
@@ -91,16 +97,27 @@ function stringify(value: RuntimeValue): string {
   return String(value);
 }
 
-function lookup(root: string, scope: ReadonlyMap<string, RuntimeValue>): RuntimeValue {
+function lookup(
+  root: string,
+  scope: ReadonlyMap<string, RuntimeValue>,
+): RuntimeValue {
   return scope.has(root) ? scope.get(root) : UNDEFINED;
 }
 
-function access(value: RuntimeValue, seg: PathSeg, scope: ReadonlyMap<string, RuntimeValue>): RuntimeValue {
+function access(
+  value: RuntimeValue,
+  seg: PathSeg,
+  scope: ReadonlyMap<string, RuntimeValue>,
+): RuntimeValue {
   if (value == null || isUndefined(value)) return UNDEFINED;
 
   if (seg.kind === "attr") {
-    if (isMap(value)) return value.has(seg.name) ? value.get(seg.name) : UNDEFINED;
-    if (isPlainObject(value)) return Object.prototype.hasOwnProperty.call(value, seg.name) ? value[seg.name] : UNDEFINED;
+    if (isMap(value))
+      return value.has(seg.name) ? value.get(seg.name) : UNDEFINED;
+    if (isPlainObject(value))
+      return Object.prototype.hasOwnProperty.call(value, seg.name)
+        ? value[seg.name]
+        : UNDEFINED;
     return UNDEFINED;
   }
 
@@ -112,7 +129,9 @@ function access(value: RuntimeValue, seg: PathSeg, scope: ReadonlyMap<string, Ru
     }
     if (isPlainObject(value)) {
       const key = stringify(index);
-      return Object.prototype.hasOwnProperty.call(value, key) ? value[key] : UNDEFINED;
+      return Object.prototype.hasOwnProperty.call(value, key)
+        ? value[key]
+        : UNDEFINED;
     }
     if (Array.isArray(value)) {
       let idx = toIndex(index);
@@ -139,7 +158,10 @@ function toIndex(value: RuntimeValue): number {
   throw new Error("Non-integer index");
 }
 
-function evalExpr(expr: Expr, scope: ReadonlyMap<string, RuntimeValue>): RuntimeValue {
+function evalExpr(
+  expr: Expr,
+  scope: ReadonlyMap<string, RuntimeValue>,
+): RuntimeValue {
   switch (expr.kind) {
     case "lit":
       return expr.value;
@@ -157,7 +179,10 @@ function evalExpr(expr: Expr, scope: ReadonlyMap<string, RuntimeValue>): Runtime
   }
 }
 
-function evalBinary(expr: Extract<Expr, { kind: "binary" }>, scope: ReadonlyMap<string, RuntimeValue>): RuntimeValue {
+function evalBinary(
+  expr: Extract<Expr, { kind: "binary" }>,
+  scope: ReadonlyMap<string, RuntimeValue>,
+): RuntimeValue {
   if (expr.operator === "and") {
     const left = evalExpr(expr.left, scope);
     return truthy(left) ? evalExpr(expr.right, scope) : left;
@@ -194,10 +219,19 @@ function evalBinary(expr: Extract<Expr, { kind: "binary" }>, scope: ReadonlyMap<
 
 function evalIn(left: RuntimeValue, right: RuntimeValue): boolean {
   const normalizedLeft = isUndefined(left) ? null : left;
-  if (isMap(right)) return typeof normalizedLeft === "string" && right.has(normalizedLeft);
-  if (isPlainObject(right)) return typeof normalizedLeft === "string" && Object.prototype.hasOwnProperty.call(right, normalizedLeft);
-  if (Array.isArray(right)) return right.some((item) => valueEquals(isUndefined(item) ? null : item, normalizedLeft));
-  if (typeof right === "string") return typeof normalizedLeft === "string" && right.includes(normalizedLeft);
+  if (isMap(right))
+    return typeof normalizedLeft === "string" && right.has(normalizedLeft);
+  if (isPlainObject(right))
+    return (
+      typeof normalizedLeft === "string" &&
+      Object.prototype.hasOwnProperty.call(right, normalizedLeft)
+    );
+  if (Array.isArray(right))
+    return right.some((item) =>
+      valueEquals(isUndefined(item) ? null : item, normalizedLeft),
+    );
+  if (typeof right === "string")
+    return typeof normalizedLeft === "string" && right.includes(normalizedLeft);
   return false;
 }
 
@@ -208,7 +242,10 @@ function valueEquals(left: RuntimeValue, right: RuntimeValue): boolean {
   return Object.is(left, right);
 }
 
-function applyFilter(expr: Extract<Expr, { kind: "filter" }>, scope: ReadonlyMap<string, RuntimeValue>): RuntimeValue {
+function applyFilter(
+  expr: Extract<Expr, { kind: "filter" }>,
+  scope: ReadonlyMap<string, RuntimeValue>,
+): RuntimeValue {
   const value = evalExpr(expr.input, scope);
   const args = expr.args.map((arg) => evalExpr(arg, scope));
   switch (expr.name) {
@@ -220,18 +257,22 @@ function applyFilter(expr: Extract<Expr, { kind: "filter" }>, scope: ReadonlyMap
       return stringify(value).trim();
     case "join": {
       const sep = args.length > 0 ? stringify(args[0]) : "";
-      return Array.isArray(value) ? value.map((item) => stringify(item)).join(sep) : "";
+      return Array.isArray(value)
+        ? value.map((item) => stringify(item)).join(sep)
+        : "";
     }
     case "length":
       if (value == null || isUndefined(value)) return 0;
-      if (typeof value === "string" || Array.isArray(value)) return value.length;
+      if (typeof value === "string" || Array.isArray(value))
+        return value.length;
       if (isMap(value)) return value.size;
       if (isPlainObject(value)) return Object.keys(value).length;
       return 0;
     case "default":
       return value == null || isUndefined(value) ? (args[0] ?? "") : value;
     case "replace": {
-      if (args.length < 2) throw new Error("replace filter requires (old, new) arguments");
+      if (args.length < 2)
+        throw new Error("replace filter requires (old, new) arguments");
       const subject = stringify(value);
       const oldValue = stringify(args[0]);
       if (oldValue.length === 0) return subject;
@@ -255,7 +296,11 @@ function interpSource(expr: Expr): string | null {
   return expr.kind === "var" ? expr.root : null;
 }
 
-function renderNodes(nodes: readonly Node[], frame: Frame, out: Segment[]): void {
+function renderNodes(
+  nodes: readonly Node[],
+  frame: Frame,
+  out: Segment[],
+): void {
   for (const node of nodes) {
     switch (node.kind) {
       case "text":
@@ -267,7 +312,9 @@ function renderNodes(nodes: readonly Node[], frame: Frame, out: Segment[]): void
         const source = interpSource(node.expr);
         const strict = source !== null && frame.strictProps.has(source);
         if (strict && ROLE_BOUNDARY.test(text)) {
-          throw new StrictViolationError(`strict input '${source}' produced a forged role boundary: ${text}`);
+          throw new StrictViolationError(
+            `strict input '${source}' produced a forged role boundary: ${text}`,
+          );
         }
         if (text.length > 0) out.push({ kind: "interp", text, source, strict });
         break;
@@ -292,7 +339,11 @@ function appendLiteral(out: Segment[], text: string): void {
   }
 }
 
-function renderIf(node: Extract<Node, { kind: "if" }>, frame: Frame, out: Segment[]): void {
+function renderIf(
+  node: Extract<Node, { kind: "if" }>,
+  frame: Frame,
+  out: Segment[],
+): void {
   for (const branch of node.branches) {
     if (truthy(evalExpr(branch.test, frame.scope))) {
       renderNodes(branch.body, frame, out);
@@ -302,22 +353,27 @@ function renderIf(node: Extract<Node, { kind: "if" }>, frame: Frame, out: Segmen
   if (node.elseBody) renderNodes(node.elseBody, frame, out);
 }
 
-function renderFor(node: Extract<Node, { kind: "for" }>, frame: Frame, out: Segment[]): void {
+function renderFor(
+  node: Extract<Node, { kind: "for" }>,
+  frame: Frame,
+  out: Segment[],
+): void {
   const items = iterSeq(evalExpr(node.seq, frame.scope));
   const total = items.length;
   for (let idx = 0; idx < total; idx += 1) {
     const childScope = new Map(frame.scope);
     childScope.set(node.loopVar, items[idx]);
-    childScope.set(
-      "loop",
-      {
-        index: idx + 1,
-        index0: idx,
-        first: idx === 0,
-        last: idx === total - 1,
-        length: total,
-      },
+    childScope.set("loop", {
+      index: idx + 1,
+      index0: idx,
+      first: idx === 0,
+      last: idx === total - 1,
+      length: total,
+    });
+    renderNodes(
+      node.body,
+      { scope: childScope, strictProps: frame.strictProps },
+      out,
     );
-    renderNodes(node.body, { scope: childScope, strictProps: frame.strictProps }, out);
   }
 }

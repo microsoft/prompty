@@ -108,7 +108,9 @@ def generate() -> tuple[list[str], dict[str, list[dict[str, Any]]]]:
             if expect_throw:
                 seg_entry["throws"] = "StrictViolation"
             else:
-                seg_entry["segments"] = [asdict(s) for s in render_segments(template, inputs, strict_props=strict_props)]
+                seg_entry["segments"] = [
+                    asdict(s) for s in render_segments(template, inputs, strict_props=strict_props)
+                ]
             segments_golden.append(seg_entry)
 
     goldens = {
