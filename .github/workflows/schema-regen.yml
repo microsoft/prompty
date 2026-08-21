@@ -13,6 +13,12 @@ name: schema regen (produce patch artifact)
 # Delete this workflow once the 1.0.0 regeneration has landed.
 on:
   workflow_dispatch:
+  # workflow_dispatch only works once a workflow is on the default branch; this one
+  # lives only on the feature branch, so a branch-scoped push trigger is what actually
+  # fires it. Scoped to the single working branch so it cannot run anywhere else.
+  push:
+    branches:
+      - sethjuarez/jinja-subset-conformance
 
 permissions:
   contents: read
