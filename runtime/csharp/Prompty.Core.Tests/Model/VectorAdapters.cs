@@ -480,6 +480,7 @@ public static class VectorAdapters
 
         IRenderer renderer = engine switch
         {
+            "jinja" => new Jinja2Renderer(),
             "jinja2" => new Jinja2Renderer(),
             "mustache" => new MustacheRenderer(),
             _ => throw new InvalidOperationException($"Unknown engine: {engine}"),
