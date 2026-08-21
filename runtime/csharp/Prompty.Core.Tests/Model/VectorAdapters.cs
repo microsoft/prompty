@@ -149,7 +149,7 @@ public static class VectorAdapters
         if (expected is JsonArray expArr && observed is JsonArray obsArr)
         {
             if (obsArr.Count != expArr.Count)
-                return observed?.DeepClone();
+                return obsArr.DeepClone();
             var result = new JsonArray();
             for (var i = 0; i < expArr.Count; i++)
                 result.Add(Project(obsArr[i]?.DeepClone(), expArr[i]));
