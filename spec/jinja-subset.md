@@ -84,7 +84,11 @@ to the reference engine. Each row lists the enforcing render vector where one ex
 - Literal text in the body (including spaces — see §3) MUST be preserved verbatim.
 - Vector: `for_loop` — `"Items: {% for item in items %}{{item}} {% endfor %}"` with
   `["a","b","c"]` MUST render `"Items: a b c "`.
-- The `loop` helper variable (`loop.index`, `loop.first`, …) is **OPTIONAL** (§4).
+- The `loop` helper variable is **REQUIRED** (promoted from OPTIONAL per the §10 Bucket A
+  decisions). Inside a `for` body the renderer MUST expose `loop.index` (1-based),
+  `loop.index0` (0-based), `loop.first` (bool), `loop.last` (bool), and `loop.length`.
+  Rationale: templates that emit separators/numbering are common and otherwise force
+  non-portable engine-specific idioms.
 
 ### §2.4 Comments
 
@@ -176,7 +180,6 @@ rather than prose-only.
 Runtimes MAY support these, but portability across runtimes is **not** guaranteed and no
 vector enforces them:
 
-- The `loop` object inside `for` (`loop.index`, `loop.first`, `loop.last`, …).
 - `for … else` clauses.
 - Filters beyond the six in §2.5 (`replace`, `capitalize`, `first`, `last`, `tojson`, …).
   (Some runtimes ship extras — e.g. Swift adds `capitalize`, `first`, `last`, `reverse`,
@@ -526,3 +529,95 @@ Every runtime MUST pass all three, identically.
   **reliability** and **injection deterrence** into structural, vector-enforced invariants.
   Injection handling is **prevention-by-construction (always on) + loud fail-closed throw for
   any input `Property` marked `strict`** (§8.4, resolved).
+
+---
+
+## §10 Roadmap & provisional decisions
+
+This section turns §8's proposal into an ordered, low-regret execution plan. It records the
+**Bucket A** value decisions (the ones that shape the reference renderer and its goldens) so
+the corpus and vectors are generated from a single, documented source of truth.
+
+### §10.1 Strategy recap
+
+- **B2 — own clean semantics.** Each runtime ships a small, hand-written subset renderer with
+  deliberately portable leaf semantics, rather than renting a third-party Jinja engine and
+  inheriting its Python-isms. The Python reference renderer is the oracle; every vector is
+  regenerated from it, so any provisional pick below is cheaply revisable by editing the
+  reference and re-snapshotting.
+- **T1 tier — emit vectors as data, hand-write engines.** We emit AST/parse vectors and render
+  vectors as JSON data and hand-write a thin tokenizer → recursive-descent parser → evaluator
+  per runtime, each verified against the shared goldens. We do **not** generate parser/evaluator
+  code (that is T2/T3 — reinventing ANTLR, rejected).
+- **Structured render→parse contract.** The renderer emits a **segment tree** (not a flat
+  string), which the parser consumes structurally. This unifies with the AST layer and retires
+  both in-band sentinels (`__PROMPTY_THREAD_` markers and the role-boundary nonce), making rich
+  inputs and provenance structural rather than string-encoded (§8).
+
+### §10.2 Bucket A — provisional value decisions
+
+These are the render/leaf-semantics choices that shape the reference renderer and every golden.
+Each is **PROVISIONAL — confirm**, but blessed as the working default so autopilot can proceed;
+all are regenerable by editing the reference oracle.
+
+| # | Decision | Provisional value |
+| - | -------- | ----------------- |
+| 1 | Booleans stringify as | `true` / `false` (lowercase — **not** Python `True`/`False`) |
+| 2 | Integers stringify as | the integer verbatim (`30`) |
+| 3 | Floats stringify as | minimal form (`1.5`; `1` not `1.0`) |
+| 4 | `null` / `None` / undefined render as | **empty string** |
+| 5 | Truthiness — falsy values | `""`, empty list, empty dict, `0`, `null` |
+| 6 | Truthiness — everything else | truthy |
+| 7 | Dict/map iteration order | **insertion order** (fixes Swift's sorted-keys latent bug) |
+| 8 | `{% if %}` expression grammar | var + dotted/index access + filters + `==` `!=` `<` `>` `<=` `>=` + `and` `or` `not` + `in` + parens. **NO arithmetic.** |
+| 9 | `loop` object | **REQUIRED** — `index`, `index0`, `first`, `last`, `length` (promoted from §4) |
+| 10 | Filter set | the six (`upper`/`lower`/`trim`/`join`/`length`/`default`); add `replace` **only if** the corpus shows real usage |
+| 11 | `strict` property | opt-in per-property (default off); triggers on role-boundary pattern `^\s*(system\|user\|assistant\|developer)\s*:` in the substituted value; MAY inherit from `FormatConfig.strict` |
+
+### §10.3 Phased plan
+
+| Phase | Scope | Gate / verification | Status |
+| ----- | ----- | ------------------- | ------ |
+| **0** | This roadmap + Bucket A decisions committed to the spec. | Spec merged/reviewed. | ✅ this section |
+| **spike** | Confirm AST vectors ride the existing seam + `@vector` pattern (no new emitter capability). | Finding recorded (§10.4). | ✅ |
+| **1** | Author the EBNF grammar, the `ast.tsp` segment-tree schema, and the B2 leaf-semantics spec (Bucket A values). | TypeSpec typechecks; grammar + semantics reviewed. | in progress |
+| **2** | Python **reference** tokenizer + parser + evaluator producing the segment tree, as an **additive** module (does not replace the `jinja2` default or flip the contract). Author corpus (subset + trim/elif/newline + injection/strict); generate AST + render + security goldens from the reference; add vectors additively. | `uv run pytest` green in the existing `.venv`; new vectors pass for Python. | pending |
+| **3** | Port the owned renderer to the other six runtimes (C#, Rust, TS, Java, Swift, Go); each verified against the shared goldens. Coordinated full `npm run generate` regen. Retire the C# `Jinja2.NET` divergence outright. | Per-runtime harness green; regen reproducible. | **deferred — Bucket B product gates** |
+| **4** | Flip the render→parse contract to the segment tree; retire both in-band sentinels; version the breaking change. | Contract vectors green; deprecation path landed. | deferred |
+| **5** | Decommission per-runtime third-party Jinja engines where fully replaced. | Dependency removed; templates re-verified. | deferred |
+
+**Autopilot boundary:** Phases 0–2 are additive, non-breaking, and Python-verifiable, and are
+in scope for unattended execution. Phase 3+ carry **Bucket B product gates** (the C# engine's
+fate; the breaking contract flip and its versioning; deprecating the global
+`FormatConfig.strict` `ValueError`; naming honesty of `format.kind: "jinja2"` vs a new
+`"prompty"`) and MUST NOT be started unattended.
+
+### §10.4 Spike finding — AST vectors need no new emitter capability
+
+Confirmed by inspecting the emit toolchain
+([`schema/tspconfig.yaml`](../schema/tspconfig.yaml),
+[`schema/package.json`](../schema/package.json)) and the existing conformance seams
+([`schema/model/conformance/seams/load-conformance.tsp`](../schema/model/conformance/seams/load-conformance.tsp)):
+
+- A **conformance-only seam** — an `interface` in `Prompty.Conformance.Seams` carrying a
+  `@vector(...)` operation that *no runtime is expected to implement* — is an established
+  pattern (`LoadConformance`, `WireConformance`, `TurnConformance`, `DiscoveryConformance`).
+  A new `interface ParseTemplateConformance { @vector(AstVectors) parseTemplate(...): ... }`
+  rides this exact pattern. **No new Typra emitter capability is required.**
+- Runtimes that don't yet implement the AST layer are handled by the **existing all-or-nothing
+  adapter-level waiver** (the "absent layer" pattern Go already uses for the renderer). The
+  Python reference registers a real adapter (green); the other six get an honest adapter-level
+  waiver with a tracking link until Phase 3.
+- The **only** thing that needs an upstream Typra change is the **per-vector** expected-fail
+  waiver ([`sethjuarez/typra#265`](https://github.com/sethjuarez/typra/issues/265), §7) — used
+  later for *partial* ports where most AST vectors pass but a few don't. It is **not** on the
+  critical path for Phases 0–2.
+- **Caveat (why Phase 3 is a coordinated gate):** propagating any new seam/vector into the
+  runtimes runs the full multi-target `npm run generate`, which rewrites **all seven** runtimes'
+  generated files at once. With the open structural emitter issues (Java
+  [#259](https://github.com/sethjuarez/typra/issues/259), Swift
+  [#260](https://github.com/sethjuarez/typra/issues/260), Go
+  [#262](https://github.com/sethjuarez/typra/issues/262)) a full regen is not safe to run
+  unattended. Therefore the `ast.tsp` schema is **authored and typechecked** now but the
+  multi-runtime regen is deferred to Phase 3; the Python reference and its goldens are built as
+  **additive Python** with **zero** emitter dependency.
