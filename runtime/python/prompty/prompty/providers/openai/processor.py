@@ -9,15 +9,15 @@ Also provides shared processing logic used by the Azure processor.
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator
 from dataclasses import dataclass
 from typing import Any
 
 from ...core.structured import StructuredResult
-from ...model import Agent
+from ...model import Agent, FailureChunk, StreamChunk, StreamFailure, TextChunk
 from ...tracing.tracer import trace
 
-__all__ = ["OpenAIProcessor", "ToolCall"]
+__all__ = ["OpenAIProcessor", "ToolCall", "process_stream_events"]
 
 
 @dataclass
@@ -27,6 +27,40 @@ class ToolCall:
     id: str
     name: str
     arguments: str
+
+
+def process_stream_events(events: Iterable[Any]) -> list[StreamChunk]:
+    """Classify raw OpenAI stream events into canonical ``StreamChunk`` items.
+
+    Each event is either a provider SSE payload (``{"kind": "provider", "value":
+    {...}}``) or a transport failure (``{"kind": "transportError", "message":
+    "..."}``). A content delta becomes a :class:`TextChunk`; a refusal delta
+    becomes a determinate :class:`FailureChunk`; and a transport error becomes an
+    indeterminate :class:`FailureChunk` that requires reconciliation.
+    """
+    chunks: list[StreamChunk] = []
+    for event in events:
+        kind = event.get("kind")
+        if kind == "provider":
+            value = event.get("value") or {}
+            choices = value.get("choices") or []
+            if not choices:
+                continue
+            delta = choices[0].get("delta") or {}
+            content = delta.get("content")
+            if content is not None:
+                chunks.append(TextChunk(value=content))
+            refusal = delta.get("refusal")
+            if refusal is not None:
+                chunks.append(
+                    FailureChunk(failure=StreamFailure(outcome="determinate", message=f"Model refused: {refusal}"))
+                )
+        elif kind == "transportError":
+            message = event.get("message", "")
+            chunks.append(FailureChunk(failure=StreamFailure(outcome="indeterminate", message=message)))
+        else:
+            raise ValueError(f"Unsupported stream event kind: {kind!r}")
+    return chunks
 
 
 class OpenAIProcessor:

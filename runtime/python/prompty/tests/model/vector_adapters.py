@@ -45,6 +45,7 @@ from prompty import (
     validate_inputs,
 )
 from prompty.core.loader import default_save_context
+from prompty.core.streaming import reconcile_stream
 from prompty.core.types import AudioPart, ContentPart, ImagePart, Message, TextPart
 from prompty.model import Agent, HostToolRequest, ModelInfo, Property, TurnOptions
 from prompty.parsers.prompty import PromptyChatParser
@@ -63,7 +64,7 @@ from prompty.providers.openai.executor import (
     _responses_tools_to_wire,
     _tools_to_wire,
 )
-from prompty.providers.openai.processor import ToolCall, _process_response
+from prompty.providers.openai.processor import ToolCall, _process_response, process_stream_events
 from prompty.renderers.jinja2 import Jinja2Renderer
 from prompty.renderers.mustache import MustacheRenderer
 
@@ -766,6 +767,21 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
     return info.save()
 
 
+def _process_stream_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
+    """Classify a raw provider stream and reconcile the streaming-failure contract."""
+    provider = resolved_input.get("provider") or context.get("provider") or "openai"
+    events = resolved_input.get("events") or []
+    if provider == "openai":
+        chunks = process_stream_events(events)
+    else:
+        raise ValueError(f"Unsupported stream provider: {provider!r}")
+    reconciliation = reconcile_stream(chunks)
+    return {
+        "chunks": [chunk.save() for chunk in chunks],
+        **reconciliation.save(),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Adapter registry
 # ---------------------------------------------------------------------------
@@ -777,6 +793,7 @@ VECTOR_ADAPTERS: dict[str, Any] = {
     "Parser.parse": {"invoke": _parse_invoke, "normalize": _project_normalize},
     "WireConformance.toRequest": {"invoke": _wire_invoke, "normalize": _project_normalize},
     "Processor.process": {"invoke": _process_invoke, "normalize": _project_normalize},
+    "Processor.processStream": {"invoke": _process_stream_invoke, "normalize": _project_normalize},
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},
     "DiscoveryConformance.mapModel": {"invoke": _discovery_map_invoke},
     "TurnConformance.replay": {"invoke": _replay_invoke},
@@ -808,16 +825,6 @@ VECTOR_WAIVERS: dict[str, str] = {
         "delegated_provider_state resumption, cancel-before-run) that has no runtime "
         "implementation yet -- only the generated _TurnConformance protocol exists. "
         "Genuine feature gap."
-    ),
-    "Processor.processStream": (
-        "The 2 processStream vectors assert the streaming-failure classification + "
-        "reconciliation contract (determinate vs indeterminate failure, preserved "
-        "partial text, requiresReconciliation, completionCommitted). The Python "
-        "runtime's provider stream generators (providers/openai/processor.py "
-        "_stream_generator) yield text chunks and raise ValueError on refusal/transport "
-        "errors, but do not produce the canonical StreamChunk/StreamFailure "
-        "reconciliation model these vectors compare against, so there is no runtime "
-        "path to drive them. Honest feature gap, not a wiring deferral."
     ),
 }
 
