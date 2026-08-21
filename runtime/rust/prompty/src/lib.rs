@@ -42,10 +42,13 @@ pub mod engine;
 pub mod guardrails;
 pub mod harness;
 pub mod interfaces;
+pub mod jinja_subset;
 pub mod loader;
 pub mod memory;
 pub mod model;
-pub use model::pipeline::{RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse};
+pub use model::contracts::pipeline::{
+    RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse,
+};
 mod model_ext;
 pub mod parsers;
 pub mod pipeline;

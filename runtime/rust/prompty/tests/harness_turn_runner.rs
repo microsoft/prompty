@@ -9,16 +9,16 @@ use prompty::harness::{
     ReferenceTurnRunner,
 };
 use prompty::model::checkpoint_store::CheckpointStore;
+use prompty::model::contracts::pipeline::RunTurnRequest;
+use prompty::model::contracts::pipeline::TurnModelRequest;
+use prompty::model::contracts::pipeline::TurnModelResponse;
+use prompty::model::contracts::pipeline::run_turn_result::RunTurnStatus;
+use prompty::model::contracts::pipeline::turn_options::TurnOptions;
 use prompty::model::events::host_tool_request::HostToolRequest;
 use prompty::model::events::permission_decision::PermissionDecision;
 use prompty::model::events::permission_request::PermissionRequest;
 use prompty::model::host_tool_executor::HostToolExecutor;
 use prompty::model::permission_resolver::PermissionResolver;
-use prompty::model::pipeline::RunTurnRequest;
-use prompty::model::pipeline::TurnModelRequest;
-use prompty::model::pipeline::TurnModelResponse;
-use prompty::model::pipeline::run_turn_result::RunTurnStatus;
-use prompty::model::pipeline::turn_options::TurnOptions;
 use serde::Deserialize;
 use serde_json::{Value, json};
 

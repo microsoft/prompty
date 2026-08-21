@@ -20,6 +20,16 @@ use crate::engine::{
     ToolOutcome, ToolPort, TurnEngine, TurnEngineEffects, TurnEngineRequest, TurnStatus,
 };
 use crate::model::context::SaveContext;
+use crate::model::contracts::pipeline::{
+    replay_journal_record::ReplayJournalRecord,
+    replay_mismatch::ReplayMismatch,
+    replay_verification_request::ReplayVerificationRequest,
+    replay_verification_result::{ReplayVerificationResult, ReplayVerificationStatus},
+    run_turn_request::RunTurnRequest,
+    run_turn_result::{RunTurnResult, RunTurnStatus},
+    turn_model_request::TurnModelRequest,
+    turn_model_response::TurnModelResponse,
+};
 use crate::model::events::{
     checkpoint::Checkpoint,
     host_tool_request::HostToolRequest,
@@ -29,16 +39,6 @@ use crate::model::events::{
     session_event::{SessionEvent, SessionEventType},
     session_summary::{SessionSummary, SessionSummaryStatus},
     turn_event::{TurnEvent, TurnEventType},
-};
-use crate::model::pipeline::{
-    replay_journal_record::ReplayJournalRecord,
-    replay_mismatch::ReplayMismatch,
-    replay_verification_request::ReplayVerificationRequest,
-    replay_verification_result::{ReplayVerificationResult, ReplayVerificationStatus},
-    run_turn_request::RunTurnRequest,
-    run_turn_result::{RunTurnResult, RunTurnStatus},
-    turn_model_request::TurnModelRequest,
-    turn_model_response::TurnModelResponse,
 };
 use crate::model::{
     checkpoint_store::CheckpointStore, event_journal_writer::EventJournalWriter,
@@ -441,7 +441,7 @@ fn host_result(result: &EngineToolResult) -> Result<HostToolResult, PortError> {
 
 struct ReferenceModelPort {
     callback: Arc<ModelCallback>,
-    options: crate::model::pipeline::turn_options::TurnOptions,
+    options: crate::model::contracts::pipeline::turn_options::TurnOptions,
     inputs: Value,
     pending_results: Arc<Mutex<Vec<HostToolResult>>>,
     adapter_failure: Arc<Mutex<Option<String>>>,

@@ -1,9 +1,9 @@
 use prompty::harness::ReferenceReplayVerifier;
-use prompty::model::pipeline::replay_journal_record::{
+use prompty::model::contracts::pipeline::replay_journal_record::{
     ReplayJournalRecord, ReplayRecordKind, ReplayRecordStatus,
 };
-use prompty::model::pipeline::replay_verification_request::ReplayVerificationRequest;
-use prompty::model::pipeline::replay_verification_result::ReplayVerificationStatus;
+use prompty::model::contracts::pipeline::replay_verification_request::ReplayVerificationRequest;
+use prompty::model::contracts::pipeline::replay_verification_result::ReplayVerificationStatus;
 
 #[test]
 fn reference_replay_verifier_passes_identical_records() {

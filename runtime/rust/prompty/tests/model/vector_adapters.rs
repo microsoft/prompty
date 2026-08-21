@@ -121,6 +121,10 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
+            "Renderer.renderSegments".to_string(),
+            Adapter::sync(render_segments_adapter),
+        ),
+        (
             "Parser.parse".to_string(),
             Adapter {
                 invoke: Invoke::Sync(parse_adapter),
@@ -595,6 +599,54 @@ async fn render_impl(input: Value, expected: Value) -> Result<Value, VectorError
         return Ok(serde_json::json!({ "rendered": rendered }));
     }
     Ok(serde_json::json!({ "rendered": rendered }))
+}
+
+// ---------------------------------------------------------------------------
+// RENDER SEGMENTS
+// ---------------------------------------------------------------------------
+
+/// Render a template into a provenance-tagged segment tree via the owned Prompty
+/// Jinja Subset engine (`prompty::jinja_subset`). A strict property forging a
+/// role boundary raises `RenderError::Strict`, which the vectors assert as the
+/// plain value `{ "error": "StrictViolation" }` (an Ok result, not a thrown
+/// outcome), so this adapter catches it and returns that shape.
+fn render_segments_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let template = input.get("template").and_then(|v| v.as_str()).unwrap_or("");
+    let inputs = input
+        .get("inputs")
+        .and_then(|v| v.as_object())
+        .cloned()
+        .unwrap_or_default();
+    let strict_props: Vec<String> = input
+        .get("strict_props")
+        .and_then(|v| v.as_array())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    match prompty::jinja_subset::render_segments(template, &inputs, &strict_props) {
+        Ok(segments) => {
+            let segs: Vec<Value> = segments
+                .iter()
+                .map(|s| {
+                    serde_json::json!({
+                        "kind": s.kind,
+                        "text": s.text,
+                        "source": s.source,
+                        "strict": s.strict,
+                    })
+                })
+                .collect();
+            Ok(serde_json::json!({ "segments": segs }))
+        }
+        Err(prompty::jinja_subset::RenderError::Strict(_)) => {
+            Ok(serde_json::json!({ "error": "StrictViolation" }))
+        }
+        Err(prompty::jinja_subset::RenderError::Syntax(message)) => Err(VectorError::new(message)),
+    }
 }
 
 // ---------------------------------------------------------------------------
