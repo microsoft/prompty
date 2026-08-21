@@ -1,0 +1,1531 @@
+[
+  {
+    "name": "simple_substitution",
+    "template": "Hello {{name}}!",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "Hello "
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "name",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": "!"
+        }
+      ]
+    }
+  },
+  {
+    "name": "multiple_variables",
+    "template": "{{first}} {{last}} is {{age}}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "first",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": " "
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "last",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": " is "
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "age",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "nested_object",
+    "template": "{{ user.name }} <{{ user.email }}>",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "user",
+            "path": [
+              {
+                "kind": "attr",
+                "name": "name"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "text",
+          "value": " <"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "user",
+            "path": [
+              {
+                "kind": "attr",
+                "name": "email"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "text",
+          "value": ">"
+        }
+      ]
+    }
+  },
+  {
+    "name": "deep_attribute",
+    "template": "{{ a.b.c }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "a",
+            "path": [
+              {
+                "kind": "attr",
+                "name": "b"
+              },
+              {
+                "kind": "attr",
+                "name": "c"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "index_access",
+    "template": "{{ items[0] }}/{{ items[2] }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "items",
+            "path": [
+              {
+                "kind": "index",
+                "expr": {
+                  "kind": "lit",
+                  "value": 0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "text",
+          "value": "/"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "items",
+            "path": [
+              {
+                "kind": "index",
+                "expr": {
+                  "kind": "lit",
+                  "value": 2
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "missing_variable_renders_empty",
+    "template": "[{{ missing }}]",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "["
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "missing",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": "]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "html_not_escaped",
+    "template": "{{ tag }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "tag",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "conditional_true",
+    "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "premium",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "Welcome VIP!"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "conditional_false",
+    "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "premium",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "Welcome VIP!"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "Hello!"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "elif_chain_first",
+    "template": "{% if a %}A{% elif b %}B{% else %}C{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "a",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "A"
+                }
+              ]
+            },
+            {
+              "test": {
+                "kind": "var",
+                "root": "b",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "C"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "elif_chain_middle",
+    "template": "{% if a %}A{% elif b %}B{% else %}C{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "a",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "A"
+                }
+              ]
+            },
+            {
+              "test": {
+                "kind": "var",
+                "root": "b",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "C"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "elif_chain_else",
+    "template": "{% if a %}A{% elif b %}B{% else %}C{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "a",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "A"
+                }
+              ]
+            },
+            {
+              "test": {
+                "kind": "var",
+                "root": "b",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "C"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "elif_multiple",
+    "template": "{% if n %}n{% elif o %}o{% elif p %}p{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "n",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "n"
+                }
+              ]
+            },
+            {
+              "test": {
+                "kind": "var",
+                "root": "o",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "o"
+                }
+              ]
+            },
+            {
+              "test": {
+                "kind": "var",
+                "root": "p",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "p"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "nested_if",
+    "template": "{% if a %}{% if b %}ab{% else %}a{% endif %}{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "a",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "if",
+                  "branches": [
+                    {
+                      "test": {
+                        "kind": "var",
+                        "root": "b",
+                        "path": []
+                      },
+                      "body": [
+                        {
+                          "kind": "text",
+                          "value": "ab"
+                        }
+                      ]
+                    }
+                  ],
+                  "elseBody": [
+                    {
+                      "kind": "text",
+                      "value": "a"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "for_loop",
+    "template": "Items: {% for item in items %}{{item}} {% endfor %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "Items: "
+        },
+        {
+          "kind": "for",
+          "loopVar": "item",
+          "seq": {
+            "kind": "var",
+            "root": "items",
+            "path": []
+          },
+          "body": [
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "item",
+                "path": []
+              }
+            },
+            {
+              "kind": "text",
+              "value": " "
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "for_loop_empty",
+    "template": "Items: [{% for item in items %}{{item}}{% endfor %}]",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "Items: ["
+        },
+        {
+          "kind": "for",
+          "loopVar": "item",
+          "seq": {
+            "kind": "var",
+            "root": "items",
+            "path": []
+          },
+          "body": [
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "item",
+                "path": []
+              }
+            }
+          ]
+        },
+        {
+          "kind": "text",
+          "value": "]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "for_loop_object",
+    "template": "{% for i in items %}{{loop.index}}:{{i}}{% if not loop.last %}, {% endif %}{% endfor %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "for",
+          "loopVar": "i",
+          "seq": {
+            "kind": "var",
+            "root": "items",
+            "path": []
+          },
+          "body": [
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "loop",
+                "path": [
+                  {
+                    "kind": "attr",
+                    "name": "index"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "text",
+              "value": ":"
+            },
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "i",
+                "path": []
+              }
+            },
+            {
+              "kind": "if",
+              "branches": [
+                {
+                  "test": {
+                    "kind": "unary",
+                    "operator": "not",
+                    "operand": {
+                      "kind": "var",
+                      "root": "loop",
+                      "path": [
+                        {
+                          "kind": "attr",
+                          "name": "last"
+                        }
+                      ]
+                    }
+                  },
+                  "body": [
+                    {
+                      "kind": "text",
+                      "value": ", "
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "for_loop_first_last",
+    "template": "{% for i in items %}{% if loop.first %}<{% endif %}{{i}}{% if loop.last %}>{% endif %}{% endfor %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "for",
+          "loopVar": "i",
+          "seq": {
+            "kind": "var",
+            "root": "items",
+            "path": []
+          },
+          "body": [
+            {
+              "kind": "if",
+              "branches": [
+                {
+                  "test": {
+                    "kind": "var",
+                    "root": "loop",
+                    "path": [
+                      {
+                        "kind": "attr",
+                        "name": "first"
+                      }
+                    ]
+                  },
+                  "body": [
+                    {
+                      "kind": "text",
+                      "value": "<"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "i",
+                "path": []
+              }
+            },
+            {
+              "kind": "if",
+              "branches": [
+                {
+                  "test": {
+                    "kind": "var",
+                    "root": "loop",
+                    "path": [
+                      {
+                        "kind": "attr",
+                        "name": "last"
+                      }
+                    ]
+                  },
+                  "body": [
+                    {
+                      "kind": "text",
+                      "value": ">"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "for_over_dict_keys",
+    "template": "{% for k in m %}{{k}}={{m[k]}};{% endfor %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "for",
+          "loopVar": "k",
+          "seq": {
+            "kind": "var",
+            "root": "m",
+            "path": []
+          },
+          "body": [
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "k",
+                "path": []
+              }
+            },
+            {
+              "kind": "text",
+              "value": "="
+            },
+            {
+              "kind": "interp",
+              "expr": {
+                "kind": "var",
+                "root": "m",
+                "path": [
+                  {
+                    "kind": "index",
+                    "expr": {
+                      "kind": "var",
+                      "root": "k",
+                      "path": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "text",
+              "value": ";"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "comment_stripped",
+    "template": "Hello{# not rendered #} World",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "Hello"
+        },
+        {
+          "kind": "text",
+          "value": " World"
+        }
+      ]
+    }
+  },
+  {
+    "name": "logical_and_or_not",
+    "template": "{% if a and not b or c %}yes{% else %}no{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "binary",
+                "operator": "or",
+                "left": {
+                  "kind": "binary",
+                  "operator": "and",
+                  "left": {
+                    "kind": "var",
+                    "root": "a",
+                    "path": []
+                  },
+                  "right": {
+                    "kind": "unary",
+                    "operator": "not",
+                    "operand": {
+                      "kind": "var",
+                      "root": "b",
+                      "path": []
+                    }
+                  }
+                },
+                "right": {
+                  "kind": "var",
+                  "root": "c",
+                  "path": []
+                }
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "yes"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "no"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "comparison_ops",
+    "template": "{% if n >= 3 and n != 5 %}ok{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "binary",
+                "operator": "and",
+                "left": {
+                  "kind": "binary",
+                  "operator": ">=",
+                  "left": {
+                    "kind": "var",
+                    "root": "n",
+                    "path": []
+                  },
+                  "right": {
+                    "kind": "lit",
+                    "value": 3
+                  }
+                },
+                "right": {
+                  "kind": "binary",
+                  "operator": "!=",
+                  "left": {
+                    "kind": "var",
+                    "root": "n",
+                    "path": []
+                  },
+                  "right": {
+                    "kind": "lit",
+                    "value": 5
+                  }
+                }
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "ok"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "in_operator",
+    "template": "{% if 'x' in items %}has-x{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "binary",
+                "operator": "in",
+                "left": {
+                  "kind": "lit",
+                  "value": "x"
+                },
+                "right": {
+                  "kind": "var",
+                  "root": "items",
+                  "path": []
+                }
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "has-x"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "parenthesized_condition",
+    "template": "{% if (a or b) and c %}y{% else %}n{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "binary",
+                "operator": "and",
+                "left": {
+                  "kind": "binary",
+                  "operator": "or",
+                  "left": {
+                    "kind": "var",
+                    "root": "a",
+                    "path": []
+                  },
+                  "right": {
+                    "kind": "var",
+                    "root": "b",
+                    "path": []
+                  }
+                },
+                "right": {
+                  "kind": "var",
+                  "root": "c",
+                  "path": []
+                }
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "y"
+                }
+              ]
+            }
+          ],
+          "elseBody": [
+            {
+              "kind": "text",
+              "value": "n"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_upper",
+    "template": "{{ name | upper }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "upper",
+            "input": {
+              "kind": "var",
+              "root": "name",
+              "path": []
+            },
+            "args": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_lower",
+    "template": "{{ name | lower }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "lower",
+            "input": {
+              "kind": "var",
+              "root": "name",
+              "path": []
+            },
+            "args": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_trim",
+    "template": "[{{ s | trim }}]",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "["
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "trim",
+            "input": {
+              "kind": "var",
+              "root": "s",
+              "path": []
+            },
+            "args": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": "]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_join",
+    "template": "{{ items | join(', ') }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "join",
+            "input": {
+              "kind": "var",
+              "root": "items",
+              "path": []
+            },
+            "args": [
+              {
+                "kind": "lit",
+                "value": ", "
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_length",
+    "template": "{{ items | length }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "length",
+            "input": {
+              "kind": "var",
+              "root": "items",
+              "path": []
+            },
+            "args": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_default_applied",
+    "template": "{{ missing | default('n/a') }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "default",
+            "input": {
+              "kind": "var",
+              "root": "missing",
+              "path": []
+            },
+            "args": [
+              {
+                "kind": "lit",
+                "value": "n/a"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_default_not_applied",
+    "template": "{{ name | default('n/a') }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "default",
+            "input": {
+              "kind": "var",
+              "root": "name",
+              "path": []
+            },
+            "args": [
+              {
+                "kind": "lit",
+                "value": "n/a"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "filter_chained",
+    "template": "{{ name | trim | upper }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "filter",
+            "name": "upper",
+            "input": {
+              "kind": "filter",
+              "name": "trim",
+              "input": {
+                "kind": "var",
+                "root": "name",
+                "path": []
+              },
+              "args": []
+            },
+            "args": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "trim_left_marker",
+    "template": "A    {%- if f %}B{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "A"
+        },
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "f",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "trim_right_marker",
+    "template": "{% if f -%}    B{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "f",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "trim_both_markers",
+    "template": "X   {%- if f -%}   Y{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "X"
+        },
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "f",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "Y"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "trim_interp_left",
+    "template": "a   {{- v }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "a"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "v",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "newline_preserved_around_tags",
+    "template": "line1\n{{ x }}\nline3",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "line1\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "x",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": "\nline3"
+        }
+      ]
+    }
+  },
+  {
+    "name": "whitespace_only_intertag_preserved",
+    "template": "{% if a %}A{% endif %} {% if b %}B{% endif %}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "a",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "A"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "text",
+          "value": " "
+        },
+        {
+          "kind": "if",
+          "branches": [
+            {
+              "test": {
+                "kind": "var",
+                "root": "b",
+                "path": []
+              },
+              "body": [
+                {
+                  "kind": "text",
+                  "value": "B"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "name": "b2_bool_true_lowercase",
+    "template": "{{ flag }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "flag",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "b2_bool_false_lowercase",
+    "template": "{{ flag }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "flag",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "b2_float_integral_minimal",
+    "template": "{{ v }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "v",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "b2_null_renders_empty",
+    "template": "[{{ v }}]",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "["
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "v",
+            "path": []
+          }
+        },
+        {
+          "kind": "text",
+          "value": "]"
+        }
+      ]
+    }
+  },
+  {
+    "name": "injection_role_marker_non_strict",
+    "template": "system:\nYou are helpful.\nuser:\n{{ q }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "system:\nYou are helpful.\nuser:\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "q",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "injection_multiline_value",
+    "template": "user:\n{{ q }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "user:\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "q",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "strict_benign_value",
+    "template": "user:\n{{ q }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "user:\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "q",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "strict_forged_boundary_throws",
+    "template": "user:\n{{ q }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "user:\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "q",
+            "path": []
+          }
+        }
+      ]
+    }
+  },
+  {
+    "name": "strict_multiline_boundary_throws",
+    "template": "user:\n{{ q }}",
+    "ast": {
+      "nodes": [
+        {
+          "kind": "text",
+          "value": "user:\n"
+        },
+        {
+          "kind": "interp",
+          "expr": {
+            "kind": "var",
+            "root": "q",
+            "path": []
+          }
+        }
+      ]
+    }
+  }
+]
