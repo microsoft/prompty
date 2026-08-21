@@ -1,4 +1,24 @@
-"""Tests for PromptyChatParser."""
+"""Non-vector parser guards for PromptyChatParser.
+
+Behavioral parse conformance (role markers, implicit system role, multi-turn,
+developer role, empty/multiline content, quoted/unquoted role attributes,
+inline-markdown-image-preserved-as-text, thread-nonce expansion, etc.) is owned
+by the ``Parser.parse`` @vector set in
+``schema/tsp-output/.typra-generated/vectors.json`` and driven against this
+runtime by ``tests/model/test_vector_conformance.py`` via the wired
+``Parser.parse`` adapter in ``tests/model/vector_adapters.py`` — so the organic
+per-case parsing tests were removed to defer to the vectors.
+
+Only checks the vector format cannot express (or behavior not in the shared
+vector set) are retained here:
+
+* case-insensitive role markers — a Python-specific leniency not part of the
+  cross-runtime vector contract (kept as a documented runtime extension),
+* the ``pre_render`` nonce-injection API contract + nonce-mismatch error,
+* the parser/renderer thread-responsibility split (parser emits no ThreadMarker),
+* the ReDoS role-boundary performance regression guard (issue #446, timing),
+* the sync/async API surface smoke test.
+"""
 
 from __future__ import annotations
 
@@ -6,13 +26,9 @@ import time
 
 import pytest
 
-from prompty.core.types import Message, TextPart
+from prompty.core.types import Message
 from prompty.model import Agent
 from prompty.parsers import PromptyChatParser
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 
 def _make_agent(**kwargs) -> Agent:
@@ -26,51 +42,22 @@ def _text(msg: Message) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Basic parsing
+# Python-specific role leniency (not part of the shared parse vector contract)
 # ---------------------------------------------------------------------------
 
 
-class TestBasicParsing:
+class TestCaseInsensitiveRoles:
+    """Case-insensitive role markers are a Python runtime leniency.
+
+    The shared ``Parser.parse`` vectors only exercise lowercase role markers,
+    so this behavior is intentionally not promoted to a cross-runtime vector
+    (doing so would force the leniency on runtimes that may treat role markers
+    case-sensitively). Retained here as an explicit record of Python behavior.
+    """
+
     def setup_method(self):
         self.parser = PromptyChatParser()
         self.agent = _make_agent()
-
-    def test_single_system_message(self):
-        rendered = "system:\nYou are a helpful assistant."
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert isinstance(result[0], Message)
-        assert result[0].role == "system"
-        assert _text(result[0]) == "You are a helpful assistant."
-
-    def test_implicit_system_role(self):
-        """Content before any role marker defaults to system."""
-        rendered = "You are a helpful assistant."
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert result[0].role == "system"
-        assert _text(result[0]) == "You are a helpful assistant."
-
-    def test_two_roles(self):
-        rendered = "system:\nYou are helpful.\n\nuser:\nWhat is 2+2?"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 2
-        assert result[0].role == "system"
-        assert result[1].role == "user"
-        assert "helpful" in _text(result[0])
-        assert "2+2" in _text(result[1])
-
-    def test_three_roles(self):
-        rendered = "system:\nHelper\n\nuser:\nHello\n\nassistant:\nHi there!"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 3
-        assert [m.role for m in result] == ["system", "user", "assistant"]
-
-    def test_developer_role(self):
-        rendered = "developer:\nYou have access to tools."
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert result[0].role == "developer"
 
     def test_case_insensitive_roles(self):
         rendered = "System:\nHello\n\nUSER:\nWorld"
@@ -79,29 +66,9 @@ class TestBasicParsing:
         assert result[0].role == "system"
         assert result[1].role == "user"
 
-    def test_preserves_content_formatting(self):
-        rendered = "system:\nLine 1\nLine 2\n\nParagraph 2"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        text = _text(result[0])
-        assert "Line 1\nLine 2" in text
-        assert "Paragraph 2" in text
-
-    def test_empty_content(self):
-        rendered = ""
-        result = self.parser.parse(self.agent, rendered)
-        # Empty content should still produce a system message (empty)
-        assert len(result) == 0 or _text(result[0]) == ""
-
-    def test_multiple_user_messages(self):
-        rendered = "user:\nFirst\n\nuser:\nSecond"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 2
-        assert all(m.role == "user" for m in result)
-
 
 # ---------------------------------------------------------------------------
-# Thread markers
+# Thread markers — parser/renderer responsibility split
 # ---------------------------------------------------------------------------
 
 
@@ -117,7 +84,6 @@ class TestNoThreadInParser:
         """![thread] in rendered text is just treated as regular content."""
         rendered = "system:\nYou are helpful.\n\n![thread]\n\nuser:\nHello"
         result = self.parser.parse(self.agent, rendered)
-        # All results should be Message objects, no ThreadMarker
         assert all(isinstance(m, Message) for m in result)
 
     def test_nonce_marker_treated_as_text(self):
@@ -129,32 +95,7 @@ class TestNoThreadInParser:
 
 
 # ---------------------------------------------------------------------------
-# Role boundary attributes
-# ---------------------------------------------------------------------------
-
-
-class TestRoleAttributes:
-    def setup_method(self):
-        self.parser = PromptyChatParser()
-        self.agent = _make_agent()
-
-    def test_name_attribute(self):
-        rendered = 'user[name="Alice"]:\nHello!'
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert result[0].role == "user"
-        assert result[0].metadata.get("name") == "Alice"
-
-    def test_multiple_attributes(self):
-        rendered = 'assistant[name="Bot",temperature=0.5]:\nResponse'
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert result[0].metadata.get("name") == "Bot"
-        assert result[0].metadata.get("temperature") == 0.5
-
-
-# ---------------------------------------------------------------------------
-# Pre-render sanitization (nonce)
+# Pre-render sanitization (nonce) — internal API contract
 # ---------------------------------------------------------------------------
 
 
@@ -180,7 +121,6 @@ class TestPreRender:
         template = "system:\nYou are {{role}}.\n\nuser:\n{{question}}"
         sanitized, context = self.parser.pre_render(template)
 
-        # Simulate rendering
         from prompty.renderers import Jinja2Renderer
 
         renderer = Jinja2Renderer()
@@ -190,7 +130,6 @@ class TestPreRender:
             {"role": "a helper", "question": "Why?"},
         )
 
-        # Parse with nonce context
         messages = self.parser.parse(self.agent, rendered, **context)
         assert len(messages) == 2
         assert messages[0].role == "system"
@@ -213,54 +152,7 @@ class TestPreRender:
 
 
 # ---------------------------------------------------------------------------
-# Inline images
-# ---------------------------------------------------------------------------
-
-
-class TestInlineImagesPreservedAsText:
-    """Inline markdown images are preserved as literal text.
-
-    Images should be passed via ``kind: image`` input properties instead.
-    """
-
-    def setup_method(self):
-        self.parser = PromptyChatParser()
-        self.agent = _make_agent()
-
-    def test_url_image_preserved(self):
-        rendered = "user:\n![photo](https://example.com/image.png)"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result) == 1
-        assert len(result[0].parts) == 1
-        assert isinstance(result[0].parts[0], TextPart)
-        assert "![photo](https://example.com/image.png)" in result[0].text
-
-    def test_text_and_image_mixed_preserved(self):
-        rendered = "user:\nLook at this: ![photo](https://example.com/img.png) and this text."
-        result = self.parser.parse(self.agent, rendered)
-        parts = result[0].parts
-        assert len(parts) == 1
-        assert isinstance(parts[0], TextPart)
-        assert "![photo]" in result[0].text
-        assert "and this text" in result[0].text
-
-    def test_data_uri_preserved(self):
-        data_uri = "data:image/png;base64,iVBORw0KGgo="
-        rendered = f"user:\n![img]({data_uri})"
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result[0].parts) == 1
-        assert isinstance(result[0].parts[0], TextPart)
-        assert data_uri in result[0].text
-
-    def test_no_images_all_text(self):
-        rendered = "user:\nJust plain text, no images."
-        result = self.parser.parse(self.agent, rendered)
-        assert len(result[0].parts) == 1
-        assert isinstance(result[0].parts[0], TextPart)
-
-
-# ---------------------------------------------------------------------------
-# ReDoS regression (issue #446)
+# ReDoS regression (issue #446) — performance, not vector-expressible
 # ---------------------------------------------------------------------------
 
 
@@ -301,7 +193,7 @@ class TestRoleBoundaryReDoS:
 
 
 # ---------------------------------------------------------------------------
-# Async
+# Async API surface
 # ---------------------------------------------------------------------------
 
 
