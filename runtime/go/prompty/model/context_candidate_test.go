@@ -10,7 +10,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestContextCandidateLoadJSON tests loading ContextCandidate from JSON

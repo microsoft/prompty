@@ -73,5 +73,10 @@ pub use wire_conformance::*;
 pub mod contracts;
 pub use contracts::*;
 
+pub mod operations;
+pub use operations::*;
+
 pub mod wire;
 pub use wire::*;
+
+pub use contracts::pipeline;

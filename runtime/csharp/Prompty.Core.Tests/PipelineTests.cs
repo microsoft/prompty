@@ -591,6 +591,9 @@ internal class MockRenderer : IRenderer
 {
     public Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs)
         => Task.FromResult($"rendered:{template}");
+
+    public Task<List<RenderSegment>> RenderSegmentsAsync(Agent agent, string template, Dictionary<string, object?> inputs)
+        => Task.FromResult(new List<RenderSegment> { new() { Kind = RenderSegmentKind.Literal, Text = $"rendered:{template}" } });
 }
 
 internal class MockParser : IParser

@@ -35,6 +35,19 @@ public struct MustacheRenderer: Renderer {
     return output
   }
 
+  /// Render the template into a provenance-tagged segment tree.
+  ///
+  /// Mustache is not the Prompty Jinja Subset and carries no interpolation provenance, so the
+  /// flat render is returned as a single `literal` span. Concatenating the span text still
+  /// reproduces ``render(agent:template:inputs:)``, satisfying the render/renderSegments
+  /// consistency contract.
+  public func renderSegments(agent: Agent, template: String, inputs: [String: Any]) async throws
+    -> [RenderSegment]
+  {
+    let rendered = try render(template: template, inputs: inputs)
+    return [RenderSegment(kind: try RenderSegmentKind.parse("literal"), text: rendered)]
+  }
+
   // MARK: - Evaluation
 
   private func emit(_ nodes: [MustacheNode], stack: [Any], into output: inout String) {

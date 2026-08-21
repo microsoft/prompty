@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestAnthropicToolResultBlockLoadJSON tests loading AnthropicToolResultBlock from JSON

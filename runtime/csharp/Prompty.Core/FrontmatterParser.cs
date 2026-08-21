@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
+using System.Globalization;
 using System.Text.RegularExpressions;
-using YamlDotNet.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.RepresentationModel;
 
 namespace Prompty.Core;
 
@@ -49,7 +51,79 @@ public static partial class FrontmatterParser
 
     private static Dictionary<string, object?> DeserializeYaml(string yaml)
     {
-        var result = YamlUtils.Deserializer.Deserialize<Dictionary<string, object?>>(yaml);
-        return result ?? new Dictionary<string, object?>();
+        if (string.IsNullOrWhiteSpace(yaml))
+            return new Dictionary<string, object?>();
+
+        var stream = new YamlStream();
+        using var reader = new StringReader(yaml);
+        stream.Load(reader);
+
+        if (stream.Documents.Count == 0)
+            return new Dictionary<string, object?>();
+
+        var root = stream.Documents[0].RootNode;
+        return ConvertNode(root) as Dictionary<string, object?> ?? new Dictionary<string, object?>();
+    }
+
+    /// <summary>
+    /// Recursively convert a YAML representation node into plain CLR objects, inferring
+    /// scalar types (null/bool/int/long/double) for plain (unquoted) scalars while
+    /// preserving quoted scalars as strings. This matches PyYAML's core-schema behavior
+    /// used by the Python reference runtime, so numeric input defaults (e.g. <c>default: 5</c>)
+    /// load as typed values rather than strings.
+    /// </summary>
+    private static object? ConvertNode(YamlNode node)
+    {
+        switch (node)
+        {
+            case YamlMappingNode map:
+                var dict = new Dictionary<string, object?>();
+                foreach (var entry in map.Children)
+                {
+                    var key = entry.Key is YamlScalarNode ks ? ks.Value ?? string.Empty : entry.Key.ToString();
+                    dict[key] = ConvertNode(entry.Value);
+                }
+                return dict;
+            case YamlSequenceNode seq:
+                return seq.Children.Select(ConvertNode).ToList();
+            case YamlScalarNode scalar:
+                return ConvertScalar(scalar);
+            default:
+                return null;
+        }
+    }
+
+    private static object? ConvertScalar(YamlScalarNode scalar)
+    {
+        var value = scalar.Value;
+        if (value is null)
+            return null;
+
+        // Quoted / literal / folded scalars are always strings — quoting is explicit intent.
+        if (scalar.Style is ScalarStyle.SingleQuoted or ScalarStyle.DoubleQuoted
+            or ScalarStyle.Literal or ScalarStyle.Folded)
+        {
+            return value;
+        }
+
+        // Plain scalar — apply YAML core-schema type resolution (matches PyYAML safe_load).
+        switch (value)
+        {
+            case "" or "~" or "null" or "Null" or "NULL":
+                return null;
+            case "true" or "True" or "TRUE":
+                return true;
+            case "false" or "False" or "FALSE":
+                return false;
+        }
+
+        if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var intValue))
+            return intValue;
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var longValue))
+            return longValue;
+        if (double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var doubleValue))
+            return doubleValue;
+
+        return value;
     }
 }

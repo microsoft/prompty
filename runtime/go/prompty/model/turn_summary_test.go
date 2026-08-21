@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestTurnSummaryLoadJSON tests loading TurnSummary from JSON

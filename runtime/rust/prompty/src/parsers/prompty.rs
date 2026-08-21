@@ -5,6 +5,7 @@
 //! system:
 //! user:
 //! assistant:
+//! developer:
 //! ```
 //! with optional leading whitespace/`#` and optional attribute blocks like `[key=value]`.
 //!
@@ -25,10 +26,10 @@ use crate::types::{ContentPart, Message, Role};
 
 /// Boundary regex per spec §6.5: role marker on its own line.
 /// Matches role markers with optional attribute blocks like `system[nonce="abc"]:`.
-/// Spec-recognized roles: system, user, assistant (developer is NOT a valid role marker).
+/// Spec-recognized roles: system, user, assistant, developer.
 static BOUNDARY_RE: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(
-        r#"(?i)^\s*#?\s*(system|user|assistant)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#,
+        r#"(?i)^\s*#?\s*(system|user|assistant|developer)(\[(\w+\s*=\s*"?[^"]*"?\s*,?\s*)+\])?\s*:\s*$"#,
     )
     .expect("boundary regex is valid")
 });
@@ -337,13 +338,12 @@ mod tests {
     }
 
     #[test]
-    fn test_developer_role_rejected() {
-        // developer: is not a valid role marker per spec (only system/user/assistant)
+    fn test_developer_role_recognized() {
+        // developer: is a valid role marker per spec (system/user/assistant/developer)
         let msgs = parse_chat("developer:\nYou are a helpful AI.");
-        // Should be treated as plain text under the default role, not as a role boundary
         assert_eq!(msgs.len(), 1);
-        assert_eq!(msgs[0].role, Role::System); // default role
-        assert!(msgs[0].text_content().contains("developer:"));
+        assert_eq!(msgs[0].role, Role::Developer);
+        assert_eq!(msgs[0].text_content(), "You are a helpful AI.");
     }
 
     #[test]

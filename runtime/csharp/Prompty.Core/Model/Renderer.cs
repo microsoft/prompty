@@ -18,4 +18,8 @@ namespace Prompty.Core;
         /// Render the template string with input values
         /// </summary>
         Task<string> RenderAsync(Agent agent, string template, Dictionary<string, object?> inputs);
+        /// <summary>
+        /// Render the template into a provenance-tagged segment tree
+        /// </summary>
+        Task<List<RenderSegment>> RenderSegmentsAsync(Agent agent, string template, Dictionary<string, object?> inputs);
     }

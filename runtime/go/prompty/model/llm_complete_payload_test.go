@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestLlmCompletePayloadLoadJSON tests loading LlmCompletePayload from JSON

@@ -257,6 +257,9 @@ public class AgentLoopTests : IDisposable
     {
         public Task<string> RenderAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
             => Task.FromResult(template);
+
+        public Task<List<Core.RenderSegment>> RenderSegmentsAsync(Core.Agent agent, string template, Dictionary<string, object?> inputs)
+            => Task.FromResult(new List<Core.RenderSegment> { new() { Kind = Core.RenderSegmentKind.Literal, Text = template } });
     }
 
     /// <summary>Parser that returns a single user message.</summary>

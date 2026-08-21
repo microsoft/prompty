@@ -23,6 +23,7 @@ public class PromptyBuilder
     /// </summary>
     public PromptyBuilder()
     {
+        InvokerRegistry.RegisterRenderer("jinja", new Jinja2Renderer());
         InvokerRegistry.RegisterRenderer("jinja2", new Jinja2Renderer());
         InvokerRegistry.RegisterRenderer("mustache", new MustacheRenderer());
         InvokerRegistry.RegisterParser("prompty", new PromptyChatParser());

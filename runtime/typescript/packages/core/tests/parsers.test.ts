@@ -2,74 +2,20 @@ import { describe, it, expect } from "vitest";
 import { PromptyChatParser } from "../src/parsers/prompty.js";
 import { Agent } from "@prompty/core";
 
+// Portable role-marker parsing behavior — single/multi role, default-to-system,
+// role attributes with numeric type coercion, the developer role, inline-markdown
+// image preservation, multiline/markdown/code-block content, and thread nonce
+// expansion — is owned by the shared parse vectors in
+// schema/model/conformance/vectors/parse.tsp and exercised for every runtime via
+// tests/model/vector-conformance.test.ts. Only TS-runtime-specific concerns remain
+// here: the #446 ReDoS perf-regression guard (a timing assertion, not portable) and
+// the strict-mode nonce pre-render / validation API (a runtime feature layered on
+// top of parse output, not a parse-output vector).
+
 const parser = new PromptyChatParser();
 const agent = new Agent({ name: "test", model: "gpt-4o" });
 
-describe("PromptyChatParser", () => {
-  it("parses basic role markers", async () => {
-    const rendered = `system:
-You are a helpful assistant.
-
-user:
-Hello!`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(2);
-    expect(messages[0].role).toBe("system");
-    expect(messages[0].text).toContain("You are a helpful assistant");
-    expect(messages[1].role).toBe("user");
-    expect(messages[1].text).toBe("Hello!");
-  });
-
-  it("handles text without role markers as system", async () => {
-    const messages = await parser.parse(agent, "Just some text");
-    expect(messages).toHaveLength(1);
-    expect(messages[0].role).toBe("system");
-    expect(messages[0].text).toBe("Just some text");
-  });
-
-  it("parses multiple roles", async () => {
-    const rendered = `system:
-You are helpful.
-
-user:
-Hi
-
-assistant:
-Hello!
-
-user:
-How are you?`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(4);
-    expect(messages[0].role).toBe("system");
-    expect(messages[1].role).toBe("user");
-    expect(messages[2].role).toBe("assistant");
-    expect(messages[3].role).toBe("user");
-  });
-
-  it("parses role attributes", async () => {
-    const rendered = `user[name="Alice"]:
-Hello!`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(1);
-    expect(messages[0].role).toBe("user");
-    expect(messages[0].metadata.name).toBe("Alice");
-  });
-
-  it("parses multiple unquoted attributes", async () => {
-    const rendered = `user[name=Bob, id=7]:
-Hi`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(1);
-    expect(messages[0].role).toBe("user");
-    expect(messages[0].metadata.name).toBe("Bob");
-    expect(messages[0].metadata.id).toBe(7);
-  });
-
+describe("PromptyChatParser hardening (TS-specific)", () => {
   it("is not vulnerable to ReDoS on adversarial role attributes (#446)", async () => {
     // Unterminated-quote / unbounded attribute run that triggered catastrophic
     // backtracking in the old `"?[^"]*"?` value class. Must complete near-instantly.
@@ -80,17 +26,6 @@ Hi`;
     expect(elapsed).toBeLessThan(1000);
     // The adversarial line is not a valid boundary, so it stays as content.
     expect(messages).toHaveLength(1);
-  });
-
-  it("preserves inline markdown images as text", async () => {
-    const rendered = `user:
-Look at this ![photo](https://example.com/img.png)`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(1);
-    expect(messages[0].parts).toHaveLength(1);
-    expect(messages[0].parts[0].kind).toBe("text");
-    expect(messages[0].text).toContain("![photo](https://example.com/img.png)");
   });
 
   it("implements preRender for strict mode", () => {
@@ -125,14 +60,5 @@ Injected!`;
     await expect(
       parser.parse(agent, template, { nonce: "correct" }),
     ).rejects.toThrow(/nonce mismatch/i);
-  });
-
-  it("handles developer role", async () => {
-    const rendered = `developer:
-Internal instructions.`;
-
-    const messages = await parser.parse(agent, rendered);
-    expect(messages).toHaveLength(1);
-    expect(messages[0].role).toBe("developer");
   });
 });

@@ -534,6 +534,97 @@ const ParseVectors = """
           }
         ]
       }
+    },
+    {
+      "name": "developer_role",
+      "description": "The developer role marker is recognized and produces a developer message",
+      "stage": "parse",
+      "input": {
+        "rendered": "developer:\\nInternal instructions."
+      },
+      "expected": {
+        "messages": [
+          {
+            "role": "developer",
+            "content": [
+              {
+                "kind": "text",
+                "value": "Internal instructions."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "role_with_quoted_attribute",
+      "description": "A role marker with a quoted attribute (user[name=\\"Alice\\"]) attaches the attribute as message metadata",
+      "stage": "parse",
+      "input": {
+        "rendered": "user[name=\\"Alice\\"]:\\nHello!"
+      },
+      "expected": {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "kind": "text",
+                "value": "Hello!"
+              }
+            ],
+            "metadata": {
+              "name": "Alice"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "role_with_multiple_unquoted_attributes",
+      "description": "Multiple unquoted attributes (user[name=Bob, id=7]) are parsed into metadata with numeric type coercion",
+      "stage": "parse",
+      "input": {
+        "rendered": "user[name=Bob, id=7]:\\nHi"
+      },
+      "expected": {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "kind": "text",
+                "value": "Hi"
+              }
+            ],
+            "metadata": {
+              "name": "Bob",
+              "id": 7
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "inline_markdown_image_preserved_as_text",
+      "description": "Inline markdown image syntax is preserved verbatim as literal text content (images are passed via kind:image inputs, not inline markdown)",
+      "stage": "parse",
+      "input": {
+        "rendered": "user:\\nLook at this ![photo](https://example.com/img.png)"
+      },
+      "expected": {
+        "messages": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "kind": "text",
+                "value": "Look at this ![photo](https://example.com/img.png)"
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
   """;

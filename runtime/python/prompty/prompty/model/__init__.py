@@ -187,6 +187,9 @@ from .contracts.tracing import (
     TraceSpan,
     TraceTime,
 )
+from .operations.pipeline import (
+    RenderSegment,
+)
 from .wire.anthropic import (
     AnthropicImageBlock,
     AnthropicImageSource,
@@ -343,6 +346,7 @@ __all__ = [
     "TraceTime",
     "TraceSpan",
     "TraceFile",
+    "RenderSegment",
     "AnthropicTextBlock",
     "AnthropicImageSource",
     "AnthropicImageBlock",

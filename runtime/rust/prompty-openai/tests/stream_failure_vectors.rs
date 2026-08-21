@@ -7,15 +7,22 @@ fn load_vectors() -> Vec<Value> {
         .join("..")
         .join("..")
         .join("..")
-        .join("spec")
-        .join("vectors")
-        .join("process")
-        .join("stream_failure_vectors.json");
-    serde_json::from_str(
+        .join("schema")
+        .join("tsp-output")
+        .join(".typra-generated")
+        .join("vectors.json");
+    let document: Value = serde_json::from_str(
         &std::fs::read_to_string(&path)
             .unwrap_or_else(|error| panic!("Failed to read {}: {error}", path.display())),
     )
-    .expect("Invalid stream failure vectors")
+    .expect("Invalid vectors.json");
+    document["vectors"]
+        .as_array()
+        .expect("vectors.json missing vectors array")
+        .iter()
+        .filter(|entry| entry["operation"] == "processStream")
+        .map(|entry| entry["vector"].clone())
+        .collect()
 }
 
 fn provider_chunks(events: &[Value]) -> Vec<Value> {

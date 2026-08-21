@@ -12,4 +12,6 @@
 
 mod agent_test;
 mod contracts;
+mod operations;
+mod vector_conformance_test;
 mod wire;

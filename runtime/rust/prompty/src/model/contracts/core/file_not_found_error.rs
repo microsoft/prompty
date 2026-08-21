@@ -43,6 +43,18 @@ impl FileNotFoundError {
         Ok(Self::load_from_value(&value, ctx))
     }
 
+    /// Load FileNotFoundError from an already-parsed JSON value, returning an error
+    /// instead of panicking on invalid input. Fallible companion to
+    /// `load_from_value` with the same validation policy as `from_json`.
+    pub fn try_load_from_value(
+        value: &serde_json::Value,
+        ctx: &LoadContext,
+    ) -> Result<Self, serde_json::Error> {
+        Self::validate_input_at(value, "")
+            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
+        Ok(Self::load_from_value(value, ctx))
+    }
+
     /// Load FileNotFoundError from a `serde_json::Value`.
     ///
     /// Calls `ctx.process_input` before field extraction.

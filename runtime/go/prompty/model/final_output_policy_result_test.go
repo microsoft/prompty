@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestFinalOutputPolicyResultLoadJSON tests loading FinalOutputPolicyResult from JSON

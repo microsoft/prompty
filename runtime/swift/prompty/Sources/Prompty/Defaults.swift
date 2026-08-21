@@ -26,5 +26,5 @@ public enum Defaults {
   public static let richKinds: Set<String> = ["thread", "image", "file", "audio"]
 
   /// Role markers the Agent parser recognizes.
-  public static let roleMarkers: Set<String> = ["system", "user", "assistant"]
+  public static let roleMarkers: Set<String> = ["system", "user", "assistant", "developer"]
 }

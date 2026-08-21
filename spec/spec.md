@@ -1009,8 +1009,12 @@ function render(agent, inputs):
 
 ### §5.5 Jinja2 Common Subset (Conformance Floor)
 
-The default renderer (format kind `"jinja2"`) MUST support the following Jinja2 template
-features as a conformance floor:
+The default renderer (format kind `"jinja2"`) MUST support a fixed subset of Jinja2 features,
+with explicit whitespace semantics, so that a `.prompty` file renders identically across every
+runtime. That subset — the **Prompty Jinja Subset** — is defined in full, with the per-runtime
+conformance audit and the whitespace/trim-marker rules, in
+[`jinja-subset.md`](jinja-subset.md). It is the contract the shared `Renderer.render`
+conformance vectors enforce. The table below is the summary; `jinja-subset.md` is normative.
 
 **MUST support**:
 
@@ -1026,6 +1030,10 @@ features as a conformance floor:
 | Filter: `join`     | `{{list\|join(", ")}}`                         |
 | Filter: `length`   | `{{list\|length}}`                             |
 | Filter: `trim`     | `{{var\|trim}}`                                |
+
+**Whitespace**: Outside explicit trim markers (`{%- … -%}` / `{{- … -}}`), the renderer MUST
+preserve all literal characters verbatim — including whitespace-only text between two tags
+(see `jinja-subset.md` §3). `trim_blocks` / `lstrip_blocks` MUST be off.
 
 **MAY support**:
 

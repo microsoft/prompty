@@ -65,6 +65,7 @@ output-format = "full"
 
 # Entry points for invoker discovery
 [project.entry-points."prompty.renderers"]
+jinja = "prompty.renderers.jinja2:Jinja2Renderer"
 jinja2 = "prompty.renderers.jinja2:Jinja2Renderer"
 mustache = "prompty.renderers.mustache:MustacheRenderer"
 

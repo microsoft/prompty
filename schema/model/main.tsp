@@ -85,6 +85,7 @@ import "./conformance/seams/turn-conformance.tsp";
 
 // Behavior vectors (conformance evidence attached to callable operations)
 import "./conformance/vectors/render.tsp";
+import "./conformance/vectors/render-segments.tsp";
 import "./conformance/vectors/parse.tsp";
 // process vectors are authored as a JSON-STRING set (Typra 0.7.0+ affordance)
 // so they can carry populated agent.model + raw provider wire payloads (both
@@ -100,6 +101,11 @@ import "./conformance/vectors/discovery.tsp";
 import "./conformance/vectors/enrichment.tsp";
 import "./conformance/vectors/turn.tsp";
 import "./conformance/vectors/replay.tsp";
+// Streaming-failure classification + reconciliation vectors, bound to
+// Processor.processStream (a real @optionalOperation). Promoted from the standalone
+// spec/vectors/process/stream_failure_vectors.json into the typra vector system so
+// every runtime is held to the same streaming-failure semantics.
+import "./conformance/vectors/stream.tsp";
 
 // Events
 import "./contracts/events/payloads.tsp";

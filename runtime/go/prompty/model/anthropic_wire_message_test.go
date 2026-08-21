@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestAnthropicWireMessageLoadJSON tests loading AnthropicWireMessage from JSON

@@ -12,6 +12,8 @@
 
 use super::agent::Agent;
 
+use super::operations::pipeline::render_segment::RenderSegment;
+
 /// Renders a template string with input values to produce the final prompt text.
 #[async_trait::async_trait]
 pub trait Renderer: Send + Sync {
@@ -22,4 +24,11 @@ pub trait Renderer: Send + Sync {
         template: &String,
         inputs: &serde_json::Value,
     ) -> Result<String, Box<dyn std::error::Error + Send + Sync>>;
+    /// Render the template into a provenance-tagged segment tree
+    async fn render_segments(
+        &self,
+        agent: &Agent,
+        template: &String,
+        inputs: &serde_json::Value,
+    ) -> Result<Vec<RenderSegment>, Box<dyn std::error::Error + Send + Sync>>;
 }

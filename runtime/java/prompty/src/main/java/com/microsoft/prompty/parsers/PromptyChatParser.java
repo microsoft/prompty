@@ -17,8 +17,9 @@ import java.util.regex.Pattern;
 /**
  * Splits rendered text into messages at role-marker lines.
  *
- * <p>A role marker is a line that, once trimmed, is nothing but {@code system:}, {@code user:} or
- * {@code assistant:} — optionally prefixed with {@code #} and optionally carrying an attribute block
+ * <p>A role marker is a line that, once trimmed, is nothing but {@code system:}, {@code user:},
+ * {@code assistant:} or {@code developer:} — optionally prefixed with {@code #} and optionally
+ * carrying an attribute block
  * such as {@code user[name="Alice"]:}. Requiring the marker to occupy the whole line is what lets
  * ordinary prose like "The user: said hello" stay content.
  *
@@ -51,7 +52,7 @@ public final class PromptyChatParser implements Parser {
    */
   private static final Pattern BOUNDARY =
       Pattern.compile(
-          "^\\s*#?\\s*(system|user|assistant)"
+          "^\\s*#?\\s*(system|user|assistant|developer)"
               + "(\\[(?:\\w++\\s*+=\\s*+(?:\"[^\"]*+\"|[^\",\\]]*+)\\s*+,?\\s*+)+\\])?"
               + "\\s*:\\s*$",
           Pattern.CASE_INSENSITIVE);

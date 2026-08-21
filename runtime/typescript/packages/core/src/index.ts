@@ -113,6 +113,12 @@ export {
 
 export { NunjucksRenderer, MustacheRenderer } from "./renderers/index.js";
 export { PromptyChatParser } from "./parsers/index.js";
+export {
+  StrictViolationError,
+  renderSegments,
+  render as renderJinjaSubset,
+  type Segment,
+} from "./jinja-subset/index.js";
 
 // ---------------------------------------------------------------------------
 // Harness reference adapters
