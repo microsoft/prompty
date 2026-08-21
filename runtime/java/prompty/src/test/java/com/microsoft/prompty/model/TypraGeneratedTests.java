@@ -144,6 +144,7 @@ public final class TypraGeneratedTests {
     TraceTimeGeneratedTest.run();
     TraceSpanGeneratedTest.run();
     TraceFileGeneratedTest.run();
+    RenderSegmentGeneratedTest.run();
     AnthropicTextBlockGeneratedTest.run();
     AnthropicImageSourceGeneratedTest.run();
     AnthropicImageBlockGeneratedTest.run();
@@ -154,5 +155,6 @@ public final class TypraGeneratedTests {
     AnthropicMessagesRequestGeneratedTest.run();
     AnthropicUsageGeneratedTest.run();
     AnthropicMessagesResponseGeneratedTest.run();
+    VectorConformanceTests.run();
   }
 }

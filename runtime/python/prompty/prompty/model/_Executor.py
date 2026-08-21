@@ -33,7 +33,11 @@ class Executor(Protocol):
         raise NotImplementedError
 
     def format_tool_messages(
-        self, raw_response: Any, tool_calls: list[ToolCall], tool_results: list[str], text_content: str | None
+        self,
+        raw_response: Any,
+        tool_calls: list[ToolCall],
+        tool_results: list[str],
+        text_content: str | None,
     ) -> list[Message]:
         """Format tool call results into messages for the next iteration"""
         raise NotImplementedError

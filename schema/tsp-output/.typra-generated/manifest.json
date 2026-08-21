@@ -695,6 +695,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Operations/Pipeline/RenderSegmentConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/VectorConformanceTests.cs",
       "marker": true
     },
@@ -1616,6 +1621,16 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/ModelLister.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Operations/Pipeline/RenderSegment.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Operations/Pipeline/RenderSegmentKind.cs",
       "marker": true
     },
     {
@@ -2586,6 +2601,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/remote_connection_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/render_segment_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/render_segment.go",
       "marker": true
     },
     {
@@ -3755,6 +3780,16 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RenderSegment.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RenderSegmentKind.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ReplayJournalRecord.java",
       "marker": true
     },
@@ -4590,6 +4625,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RenderSegmentGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayJournalRecordGeneratedTest.java",
       "marker": true
     },
@@ -4886,6 +4926,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ValidationResultGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/VectorConformanceTests.java",
       "marker": true
     },
     {
@@ -5626,6 +5671,21 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/contracts/tracing/_TraceTime.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/operations/__init__.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/operations/pipeline/__init__.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/operations/pipeline/_RenderSegment.py",
       "marker": true
     },
     {
@@ -6376,6 +6436,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/tracing/test_trace_time.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/operations/pipeline/test_render_segment.py",
       "marker": true
     },
     {
@@ -7155,6 +7220,21 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/operations/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/operations/pipeline/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/operations/pipeline/render_segment.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/parser.rs",
       "marker": true
     },
@@ -7890,6 +7970,21 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/operations/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/operations/pipeline/mod.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/operations/pipeline/render_segment_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/vector_conformance_test.rs",
       "marker": true
     },
@@ -8595,6 +8690,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/Operations/Pipeline/render_segment.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/parser.swift",
       "marker": true
     },
@@ -9256,6 +9356,11 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceTimeTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Operations/Pipeline/RenderSegmentTests.swift",
       "marker": true
     },
     {
@@ -10021,6 +10126,16 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/model-lister.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/operations/pipeline/index.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/operations/pipeline/render-segment.ts",
       "marker": true
     },
     {
@@ -10800,6 +10915,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/operations/pipeline/render-segment.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/vector-conformance.test.ts",
       "marker": true
     },
@@ -11381,6 +11501,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/Renderer.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/RenderSegment.md",
       "marker": true
     },
     {

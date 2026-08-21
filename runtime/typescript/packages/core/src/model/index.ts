@@ -182,6 +182,8 @@ export { TraceTime } from "./contracts/tracing/trace-time";
 export { TraceSpan } from "./contracts/tracing/trace-span";
 export { TraceFile } from "./contracts/tracing/trace-file";
 
+export { RenderSegment } from "./operations/pipeline/render-segment";
+
 export { AnthropicTextBlock } from "./wire/anthropic/anthropic-text-block";
 export { AnthropicImageSource } from "./wire/anthropic/anthropic-image-source";
 export { AnthropicImageBlock } from "./wire/anthropic/anthropic-image-block";

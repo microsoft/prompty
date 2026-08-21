@@ -8,6 +8,7 @@
 from typing import Any, Protocol, runtime_checkable
 
 from ._Agent import Agent
+from .operations.pipeline._RenderSegment import RenderSegment
 
 
 @runtime_checkable
@@ -20,4 +21,12 @@ class Renderer(Protocol):
 
     async def render_async(self, agent: Agent, template: str, inputs: dict[str, Any]) -> str:
         """Render the template string with input values (async variant)"""
+        raise NotImplementedError
+
+    def render_segments(self, agent: Agent, template: str, inputs: dict[str, Any]) -> list[RenderSegment]:
+        """Render the template into a provenance-tagged segment tree"""
+        raise NotImplementedError
+
+    async def render_segments_async(self, agent: Agent, template: str, inputs: dict[str, Any]) -> list[RenderSegment]:
+        """Render the template into a provenance-tagged segment tree (async variant)"""
         raise NotImplementedError

@@ -5,4 +5,5 @@ import Foundation
 
 public protocol Renderer: Sendable {
   func render(agent: Agent, template: String, inputs: [String: Any]) async throws -> String
+  func renderSegments(agent: Agent, template: String, inputs: [String: Any]) async throws -> [RenderSegment]
 }

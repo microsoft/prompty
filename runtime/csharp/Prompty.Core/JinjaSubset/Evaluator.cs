@@ -345,11 +345,11 @@ internal static class Evaluator
             case "trim":
                 return Stringify(value).Trim();
             case "join":
-            {
-                string sep = args.Count > 0 ? Stringify(args[0]) : string.Empty;
-                var seq = value is List<object?> l ? l : new List<object?>();
-                return string.Join(sep, seq.Select(Stringify));
-            }
+                {
+                    string sep = args.Count > 0 ? Stringify(args[0]) : string.Empty;
+                    var seq = value is List<object?> l ? l : new List<object?>();
+                    return string.Join(sep, seq.Select(Stringify));
+                }
             case "length":
                 if (value is null || value is Undefined)
                     return 0L;
@@ -361,10 +361,10 @@ internal static class Evaluator
                     return (long)dict.Count;
                 return 0L;
             case "default":
-            {
-                object? fallback = args.Count > 0 ? args[0] : string.Empty;
-                return value is null || value is Undefined ? fallback : value;
-            }
+                {
+                    object? fallback = args.Count > 0 ? args[0] : string.Empty;
+                    return value is null || value is Undefined ? fallback : value;
+                }
             case "replace":
                 if (args.Count < 2)
                     throw new InvalidOperationException("replace filter requires (old, new) arguments");
@@ -407,17 +407,17 @@ internal static class Evaluator
                         outp.Add(new Segment { Kind = "literal", Text = text.Value });
                     break;
                 case InterpNode interp:
-                {
-                    var value = EvalExpr(interp.Expr, frame.Scope);
-                    string text = Stringify(value);
-                    string? source = InterpSource(interp.Expr);
-                    bool isStrict = source is not null && frame.StrictProps.Contains(source);
-                    if (isStrict && RoleBoundary.IsMatch(text))
-                        throw new StrictViolationException(
-                            $"strict input '{source}' produced a forged role boundary: {text}");
-                    outp.Add(new Segment { Kind = "interp", Text = text, Source = source, Strict = isStrict });
-                    break;
-                }
+                    {
+                        var value = EvalExpr(interp.Expr, frame.Scope);
+                        string text = Stringify(value);
+                        string? source = InterpSource(interp.Expr);
+                        bool isStrict = source is not null && frame.StrictProps.Contains(source);
+                        if (isStrict && RoleBoundary.IsMatch(text))
+                            throw new StrictViolationException(
+                                $"strict input '{source}' produced a forged role boundary: {text}");
+                        outp.Add(new Segment { Kind = "interp", Text = text, Source = source, Strict = isStrict });
+                        break;
+                    }
                 case IfNode iff:
                     RenderIf(iff, frame, outp);
                     break;

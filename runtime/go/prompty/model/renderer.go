@@ -8,4 +8,6 @@ package prompty
 type Renderer interface {
 	// Render — Render the template string with input values
 	Render(agent Agent, template string, inputs map[string]interface{}) (string, error)
+	// RenderSegments — Render the template into a provenance-tagged segment tree
+	RenderSegments(agent Agent, template string, inputs map[string]interface{}) ([]RenderSegment, error)
 }

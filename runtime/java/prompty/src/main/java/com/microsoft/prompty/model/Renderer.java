@@ -9,4 +9,5 @@ import java.util.Map;
 
 public interface Renderer {
   String render(Agent agent, String template, Map<String, Object> inputs);
+  List<RenderSegment> renderSegments(Agent agent, String template, Map<String, Object> inputs);
 }

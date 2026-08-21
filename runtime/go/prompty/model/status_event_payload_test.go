@@ -9,7 +9,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"prompty/model"
+	prompty "prompty/model"
 )
 
 // TestStatusEventPayloadLoadJSON tests loading StatusEventPayload from JSON

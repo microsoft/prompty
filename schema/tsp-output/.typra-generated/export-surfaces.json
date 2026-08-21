@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "0.13.0",
-        "supportedRange": "0.13.0",
+        "version": "1.0.0",
+        "supportedRange": "1.0.0",
         "supported": true
       }
     ]
@@ -138,6 +138,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -1295,6 +1296,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "operations/RenderSegment.cs",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -1622,6 +1630,15 @@
             "TurnTrace.cs",
             "ValidationError.cs",
             "ValidationResult.cs"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "RenderSegment.cs"
           ]
         },
         {
@@ -2115,6 +2132,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -2318,6 +2349,7 @@
         "contracts/TurnTrace.cs",
         "contracts/ValidationError.cs",
         "contracts/ValidationResult.cs",
+        "operations/RenderSegment.cs",
         "wire/AnthropicImageBlock.cs",
         "wire/AnthropicImageSource.cs",
         "wire/AnthropicMessagesRequest.cs",
@@ -2439,6 +2471,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -3596,6 +3629,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "render_segment.go",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -3923,6 +3963,15 @@
             "turn_trace",
             "validation_error",
             "validation_result"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "render_segment"
           ]
         },
         {
@@ -4416,6 +4465,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -4573,6 +4636,7 @@
         "property.go",
         "redacted_field.go",
         "redaction_metadata.go",
+        "render_segment.go",
         "renderer.go",
         "replay_journal_record.go",
         "replay_mismatch.go",
@@ -4740,6 +4804,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -5897,6 +5962,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "RenderSegment.java",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -6224,6 +6296,15 @@
             "TurnTrace.java",
             "ValidationError.java",
             "ValidationResult.java"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "RenderSegment.java"
           ]
         },
         {
@@ -6717,6 +6798,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -6874,6 +6969,7 @@
         "Property.java",
         "RedactedField.java",
         "RedactionMetadata.java",
+        "RenderSegment.java",
         "Renderer.java",
         "ReplayJournalRecord.java",
         "ReplayMismatch.java",
@@ -7040,6 +7136,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -8197,6 +8294,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "RenderSegment",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -8524,6 +8628,15 @@
             "turn_trace",
             "validation_error",
             "validation_result"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "render_segment"
           ]
         },
         {
@@ -9017,6 +9130,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -9174,6 +9301,7 @@
         "Property",
         "RedactedField",
         "RedactionMetadata",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -9341,6 +9469,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -10498,6 +10627,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": ".operations",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -10825,6 +10961,15 @@
             "_TurnTrace",
             "_ValidationError",
             "_ValidationResult"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "_RenderSegment"
           ]
         },
         {
@@ -11318,6 +11463,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -11408,6 +11567,7 @@
         "._TurnConformance",
         "._WireConformance",
         ".contracts",
+        ".operations",
         ".wire"
       ]
     },
@@ -11519,6 +11679,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -12676,6 +12837,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "operations::render_segment",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -13003,6 +13171,15 @@
             "turn_trace",
             "validation_error",
             "validation_result"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "render_segment"
           ]
         },
         {
@@ -13496,6 +13673,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -13581,6 +13772,7 @@
         "host_tool_executor",
         "load_conformance",
         "model_lister",
+        "operations",
         "parser",
         "permission_resolver",
         "processor",
@@ -13699,6 +13891,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -14856,6 +15049,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "Sources/PromptyModel/operations/render_segment.swift",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -15183,6 +15383,15 @@
             "turn_trace.swift",
             "validation_error.swift",
             "validation_result.swift"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "render_segment.swift"
           ]
         },
         {
@@ -15676,6 +15885,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -15873,6 +16096,7 @@
         "Sources/PromptyModel/host_tool_executor.swift",
         "Sources/PromptyModel/load_conformance.swift",
         "Sources/PromptyModel/model_lister.swift",
+        "Sources/PromptyModel/operations/render_segment.swift",
         "Sources/PromptyModel/parser.swift",
         "Sources/PromptyModel/permission_resolver.swift",
         "Sources/PromptyModel/processor.swift",
@@ -16000,6 +16224,7 @@
         "RedactionMetadata",
         "ReferenceConnection",
         "RemoteConnection",
+        "RenderSegment",
         "Renderer",
         "ReplayJournalRecord",
         "ReplayMismatch",
@@ -17157,6 +17382,13 @@
           "protocol": false
         },
         {
+          "name": "RenderSegment",
+          "kind": "value",
+          "group": "operations",
+          "source": "./operations/render-segment",
+          "protocol": false
+        },
+        {
           "name": "AnthropicImageBlock",
           "kind": "value",
           "group": "wire",
@@ -17484,6 +17716,15 @@
             "turn-trace",
             "validation-error",
             "validation-result"
+          ]
+        },
+        {
+          "name": "operations",
+          "exports": [
+            "RenderSegment"
+          ],
+          "modules": [
+            "render-segment"
           ]
         },
         {
@@ -17977,6 +18218,20 @@
               "runtimeCancellable": false,
               "atomic": false,
               "nonFatal": false
+            },
+            {
+              "name": "renderSegments",
+              "returns": "RenderSegment[]",
+              "params": {
+                "agent": "Agent",
+                "inputs": "Record<unknown>",
+                "template": "string"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
             }
           ]
         },
@@ -18174,6 +18429,7 @@
         "./host-tool-executor",
         "./load-conformance",
         "./model-lister",
+        "./operations/render-segment",
         "./parser",
         "./permission-resolver",
         "./processor",

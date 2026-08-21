@@ -22,6 +22,7 @@ classDiagram
     class Renderer {
       <<protocol>>
         +render(agent: Agent, template: string, inputs: Record<unknown>) string [async-capable]
+        +renderSegments(agent: Agent, template: string, inputs: Record<unknown>) RenderSegment[] [async-capable]
     }
 ```
 
@@ -32,3 +33,4 @@ The following helper methods are declared via `@method` and must be implemented 
 | Name | Signature | Runtime shape | Description |
 | ---- | --------- | ------------- | ----------- |
 | `render` | `render(agent: Agent, template: string, inputs: Record<unknown>) -> string` | async-capable | Render the template string with input values |
+| `renderSegments` | `renderSegments(agent: Agent, template: string, inputs: Record<unknown>) -> RenderSegment[]` | async-capable | Render the template into a provenance-tagged segment tree |
