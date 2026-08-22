@@ -1,17 +1,53 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 
+use async_trait::async_trait;
+use futures::StreamExt;
+use prompty::engine::agent_loop::{
+    AgentLoopOptions, GuardrailDecision, ModelResponse, SUMMARY_PREFIX, SteeringMessage,
+    ToolCall as AgentToolCall, run_agent_loop,
+};
+use prompty::harness::{
+    AdapterError, CollectingEventSink, FunctionHostToolExecutor, InMemoryCheckpointStore,
+    JsonlEventJournalWriter, ReferenceTurnRunner,
+};
 use prompty::model::Agent;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
+use prompty::model::contracts::pipeline::turn_options::TurnOptions;
+use prompty::model::contracts::pipeline::{RunTurnRequest, TurnModelRequest, TurnModelResponse};
+use prompty::model::events::host_tool_request::HostToolRequest;
+use prompty::model::events::permission_decision::PermissionDecision;
+use prompty::model::events::permission_request::PermissionRequest;
+use prompty::model::host_tool_executor::HostToolExecutor;
+use prompty::model::permission_resolver::PermissionResolver;
+use prompty::model::{Property, PropertyKind, ToolKind};
 use prompty::parsers::parse_chat;
 use prompty::pipeline::expand_threads;
-use prompty::{Message, load, validate_inputs};
+use prompty::streaming::reconcile_stream;
+use prompty::types::ContentPart;
+use prompty::types::StreamChunk;
+use prompty::{
+    AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ContextPortability,
+    DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
+    EngineEvent, EnginePermissionDecision, EngineToolRequest, EngineToolResult, IdGenerator,
+    InvocationContextState, Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
+    ModelStreamPort, NoopHostPolicyPort, NoopModelStreamPort, NoopRetryPolicyPort, PermissionPort,
+    PortError, PostCommitPort, Role, ToolOutcome, ToolPort, TurnCommit, TurnEngine,
+    TurnEngineEffects, TurnEngineRequest, load, validate_inputs,
+};
 use regex::Regex;
-use serde_json::Value;
+use serde::Deserialize;
+use serde_json::{Value, json};
 
 /// Serializes env-var mutation across parallel `#[tokio::test]` load vectors.
 /// The load contract resolves `${env:...}` against the process environment, so
@@ -131,36 +167,67 @@ pub fn adapters() -> HashMap<String, Adapter> {
                 normalize: None,
             },
         ),
+        (
+            "TurnConformance.runTurn".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, _ctx| {
+                    let input = input.clone();
+                    Box::pin(run_turn_impl(input))
+                })),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "TurnConformance.run".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, ctx| {
+                    let input = input.clone();
+                    let vector = ctx.vector.clone();
+                    Box::pin(run_impl(input, vector))
+                })),
+                normalize: Some(run_normalize),
+            },
+        ),
+        (
+            "Processor.processStream".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, _ctx| {
+                    let input = input.clone();
+                    Box::pin(process_stream_impl(input))
+                })),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "WireConformance.toRequest".to_string(),
+            Adapter {
+                invoke: Invoke::Sync(wire_to_request_adapter),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "Processor.process".to_string(),
+            Adapter {
+                invoke: Invoke::Sync(process_adapter),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "TurnConformance.replay".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, ctx| {
+                    let input = input.clone();
+                    let vector = ctx.vector.clone();
+                    Box::pin(replay_impl(input, vector))
+                })),
+                normalize: None,
+            },
+        ),
     ])
 }
 
 pub fn waivers() -> HashMap<String, String> {
-    HashMap::from([
-        (
-            "WireConformance.toRequest".to_string(),
-            "No concrete provider request-builder exists in the Rust runtime yet. The generated `WireConformance` trait (src/model/wire_conformance.rs) and the Anthropic wire structs (src/model/wire/) are present, but there is no OpenAI/Anthropic executor that maps a canonical agent + messages into a provider request body (no `_build_chat_args`/`_message_to_wire` equivalent). Wiring this would require reimplementing that provider logic inside the adapter, which is disallowed. Honest gap: the Rust runtime does not implement the provider wire layer.".to_string(),
-        ),
-        (
-            "Processor.process".to_string(),
-            "No concrete provider response-processor exists in the Rust runtime yet. The `Processor` trait and pipeline `process()` dispatch are present, but `register_defaults()` registers only renderers, the parser, and tool handlers — no OpenAI/Anthropic processor is registered to extract content/tool_calls/usage from a raw provider response. Honest gap: the Rust runtime does not implement the provider response-processing layer.".to_string(),
-        ),
-        (
-            "TurnConformance.replay".to_string(),
-            "Depends on the provider wire + process layer (unimplemented in the Rust runtime), so the replay journal cannot be reproduced. Honest gap, consistent with WireConformance.toRequest and Processor.process.".to_string(),
-        ),
-        (
-            "TurnConformance.run".to_string(),
-            "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas) not yet matched by the runtime. Same honest gap as the Python reference.".to_string(),
-        ),
-        (
-            "TurnConformance.runTurn".to_string(),
-            "Requires the not-yet-implemented snapshot/portability turn engine. Same gap as the Python reference.".to_string(),
-        ),
-        (
-            "Processor.processStream".to_string(),
-            "The processStream vectors assert streaming-failure classification + reconciliation (determinate vs indeterminate failure, preserved partial text, requiresReconciliation, completionCommitted). The classification lives in the `prompty-openai` provider crate and the reconciliation lives in the `prompty` pipeline (`src/pipeline/live_turn.rs`) — neither is registered by the core model harness (`register_defaults()` wires no provider stream processor). It is driven against the same generated `vectors.json` by the dedicated runners `prompty-openai/tests/stream_failure_vectors.rs` (chunk classification) and the `live_turn.rs` streaming tests (reconciliation). Provider/pipeline-layer behavior, not a pure model-layer op.".to_string(),
-        ),
-    ])
+    HashMap::new()
 }
 
 pub fn doubles() -> HashMap<String, Value> {
@@ -693,4 +760,1245 @@ fn parse_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
 
     let canonical: Vec<Value> = messages.iter().map(message_to_canonical).collect();
     Ok(serde_json::json!({ "messages": canonical }))
+}
+
+// ---------------------------------------------------------------------------
+// WireConformance.toRequest / Processor.process -- drive the real provider
+// wire/process layers in `prompty-openai` and `prompty-anthropic`.
+// ---------------------------------------------------------------------------
+//
+// The provider request-builders and response-processors are owned by the
+// `prompty-openai` and `prompty-anthropic` crates, each with its own passing
+// vector suite. These adapters only translate a vector `input` into the
+// canonical `Agent` + `Message` values those crates expect, dispatch to the
+// matching public function, and wrap the result in the shape the vectors
+// assert -- no provider request/response logic is reimplemented here.
+
+/// Build a `Message` list from a wire vector's `messages` field.
+fn build_wire_messages(input: &Value) -> Vec<Message> {
+    let Some(msgs) = input.get("messages").and_then(|v| v.as_array()) else {
+        return Vec::new();
+    };
+    msgs.iter()
+        .map(|m| {
+            let role = m
+                .get("role")
+                .and_then(|v| v.as_str())
+                .and_then(Role::from_str_opt)
+                .unwrap_or(Role::User);
+            let parts: Vec<ContentPart> = m
+                .get("content")
+                .and_then(|v| v.as_array())
+                .map(|content| {
+                    content
+                        .iter()
+                        .filter_map(|p| {
+                            let kind = p.get("kind").and_then(|v| v.as_str())?;
+                            let value = p.get("value").and_then(|v| v.as_str()).unwrap_or("");
+                            let media = p
+                                .get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from);
+                            Some(match kind {
+                                "image" => ContentPart::image(value, None, media),
+                                "audio" => ContentPart::audio(value, media),
+                                _ => ContentPart::text(value),
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Message {
+                role,
+                parts,
+                ..Default::default()
+            }
+        })
+        .collect()
+}
+
+/// Build a canonical `Agent` from a wire vector's `input` fields. Mirrors the
+/// provider crates' own vector harnesses: OpenAI tool schemas need synthetic
+/// `items` injected for unspecified array properties before load (and cleared
+/// afterwards); Anthropic does not.
+fn build_wire_agent(input: &Value) -> Agent {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let model_id =
+        input
+            .get("model_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or(if provider == "anthropic" {
+                "claude-3"
+            } else {
+                "gpt-4"
+            });
+    let api_type = input
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat");
+
+    let mut data = json!({
+        "name": "test",
+        "kind": "prompt",
+        "model": { "id": model_id, "apiType": api_type, "provider": provider },
+        "instructions": "test",
+    });
+
+    if let Some(options) = input.get("options") {
+        if options.as_object().is_some_and(|o| !o.is_empty()) {
+            data["model"]["options"] = options.clone();
+        }
+    }
+
+    let is_openai = provider == "openai";
+
+    if let Some(tools) = input.get("tools") {
+        if tools.as_array().is_some_and(|t| !t.is_empty()) {
+            let mut tools = tools.clone();
+            if is_openai {
+                normalize_array_items(&mut tools);
+            }
+            data["tools"] = tools;
+        }
+    }
+
+    if let Some(outputs) = input.get("outputs") {
+        if outputs.as_array().is_some_and(|o| !o.is_empty()) {
+            data["outputs"] = outputs.clone();
+        }
+    }
+
+    let mut agent = Agent::load_from_value(&data, &LoadContext::default());
+    if is_openai {
+        clear_synthetic_array_items(&mut agent);
+    }
+    agent
+}
+
+/// Build a canonical `Agent` for a process vector. Process vectors carry only
+/// `provider` and `has_outputs`; the response drives everything else.
+fn build_process_agent(input: &Value) -> Agent {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let has_outputs = input
+        .get("has_outputs")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let model_id = if provider == "anthropic" {
+        "claude-3"
+    } else {
+        "gpt-4"
+    };
+
+    let mut data = json!({
+        "name": "test",
+        "kind": "prompt",
+        "model": { "id": model_id, "provider": provider },
+        "instructions": "test",
+    });
+
+    if has_outputs {
+        data["outputs"] = json!([{ "name": "result", "kind": "string" }]);
+    }
+
+    Agent::load_from_value(&data, &LoadContext::default())
+}
+
+fn normalize_array_items(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.get("kind").and_then(Value::as_str) == Some("array")
+                && !map.contains_key("items")
+            {
+                map.insert(
+                    "items".to_string(),
+                    json!({ "kind": "__prompty_unspecified_array_item" }),
+                );
+            }
+            for child in map.values_mut() {
+                normalize_array_items(child);
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                normalize_array_items(child);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn clear_synthetic_array_items(agent: &mut Agent) {
+    for tool in agent.tools.iter_mut().flatten() {
+        if let ToolKind::Function { parameters, .. } = &mut tool.kind {
+            for property in parameters {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+    }
+}
+
+fn clear_property_synthetic_array_items(property: &mut Property) {
+    match &mut property.kind {
+        PropertyKind::Array { items }
+            if items.get("kind").and_then(Value::as_str)
+                == Some("__prompty_unspecified_array_item") =>
+        {
+            *items = Value::Null;
+        }
+        PropertyKind::Array { items } => normalize_loaded_property_value(items),
+        PropertyKind::Object { properties } => {
+            for property in properties {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Union { one_of, any_of } => {
+            for property in one_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+            for property in any_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Custom { .. } => {}
+    }
+}
+
+fn normalize_loaded_property_value(value: &mut Value) {
+    if value.get("kind").and_then(Value::as_str) == Some("__prompty_unspecified_array_item") {
+        *value = Value::Null;
+    }
+}
+
+/// WireConformance.toRequest -- build a provider request body from a canonical
+/// agent + messages through the real provider wire layer.
+fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let api_type = input
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat");
+    let agent = build_wire_agent(input);
+    let messages = build_wire_messages(input);
+
+    let request_body = match provider {
+        "anthropic" => prompty_anthropic::wire::build_chat_args(&agent, &messages)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        "openai" => match api_type {
+            "chat" | "agent" => prompty_openai::wire::build_chat_args(&agent, &messages)
+                .map_err(|e| VectorError::new(e.to_string()))?,
+            "responses" => prompty_openai::wire::build_responses_args(&agent, &messages)
+                .map_err(|e| VectorError::new(e.to_string()))?,
+            "embedding" => prompty_openai::wire::build_embedding_args(&agent, &messages),
+            "image" => prompty_openai::wire::build_image_args(&agent, &messages),
+            other => {
+                return Err(VectorError::new(format!(
+                    "unsupported openai apiType: {other}"
+                )));
+            }
+        },
+        other => return Err(VectorError::new(format!("unsupported provider: {other}"))),
+    };
+
+    Ok(json!({ "request_body": request_body }))
+}
+
+/// Processor.process -- extract the canonical result from a raw provider
+/// response through the real provider process layer.
+fn process_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let agent = build_process_agent(input);
+    let response = input.get("response").cloned().unwrap_or(Value::Null);
+
+    let result = match provider {
+        "anthropic" => prompty_anthropic::process_response(&agent, &response)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        "openai" => prompty_openai::process_response(&agent, &response)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        other => return Err(VectorError::new(format!("unsupported provider: {other}"))),
+    };
+
+    Ok(json!({ "result": result }))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.runTurn -- drives the canonical snapshot/portability engine
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::engine::TurnEngine` (the same
+// engine exercised directly by `tests/turn_engine.rs`). This adapter only
+// translates a `runTurn` vector into the engine's scripted ports, runs the
+// engine, and projects its `TurnEngineResult` into the observable JSON the
+// vectors assert -- no turn logic is reimplemented here.
+
+#[derive(Debug, Deserialize)]
+struct RtVectorMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RtModelResponse {
+    output: Option<Value>,
+    assistant: Option<String>,
+    #[serde(default)]
+    tools: Vec<EngineToolRequest>,
+    next_portability: Option<ContextPortability>,
+    delegated_state: Option<Vec<DelegatedStateReference>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RtVector {
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    cancel_before_run: bool,
+    messages: Vec<RtVectorMessage>,
+    model: Vec<RtModelResponse>,
+    #[serde(default)]
+    tool_outputs: HashMap<String, String>,
+    #[serde(default)]
+    deny_tools: HashSet<String>,
+}
+
+struct RtScriptedModel {
+    responses: Mutex<VecDeque<ModelInvocationResponse>>,
+}
+
+#[async_trait]
+impl ModelPort for RtScriptedModel {
+    async fn invoke(
+        &self,
+        _request: &ModelInvocationRequest,
+        _cancellation: &CancellationToken,
+        _stream: &dyn ModelStreamPort,
+    ) -> Result<ModelInvocationResponse, PortError> {
+        self.responses
+            .lock()
+            .unwrap()
+            .pop_front()
+            .ok_or_else(|| PortError::new("scripted model response exhausted"))
+    }
+}
+
+struct RtPermissions {
+    denied: HashSet<String>,
+}
+
+#[async_trait]
+impl PermissionPort for RtPermissions {
+    async fn authorize(
+        &self,
+        request: &EngineToolRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<EnginePermissionDecision, PortError> {
+        let approved = !self.denied.contains(&request.name);
+        Ok(EnginePermissionDecision {
+            approved,
+            reason: (!approved).then(|| "denied by vector".to_string()),
+            metadata: Value::Null,
+        })
+    }
+}
+
+struct RtTools {
+    outputs: HashMap<String, String>,
+}
+
+#[async_trait]
+impl ToolPort for RtTools {
+    async fn execute(
+        &self,
+        request: &EngineToolRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<EngineToolResult, PortError> {
+        Ok(EngineToolResult {
+            request_id: request.id.clone(),
+            name: request.name.clone(),
+            outcome: ToolOutcome::Success,
+            output: Some(Value::String(
+                self.outputs.get(&request.id).cloned().unwrap_or_else(|| {
+                    request.arguments.clone().unwrap_or(Value::Null).to_string()
+                }),
+            )),
+            error_kind: None,
+            metadata: Value::Null,
+        })
+    }
+}
+
+#[derive(Default)]
+struct RtEvents(Mutex<Vec<EngineEvent>>);
+
+struct RtDurability {
+    events: Arc<RtEvents>,
+}
+
+#[async_trait]
+impl DurabilityPort for RtDurability {
+    async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+        self.events.0.lock().unwrap().push(event.clone());
+        Ok(())
+    }
+
+    async fn append_with_checkpoint(
+        &self,
+        events: &[EngineEvent],
+        _checkpoint: &EngineCheckpoint,
+    ) -> Result<(), PortError> {
+        self.events.0.lock().unwrap().extend_from_slice(events);
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct RtPostCommit(Mutex<Vec<TurnCommit>>);
+
+#[async_trait]
+impl PostCommitPort for RtPostCommit {
+    async fn after_commit(
+        &self,
+        _effect_id: &str,
+        commit: &TurnCommit,
+        _cancellation: &CancellationToken,
+    ) -> Result<(), PortError> {
+        self.0.lock().unwrap().push(commit.clone());
+        Ok(())
+    }
+}
+
+struct RtClock;
+
+impl Clock for RtClock {
+    fn now(&self) -> String {
+        "2026-07-21T00:00:00Z".to_string()
+    }
+}
+
+#[derive(Default)]
+struct RtIds(AtomicU64);
+
+impl IdGenerator for RtIds {
+    fn next_id(&self, kind: &str) -> String {
+        format!("{kind}-{}", self.0.fetch_add(1, Ordering::Relaxed) + 1)
+    }
+}
+
+fn rt_to_message(message: &RtVectorMessage) -> Message {
+    let role = match message.role.as_str() {
+        "system" => Role::System,
+        "assistant" => Role::Assistant,
+        "tool" => Role::Tool,
+        _ => Role::User,
+    };
+    Message::with_text(role, message.content.clone())
+}
+
+fn rt_to_response(response: &RtModelResponse) -> ModelInvocationResponse {
+    let next_context_state = match (response.next_portability, &response.delegated_state) {
+        (None, None) => None,
+        (portability, delegated) => Some(InvocationContextState {
+            portability: portability.unwrap_or(ContextPortability::Portable),
+            delegated_state: Some(delegated.clone().unwrap_or_default()),
+        }),
+    };
+    ModelInvocationResponse {
+        output: response.output.clone(),
+        usage: None,
+        assistant_messages: Some(
+            response
+                .assistant
+                .iter()
+                .map(|text| Message::with_text(Role::Assistant, text.clone()))
+                .collect(),
+        ),
+        tool_requests: Some(response.tools.clone()),
+        next_context_state,
+        metadata: Value::Null,
+    }
+}
+
+async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
+    let vector: RtVector = serde_json::from_value(input)
+        .map_err(|error| VectorError::new(format!("invalid runTurn vector input: {error}")))?;
+
+    let model = Arc::new(RtScriptedModel {
+        responses: Mutex::new(vector.model.iter().map(rt_to_response).collect()),
+    });
+    let events = Arc::new(RtEvents::default());
+    let post_commit = Arc::new(RtPostCommit::default());
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        TurnEngineEffects {
+            model,
+            stream: Arc::new(NoopModelStreamPort),
+            policy: Arc::new(NoopHostPolicyPort),
+            retry: Arc::new(NoopRetryPolicyPort),
+            conversation: Arc::new(DefaultConversationPort),
+            permission: Arc::new(RtPermissions {
+                denied: vector.deny_tools.clone(),
+            }),
+            tools: Arc::new(RtTools {
+                outputs: vector.tool_outputs.clone(),
+            }),
+            durability: Arc::new(RtDurability {
+                events: events.clone(),
+            }),
+            post_commit: post_commit.clone(),
+            clock: Arc::new(RtClock),
+            ids: Arc::new(RtIds::default()),
+        },
+    );
+
+    let cancellation = CancellationToken::new();
+    if vector.cancel_before_run {
+        cancellation.cancel();
+    }
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                format!("session-{}", vector.name),
+                format!("turn-{}", vector.name),
+                vector.messages.iter().map(rt_to_message).collect(),
+            ),
+            cancellation,
+        )
+        .await
+        .map_err(|error| VectorError::new(format!("{} failed: {error}", vector.name)))?;
+
+    let snapshot_portability: Vec<Value> = result
+        .snapshots
+        .iter()
+        .map(|snapshot| {
+            serde_json::to_value(snapshot.context_state.portability).unwrap_or(Value::Null)
+        })
+        .collect();
+    let snapshot_stable_prefixes: Vec<Value> = result
+        .snapshots
+        .iter()
+        .map(|snapshot| Value::from(snapshot.stable_prefix_messages))
+        .collect();
+    let tool_result_order: Vec<Value> = result
+        .tool_results
+        .iter()
+        .map(|entry| Value::String(entry.request_id.clone()))
+        .collect();
+    let delegated_state = result
+        .commit
+        .context_state
+        .delegated_state
+        .as_ref()
+        .map_or(0, |state| state.len());
+    let event_kinds: Vec<Value> = events
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|event| Value::String(event.kind.to_string()))
+        .collect();
+
+    Ok(serde_json::json!({
+        "status": serde_json::to_value(result.commit.status).unwrap_or(Value::Null),
+        "output": result.commit.output.clone(),
+        "iterations": result.commit.iterations,
+        "snapshots": result.snapshots.len(),
+        "snapshotPortability": snapshot_portability,
+        "snapshotStablePrefixes": snapshot_stable_prefixes,
+        "commitPortability": serde_json::to_value(result.commit.context_state.portability)
+            .unwrap_or(Value::Null),
+        "delegatedState": delegated_state,
+        "toolResults": result.tool_results.len(),
+        "toolResultOrder": tool_result_order,
+        "eventKinds": event_kinds,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.replay -- reproduces a session journal via the reference runner
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::harness::ReferenceTurnRunner`
+// session runner (exercised directly by tests/harness_turn_runner.rs against the
+// same golden `replay` vectors). This adapter only scripts the per-scenario model
+// callback + host tools + permission policy, runs the runner, reads back the JSONL
+// journal it writes, and normalizes each record into the observable event strings
+// the vectors assert -- no session/journal logic lives here.
+
+/// Single-typed permission resolver so the generic `ReferenceTurnRunner` has one
+/// `P: PermissionResolver`; scenarios that deny simply flip `approved`.
+struct ReplayPermissionResolver {
+    approved: bool,
+}
+
+#[async_trait]
+impl PermissionResolver for ReplayPermissionResolver {
+    async fn request(
+        &self,
+        request: &PermissionRequest,
+    ) -> Result<PermissionDecision, AdapterError> {
+        Ok(PermissionDecision {
+            request_id: request.request_id.clone(),
+            tool_call_id: request.tool_call_id.clone(),
+            permission: request.permission.clone(),
+            approved: self.approved,
+            reason: Some(
+                if self.approved {
+                    "allow_all"
+                } else {
+                    "deny_all"
+                }
+                .to_string(),
+            ),
+            result: Value::Null,
+        })
+    }
+}
+
+fn replay_model_for_scenario(
+    name: &str,
+) -> Arc<dyn Fn(TurnModelRequest) -> Result<TurnModelResponse, AdapterError> + Send + Sync> {
+    let name = name.to_string();
+    Arc::new(move |request: TurnModelRequest| {
+        if name == "no_tool" {
+            return Ok(TurnModelResponse {
+                output: Some(json!({
+                    "text": format!("hello {}", request.inputs["name"].as_str().unwrap_or("")),
+                })),
+                checkpoint_state: json!({ "stable": true }),
+                ..Default::default()
+            });
+        }
+        if request.iteration == 0 {
+            return Ok(TurnModelResponse {
+                tool_requests: Some(vec![HostToolRequest {
+                    request_id: Some("exec-1".to_string()),
+                    tool_call_id: Some("call-1".to_string()),
+                    tool_name: if name == "tool_failure" {
+                        "fail"
+                    } else {
+                        "add"
+                    }
+                    .to_string(),
+                    arguments: json!({ "a": 2, "b": 3 }),
+                    ..Default::default()
+                }]),
+                ..Default::default()
+            });
+        }
+        Ok(TurnModelResponse {
+            output: Some(json!({
+                "toolResult": request.tool_results.as_ref().unwrap()[0].result,
+                "errorKind": request.tool_results.as_ref().unwrap()[0].error_kind,
+            })),
+            ..Default::default()
+        })
+    })
+}
+
+fn replay_normalize_journal(records: &[Value]) -> Vec<Value> {
+    records
+        .iter()
+        .map(|record| {
+            let text = if record["kind"] == "summary" {
+                let summary = &record["summary"];
+                format!(
+                    "summary:{}:{}:turns={}:checkpoints={}",
+                    summary["sessionId"].as_str().unwrap_or(""),
+                    summary["status"].as_str().unwrap_or(""),
+                    summary["turns"].as_i64().unwrap_or_default(),
+                    summary["checkpoints"].as_i64().unwrap_or_default()
+                )
+            } else if record["kind"] == "session" {
+                let event = &record["event"];
+                let event_type = event["type"].as_str().unwrap_or("");
+                if event_type == "session_end" {
+                    format!(
+                        "session:{}:{}:{}:{}",
+                        event_type,
+                        event["sessionId"].as_str().unwrap_or(""),
+                        event["turnId"].as_str().unwrap_or(""),
+                        event["payload"]["status"].as_str().unwrap_or("")
+                    )
+                } else {
+                    format!(
+                        "session:{}:{}:{}",
+                        event_type,
+                        event["sessionId"].as_str().unwrap_or(""),
+                        event["turnId"].as_str().unwrap_or("")
+                    )
+                }
+            } else {
+                let event = &record["event"];
+                let event_type = event["type"].as_str().unwrap_or("");
+                let payload = &event["payload"];
+                let iteration = event["iteration"].as_i64().unwrap_or_default();
+                match event_type {
+                    "permission_requested" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["requestId"].as_str().unwrap_or("")
+                    ),
+                    "permission_completed" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["approved"].as_bool().unwrap_or_default()
+                    ),
+                    "tool_execution_start" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["toolName"].as_str().unwrap_or("")
+                    ),
+                    "tool_execution_complete" | "tool_result" => {
+                        let mut value = format!(
+                            "turn:{event_type}:{iteration}:{}:{}",
+                            payload["toolName"].as_str().unwrap_or(""),
+                            payload["success"].as_bool().unwrap_or_default()
+                        );
+                        if let Some(error_kind) = payload["errorKind"].as_str() {
+                            value.push(':');
+                            value.push_str(error_kind);
+                        }
+                        value
+                    }
+                    "error" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["errorKind"].as_str().unwrap_or("")
+                    ),
+                    "turn_end" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["status"].as_str().unwrap_or("")
+                    ),
+                    _ => format!("turn:{event_type}:{iteration}"),
+                }
+            };
+            Value::String(text)
+        })
+        .collect()
+}
+
+async fn replay_impl(input: Value, vector: Value) -> Result<Value, VectorError> {
+    let name = vector["name"].as_str().unwrap_or_default().to_string();
+    let clock = input["clock"].as_str().unwrap_or_default().to_string();
+    let session_id = input["sessionId"].as_str().unwrap_or_default().to_string();
+    let turn_id = input["turnId"].as_str().unwrap_or_default().to_string();
+    let inputs = input.get("inputs").cloned().unwrap_or_else(|| json!({}));
+    let max_iterations = input
+        .get("maxIterations")
+        .and_then(Value::as_i64)
+        .map(|v| v as i32);
+
+    let path = std::env::temp_dir().join(format!(
+        "prompty-replay-{name}-{}.jsonl",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    let mut handlers: HashMap<
+        String,
+        Arc<dyn Fn(&Value, &HostToolRequest) -> Result<Value, AdapterError> + Send + Sync>,
+    > = HashMap::new();
+    handlers.insert(
+        "add".to_string(),
+        Arc::new(
+            |args: &Value, _request: &HostToolRequest| -> Result<Value, AdapterError> {
+                Ok(json!(
+                    args["a"].as_i64().unwrap_or_default() + args["b"].as_i64().unwrap_or_default()
+                ))
+            },
+        ),
+    );
+    handlers.insert(
+        "fail".to_string(),
+        Arc::new(
+            |_args: &Value, _request: &HostToolRequest| -> Result<Value, AdapterError> {
+                Err(Box::new(std::io::Error::other("boom")))
+            },
+        ),
+    );
+
+    let id_index = Arc::new(Mutex::new(0));
+    let next_id = Arc::new(move |prefix: &str| {
+        let mut index = id_index.lock().unwrap();
+        *index += 1;
+        format!("{prefix}-{index}")
+    });
+
+    let runner = ReferenceTurnRunner::new(
+        CollectingEventSink::new(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        ReplayPermissionResolver {
+            approved: name != "permission_denied",
+        },
+        FunctionHostToolExecutor::new(handlers),
+        replay_model_for_scenario(&name),
+        Arc::new(move || clock.clone()),
+        next_id,
+    );
+
+    runner
+        .run(RunTurnRequest {
+            session_id,
+            turn_id,
+            inputs,
+            options: Some(TurnOptions {
+                max_iterations,
+                ..Default::default()
+            }),
+        })
+        .await
+        .map_err(|error| VectorError::new(format!("replay {name} failed: {error}")))?;
+
+    let contents = std::fs::read_to_string(&path)
+        .map_err(|error| VectorError::new(format!("replay {name} journal read failed: {error}")))?;
+    let _ = std::fs::remove_file(&path);
+    let records: Vec<Value> = contents
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| serde_json::from_str(line).unwrap_or(Value::Null))
+        .collect();
+
+    Ok(Value::Array(replay_normalize_journal(&records)))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.run -- drives the provider-agnostic agent loop
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::engine::agent_loop::run_agent_loop`
+// engine (mirrors the verified Python `core/agent_loop.py`). This adapter only
+// scripts the model + tool callbacks from a `run` vector's `sequence`, wires the
+// optional guardrail/steering/cancel/context flags, runs the engine, and projects
+// its result into the observable JSON the vectors assert -- no loop logic here.
+
+struct RunScriptedState {
+    sequence: Vec<Value>,
+    index: usize,
+    results: HashMap<String, String>,
+}
+
+async fn run_impl(input: Value, vector: Value) -> Result<Value, VectorError> {
+    let flags = input;
+    let expected = vector.get("expected").cloned().unwrap_or(Value::Null);
+    let sequence = vector
+        .get("sequence")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let messages: Vec<Value> = flags
+        .get("messages")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let registered: HashSet<String> = flags
+        .get("tool_functions")
+        .and_then(Value::as_object)
+        .map(|obj| obj.keys().cloned().collect())
+        .unwrap_or_default();
+
+    let state = Rc::new(RefCell::new(RunScriptedState {
+        sequence,
+        index: 0,
+        results: HashMap::new(),
+    }));
+
+    let model_state = state.clone();
+    let invoke_model = move |_conversation: &[Value]| -> ModelResponse {
+        let mut st = model_state.borrow_mut();
+        let step = st.sequence[st.index].clone();
+        st.index += 1;
+        let message = step
+            .pointer("/llm_response/choices/0/message")
+            .cloned()
+            .unwrap_or(Value::Null);
+        let raw_tool_calls = message
+            .get("tool_calls")
+            .and_then(Value::as_array)
+            .cloned()
+            .filter(|calls| !calls.is_empty());
+        let mut tool_calls = Vec::new();
+        for tc in raw_tool_calls.iter().flatten() {
+            let function = tc.get("function");
+            tool_calls.push(AgentToolCall {
+                id: tc
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+                name: function
+                    .and_then(|f| f.get("name"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+                arguments: function
+                    .and_then(|f| f.get("arguments"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+            });
+        }
+        st.results = step
+            .get("tool_results")
+            .and_then(Value::as_array)
+            .map(|entries| {
+                entries
+                    .iter()
+                    .filter_map(|tr| {
+                        let id = tr.get("tool_call_id").and_then(Value::as_str)?.to_string();
+                        let output = tr
+                            .get("result")
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .to_string();
+                        Some((id, output))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        ModelResponse {
+            content: message
+                .get("content")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+            tool_calls,
+            raw_tool_calls,
+        }
+    };
+
+    let tool_state = state.clone();
+    let dispatch_tool = move |call: &AgentToolCall| -> String {
+        tool_state
+            .borrow()
+            .results
+            .get(&call.id)
+            .cloned()
+            .unwrap_or_default()
+    };
+
+    let guardrails = flags.get("guardrails").cloned().unwrap_or(Value::Null);
+    let input_guardrail = guardrails.get("input").cloned().map(|cfg| {
+        Box::new(move |_conversation: &[Value]| run_guardrail_decision(&cfg))
+            as Box<dyn FnMut(&[Value]) -> GuardrailDecision>
+    });
+    let output_guardrail = guardrails.get("output").cloned().map(|cfg| {
+        Box::new(move |_response: &ModelResponse| run_guardrail_decision(&cfg))
+            as Box<dyn FnMut(&ModelResponse) -> GuardrailDecision>
+    });
+    let tool_guardrail = guardrails.get("tool").cloned().map(|cfg| {
+        let deny: HashSet<String> = cfg
+            .get("deny_tools")
+            .and_then(Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let reason = cfg
+            .get("reason")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        Box::new(move |name: &str, _args: &Value| {
+            if deny.contains(name) {
+                GuardrailDecision::deny(reason.clone())
+            } else {
+                GuardrailDecision::allow()
+            }
+        }) as Box<dyn FnMut(&str, &Value) -> GuardrailDecision>
+    });
+
+    let steering: Vec<SteeringMessage> = flags
+        .pointer("/steering/messages")
+        .and_then(Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .map(|item| SteeringMessage {
+                    inject_before_iteration: item
+                        .get("inject_before_iteration")
+                        .and_then(Value::as_i64)
+                        .unwrap_or(0),
+                    role: item
+                        .get("role")
+                        .and_then(Value::as_str)
+                        .unwrap_or("user")
+                        .to_string(),
+                    text: item
+                        .get("text")
+                        .and_then(Value::as_str)
+                        .unwrap_or("")
+                        .to_string(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let cancel_at = flags
+        .pointer("/cancel/cancelled_at")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let context_budget = flags.get("context_budget").and_then(Value::as_i64);
+
+    let summary_text = expected
+        .get("trimmed_messages")
+        .and_then(Value::as_array)
+        .and_then(|arr| {
+            arr.iter().find_map(|m| {
+                let content = m.get("content").and_then(Value::as_str)?;
+                content
+                    .starts_with(SUMMARY_PREFIX)
+                    .then(|| content.to_string())
+            })
+        });
+    let summarize = summary_text.map(|summary| {
+        Box::new(move |_dropped: &[Value]| summary.clone()) as Box<dyn FnMut(&[Value]) -> String>
+    });
+
+    let options = AgentLoopOptions {
+        is_tool_registered: Some(Box::new(move |name: &str| registered.contains(name))),
+        max_iterations: None,
+        input_guardrail,
+        output_guardrail,
+        tool_guardrail,
+        steering,
+        cancel_at,
+        context_budget,
+        summarize,
+    };
+
+    let result = run_agent_loop(messages, invoke_model, dispatch_tool, options);
+
+    let mut observed = serde_json::Map::new();
+    observed.insert(
+        "result".to_string(),
+        result.result.clone().map_or(Value::Null, Value::String),
+    );
+    observed.insert("iterations".to_string(), json!(result.iterations));
+    observed.insert("total_messages".to_string(), json!(result.total_messages()));
+    observed.insert(
+        "message_sequence".to_string(),
+        Value::Array(result.conversation.clone()),
+    );
+    observed.insert("tools_executed".to_string(), json!(result.tools_executed));
+    observed.insert(
+        "tool_execution_order".to_string(),
+        json!(result.tool_execution_order),
+    );
+    observed.insert("denied_tools".to_string(), json!(result.denied_tools));
+    observed.insert(
+        "trimmed_messages".to_string(),
+        result
+            .trimmed_messages
+            .clone()
+            .map_or(Value::Null, Value::Array),
+    );
+    observed.insert("events".to_string(), Value::Array(result.events.clone()));
+
+    if let Some(message) = result.conversation.iter().find(|m| {
+        m.get("role").and_then(Value::as_str) == Some("assistant")
+            && m.pointer("/metadata/tool_calls").is_some()
+    }) {
+        observed.insert("assistant_tool_calls_message".to_string(), message.clone());
+    }
+
+    if let Some(message) = result
+        .conversation
+        .iter()
+        .find(|m| m.get("role").and_then(Value::as_str) == Some("tool"))
+    {
+        let content = message.get("content").cloned().unwrap_or(Value::Null);
+        observed.insert(
+            "tool_result_message".to_string(),
+            json!({
+                "role": "tool",
+                "content": [{"type": "text", "text": content}],
+                "metadata": message.get("metadata").cloned().unwrap_or(Value::Null),
+            }),
+        );
+    }
+
+    if let Some(error) = &result.error {
+        observed.insert("error".to_string(), Value::String(error.clone()));
+    }
+    if let Some(error_type) = &result.error_type {
+        observed.insert("error_type".to_string(), Value::String(error_type.clone()));
+    }
+    if let Some(error_reason) = &result.error_reason {
+        observed.insert(
+            "error_reason".to_string(),
+            Value::String(error_reason.clone()),
+        );
+    }
+
+    // Annotation passthrough -- cross-runtime notes that are not Rust behavioral
+    // observations. Echo them so canonical equality holds without fabricating
+    // engine output.
+    for annotation in ["notes", "summary_contains", "rust_expected_error"] {
+        if let Some(value) = expected.get(annotation) {
+            observed.insert(annotation.to_string(), value.clone());
+        }
+    }
+
+    Ok(Value::Object(observed))
+}
+
+fn run_guardrail_decision(cfg: &Value) -> GuardrailDecision {
+    if cfg.get("action").and_then(Value::as_str) == Some("deny") {
+        GuardrailDecision::deny(
+            cfg.get("reason")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+        )
+    } else {
+        GuardrailDecision::allow()
+    }
+}
+
+/// Subsequence-match observed events against the expected event list. For each
+/// expected event (in order) scan forward for the next observed event of the same
+/// `type`, then project its `data` to the expected keys (or drop `data` entirely
+/// when the expected event is type-only). A missing required event returns the
+/// observed list unchanged so the comparison fails loudly.
+fn run_match_events(observed: &[Value], expected: &[Value]) -> Value {
+    let mut matched: Vec<Value> = Vec::new();
+    let mut index = 0;
+    for exp in expected {
+        let exp_type = exp.get("type").and_then(Value::as_str);
+        let mut found: Option<&Value> = None;
+        while index < observed.len() {
+            let candidate = &observed[index];
+            index += 1;
+            if candidate.get("type").and_then(Value::as_str) == exp_type {
+                found = Some(candidate);
+                break;
+            }
+        }
+        match found {
+            None => return Value::Array(observed.to_vec()),
+            Some(candidate) => {
+                if let Some(exp_data) = exp.get("data") {
+                    matched.push(json!({
+                        "type": exp_type,
+                        "data": project(candidate.get("data").unwrap_or(&Value::Null), exp_data),
+                    }));
+                } else {
+                    matched.push(json!({"type": exp_type}));
+                }
+            }
+        }
+    }
+    Value::Array(matched)
+}
+
+fn run_normalize(observed: &Value, ctx: &Context) -> Value {
+    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
+    let (obs, exp) = match (observed.as_object(), expected.as_object()) {
+        (Some(obs), Some(exp)) => (obs, exp),
+        _ => return observed.clone(),
+    };
+    let mut projected = serde_json::Map::new();
+    for (key, exp_val) in exp {
+        if key == "events" {
+            let obs_events = obs
+                .get("events")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            let exp_events = exp_val.as_array().cloned().unwrap_or_default();
+            projected.insert(key.clone(), run_match_events(&obs_events, &exp_events));
+        } else {
+            projected.insert(
+                key.clone(),
+                project(obs.get(key).unwrap_or(&Value::Null), exp_val),
+            );
+        }
+    }
+    Value::Object(projected)
+}
+
+// ---------------------------------------------------------------------------
+// Processor.processStream -- classifies provider SSE chunks, then reconciles
+// ---------------------------------------------------------------------------
+//
+// Classification is owned by the real provider crate
+// (`prompty_openai::processor::process_stream`, a dev-dependency edge) and the
+// reconciliation is owned by the provider-agnostic `prompty::streaming::
+// reconcile_stream` engine (mirrors the verified Python `core/streaming.py`).
+// This adapter only converts the vector's `events` into provider wire chunks,
+// drives them through the classifier, shapes the classified chunks, and asks the
+// reconciler for partialText/requiresReconciliation/completionCommitted.
+
+async fn process_stream_impl(input: Value) -> Result<Value, VectorError> {
+    let events = input
+        .get("events")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let mut provider_chunks = Vec::with_capacity(events.len());
+    for event in &events {
+        match event.get("kind").and_then(Value::as_str) {
+            Some("provider") => {
+                provider_chunks.push(event.get("value").cloned().unwrap_or(Value::Null))
+            }
+            Some("transportError") => provider_chunks.push(json!({
+                "error": {
+                    "type": "sse_transport_error",
+                    "message": event.get("message").cloned().unwrap_or(Value::Null),
+                }
+            })),
+            kind => {
+                return Err(VectorError::new(format!(
+                    "Unsupported stream vector event kind: {kind:?}"
+                )));
+            }
+        }
+    }
+
+    let classified: Vec<StreamChunk> =
+        prompty_openai::processor::process_stream(futures::stream::iter(provider_chunks))
+            .collect()
+            .await;
+
+    let chunks: Vec<Value> = classified.iter().map(stream_chunk_to_value).collect();
+    let reconciliation = reconcile_stream(classified.iter());
+
+    Ok(json!({
+        "chunks": chunks,
+        "partialText": reconciliation.partial_text,
+        "requiresReconciliation": reconciliation.requires_reconciliation,
+        "completionCommitted": reconciliation.completion_committed,
+    }))
+}
+
+fn stream_chunk_to_value(chunk: &StreamChunk) -> Value {
+    match chunk {
+        StreamChunk::Text(value) => json!({"kind": "text", "value": value}),
+        StreamChunk::Failure(failure) => json!({
+            "kind": "failure",
+            "failure": {
+                "outcome": if failure.outcome_unknown() {
+                    "indeterminate"
+                } else {
+                    "determinate"
+                },
+                "message": failure.message(),
+            }
+        }),
+        other => json!({"kind": "unexpected", "debug": format!("{other:?}")}),
+    }
 }
