@@ -16,9 +16,20 @@ use prompty::engine::agent_loop::{
     AgentLoopOptions, GuardrailDecision, ModelResponse, SUMMARY_PREFIX, SteeringMessage,
     ToolCall as AgentToolCall, run_agent_loop,
 };
+use prompty::harness::{
+    AdapterError, CollectingEventSink, FunctionHostToolExecutor, InMemoryCheckpointStore,
+    JsonlEventJournalWriter, ReferenceTurnRunner,
+};
 use prompty::model::Agent;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
+use prompty::model::contracts::pipeline::turn_options::TurnOptions;
+use prompty::model::contracts::pipeline::{RunTurnRequest, TurnModelRequest, TurnModelResponse};
+use prompty::model::events::host_tool_request::HostToolRequest;
+use prompty::model::events::permission_decision::PermissionDecision;
+use prompty::model::events::permission_request::PermissionRequest;
+use prompty::model::host_tool_executor::HostToolExecutor;
+use prompty::model::permission_resolver::PermissionResolver;
 use prompty::parsers::parse_chat;
 use prompty::pipeline::expand_threads;
 use prompty::streaming::reconcile_stream;
@@ -185,6 +196,17 @@ pub fn adapters() -> HashMap<String, Adapter> {
                 normalize: Some(project_normalize),
             },
         ),
+        (
+            "TurnConformance.replay".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, ctx| {
+                    let input = input.clone();
+                    let vector = ctx.vector.clone();
+                    Box::pin(replay_impl(input, vector))
+                })),
+                normalize: None,
+            },
+        ),
     ])
 }
 
@@ -197,10 +219,6 @@ pub fn waivers() -> HashMap<String, String> {
         (
             "Processor.process".to_string(),
             "No concrete provider response-processor exists in the Rust runtime yet. The `Processor` trait and pipeline `process()` dispatch are present, but `register_defaults()` registers only renderers, the parser, and tool handlers — no OpenAI/Anthropic processor is registered to extract content/tool_calls/usage from a raw provider response. Honest gap: the Rust runtime does not implement the provider response-processing layer.".to_string(),
-        ),
-        (
-            "TurnConformance.replay".to_string(),
-            "Depends on the provider wire + process layer (unimplemented in the Rust runtime), so the replay journal cannot be reproduced. Honest gap, consistent with WireConformance.toRequest and Processor.process.".to_string(),
         ),
     ])
 }
@@ -1030,6 +1048,253 @@ async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
         "toolResultOrder": tool_result_order,
         "eventKinds": event_kinds,
     }))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.replay -- reproduces a session journal via the reference runner
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::harness::ReferenceTurnRunner`
+// session runner (exercised directly by tests/harness_turn_runner.rs against the
+// same golden `replay` vectors). This adapter only scripts the per-scenario model
+// callback + host tools + permission policy, runs the runner, reads back the JSONL
+// journal it writes, and normalizes each record into the observable event strings
+// the vectors assert -- no session/journal logic lives here.
+
+/// Single-typed permission resolver so the generic `ReferenceTurnRunner` has one
+/// `P: PermissionResolver`; scenarios that deny simply flip `approved`.
+struct ReplayPermissionResolver {
+    approved: bool,
+}
+
+#[async_trait]
+impl PermissionResolver for ReplayPermissionResolver {
+    async fn request(
+        &self,
+        request: &PermissionRequest,
+    ) -> Result<PermissionDecision, AdapterError> {
+        Ok(PermissionDecision {
+            request_id: request.request_id.clone(),
+            tool_call_id: request.tool_call_id.clone(),
+            permission: request.permission.clone(),
+            approved: self.approved,
+            reason: Some(
+                if self.approved {
+                    "allow_all"
+                } else {
+                    "deny_all"
+                }
+                .to_string(),
+            ),
+            result: Value::Null,
+        })
+    }
+}
+
+fn replay_model_for_scenario(
+    name: &str,
+) -> Arc<dyn Fn(TurnModelRequest) -> Result<TurnModelResponse, AdapterError> + Send + Sync> {
+    let name = name.to_string();
+    Arc::new(move |request: TurnModelRequest| {
+        if name == "no_tool" {
+            return Ok(TurnModelResponse {
+                output: Some(json!({
+                    "text": format!("hello {}", request.inputs["name"].as_str().unwrap_or("")),
+                })),
+                checkpoint_state: json!({ "stable": true }),
+                ..Default::default()
+            });
+        }
+        if request.iteration == 0 {
+            return Ok(TurnModelResponse {
+                tool_requests: Some(vec![HostToolRequest {
+                    request_id: Some("exec-1".to_string()),
+                    tool_call_id: Some("call-1".to_string()),
+                    tool_name: if name == "tool_failure" {
+                        "fail"
+                    } else {
+                        "add"
+                    }
+                    .to_string(),
+                    arguments: json!({ "a": 2, "b": 3 }),
+                    ..Default::default()
+                }]),
+                ..Default::default()
+            });
+        }
+        Ok(TurnModelResponse {
+            output: Some(json!({
+                "toolResult": request.tool_results.as_ref().unwrap()[0].result,
+                "errorKind": request.tool_results.as_ref().unwrap()[0].error_kind,
+            })),
+            ..Default::default()
+        })
+    })
+}
+
+fn replay_normalize_journal(records: &[Value]) -> Vec<Value> {
+    records
+        .iter()
+        .map(|record| {
+            let text = if record["kind"] == "summary" {
+                let summary = &record["summary"];
+                format!(
+                    "summary:{}:{}:turns={}:checkpoints={}",
+                    summary["sessionId"].as_str().unwrap_or(""),
+                    summary["status"].as_str().unwrap_or(""),
+                    summary["turns"].as_i64().unwrap_or_default(),
+                    summary["checkpoints"].as_i64().unwrap_or_default()
+                )
+            } else if record["kind"] == "session" {
+                let event = &record["event"];
+                let event_type = event["type"].as_str().unwrap_or("");
+                if event_type == "session_end" {
+                    format!(
+                        "session:{}:{}:{}:{}",
+                        event_type,
+                        event["sessionId"].as_str().unwrap_or(""),
+                        event["turnId"].as_str().unwrap_or(""),
+                        event["payload"]["status"].as_str().unwrap_or("")
+                    )
+                } else {
+                    format!(
+                        "session:{}:{}:{}",
+                        event_type,
+                        event["sessionId"].as_str().unwrap_or(""),
+                        event["turnId"].as_str().unwrap_or("")
+                    )
+                }
+            } else {
+                let event = &record["event"];
+                let event_type = event["type"].as_str().unwrap_or("");
+                let payload = &event["payload"];
+                let iteration = event["iteration"].as_i64().unwrap_or_default();
+                match event_type {
+                    "permission_requested" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["requestId"].as_str().unwrap_or("")
+                    ),
+                    "permission_completed" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["approved"].as_bool().unwrap_or_default()
+                    ),
+                    "tool_execution_start" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["toolName"].as_str().unwrap_or("")
+                    ),
+                    "tool_execution_complete" | "tool_result" => {
+                        let mut value = format!(
+                            "turn:{event_type}:{iteration}:{}:{}",
+                            payload["toolName"].as_str().unwrap_or(""),
+                            payload["success"].as_bool().unwrap_or_default()
+                        );
+                        if let Some(error_kind) = payload["errorKind"].as_str() {
+                            value.push(':');
+                            value.push_str(error_kind);
+                        }
+                        value
+                    }
+                    "error" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["errorKind"].as_str().unwrap_or("")
+                    ),
+                    "turn_end" => format!(
+                        "turn:{event_type}:{iteration}:{}",
+                        payload["status"].as_str().unwrap_or("")
+                    ),
+                    _ => format!("turn:{event_type}:{iteration}"),
+                }
+            };
+            Value::String(text)
+        })
+        .collect()
+}
+
+async fn replay_impl(input: Value, vector: Value) -> Result<Value, VectorError> {
+    let name = vector["name"].as_str().unwrap_or_default().to_string();
+    let clock = input["clock"].as_str().unwrap_or_default().to_string();
+    let session_id = input["sessionId"].as_str().unwrap_or_default().to_string();
+    let turn_id = input["turnId"].as_str().unwrap_or_default().to_string();
+    let inputs = input.get("inputs").cloned().unwrap_or_else(|| json!({}));
+    let max_iterations = input
+        .get("maxIterations")
+        .and_then(Value::as_i64)
+        .map(|v| v as i32);
+
+    let path = std::env::temp_dir().join(format!(
+        "prompty-replay-{name}-{}.jsonl",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+
+    let mut handlers: HashMap<
+        String,
+        Arc<dyn Fn(&Value, &HostToolRequest) -> Result<Value, AdapterError> + Send + Sync>,
+    > = HashMap::new();
+    handlers.insert(
+        "add".to_string(),
+        Arc::new(
+            |args: &Value, _request: &HostToolRequest| -> Result<Value, AdapterError> {
+                Ok(json!(
+                    args["a"].as_i64().unwrap_or_default() + args["b"].as_i64().unwrap_or_default()
+                ))
+            },
+        ),
+    );
+    handlers.insert(
+        "fail".to_string(),
+        Arc::new(
+            |_args: &Value, _request: &HostToolRequest| -> Result<Value, AdapterError> {
+                Err(Box::new(std::io::Error::other("boom")))
+            },
+        ),
+    );
+
+    let id_index = Arc::new(Mutex::new(0));
+    let next_id = Arc::new(move |prefix: &str| {
+        let mut index = id_index.lock().unwrap();
+        *index += 1;
+        format!("{prefix}-{index}")
+    });
+
+    let runner = ReferenceTurnRunner::new(
+        CollectingEventSink::new(),
+        JsonlEventJournalWriter::new(&path),
+        InMemoryCheckpointStore::new(),
+        ReplayPermissionResolver {
+            approved: name != "permission_denied",
+        },
+        FunctionHostToolExecutor::new(handlers),
+        replay_model_for_scenario(&name),
+        Arc::new(move || clock.clone()),
+        next_id,
+    );
+
+    runner
+        .run(RunTurnRequest {
+            session_id,
+            turn_id,
+            inputs,
+            options: Some(TurnOptions {
+                max_iterations,
+                ..Default::default()
+            }),
+        })
+        .await
+        .map_err(|error| VectorError::new(format!("replay {name} failed: {error}")))?;
+
+    let contents = std::fs::read_to_string(&path)
+        .map_err(|error| VectorError::new(format!("replay {name} journal read failed: {error}")))?;
+    let _ = std::fs::remove_file(&path);
+    let records: Vec<Value> = contents
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| serde_json::from_str(line).unwrap_or(Value::Null))
+        .collect();
+
+    Ok(Value::Array(replay_normalize_journal(&records)))
 }
 
 // ---------------------------------------------------------------------------
