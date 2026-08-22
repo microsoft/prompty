@@ -50,6 +50,10 @@ enum VectorAdapters {
         asynchronous: { input, context in runTurnInvoke(input, context) },
         normalize: { observed, context in projectNormalize(observed, context) }
       ),
+      "Processor.processStream": VectorAdapter(
+        sync: { input, _ in try processStreamInvoke(input) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
     ]
   }
 
@@ -84,15 +88,6 @@ enum VectorAdapters {
       + "provider-level runners in `prompty/Tests/PromptyTests` "
       + "(`WireVectorTests`, `ProcessVectorTests`, `AnthropicWireVectorTests`, "
       + "`AnthropicProcessVectorTests`)."
-    let streamLayer =
-      "Streaming-failure classification is provider-specific (OpenAI SSE chunk "
-      + "typing lives in `PromptyOpenAI`); the provider-agnostic reconciliation is "
-      + "then applied on top. Both the classifier and the reconciler are exercised "
-      + "against the generated `processStream` vectors by the provider-level runner "
-      + "`ProcessStreamVectorTests` in `prompty/Tests/PromptyTests`. Unreachable from "
-      + "this model-only harness (importing `PromptyOpenAI` here would be a circular "
-      + "package dependency), so it records the same package-layering boundary as "
-      + "`WireConformance.toRequest`/`Processor.process`."
     let replayLayer =
       "The async replay-journal runner lives in the `Prompty` SDK package and is "
       + "driven against the generated `replay` vectors by `ReplayVectorTests` in "
@@ -104,7 +99,6 @@ enum VectorAdapters {
       "Parser.parse": sdkPipeline,
       "WireConformance.toRequest": providerLayer,
       "Processor.process": providerLayer,
-      "Processor.processStream": streamLayer,
       "TurnConformance.replay": replayLayer,
     ]
   }
@@ -137,6 +131,67 @@ enum VectorAdapters {
 
   static func projectNormalize(_ observed: Any?, _ context: VectorContext) -> Any? {
     project(observed, context.vector["expected"])
+  }
+
+  // MARK: - Processor.processStream
+
+  /// Classify a vector's raw provider stream events into ``StreamChunk`` values
+  /// and reconcile them with the provider-agnostic ``reconcileStream(_:)`` in
+  /// `PromptyModel`. The vectors carry raw SSE JSON (a `provider` chunk with
+  /// `value.choices[].delta`, or a `transportError`), so the classification is
+  /// pure JSON-shape logic — no provider SDK is required, matching the Python,
+  /// Rust, TypeScript, Go and Java reference runtimes.
+  static func processStreamInvoke(_ input: Any?) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    let events = object["events"] as? [[String: Any]] ?? []
+    let chunks = try classifyStreamEvents(events)
+    let reconciliation = reconcileStream(chunks)
+
+    var savedChunks: [[String: Any]] = []
+    for chunk in chunks {
+      savedChunks.append(try chunk.save())
+    }
+    return [
+      "chunks": savedChunks,
+      "partialText": reconciliation.partialText,
+      "requiresReconciliation": reconciliation.requiresReconciliation,
+      "completionCommitted": reconciliation.completionCommitted,
+    ]
+  }
+
+  static func classifyStreamEvents(_ events: [[String: Any]]) throws -> [StreamChunk] {
+    var chunks: [StreamChunk] = []
+    for event in events {
+      let kind = event["kind"] as? String
+      switch kind {
+      case "provider":
+        guard let value = event["value"] as? [String: Any],
+          let choices = value["choices"] as? [[String: Any]],
+          let first = choices.first,
+          let delta = first["delta"] as? [String: Any]
+        else {
+          continue
+        }
+        if let content = delta["content"] as? String {
+          chunks.append(.textChunk(TextChunk(value: content)))
+        }
+        if let refusal = delta["refusal"] as? String {
+          chunks.append(
+            .failureChunk(
+              FailureChunk(
+                failure: StreamFailure(outcome: .determinate, message: "Model refused: \(refusal)"))
+            ))
+        }
+      case "transportError":
+        let message = event["message"] as? String ?? ""
+        chunks.append(
+          .failureChunk(
+            FailureChunk(failure: StreamFailure(outcome: .indeterminate, message: message))))
+      default:
+        throw VectorError("unsupported stream event kind: \(kind ?? "nil")")
+      }
+    }
+    return chunks
   }
 
   // MARK: - TurnConformance.run
