@@ -73,6 +73,61 @@ public class WireFormatTests
         Assert.IsType<UserChatMessage>(result);
     }
 
+    // -----------------------------------------------------------------------
+    // Audio content parts (§7.1.2) — AudioPart.Source carries base64 audio;
+    // the typed SDK base64-decodes it into bytes, then re-emits it to the wire.
+    // -----------------------------------------------------------------------
+
+    private static JsonElement SerializeWire(ChatMessage message)
+    {
+        var bytes = System.ClientModel.Primitives.ModelReaderWriter.Write(
+            message, System.ClientModel.Primitives.ModelReaderWriterOptions.Json);
+        return JsonDocument.Parse(bytes.ToString()).RootElement;
+    }
+
+    private static JsonElement FirstInputAudio(JsonElement wire)
+    {
+        var part = wire.GetProperty("content").EnumerateArray()
+            .First(p => p.GetProperty("type").GetString() == "input_audio");
+        return part.GetProperty("input_audio");
+    }
+
+    [Fact]
+    public void AudioPart_ValidBase64_MapsToInputAudio()
+    {
+        var audio = Convert.ToBase64String([1, 2, 3, 4]);
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts = [new AudioPart { Source = audio, MediaType = "audio/wav" }],
+        };
+
+        var wire = SerializeWire(WireFormat.MessageToWire(msg));
+        var inputAudio = FirstInputAudio(wire);
+
+        // The base64 payload round-trips byte-for-byte through the typed SDK.
+        Assert.Equal(audio, inputAudio.GetProperty("data").GetString());
+        Assert.Equal("wav", inputAudio.GetProperty("format").GetString());
+    }
+
+    [Fact]
+    public void AudioPart_Mpeg_MapsToMp3Format()
+    {
+        var audio = Convert.ToBase64String([9, 8, 7, 6, 5]);
+        var msg = new Message
+        {
+            Role = Role.User,
+            Parts = [new AudioPart { Source = audio, MediaType = "audio/mpeg" }],
+        };
+
+        var wire = SerializeWire(WireFormat.MessageToWire(msg));
+        var inputAudio = FirstInputAudio(wire);
+
+        Assert.Equal(audio, inputAudio.GetProperty("data").GetString());
+        // audio/mpeg MUST map to 'mp3', not 'mpeg'.
+        Assert.Equal("mp3", inputAudio.GetProperty("format").GetString());
+    }
+
     [Fact]
     public void MessageToWire_AssistantMessage_ReturnsAssistantChatMessage()
     {

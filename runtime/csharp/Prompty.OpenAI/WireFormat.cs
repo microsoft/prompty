@@ -64,6 +64,11 @@ public static class WireFormat
                             _ => ChatImageDetailLevel.Auto,
                         });
                     break;
+                case AudioPart a:
+                    yield return ChatMessageContentPart.CreateInputAudioPart(
+                        BinaryData.FromBytes(Convert.FromBase64String(a.Source)),
+                        AudioFormatFromMediaType(a.MediaType));
+                    break;
             }
         }
     }
@@ -84,6 +89,16 @@ public static class WireFormat
 
         return assistant;
     }
+
+    /// <summary>
+    /// Map an audio MIME type to the OpenAI chat input-audio format. Notably
+    /// <c>audio/mpeg</c> maps to <c>mp3</c> (not <c>mpeg</c>), per spec §7.1.2.
+    /// </summary>
+    private static ChatInputAudioFormat AudioFormatFromMediaType(string? mediaType) => mediaType switch
+    {
+        "audio/mpeg" or "audio/mp3" => ChatInputAudioFormat.Mp3,
+        _ => ChatInputAudioFormat.Wav,
+    };
 
     /// <summary>
     /// Convert Prompty tools to OpenAI ChatTool definitions.
