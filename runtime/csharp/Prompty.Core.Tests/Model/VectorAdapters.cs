@@ -74,6 +74,7 @@ public static class VectorAdapters
         ["TurnConformance.run"] = new(RunInvoke, RunNormalize),
         ["TurnConformance.runTurn"] = new(RunTurnInvoke, ProjectNormalize),
         ["TurnConformance.replay"] = new(ReplayInvoke),
+        ["Processor.processStream"] = new(ProcessStreamInvoke, ProjectNormalize),
     };
 
     public static IDictionary<string, string> Waivers() => new Dictionary<string, string>
@@ -89,15 +90,6 @@ public static class VectorAdapters
             "(SDK-typed response parsers), not referenced by the Prompty.Core conformance harness. " +
             "The same process vectors are driven against the real providers by the provider-level " +
             "SpecVectorProcessTests in Prompty.OpenAI.Tests.",
-        ["Processor.processStream"] =
-            "The processStream vectors assert streaming-failure classification + reconciliation " +
-            "(determinate vs indeterminate failure, preserved partial text, requiresReconciliation, " +
-            "completionCommitted). Streaming-wire classification is provider-specific and lives in the " +
-            "Prompty.OpenAI/Prompty.Anthropic provider assemblies, which the Prompty.Core conformance " +
-            "harness does not reference. The provider-agnostic reconciler (Prompty.Core.StreamReconciliation) " +
-            "IS exercised here, and the full processStream vectors are driven against the real provider " +
-            "classifier by the provider-level SpecVectorStreamTests in Prompty.OpenAI.Tests. Legitimate " +
-            "package-layering pointer, not a contract gap.",
     };
 
     public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();
@@ -918,6 +910,91 @@ public static class VectorAdapters
 
         public string Dispatch(AgentToolCall call) =>
             _results.TryGetValue(call.Id, out var result) ? result : string.Empty;
+    }
+
+    // -----------------------------------------------------------------------
+    // Processor.processStream — provider-agnostic stream classification + reconciliation
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Classify a vector's raw provider stream events into canonical <see cref="StreamChunk"/>
+    /// items, then reconcile them via the provider-agnostic <see cref="StreamReconciliation"/> in
+    /// Prompty.Core. The vectors carry raw SSE JSON (a <c>provider</c> chunk with
+    /// <c>value.choices[].delta</c>, or a <c>transportError</c>), so no provider SDK assembly is
+    /// required — the same classification the OpenAI processor performs is pure JSON shape logic.
+    /// </summary>
+    private static JsonNode? ProcessStreamInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        _ = ctx;
+        var input = inputNode as JsonObject ?? new JsonObject();
+        var chunks = ClassifyStreamEvents(input["events"] as JsonArray ?? new JsonArray());
+        var reconciliation = StreamReconciliation.Reconcile(chunks);
+
+        var savedChunks = new List<object?>();
+        foreach (var chunk in chunks)
+            savedChunks.Add(chunk.Save());
+
+        var result = new Dictionary<string, object?>
+        {
+            ["chunks"] = savedChunks,
+            ["partialText"] = reconciliation.PartialText,
+            ["requiresReconciliation"] = reconciliation.RequiresReconciliation,
+            ["completionCommitted"] = reconciliation.CompletionCommitted,
+        };
+        return ToJsonNode(result);
+    }
+
+    private static List<StreamChunk> ClassifyStreamEvents(JsonArray events)
+    {
+        var chunks = new List<StreamChunk>();
+        foreach (var raw in events)
+        {
+            if (raw is not JsonObject evt)
+                continue;
+            var kind = (evt["kind"] as JsonValue)?.GetValue<string>();
+            if (kind == "provider")
+            {
+                if (evt["value"] is not JsonObject value
+                    || value["choices"] is not JsonArray choices
+                    || choices.Count == 0
+                    || choices[0] is not JsonObject choice
+                    || choice["delta"] is not JsonObject delta)
+                {
+                    continue;
+                }
+
+                if (delta["content"] is JsonValue content && content.TryGetValue<string>(out var text))
+                    chunks.Add(new TextChunk { Value = text });
+
+                if (delta["refusal"] is JsonValue refusal && refusal.TryGetValue<string>(out var reason))
+                {
+                    chunks.Add(new FailureChunk
+                    {
+                        Failure = new StreamFailure
+                        {
+                            Outcome = StreamFailureOutcome.Determinate,
+                            Message = $"Model refused: {reason}",
+                        },
+                    });
+                }
+            }
+            else if (kind == "transportError")
+            {
+                chunks.Add(new FailureChunk
+                {
+                    Failure = new StreamFailure
+                    {
+                        Outcome = StreamFailureOutcome.Indeterminate,
+                        Message = (evt["message"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                    },
+                });
+            }
+            else
+            {
+                throw new InvalidOperationException($"unsupported stream event kind: {kind}");
+            }
+        }
+        return chunks;
     }
 
     // -----------------------------------------------------------------------
