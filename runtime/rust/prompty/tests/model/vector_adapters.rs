@@ -30,9 +30,11 @@ use prompty::model::events::permission_decision::PermissionDecision;
 use prompty::model::events::permission_request::PermissionRequest;
 use prompty::model::host_tool_executor::HostToolExecutor;
 use prompty::model::permission_resolver::PermissionResolver;
+use prompty::model::{Property, PropertyKind, ToolKind};
 use prompty::parsers::parse_chat;
 use prompty::pipeline::expand_threads;
 use prompty::streaming::reconcile_stream;
+use prompty::types::ContentPart;
 use prompty::types::StreamChunk;
 use prompty::{
     AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ContextPortability,
@@ -197,6 +199,20 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
+            "WireConformance.toRequest".to_string(),
+            Adapter {
+                invoke: Invoke::Sync(wire_to_request_adapter),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "Processor.process".to_string(),
+            Adapter {
+                invoke: Invoke::Sync(process_adapter),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
             "TurnConformance.replay".to_string(),
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, ctx| {
@@ -211,16 +227,7 @@ pub fn adapters() -> HashMap<String, Adapter> {
 }
 
 pub fn waivers() -> HashMap<String, String> {
-    HashMap::from([
-        (
-            "WireConformance.toRequest".to_string(),
-            "No concrete provider request-builder exists in the Rust runtime yet. The generated `WireConformance` trait (src/model/wire_conformance.rs) and the Anthropic wire structs (src/model/wire/) are present, but there is no OpenAI/Anthropic executor that maps a canonical agent + messages into a provider request body (no `_build_chat_args`/`_message_to_wire` equivalent). Wiring this would require reimplementing that provider logic inside the adapter, which is disallowed. Honest gap: the Rust runtime does not implement the provider wire layer.".to_string(),
-        ),
-        (
-            "Processor.process".to_string(),
-            "No concrete provider response-processor exists in the Rust runtime yet. The `Processor` trait and pipeline `process()` dispatch are present, but `register_defaults()` registers only renderers, the parser, and tool handlers — no OpenAI/Anthropic processor is registered to extract content/tool_calls/usage from a raw provider response. Honest gap: the Rust runtime does not implement the provider response-processing layer.".to_string(),
-        ),
-    ])
+    HashMap::new()
 }
 
 pub fn doubles() -> HashMap<String, Value> {
@@ -753,6 +760,276 @@ fn parse_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
 
     let canonical: Vec<Value> = messages.iter().map(message_to_canonical).collect();
     Ok(serde_json::json!({ "messages": canonical }))
+}
+
+// ---------------------------------------------------------------------------
+// WireConformance.toRequest / Processor.process -- drive the real provider
+// wire/process layers in `prompty-openai` and `prompty-anthropic`.
+// ---------------------------------------------------------------------------
+//
+// The provider request-builders and response-processors are owned by the
+// `prompty-openai` and `prompty-anthropic` crates, each with its own passing
+// vector suite. These adapters only translate a vector `input` into the
+// canonical `Agent` + `Message` values those crates expect, dispatch to the
+// matching public function, and wrap the result in the shape the vectors
+// assert -- no provider request/response logic is reimplemented here.
+
+/// Build a `Message` list from a wire vector's `messages` field.
+fn build_wire_messages(input: &Value) -> Vec<Message> {
+    let Some(msgs) = input.get("messages").and_then(|v| v.as_array()) else {
+        return Vec::new();
+    };
+    msgs.iter()
+        .map(|m| {
+            let role = m
+                .get("role")
+                .and_then(|v| v.as_str())
+                .and_then(Role::from_str_opt)
+                .unwrap_or(Role::User);
+            let parts: Vec<ContentPart> = m
+                .get("content")
+                .and_then(|v| v.as_array())
+                .map(|content| {
+                    content
+                        .iter()
+                        .filter_map(|p| {
+                            let kind = p.get("kind").and_then(|v| v.as_str())?;
+                            let value = p.get("value").and_then(|v| v.as_str()).unwrap_or("");
+                            let media = p
+                                .get("mediaType")
+                                .and_then(|v| v.as_str())
+                                .map(String::from);
+                            Some(match kind {
+                                "image" => ContentPart::image(value, None, media),
+                                "audio" => ContentPart::audio(value, media),
+                                _ => ContentPart::text(value),
+                            })
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Message {
+                role,
+                parts,
+                ..Default::default()
+            }
+        })
+        .collect()
+}
+
+/// Build a canonical `Agent` from a wire vector's `input` fields. Mirrors the
+/// provider crates' own vector harnesses: OpenAI tool schemas need synthetic
+/// `items` injected for unspecified array properties before load (and cleared
+/// afterwards); Anthropic does not.
+fn build_wire_agent(input: &Value) -> Agent {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let model_id =
+        input
+            .get("model_id")
+            .and_then(|v| v.as_str())
+            .unwrap_or(if provider == "anthropic" {
+                "claude-3"
+            } else {
+                "gpt-4"
+            });
+    let api_type = input
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat");
+
+    let mut data = json!({
+        "name": "test",
+        "kind": "prompt",
+        "model": { "id": model_id, "apiType": api_type, "provider": provider },
+        "instructions": "test",
+    });
+
+    if let Some(options) = input.get("options") {
+        if options.as_object().is_some_and(|o| !o.is_empty()) {
+            data["model"]["options"] = options.clone();
+        }
+    }
+
+    let is_openai = provider == "openai";
+
+    if let Some(tools) = input.get("tools") {
+        if tools.as_array().is_some_and(|t| !t.is_empty()) {
+            let mut tools = tools.clone();
+            if is_openai {
+                normalize_array_items(&mut tools);
+            }
+            data["tools"] = tools;
+        }
+    }
+
+    if let Some(outputs) = input.get("outputs") {
+        if outputs.as_array().is_some_and(|o| !o.is_empty()) {
+            data["outputs"] = outputs.clone();
+        }
+    }
+
+    let mut agent = Agent::load_from_value(&data, &LoadContext::default());
+    if is_openai {
+        clear_synthetic_array_items(&mut agent);
+    }
+    agent
+}
+
+/// Build a canonical `Agent` for a process vector. Process vectors carry only
+/// `provider` and `has_outputs`; the response drives everything else.
+fn build_process_agent(input: &Value) -> Agent {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let has_outputs = input
+        .get("has_outputs")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    let model_id = if provider == "anthropic" {
+        "claude-3"
+    } else {
+        "gpt-4"
+    };
+
+    let mut data = json!({
+        "name": "test",
+        "kind": "prompt",
+        "model": { "id": model_id, "provider": provider },
+        "instructions": "test",
+    });
+
+    if has_outputs {
+        data["outputs"] = json!([{ "name": "result", "kind": "string" }]);
+    }
+
+    Agent::load_from_value(&data, &LoadContext::default())
+}
+
+fn normalize_array_items(value: &mut Value) {
+    match value {
+        Value::Object(map) => {
+            if map.get("kind").and_then(Value::as_str) == Some("array")
+                && !map.contains_key("items")
+            {
+                map.insert(
+                    "items".to_string(),
+                    json!({ "kind": "__prompty_unspecified_array_item" }),
+                );
+            }
+            for child in map.values_mut() {
+                normalize_array_items(child);
+            }
+        }
+        Value::Array(values) => {
+            for child in values {
+                normalize_array_items(child);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn clear_synthetic_array_items(agent: &mut Agent) {
+    for tool in agent.tools.iter_mut().flatten() {
+        if let ToolKind::Function { parameters, .. } = &mut tool.kind {
+            for property in parameters {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+    }
+}
+
+fn clear_property_synthetic_array_items(property: &mut Property) {
+    match &mut property.kind {
+        PropertyKind::Array { items }
+            if items.get("kind").and_then(Value::as_str)
+                == Some("__prompty_unspecified_array_item") =>
+        {
+            *items = Value::Null;
+        }
+        PropertyKind::Array { items } => normalize_loaded_property_value(items),
+        PropertyKind::Object { properties } => {
+            for property in properties {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Union { one_of, any_of } => {
+            for property in one_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+            for property in any_of.iter_mut().flatten() {
+                clear_property_synthetic_array_items(property);
+            }
+        }
+        PropertyKind::Custom { .. } => {}
+    }
+}
+
+fn normalize_loaded_property_value(value: &mut Value) {
+    if value.get("kind").and_then(Value::as_str) == Some("__prompty_unspecified_array_item") {
+        *value = Value::Null;
+    }
+}
+
+/// WireConformance.toRequest -- build a provider request body from a canonical
+/// agent + messages through the real provider wire layer.
+fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let api_type = input
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat");
+    let agent = build_wire_agent(input);
+    let messages = build_wire_messages(input);
+
+    let request_body = match provider {
+        "anthropic" => prompty_anthropic::wire::build_chat_args(&agent, &messages)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        "openai" => match api_type {
+            "chat" | "agent" => prompty_openai::wire::build_chat_args(&agent, &messages)
+                .map_err(|e| VectorError::new(e.to_string()))?,
+            "responses" => prompty_openai::wire::build_responses_args(&agent, &messages)
+                .map_err(|e| VectorError::new(e.to_string()))?,
+            "embedding" => prompty_openai::wire::build_embedding_args(&agent, &messages),
+            "image" => prompty_openai::wire::build_image_args(&agent, &messages),
+            other => {
+                return Err(VectorError::new(format!(
+                    "unsupported openai apiType: {other}"
+                )));
+            }
+        },
+        other => return Err(VectorError::new(format!("unsupported provider: {other}"))),
+    };
+
+    Ok(json!({ "request_body": request_body }))
+}
+
+/// Processor.process -- extract the canonical result from a raw provider
+/// response through the real provider process layer.
+fn process_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let provider = input
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .unwrap_or("openai");
+    let agent = build_process_agent(input);
+    let response = input.get("response").cloned().unwrap_or(Value::Null);
+
+    let result = match provider {
+        "anthropic" => prompty_anthropic::process_response(&agent, &response)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        "openai" => prompty_openai::process_response(&agent, &response)
+            .map_err(|e| VectorError::new(e.to_string()))?,
+        other => return Err(VectorError::new(format!("unsupported provider: {other}"))),
+    };
+
+    Ok(json!({ "result": result }))
 }
 
 // ---------------------------------------------------------------------------
