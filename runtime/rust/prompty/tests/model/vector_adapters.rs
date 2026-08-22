@@ -1,16 +1,30 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 
+use async_trait::async_trait;
 use prompty::model::Agent;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
 use prompty::parsers::parse_chat;
 use prompty::pipeline::expand_threads;
-use prompty::{Message, load, validate_inputs};
+use prompty::{
+    AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ContextPortability,
+    DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
+    EngineEvent, EnginePermissionDecision, EngineToolRequest, EngineToolResult, IdGenerator,
+    InvocationContextState, Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
+    ModelStreamPort, NoopHostPolicyPort, NoopModelStreamPort, NoopRetryPolicyPort, PermissionPort,
+    PortError, PostCommitPort, Role, ToolOutcome, ToolPort, TurnCommit, TurnEngine,
+    TurnEngineEffects, TurnEngineRequest, load, validate_inputs,
+};
 use regex::Regex;
+use serde::Deserialize;
 use serde_json::Value;
 
 /// Serializes env-var mutation across parallel `#[tokio::test]` load vectors.
@@ -131,6 +145,16 @@ pub fn adapters() -> HashMap<String, Adapter> {
                 normalize: None,
             },
         ),
+        (
+            "TurnConformance.runTurn".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, _ctx| {
+                    let input = input.clone();
+                    Box::pin(run_turn_impl(input))
+                })),
+                normalize: Some(project_normalize),
+            },
+        ),
     ])
 }
 
@@ -151,10 +175,6 @@ pub fn waivers() -> HashMap<String, String> {
         (
             "TurnConformance.run".to_string(),
             "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas) not yet matched by the runtime. Same honest gap as the Python reference.".to_string(),
-        ),
-        (
-            "TurnConformance.runTurn".to_string(),
-            "Requires the not-yet-implemented snapshot/portability turn engine. Same gap as the Python reference.".to_string(),
         ),
         (
             "Processor.processStream".to_string(),
@@ -693,4 +713,299 @@ fn parse_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
 
     let canonical: Vec<Value> = messages.iter().map(message_to_canonical).collect();
     Ok(serde_json::json!({ "messages": canonical }))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.runTurn -- drives the canonical snapshot/portability engine
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::engine::TurnEngine` (the same
+// engine exercised directly by `tests/turn_engine.rs`). This adapter only
+// translates a `runTurn` vector into the engine's scripted ports, runs the
+// engine, and projects its `TurnEngineResult` into the observable JSON the
+// vectors assert -- no turn logic is reimplemented here.
+
+#[derive(Debug, Deserialize)]
+struct RtVectorMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RtModelResponse {
+    output: Option<Value>,
+    assistant: Option<String>,
+    #[serde(default)]
+    tools: Vec<EngineToolRequest>,
+    next_portability: Option<ContextPortability>,
+    delegated_state: Option<Vec<DelegatedStateReference>>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RtVector {
+    #[serde(default)]
+    name: String,
+    #[serde(default)]
+    cancel_before_run: bool,
+    messages: Vec<RtVectorMessage>,
+    model: Vec<RtModelResponse>,
+    #[serde(default)]
+    tool_outputs: HashMap<String, String>,
+    #[serde(default)]
+    deny_tools: HashSet<String>,
+}
+
+struct RtScriptedModel {
+    responses: Mutex<VecDeque<ModelInvocationResponse>>,
+}
+
+#[async_trait]
+impl ModelPort for RtScriptedModel {
+    async fn invoke(
+        &self,
+        _request: &ModelInvocationRequest,
+        _cancellation: &CancellationToken,
+        _stream: &dyn ModelStreamPort,
+    ) -> Result<ModelInvocationResponse, PortError> {
+        self.responses
+            .lock()
+            .unwrap()
+            .pop_front()
+            .ok_or_else(|| PortError::new("scripted model response exhausted"))
+    }
+}
+
+struct RtPermissions {
+    denied: HashSet<String>,
+}
+
+#[async_trait]
+impl PermissionPort for RtPermissions {
+    async fn authorize(
+        &self,
+        request: &EngineToolRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<EnginePermissionDecision, PortError> {
+        let approved = !self.denied.contains(&request.name);
+        Ok(EnginePermissionDecision {
+            approved,
+            reason: (!approved).then(|| "denied by vector".to_string()),
+            metadata: Value::Null,
+        })
+    }
+}
+
+struct RtTools {
+    outputs: HashMap<String, String>,
+}
+
+#[async_trait]
+impl ToolPort for RtTools {
+    async fn execute(
+        &self,
+        request: &EngineToolRequest,
+        _cancellation: &CancellationToken,
+    ) -> Result<EngineToolResult, PortError> {
+        Ok(EngineToolResult {
+            request_id: request.id.clone(),
+            name: request.name.clone(),
+            outcome: ToolOutcome::Success,
+            output: Some(Value::String(
+                self.outputs.get(&request.id).cloned().unwrap_or_else(|| {
+                    request.arguments.clone().unwrap_or(Value::Null).to_string()
+                }),
+            )),
+            error_kind: None,
+            metadata: Value::Null,
+        })
+    }
+}
+
+#[derive(Default)]
+struct RtEvents(Mutex<Vec<EngineEvent>>);
+
+struct RtDurability {
+    events: Arc<RtEvents>,
+}
+
+#[async_trait]
+impl DurabilityPort for RtDurability {
+    async fn append(&self, event: &EngineEvent) -> Result<(), PortError> {
+        self.events.0.lock().unwrap().push(event.clone());
+        Ok(())
+    }
+
+    async fn append_with_checkpoint(
+        &self,
+        events: &[EngineEvent],
+        _checkpoint: &EngineCheckpoint,
+    ) -> Result<(), PortError> {
+        self.events.0.lock().unwrap().extend_from_slice(events);
+        Ok(())
+    }
+}
+
+#[derive(Default)]
+struct RtPostCommit(Mutex<Vec<TurnCommit>>);
+
+#[async_trait]
+impl PostCommitPort for RtPostCommit {
+    async fn after_commit(
+        &self,
+        _effect_id: &str,
+        commit: &TurnCommit,
+        _cancellation: &CancellationToken,
+    ) -> Result<(), PortError> {
+        self.0.lock().unwrap().push(commit.clone());
+        Ok(())
+    }
+}
+
+struct RtClock;
+
+impl Clock for RtClock {
+    fn now(&self) -> String {
+        "2026-07-21T00:00:00Z".to_string()
+    }
+}
+
+#[derive(Default)]
+struct RtIds(AtomicU64);
+
+impl IdGenerator for RtIds {
+    fn next_id(&self, kind: &str) -> String {
+        format!("{kind}-{}", self.0.fetch_add(1, Ordering::Relaxed) + 1)
+    }
+}
+
+fn rt_to_message(message: &RtVectorMessage) -> Message {
+    let role = match message.role.as_str() {
+        "system" => Role::System,
+        "assistant" => Role::Assistant,
+        "tool" => Role::Tool,
+        _ => Role::User,
+    };
+    Message::with_text(role, message.content.clone())
+}
+
+fn rt_to_response(response: &RtModelResponse) -> ModelInvocationResponse {
+    let next_context_state = match (response.next_portability, &response.delegated_state) {
+        (None, None) => None,
+        (portability, delegated) => Some(InvocationContextState {
+            portability: portability.unwrap_or(ContextPortability::Portable),
+            delegated_state: Some(delegated.clone().unwrap_or_default()),
+        }),
+    };
+    ModelInvocationResponse {
+        output: response.output.clone(),
+        usage: None,
+        assistant_messages: Some(
+            response
+                .assistant
+                .iter()
+                .map(|text| Message::with_text(Role::Assistant, text.clone()))
+                .collect(),
+        ),
+        tool_requests: Some(response.tools.clone()),
+        next_context_state,
+        metadata: Value::Null,
+    }
+}
+
+async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
+    let vector: RtVector = serde_json::from_value(input)
+        .map_err(|error| VectorError::new(format!("invalid runTurn vector input: {error}")))?;
+
+    let model = Arc::new(RtScriptedModel {
+        responses: Mutex::new(vector.model.iter().map(rt_to_response).collect()),
+    });
+    let events = Arc::new(RtEvents::default());
+    let post_commit = Arc::new(RtPostCommit::default());
+    let engine = TurnEngine::new(
+        ContextPipeline::new(Arc::new(AppendContextPackingStrategy)),
+        TurnEngineEffects {
+            model,
+            stream: Arc::new(NoopModelStreamPort),
+            policy: Arc::new(NoopHostPolicyPort),
+            retry: Arc::new(NoopRetryPolicyPort),
+            conversation: Arc::new(DefaultConversationPort),
+            permission: Arc::new(RtPermissions {
+                denied: vector.deny_tools.clone(),
+            }),
+            tools: Arc::new(RtTools {
+                outputs: vector.tool_outputs.clone(),
+            }),
+            durability: Arc::new(RtDurability {
+                events: events.clone(),
+            }),
+            post_commit: post_commit.clone(),
+            clock: Arc::new(RtClock),
+            ids: Arc::new(RtIds::default()),
+        },
+    );
+
+    let cancellation = CancellationToken::new();
+    if vector.cancel_before_run {
+        cancellation.cancel();
+    }
+
+    let result = engine
+        .run(
+            TurnEngineRequest::new(
+                format!("session-{}", vector.name),
+                format!("turn-{}", vector.name),
+                vector.messages.iter().map(rt_to_message).collect(),
+            ),
+            cancellation,
+        )
+        .await
+        .map_err(|error| VectorError::new(format!("{} failed: {error}", vector.name)))?;
+
+    let snapshot_portability: Vec<Value> = result
+        .snapshots
+        .iter()
+        .map(|snapshot| {
+            serde_json::to_value(snapshot.context_state.portability).unwrap_or(Value::Null)
+        })
+        .collect();
+    let snapshot_stable_prefixes: Vec<Value> = result
+        .snapshots
+        .iter()
+        .map(|snapshot| Value::from(snapshot.stable_prefix_messages))
+        .collect();
+    let tool_result_order: Vec<Value> = result
+        .tool_results
+        .iter()
+        .map(|entry| Value::String(entry.request_id.clone()))
+        .collect();
+    let delegated_state = result
+        .commit
+        .context_state
+        .delegated_state
+        .as_ref()
+        .map_or(0, |state| state.len());
+    let event_kinds: Vec<Value> = events
+        .0
+        .lock()
+        .unwrap()
+        .iter()
+        .map(|event| Value::String(event.kind.to_string()))
+        .collect();
+
+    Ok(serde_json::json!({
+        "status": serde_json::to_value(result.commit.status).unwrap_or(Value::Null),
+        "output": result.commit.output.clone(),
+        "iterations": result.commit.iterations,
+        "snapshots": result.snapshots.len(),
+        "snapshotPortability": snapshot_portability,
+        "snapshotStablePrefixes": snapshot_stable_prefixes,
+        "commitPortability": serde_json::to_value(result.commit.context_state.portability)
+            .unwrap_or(Value::Null),
+        "delegatedState": delegated_state,
+        "toolResults": result.tool_results.len(),
+        "toolResultOrder": tool_result_order,
+        "eventKinds": event_kinds,
+    }))
 }
