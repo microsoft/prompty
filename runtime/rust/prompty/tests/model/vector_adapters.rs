@@ -11,6 +11,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use async_trait::async_trait;
+use futures::StreamExt;
 use prompty::engine::agent_loop::{
     AgentLoopOptions, GuardrailDecision, ModelResponse, SUMMARY_PREFIX, SteeringMessage,
     ToolCall as AgentToolCall, run_agent_loop,
@@ -20,6 +21,8 @@ use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
 use prompty::parsers::parse_chat;
 use prompty::pipeline::expand_threads;
+use prompty::streaming::reconcile_stream;
+use prompty::types::StreamChunk;
 use prompty::{
     AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ContextPortability,
     DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
@@ -172,6 +175,16 @@ pub fn adapters() -> HashMap<String, Adapter> {
                 normalize: Some(run_normalize),
             },
         ),
+        (
+            "Processor.processStream".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, _ctx| {
+                    let input = input.clone();
+                    Box::pin(process_stream_impl(input))
+                })),
+                normalize: Some(project_normalize),
+            },
+        ),
     ])
 }
 
@@ -188,10 +201,6 @@ pub fn waivers() -> HashMap<String, String> {
         (
             "TurnConformance.replay".to_string(),
             "Depends on the provider wire + process layer (unimplemented in the Rust runtime), so the replay journal cannot be reproduced. Honest gap, consistent with WireConformance.toRequest and Processor.process.".to_string(),
-        ),
-        (
-            "Processor.processStream".to_string(),
-            "The processStream vectors assert streaming-failure classification + reconciliation (determinate vs indeterminate failure, preserved partial text, requiresReconciliation, completionCommitted). The classification lives in the `prompty-openai` provider crate and the reconciliation lives in the `prompty` pipeline (`src/pipeline/live_turn.rs`) — neither is registered by the core model harness (`register_defaults()` wires no provider stream processor). It is driven against the same generated `vectors.json` by the dedicated runners `prompty-openai/tests/stream_failure_vectors.rs` (chunk classification) and the `live_turn.rs` streaming tests (reconciliation). Provider/pipeline-layer behavior, not a pure model-layer op.".to_string(),
         ),
     ])
 }
@@ -1377,4 +1386,77 @@ fn run_normalize(observed: &Value, ctx: &Context) -> Value {
         }
     }
     Value::Object(projected)
+}
+
+// ---------------------------------------------------------------------------
+// Processor.processStream -- classifies provider SSE chunks, then reconciles
+// ---------------------------------------------------------------------------
+//
+// Classification is owned by the real provider crate
+// (`prompty_openai::processor::process_stream`, a dev-dependency edge) and the
+// reconciliation is owned by the provider-agnostic `prompty::streaming::
+// reconcile_stream` engine (mirrors the verified Python `core/streaming.py`).
+// This adapter only converts the vector's `events` into provider wire chunks,
+// drives them through the classifier, shapes the classified chunks, and asks the
+// reconciler for partialText/requiresReconciliation/completionCommitted.
+
+async fn process_stream_impl(input: Value) -> Result<Value, VectorError> {
+    let events = input
+        .get("events")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let mut provider_chunks = Vec::with_capacity(events.len());
+    for event in &events {
+        match event.get("kind").and_then(Value::as_str) {
+            Some("provider") => {
+                provider_chunks.push(event.get("value").cloned().unwrap_or(Value::Null))
+            }
+            Some("transportError") => provider_chunks.push(json!({
+                "error": {
+                    "type": "sse_transport_error",
+                    "message": event.get("message").cloned().unwrap_or(Value::Null),
+                }
+            })),
+            kind => {
+                return Err(VectorError::new(format!(
+                    "Unsupported stream vector event kind: {kind:?}"
+                )));
+            }
+        }
+    }
+
+    let classified: Vec<StreamChunk> =
+        prompty_openai::processor::process_stream(futures::stream::iter(provider_chunks))
+            .collect()
+            .await;
+
+    let chunks: Vec<Value> = classified.iter().map(stream_chunk_to_value).collect();
+    let reconciliation = reconcile_stream(classified.iter());
+
+    Ok(json!({
+        "chunks": chunks,
+        "partialText": reconciliation.partial_text,
+        "requiresReconciliation": reconciliation.requires_reconciliation,
+        "completionCommitted": reconciliation.completion_committed,
+    }))
+}
+
+fn stream_chunk_to_value(chunk: &StreamChunk) -> Value {
+    match chunk {
+        StreamChunk::Text(value) => json!({"kind": "text", "value": value}),
+        StreamChunk::Failure(failure) => json!({
+            "kind": "failure",
+            "failure": {
+                "outcome": if failure.outcome_unknown() {
+                    "indeterminate"
+                } else {
+                    "determinate"
+                },
+                "message": failure.message(),
+            }
+        }),
+        other => json!({"kind": "unexpected", "debug": format!("{other:?}")}),
+    }
 }

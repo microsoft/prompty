@@ -56,6 +56,7 @@ pub mod prelude;
 pub mod registry;
 pub mod renderers;
 pub mod steering;
+pub mod streaming;
 pub mod structured;
 pub mod tool_dispatch;
 pub mod tracing;
