@@ -41,3 +41,9 @@ otel = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-stdout"]
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
 serial_test = "3"
+# Dev-only cycle (allowed by Cargo): the model conformance harness drives the
+# `Processor.processStream` vectors through the real OpenAI stream classifier
+# (`prompty_openai::processor::process_stream`) before reconciling with the
+# provider-agnostic `prompty::streaming::reconcile_stream`. This edge is used
+# only when building `prompty`'s tests, never its library.
+prompty-openai = { path = "../prompty-openai" }

@@ -105,6 +105,25 @@ export {
   createStructuredResult,
   isStructuredResult,
   cast,
+
+  // Provider-agnostic conformance engines
+  runAgentLoop,
+  totalMessages,
+  type AgentLoopResult,
+  type AgentToolCall,
+  type ModelResponse,
+  type GuardrailDecision as AgentGuardrailDecision,
+  type SteeringMessage as AgentSteeringMessage,
+  SUMMARY_PREFIX,
+  runTurnEngine,
+  type TurnResult,
+  type TurnToolCall,
+  type TurnModelTurn,
+  type TurnToolResult,
+  PORTABILITY_PORTABLE,
+  PORTABILITY_DELEGATED,
+  reconcileStream,
+  type StreamReconciliation,
 } from "./core/index.js";
 
 // ---------------------------------------------------------------------------
@@ -206,6 +225,7 @@ export {
   HostToolResult,
   StreamChunk,
   ErrorChunk,
+  TextChunk,
   FailureChunk,
   StreamFailure,
   type EventJournalWriter,

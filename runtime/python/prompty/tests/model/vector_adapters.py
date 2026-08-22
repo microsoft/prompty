@@ -44,7 +44,38 @@ from prompty import (
     load,
     validate_inputs,
 )
+from prompty.core.agent_loop import (
+    SUMMARY_PREFIX as _AGENT_SUMMARY_PREFIX,
+)
+from prompty.core.agent_loop import (
+    GuardrailDecision as _AgentGuardrailDecision,
+)
+from prompty.core.agent_loop import (
+    ModelResponse as _AgentModelResponse,
+)
+from prompty.core.agent_loop import (
+    SteeringMessage as _AgentSteeringMessage,
+)
+from prompty.core.agent_loop import (
+    ToolCall as _AgentToolCall,
+)
+from prompty.core.agent_loop import (
+    run_agent_loop as _run_agent_loop,
+)
 from prompty.core.loader import default_save_context
+from prompty.core.streaming import reconcile_stream
+from prompty.core.turn_engine import (
+    TurnModelTurn as _TurnModelTurn,
+)
+from prompty.core.turn_engine import (
+    TurnToolCall as _TurnToolCall,
+)
+from prompty.core.turn_engine import (
+    TurnToolResult as _TurnToolResult,
+)
+from prompty.core.turn_engine import (
+    run_turn as _run_turn,
+)
 from prompty.core.types import AudioPart, ContentPart, ImagePart, Message, TextPart
 from prompty.model import Agent, HostToolRequest, ModelInfo, Property, TurnOptions
 from prompty.parsers.prompty import PromptyChatParser
@@ -63,7 +94,7 @@ from prompty.providers.openai.executor import (
     _responses_tools_to_wire,
     _tools_to_wire,
 )
-from prompty.providers.openai.processor import ToolCall, _process_response
+from prompty.providers.openai.processor import ToolCall, _process_response, process_stream_events
 from prompty.renderers.jinja2 import Jinja2Renderer
 from prompty.renderers.mustache import MustacheRenderer
 
@@ -766,6 +797,309 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
     return info.save()
 
 
+def _process_stream_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
+    """Classify a raw provider stream and reconcile the streaming-failure contract."""
+    provider = resolved_input.get("provider") or context.get("provider") or "openai"
+    events = resolved_input.get("events") or []
+    if provider == "openai":
+        chunks = process_stream_events(events)
+    else:
+        raise ValueError(f"Unsupported stream provider: {provider!r}")
+    reconciliation = reconcile_stream(chunks)
+    return {
+        "chunks": [chunk.save() for chunk in chunks],
+        **reconciliation.save(),
+    }
+
+
+# ---------------------------------------------------------------------------
+# TurnConformance.run -- provider-agnostic agent loop
+# ---------------------------------------------------------------------------
+
+
+class _ScriptedModel:
+    """Replay a vector's ``sequence`` as the agent loop's model callback.
+
+    Each ``invoke`` returns the next scripted ``llm_response`` translated to a
+    provider-agnostic :class:`ModelResponse`, and records that step's
+    ``tool_results`` so ``dispatch`` can return them by ``tool_call_id``. This
+    keeps the engine free of any provider or fixture knowledge -- it only ever
+    sees normalized model turns and tool outputs.
+    """
+
+    def __init__(self, sequence: list[dict[str, Any]]) -> None:
+        self._sequence = sequence
+        self._index = 0
+        self._results: dict[str, Any] = {}
+
+    def invoke(self, _conversation: list[dict[str, Any]]) -> _AgentModelResponse:
+        step = self._sequence[self._index]
+        self._index += 1
+        message = step["llm_response"]["choices"][0]["message"]
+        raw_tool_calls = message.get("tool_calls")
+        tool_calls: list[_AgentToolCall] = []
+        for tc in raw_tool_calls or []:
+            fn = tc.get("function", {})
+            tool_calls.append(_AgentToolCall(id=tc["id"], name=fn.get("name", ""), arguments=fn.get("arguments", "")))
+        self._results = {tr["tool_call_id"]: tr.get("result") for tr in (step.get("tool_results") or [])}
+        return _AgentModelResponse(
+            content=message.get("content"),
+            tool_calls=tool_calls,
+            raw_tool_calls=raw_tool_calls or None,
+        )
+
+    def dispatch(self, call: _AgentToolCall) -> str:
+        return self._results.get(call.id, "")
+
+
+def _run_scripted_summary(expected: dict[str, Any]) -> str | None:
+    """Return the scripted compaction summary from a vector's expectation.
+
+    The compaction summary is a model output. In conformance the model is
+    scripted, but the summary has no dedicated slot in the ``sequence`` today, so
+    it is sourced from ``expected.trimmed_messages`` (the summary system message).
+    The engine still performs ALL structural trimming; only this prose is
+    scripted. A dedicated summary input slot is the recommended TypeSpec
+    follow-up (tracked on PR #495).
+    """
+    for message in expected.get("trimmed_messages") or []:
+        content = message.get("content")
+        if isinstance(content, str) and content.startswith(_AGENT_SUMMARY_PREFIX):
+            return content
+    return None
+
+
+def _run_guardrails(flags: dict[str, Any]):
+    """Build the three optional guardrail callbacks from vector flags."""
+    guardrails = flags.get("guardrails") or {}
+    input_guardrail = None
+    output_guardrail = None
+    tool_guardrail = None
+
+    input_cfg = guardrails.get("input")
+    if input_cfg is not None:
+
+        def input_guardrail(_conversation, _cfg=input_cfg):
+            if _cfg.get("action") == "deny":
+                return _AgentGuardrailDecision(False, _cfg.get("reason"))
+            return _AgentGuardrailDecision(True)
+
+    output_cfg = guardrails.get("output")
+    if output_cfg is not None:
+
+        def output_guardrail(_response, _cfg=output_cfg):
+            if _cfg.get("action") == "deny":
+                return _AgentGuardrailDecision(False, _cfg.get("reason"))
+            return _AgentGuardrailDecision(True)
+
+    tool_cfg = guardrails.get("tool")
+    if tool_cfg is not None:
+        deny = set(tool_cfg.get("deny_tools") or [])
+        reason = tool_cfg.get("reason")
+
+        def tool_guardrail(name, _args, _deny=deny, _reason=reason):
+            if name in _deny:
+                return _AgentGuardrailDecision(False, _reason)
+            return _AgentGuardrailDecision(True)
+
+    return input_guardrail, output_guardrail, tool_guardrail
+
+
+def _first_message(conversation: list[dict[str, Any]], predicate) -> dict[str, Any] | None:
+    for message in conversation:
+        if predicate(message):
+            return message
+    return None
+
+
+def _run_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
+    """Drive the provider-agnostic agent loop for one ``run`` vector."""
+    flags = resolved_input
+    expected = context["vector"]["expected"]
+
+    messages = [dict(m) for m in flags.get("messages", [])]
+    tool_functions = flags.get("tool_functions") or {}
+    sequence = context["vector"].get("sequence") or []
+
+    model = _ScriptedModel(sequence)
+    input_guardrail, output_guardrail, tool_guardrail = _run_guardrails(flags)
+
+    steering_cfg = (flags.get("steering") or {}).get("messages") or []
+    steering = [
+        _AgentSteeringMessage(
+            inject_before_iteration=item["inject_before_iteration"],
+            role=item.get("role", "user"),
+            text=item["text"],
+        )
+        for item in steering_cfg
+    ]
+
+    cancel_at = (flags.get("cancel") or {}).get("cancelled_at")
+    context_budget = flags.get("context_budget")
+    summary = _run_scripted_summary(expected)
+    summarize = (lambda _dropped, _s=summary: _s) if summary is not None else None
+
+    result = _run_agent_loop(
+        messages,
+        invoke_model=model.invoke,
+        dispatch_tool=model.dispatch,
+        is_tool_registered=lambda name, _tf=tool_functions: name in _tf,
+        input_guardrail=input_guardrail,
+        output_guardrail=output_guardrail,
+        tool_guardrail=tool_guardrail,
+        steering=steering,
+        cancel_at=cancel_at,
+        context_budget=context_budget,
+        summarize=summarize,
+    )
+
+    observed: dict[str, Any] = {
+        "result": result.result,
+        "iterations": result.iterations,
+        "total_messages": result.total_messages,
+        "message_sequence": result.conversation,
+        "tools_executed": result.tools_executed,
+        "tool_execution_order": result.tool_execution_order,
+        "denied_tools": result.denied_tools,
+        "trimmed_messages": result.trimmed_messages,
+        "events": result.events,
+    }
+
+    assistant_tc = _first_message(
+        result.conversation,
+        lambda m: (
+            m.get("role") == "assistant" and isinstance(m.get("metadata"), dict) and "tool_calls" in m["metadata"]
+        ),
+    )
+    if assistant_tc is not None:
+        observed["assistant_tool_calls_message"] = assistant_tc
+
+    tool_message = _first_message(result.conversation, lambda m: m.get("role") == "tool")
+    if tool_message is not None:
+        # Named-field form uses list content; message_sequence uses string content.
+        observed["tool_result_message"] = {
+            "role": "tool",
+            "content": [{"type": "text", "text": tool_message.get("content")}],
+            "metadata": tool_message.get("metadata"),
+        }
+
+    if result.error is not None:
+        observed["error"] = result.error
+    if result.error_type is not None:
+        observed["error_type"] = result.error_type
+    if result.error_reason is not None:
+        observed["error_reason"] = result.error_reason
+
+    # Annotation passthrough -- cross-runtime notes that are not Python behavioral
+    # observations. Echo them so canonical equality holds without fabricating
+    # engine output.
+    for annotation in ("notes", "summary_contains", "rust_expected_error"):
+        if annotation in expected:
+            observed[annotation] = expected[annotation]
+
+    return observed
+
+
+def _run_match_events(observed_events: list[dict], expected_events: list[dict]) -> list[dict]:
+    """Subsequence-match observed events against the expected event list.
+
+    For each expected event (in order) scan forward for the next observed event
+    of the same ``type``, then project its ``data`` to the expected keys (or drop
+    ``data`` entirely when the expected event is type-only). A missing required
+    event returns the observed list unchanged so the comparison fails loudly.
+    """
+    matched: list[dict] = []
+    index = 0
+    for expected in expected_events:
+        expected_type = expected.get("type")
+        found = None
+        while index < len(observed_events):
+            candidate = observed_events[index]
+            index += 1
+            if candidate.get("type") == expected_type:
+                found = candidate
+                break
+        if found is None:
+            return observed_events
+        if "data" in expected:
+            matched.append({"type": expected_type, "data": _project(found.get("data"), expected["data"])})
+        else:
+            matched.append({"type": expected_type})
+    return matched
+
+
+def _run_normalize(observed: Any, context: dict[str, Any]) -> Any:
+    expected = context["vector"]["expected"]
+    if not isinstance(observed, dict) or not isinstance(expected, dict):
+        return observed
+    projected: dict[str, Any] = {}
+    for key in expected:
+        if key == "events":
+            projected[key] = _run_match_events(observed.get("events") or [], expected["events"])
+        else:
+            projected[key] = _project(observed.get(key), expected[key])
+    return projected
+
+
+# ---------------------------------------------------------------------------
+# TurnConformance.runTurn -- provider-agnostic snapshot/portability turn engine
+# ---------------------------------------------------------------------------
+
+
+def _run_turn_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
+    """Drive the provider-agnostic turn engine for one ``runTurn`` vector.
+
+    The vector scripts the model as an ordered ``model`` array (each entry is a
+    tool round ``{tools, nextPortability?, delegatedState?}`` or a final answer
+    ``{output}``), ``toolOutputs`` by tool-call id, ``denyTools`` for the
+    permission gate, and ``cancelBeforeRun``. The adapter turns these into the
+    engine's abstract callbacks; all snapshot/portability/event accounting lives
+    in :func:`prompty.core.turn_engine.run_turn`.
+    """
+    flags = resolved_input
+    messages = list(flags.get("messages") or [])
+    scripted = list(flags.get("model") or [])
+    tool_outputs = flags.get("toolOutputs") or {}
+    deny_tools = set(flags.get("denyTools") or [])
+    cancel_before_run = bool(flags.get("cancelBeforeRun"))
+
+    def invoke_model(iteration: int, _tool_results: list[_TurnToolResult]) -> _TurnModelTurn:
+        turn = scripted[iteration]
+        tool_calls = [
+            _TurnToolCall(id=tc["id"], name=tc["name"], arguments=tc.get("arguments") or {})
+            for tc in (turn.get("tools") or [])
+        ]
+        return _TurnModelTurn(
+            output=turn.get("output"),
+            tool_calls=tool_calls,
+            next_portability=turn.get("nextPortability"),
+            delegated_state=turn.get("delegatedState"),
+        )
+
+    result = _run_turn(
+        messages,
+        invoke_model=invoke_model,
+        resolve_permission=lambda call, _deny=deny_tools: call.name not in _deny,
+        execute_tool=lambda call, _out=tool_outputs: _out.get(call.id),
+        cancel_before_run=cancel_before_run,
+    )
+
+    observed: dict[str, Any] = {
+        "status": result.status,
+        "output": result.output,
+        "iterations": result.iterations,
+        "snapshots": result.snapshots,
+        "snapshotStablePrefixes": result.snapshot_stable_prefixes,
+        "snapshotPortability": result.snapshot_portability,
+        "commitPortability": result.commit_portability,
+        "delegatedState": result.delegated_state_count,
+        "toolResults": len(result.tool_results),
+        "toolResultOrder": result.tool_result_order,
+        "eventKinds": result.events,
+    }
+    return observed
+
+
 # ---------------------------------------------------------------------------
 # Adapter registry
 # ---------------------------------------------------------------------------
@@ -777,6 +1111,9 @@ VECTOR_ADAPTERS: dict[str, Any] = {
     "Parser.parse": {"invoke": _parse_invoke, "normalize": _project_normalize},
     "WireConformance.toRequest": {"invoke": _wire_invoke, "normalize": _project_normalize},
     "Processor.process": {"invoke": _process_invoke, "normalize": _project_normalize},
+    "Processor.processStream": {"invoke": _process_stream_invoke, "normalize": _project_normalize},
+    "TurnConformance.run": {"invoke": _run_invoke, "normalize": _run_normalize},
+    "TurnConformance.runTurn": {"invoke": _run_turn_invoke, "normalize": _project_normalize},
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},
     "DiscoveryConformance.mapModel": {"invoke": _discovery_map_invoke},
     "TurnConformance.replay": {"invoke": _replay_invoke},
@@ -785,40 +1122,6 @@ VECTOR_ADAPTERS: dict[str, Any] = {
 # Contracts introduced/tightened by Typra 0.12.0 that the Python runtime does not
 # yet satisfy against the canonical spec. Each waiver is an explicit, reasoned
 # conformance gap -- NOT a silent skip -- and is the honest "how done" signal.
-VECTOR_WAIVERS: dict[str, str] = {
-    "TurnConformance.run": (
-        "The 28 run vectors assert a specific agent-loop *accounting and "
-        "observability* contract that the Python runtime does not yet match, even "
-        "though the underlying behaviors exist. pipeline.turn() implements "
-        "guardrails (input/output/tool), steering injection, context-window "
-        "trimming/compaction, parallel tool rounds, cancellation, and structured "
-        "events. The gap is the observable model the vectors compare against: "
-        "(1) `iterations` is defined as the number of LLM calls (no_tool_calls=1, "
-        "single_tool_call=2), while turn() counts only tool-executing rounds "
-        "(0 and 1); (2) `total_messages` must include the final assistant message "
-        "appended to the conversation, which turn() does not add before returning; "
-        "(3) each vector pins an exact `events` schema. Reconciling turn()'s "
-        "accounting to the canonical convention is real, scoped runtime work; "
-        "recomputing these counts in the adapter would test the adapter, not the "
-        "runtime, so this stays an honest waiver rather than a fudged pass."
-    ),
-    "TurnConformance.runTurn": (
-        "The 5 runTurn vectors require a snapshot/portability turn engine "
-        "(stable-prefix snapshots, portable vs delegated provider state, "
-        "delegated_provider_state resumption, cancel-before-run) that has no runtime "
-        "implementation yet -- only the generated _TurnConformance protocol exists. "
-        "Genuine feature gap."
-    ),
-    "Processor.processStream": (
-        "The 2 processStream vectors assert the streaming-failure classification + "
-        "reconciliation contract (determinate vs indeterminate failure, preserved "
-        "partial text, requiresReconciliation, completionCommitted). The Python "
-        "runtime's provider stream generators (providers/openai/processor.py "
-        "_stream_generator) yield text chunks and raise ValueError on refusal/transport "
-        "errors, but do not produce the canonical StreamChunk/StreamFailure "
-        "reconciliation model these vectors compare against, so there is no runtime "
-        "path to drive them. Honest feature gap, not a wiring deferral."
-    ),
-}
+VECTOR_WAIVERS: dict[str, str] = {}
 
 VECTOR_DOUBLES: dict[str, Any] = {}

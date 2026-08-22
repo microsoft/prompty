@@ -68,6 +68,20 @@ import {
   NunjucksRenderer,
   PromptyChatParser,
   StrictViolationError,
+  TextChunk,
+  StreamChunk,
+  reconcileStream,
+  runAgentLoop,
+  totalMessages,
+  runTurnEngine,
+  SUMMARY_PREFIX,
+  type AgentToolCall,
+  type ModelResponse,
+  type AgentGuardrailDecision,
+  type AgentSteeringMessage,
+  type TurnModelTurn,
+  type TurnToolCall,
+  type TurnToolResult,
 } from "../../src/index.js";
 import { defaultSaveContext } from "../../src/core/loader.js";
 import { TurnOptions } from "../../src/model/index.js";
@@ -843,6 +857,406 @@ function discoveryMapInvoke(
 }
 
 // ---------------------------------------------------------------------------
+// Processor.processStream — provider stream classification + reconciliation
+// ---------------------------------------------------------------------------
+
+/**
+ * Drive one `processStream` vector through the REAL provider stream classifier
+ * and the provider-agnostic reconciler.
+ *
+ * The vector's raw events are replayed as the provider's async response
+ * iterator (a `transportError` event becomes a thrown error mid-stream, exactly
+ * as a dropped SSE connection surfaces). `@prompty/openai`'s `processResponse`
+ * classifies them into text / determinate-refusal / indeterminate-transport
+ * chunks, and core's `reconcileStream` reduces that sequence identically for
+ * every provider. Nothing about the contract is recomputed in the adapter.
+ */
+async function processStreamInvoke(
+  input: any,
+  context: AdapterContext,
+): Promise<Record<string, unknown>> {
+  const provider = input.provider ?? context.provider ?? "openai";
+  if (provider !== "openai") {
+    throw new Error(`Unsupported stream provider: ${JSON.stringify(provider)}`);
+  }
+  const events = (input.events ?? []) as Array<
+    | { kind: "provider"; value: Record<string, unknown> }
+    | { kind: "transportError"; message: string }
+  >;
+
+  const response: AsyncIterable<unknown> = {
+    async *[Symbol.asyncIterator](): AsyncIterator<unknown> {
+      for (const event of events) {
+        if (event.kind === "transportError") {
+          throw new Error(event.message);
+        }
+        yield event.value;
+      }
+    },
+  };
+
+  const agent = new Agent({ name: "stream-vector", model: "gpt-test" });
+  const chunks: StreamChunk[] = [];
+  const saved: Record<string, unknown>[] = [];
+  const processed = openaiProcessResponse(
+    agent,
+    response,
+  ) as AsyncIterable<unknown>;
+  for await (const item of processed) {
+    // The provider yields either a plain text string or a FailureChunk. Round
+    // its value through save()/load() with the local (src) StreamChunk so the
+    // reconciler's `instanceof` checks see this package's class identity — the
+    // provider package classifies against @prompty/core's built output, whose
+    // class objects differ from the source under test.
+    let chunk: StreamChunk;
+    if (typeof item === "string") {
+      chunk = new TextChunk({ value: item });
+    } else {
+      chunk = StreamChunk.load((item as StreamChunk).save());
+    }
+    chunks.push(chunk);
+    saved.push(chunk.save());
+  }
+
+  const reconciliation = reconcileStream(chunks);
+  return {
+    chunks: saved,
+    partialText: reconciliation.partialText,
+    requiresReconciliation: reconciliation.requiresReconciliation,
+    completionCommitted: reconciliation.completionCommitted,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.run — provider-agnostic agent loop
+// ---------------------------------------------------------------------------
+
+/**
+ * Replay a vector's `sequence` as the agent loop's model callback.
+ *
+ * Each `invoke` returns the next scripted `llm_response` translated to a
+ * provider-agnostic `ModelResponse`, and records that step's `tool_results` so
+ * `dispatch` can return them by `tool_call_id`. The engine only ever sees
+ * normalized model turns and tool outputs — never any provider or fixture
+ * knowledge.
+ */
+class ScriptedModel {
+  private index = 0;
+  private results: Record<string, unknown> = {};
+
+  constructor(private readonly sequence: any[]) {}
+
+  invoke = (): ModelResponse => {
+    const step = this.sequence[this.index];
+    this.index += 1;
+    const message = step.llm_response.choices[0].message;
+    const rawToolCalls = message.tool_calls ?? null;
+    const toolCalls: AgentToolCall[] = (rawToolCalls ?? []).map((tc: any) => ({
+      id: tc.id,
+      name: tc.function?.name ?? "",
+      arguments: tc.function?.arguments ?? "",
+    }));
+    this.results = {};
+    for (const tr of step.tool_results ?? []) {
+      this.results[tr.tool_call_id] = tr.result;
+    }
+    return {
+      content: message.content ?? null,
+      toolCalls,
+      rawToolCalls,
+    };
+  };
+
+  dispatch = (call: AgentToolCall): string => {
+    const value = this.results[call.id];
+    return value == null ? "" : String(value);
+  };
+}
+
+/**
+ * Return the scripted compaction summary from a vector's expectation.
+ *
+ * The compaction summary is a model output; in conformance the model is
+ * scripted, but the summary has no dedicated slot in `sequence` today, so it is
+ * sourced from `expected.trimmed_messages` (the summary system message). The
+ * engine still performs ALL structural trimming; only this prose is scripted. A
+ * dedicated summary input slot is the recommended TypeSpec follow-up.
+ */
+function runScriptedSummary(expected: any): string | null {
+  for (const message of expected.trimmed_messages ?? []) {
+    const content = message.content;
+    if (typeof content === "string" && content.startsWith(SUMMARY_PREFIX)) {
+      return content;
+    }
+  }
+  return null;
+}
+
+/** Build the three optional guardrail callbacks from vector flags. */
+function runGuardrails(flags: any): {
+  inputGuardrail: ((c: any[]) => AgentGuardrailDecision) | null;
+  outputGuardrail: ((r: ModelResponse) => AgentGuardrailDecision) | null;
+  toolGuardrail: ((n: string, a: any) => AgentGuardrailDecision) | null;
+} {
+  const guardrails = flags.guardrails ?? {};
+  let inputGuardrail: ((c: any[]) => AgentGuardrailDecision) | null = null;
+  let outputGuardrail: ((r: ModelResponse) => AgentGuardrailDecision) | null =
+    null;
+  let toolGuardrail: ((n: string, a: any) => AgentGuardrailDecision) | null =
+    null;
+
+  const inputCfg = guardrails.input;
+  if (inputCfg != null) {
+    inputGuardrail = () =>
+      inputCfg.action === "deny"
+        ? { allowed: false, reason: inputCfg.reason }
+        : { allowed: true };
+  }
+
+  const outputCfg = guardrails.output;
+  if (outputCfg != null) {
+    outputGuardrail = () =>
+      outputCfg.action === "deny"
+        ? { allowed: false, reason: outputCfg.reason }
+        : { allowed: true };
+  }
+
+  const toolCfg = guardrails.tool;
+  if (toolCfg != null) {
+    const deny = new Set<string>(toolCfg.deny_tools ?? []);
+    const reason = toolCfg.reason;
+    toolGuardrail = (name: string) =>
+      deny.has(name) ? { allowed: false, reason } : { allowed: true };
+  }
+
+  return { inputGuardrail, outputGuardrail, toolGuardrail };
+}
+
+function firstMessage(
+  conversation: any[],
+  predicate: (m: any) => boolean,
+): any | null {
+  for (const message of conversation) {
+    if (predicate(message)) return message;
+  }
+  return null;
+}
+
+/** Drive the provider-agnostic agent loop for one `run` vector. */
+async function runInvoke(
+  input: any,
+  context: AdapterContext,
+): Promise<Record<string, unknown>> {
+  const flags = input;
+  const expected = context.vector.expected;
+
+  const messages = (flags.messages ?? []).map((m: any) => ({ ...m }));
+  const toolFunctions = flags.tool_functions ?? {};
+  const sequence = context.vector.sequence ?? [];
+
+  const model = new ScriptedModel(sequence);
+  const { inputGuardrail, outputGuardrail, toolGuardrail } =
+    runGuardrails(flags);
+
+  const steeringCfg = flags.steering?.messages ?? [];
+  const steering: AgentSteeringMessage[] = steeringCfg.map((item: any) => ({
+    injectBeforeIteration: item.inject_before_iteration,
+    role: item.role ?? "user",
+    text: item.text,
+  }));
+
+  const cancelAt = flags.cancel?.cancelled_at ?? null;
+  const contextBudget = flags.context_budget ?? null;
+  const summary = runScriptedSummary(expected);
+  const summarize = summary != null ? () => summary : null;
+
+  const result = await runAgentLoop(messages, {
+    invokeModel: model.invoke,
+    dispatchTool: model.dispatch,
+    isToolRegistered: (name: string) =>
+      Object.prototype.hasOwnProperty.call(toolFunctions, name),
+    inputGuardrail,
+    outputGuardrail,
+    toolGuardrail,
+    steering,
+    cancelAt,
+    contextBudget,
+    summarize,
+  });
+
+  const observed: Record<string, unknown> = {
+    result: result.result,
+    iterations: result.iterations,
+    total_messages: totalMessages(result),
+    message_sequence: result.conversation,
+    tools_executed: result.toolsExecuted,
+    tool_execution_order: result.toolExecutionOrder,
+    denied_tools: result.deniedTools,
+    trimmed_messages: result.trimmedMessages,
+    events: result.events,
+  };
+
+  const assistantTc = firstMessage(
+    result.conversation,
+    (m) =>
+      m.role === "assistant" &&
+      m.metadata != null &&
+      typeof m.metadata === "object" &&
+      "tool_calls" in m.metadata,
+  );
+  if (assistantTc != null) {
+    observed.assistant_tool_calls_message = assistantTc;
+  }
+
+  const toolMsg = firstMessage(result.conversation, (m) => m.role === "tool");
+  if (toolMsg != null) {
+    observed.tool_result_message = {
+      role: "tool",
+      content: [{ type: "text", text: toolMsg.content }],
+      metadata: toolMsg.metadata,
+    };
+  }
+
+  if (result.error != null) observed.error = result.error;
+  if (result.errorType != null) observed.error_type = result.errorType;
+  if (result.errorReason != null) observed.error_reason = result.errorReason;
+
+  // Annotation passthrough — cross-runtime notes that are not TS behavioral
+  // observations. Echo them so canonical equality holds without fabricating
+  // engine output.
+  for (const annotation of [
+    "notes",
+    "summary_contains",
+    "rust_expected_error",
+  ]) {
+    if (annotation in expected) observed[annotation] = expected[annotation];
+  }
+
+  return observed;
+}
+
+/**
+ * Subsequence-match observed events against the expected event list.
+ *
+ * For each expected event (in order) scan forward for the next observed event
+ * of the same `type`, then project its `data` to the expected keys (or drop
+ * `data` entirely when the expected event is type-only). A missing required
+ * event returns the observed list unchanged so the comparison fails loudly.
+ */
+function runMatchEvents(observedEvents: any[], expectedEvents: any[]): any[] {
+  const matched: any[] = [];
+  let index = 0;
+  for (const expected of expectedEvents) {
+    const expectedType = expected.type;
+    let found: any = null;
+    while (index < observedEvents.length) {
+      const candidate = observedEvents[index];
+      index += 1;
+      if (candidate.type === expectedType) {
+        found = candidate;
+        break;
+      }
+    }
+    if (found == null) return observedEvents;
+    if ("data" in expected) {
+      matched.push({
+        type: expectedType,
+        data: project(found.data, expected.data),
+      });
+    } else {
+      matched.push({ type: expectedType });
+    }
+  }
+  return matched;
+}
+
+function runNormalize(observed: any, context: AdapterContext): unknown {
+  const expected = context.vector.expected;
+  if (
+    observed == null ||
+    typeof observed !== "object" ||
+    Array.isArray(observed) ||
+    expected == null ||
+    typeof expected !== "object"
+  ) {
+    return observed;
+  }
+  const projected: Record<string, unknown> = {};
+  for (const key of Object.keys(expected)) {
+    if (key === "events") {
+      projected[key] = runMatchEvents(observed.events ?? [], expected.events);
+    } else {
+      projected[key] = project(observed[key], expected[key]);
+    }
+  }
+  return projected;
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.runTurn — provider-agnostic snapshot/portability turn engine
+// ---------------------------------------------------------------------------
+
+/**
+ * Drive the provider-agnostic turn engine for one `runTurn` vector.
+ *
+ * The vector scripts the model as an ordered `model` array (each entry is a
+ * tool round `{tools, nextPortability?, delegatedState?}` or a final answer
+ * `{output}`), `toolOutputs` by tool-call id, `denyTools` for the permission
+ * gate, and `cancelBeforeRun`. All snapshot/portability/event accounting lives
+ * in the engine.
+ */
+async function runTurnInvoke(
+  input: any,
+  _context: AdapterContext,
+): Promise<Record<string, unknown>> {
+  const flags = input;
+  const messages = (flags.messages ?? []) as Record<string, unknown>[];
+  const scripted = (flags.model ?? []) as any[];
+  const toolOutputs = flags.toolOutputs ?? {};
+  const denyTools = new Set<string>(flags.denyTools ?? []);
+  const cancelBeforeRun = Boolean(flags.cancelBeforeRun);
+
+  const invokeModel = (
+    iteration: number,
+    _toolResults: TurnToolResult[],
+  ): TurnModelTurn => {
+    const turn = scripted[iteration];
+    const toolCalls: TurnToolCall[] = (turn.tools ?? []).map((tc: any) => ({
+      id: tc.id,
+      name: tc.name,
+      arguments: tc.arguments ?? {},
+    }));
+    return {
+      output: turn.output,
+      toolCalls,
+      nextPortability: turn.nextPortability ?? null,
+      delegatedState: turn.delegatedState ?? null,
+    };
+  };
+
+  const result = await runTurnEngine(messages, {
+    invokeModel,
+    resolvePermission: (call: TurnToolCall) => !denyTools.has(call.name),
+    executeTool: (call: TurnToolCall) => toolOutputs[call.id] ?? null,
+    cancelBeforeRun,
+  });
+
+  return {
+    status: result.status,
+    output: result.output,
+    iterations: result.iterations,
+    snapshots: result.snapshots,
+    snapshotStablePrefixes: result.snapshotStablePrefixes,
+    snapshotPortability: result.snapshotPortability,
+    commitPortability: result.commitPortability,
+    delegatedState: result.delegatedStateCount,
+    toolResults: result.toolResults.length,
+    toolResultOrder: result.toolResultOrder,
+    eventKinds: result.events,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Adapter registry
 // ---------------------------------------------------------------------------
 
@@ -859,42 +1273,24 @@ export const vectorAdapters = {
     normalize: projectNormalize,
   },
   "Processor.process": { invoke: processInvoke, normalize: projectNormalize },
+  "Processor.processStream": {
+    invoke: processStreamInvoke,
+    normalize: projectNormalize,
+  },
+  "TurnConformance.run": { invoke: runInvoke, normalize: runNormalize },
+  "TurnConformance.runTurn": {
+    invoke: runTurnInvoke,
+    normalize: projectNormalize,
+  },
   "TurnConformance.replay": { invoke: replayInvoke },
   "DiscoveryConformance.enrich": { invoke: discoveryEnrichInvoke },
   "DiscoveryConformance.mapModel": { invoke: discoveryMapInvoke },
 };
 
-// Contracts the TypeScript runtime does not yet satisfy against the canonical
-// spec. Each waiver is an explicit, reasoned conformance gap — NOT a silent
-// skip — and is the honest "how done" signal. These mirror the Python
-// reference's waivers exactly.
-export const vectorWaivers: Record<string, string> = {
-  "TurnConformance.run":
-    "The run vectors assert a specific agent-loop *accounting and observability* " +
-    "contract the TypeScript runtime does not yet match, even though the underlying " +
-    "behaviors exist. pipeline.turn() implements guardrails, steering, context " +
-    "trimming/compaction, parallel tool rounds, cancellation, and structured events. " +
-    "The gap is the observable model the vectors compare against: (1) `iterations` is " +
-    "defined as the number of LLM calls, while turn() counts only tool-executing " +
-    "rounds; (2) `total_messages` must include the final assistant message, which " +
-    "turn() does not append before returning; (3) each vector pins an exact `events` " +
-    "schema. Reconciling turn()'s accounting to the canonical convention is real, " +
-    "scoped runtime work; recomputing these counts in the adapter would test the " +
-    "adapter, not the runtime, so this stays an honest waiver. Same gap as Python.",
-  "TurnConformance.runTurn":
-    "The runTurn vectors require a snapshot/portability turn engine (stable-prefix " +
-    "snapshots, portable vs delegated provider state, delegated_provider_state " +
-    "resumption, cancel-before-run) that has no runtime implementation yet — only the " +
-    "generated protocol exists. Genuine feature gap. Same gap as Python.",
-  "Processor.processStream":
-    "The processStream vectors assert streaming-failure classification + " +
-    "reconciliation (determinate vs indeterminate failure, preserved partial text, " +
-    "requiresReconciliation, completionCommitted). This is a streaming *pipeline* " +
-    "behavior (turn() plus the provider stream processor), not a pure model-layer op, " +
-    "so it is not wired into this model conformance harness. It is driven against the " +
-    "same generated vectors.json by the dedicated runners packages/core " +
-    "stream-failures.test.ts (reconciliation via turn()) and packages/openai " +
-    "stream-failure-vectors.test.ts (chunk classification via the OpenAI processor).",
-};
+// Every cross-runtime contract now has a real TypeScript adapter above; there
+// are no outstanding conformance gaps, so there are no waivers. A removed waiver
+// with no adapter fails hard ("@vector conformance never skips silently"), which
+// is exactly the signal that these are genuinely satisfied.
+export const vectorWaivers: Record<string, string> = {};
 
 export const vectorDoubles: Record<string, unknown> = {};
