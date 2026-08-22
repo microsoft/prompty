@@ -831,14 +831,10 @@ func replayInvoke(input any, ctx Context) (any, error) {
 
 	var maxIterations *int32
 	if raw, ok := resolved["maxIterations"]; ok && raw != nil {
-		n := toInt(raw)
-		if n < math.MinInt32 {
-			n = math.MinInt32
-		} else if n > math.MaxInt32 {
-			n = math.MaxInt32
+		if n := toInt(raw); n >= math.MinInt32 && n <= math.MaxInt32 {
+			value := int32(n)
+			maxIterations = &value
 		}
-		value := int32(n)
-		maxIterations = &value
 	}
 
 	var inputs map[string]interface{}
