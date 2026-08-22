@@ -50,7 +50,7 @@ public sealed class VectorException(string message, JsonNode? payload = null) : 
 /// concrete C# implementation. It replaces the bespoke <c>SpecVectorTests</c> runner:
 /// the vectors are the source of truth and every runtime authors an adapter like this.
 /// </summary>
-public static class VectorAdapters
+public static partial class VectorAdapters
 {
     private static readonly string SpecFixtures = FindSpecFixtures();
 
@@ -75,21 +75,28 @@ public static class VectorAdapters
         ["TurnConformance.runTurn"] = new(RunTurnInvoke, ProjectNormalize),
         ["TurnConformance.replay"] = new(ReplayInvoke),
         ["Processor.processStream"] = new(ProcessStreamInvoke, ProjectNormalize),
+        ["WireConformance.toRequest"] = new(WireInvoke, AlignNormalize),
+        ["Processor.process"] = new(ProcessInvoke, AlignNormalize),
     };
 
     public static IDictionary<string, string> Waivers() => new Dictionary<string, string>
     {
-        ["WireConformance.toRequest"] =
-            "Provider request-building lives in the Prompty.OpenAI and Prompty.Anthropic assemblies " +
-            "(SDK-typed request builders), which the Prompty.Core conformance harness does not reference. " +
-            "The same toRequest vectors are driven against the real providers by the provider-level " +
-            "SpecVectorWireTests in Prompty.OpenAI.Tests; wiring them here would require a Core->provider " +
-            "dependency that inverts the layering.",
-        ["Processor.process"] =
-            "Response processing lives in the Prompty.OpenAI and Prompty.Anthropic assemblies " +
-            "(SDK-typed response parsers), not referenced by the Prompty.Core conformance harness. " +
-            "The same process vectors are driven against the real providers by the provider-level " +
-            "SpecVectorProcessTests in Prompty.OpenAI.Tests.",
+        // The following four vectors are genuinely blocked by the typed OpenAI .NET SDK,
+        // not by missing wiring. The adapters above call the REAL WireFormat / processor
+        // layers; these specific vectors cannot round-trip through the SDK's typed path.
+        ["WireConformance.toRequest:chat_audio_part"] =
+            "OpenAI SDK ChatMessageContentPart re-base64-encodes audio bytes; the synthetic " +
+            "non-base64 placeholder 'base64data' cannot round-trip through the typed SDK wire path.",
+        ["WireConformance.toRequest:chat_audio_mp3"] =
+            "OpenAI SDK ChatMessageContentPart re-base64-encodes audio bytes; the synthetic " +
+            "non-base64 placeholder 'base64data' cannot round-trip through the typed SDK wire path.",
+        ["WireConformance.toRequest:options_additional_properties"] =
+            "Typed OpenAI ChatCompletionOptions cannot carry arbitrary top-level request fields " +
+            "(generic additionalProperties passthrough); the executor uses the typed CompleteChatAsync " +
+            "path so passthrough props never reach the wire.",
+        ["Processor.process:image_b64"] =
+            "OpenAI SDK ModelReaderWriter rejects the synthetic non-base64 placeholder 'base64data' " +
+            "in b64_json while deserializing GeneratedImageCollection.",
     };
 
     public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();

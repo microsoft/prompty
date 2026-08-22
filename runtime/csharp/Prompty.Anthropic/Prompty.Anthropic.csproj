@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
     <InternalsVisibleTo Include="Prompty.Anthropic.Tests" />
     <InternalsVisibleTo Include="Prompty.OpenAI.Tests" />
+    <InternalsVisibleTo Include="Prompty.Core.Tests" />
   </ItemGroup>
 
 </Project>

@@ -17,6 +17,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Prompty.Core\Prompty.Core.csproj" />
+    <!-- Test-only references so the @vector conformance harness can drive the REAL
+         provider wire/process layers. These are a DAG (test -> provider -> core),
+         no runtime cycle: production Prompty.Core never references the providers. -->
+    <ProjectReference Include="..\Prompty.OpenAI\Prompty.OpenAI.csproj" />
+    <ProjectReference Include="..\Prompty.Anthropic\Prompty.Anthropic.csproj" />
   </ItemGroup>
 
   <ItemGroup>
