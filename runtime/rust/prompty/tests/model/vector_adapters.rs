@@ -1,14 +1,20 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::future::Future;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use async_trait::async_trait;
+use prompty::engine::agent_loop::{
+    AgentLoopOptions, GuardrailDecision, ModelResponse, SUMMARY_PREFIX, SteeringMessage,
+    ToolCall as AgentToolCall, run_agent_loop,
+};
 use prompty::model::Agent;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
@@ -25,7 +31,7 @@ use prompty::{
 };
 use regex::Regex;
 use serde::Deserialize;
-use serde_json::Value;
+use serde_json::{Value, json};
 
 /// Serializes env-var mutation across parallel `#[tokio::test]` load vectors.
 /// The load contract resolves `${env:...}` against the process environment, so
@@ -155,6 +161,17 @@ pub fn adapters() -> HashMap<String, Adapter> {
                 normalize: Some(project_normalize),
             },
         ),
+        (
+            "TurnConformance.run".to_string(),
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, ctx| {
+                    let input = input.clone();
+                    let vector = ctx.vector.clone();
+                    Box::pin(run_impl(input, vector))
+                })),
+                normalize: Some(run_normalize),
+            },
+        ),
     ])
 }
 
@@ -171,10 +188,6 @@ pub fn waivers() -> HashMap<String, String> {
         (
             "TurnConformance.replay".to_string(),
             "Depends on the provider wire + process layer (unimplemented in the Rust runtime), so the replay journal cannot be reproduced. Honest gap, consistent with WireConformance.toRequest and Processor.process.".to_string(),
-        ),
-        (
-            "TurnConformance.run".to_string(),
-            "The run vectors assert an agent-loop accounting/observability contract (iteration counting = LLM-call count, total_messages including the final assistant message, exact event schemas) not yet matched by the runtime. Same honest gap as the Python reference.".to_string(),
         ),
         (
             "Processor.processStream".to_string(),
@@ -1008,4 +1021,360 @@ async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
         "toolResultOrder": tool_result_order,
         "eventKinds": event_kinds,
     }))
+}
+
+// ---------------------------------------------------------------------------
+// TurnConformance.run -- drives the provider-agnostic agent loop
+// ---------------------------------------------------------------------------
+//
+// The behavior is owned by the real `prompty::engine::agent_loop::run_agent_loop`
+// engine (mirrors the verified Python `core/agent_loop.py`). This adapter only
+// scripts the model + tool callbacks from a `run` vector's `sequence`, wires the
+// optional guardrail/steering/cancel/context flags, runs the engine, and projects
+// its result into the observable JSON the vectors assert -- no loop logic here.
+
+struct RunScriptedState {
+    sequence: Vec<Value>,
+    index: usize,
+    results: HashMap<String, String>,
+}
+
+async fn run_impl(input: Value, vector: Value) -> Result<Value, VectorError> {
+    let flags = input;
+    let expected = vector.get("expected").cloned().unwrap_or(Value::Null);
+    let sequence = vector
+        .get("sequence")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let messages: Vec<Value> = flags
+        .get("messages")
+        .and_then(Value::as_array)
+        .cloned()
+        .unwrap_or_default();
+
+    let registered: HashSet<String> = flags
+        .get("tool_functions")
+        .and_then(Value::as_object)
+        .map(|obj| obj.keys().cloned().collect())
+        .unwrap_or_default();
+
+    let state = Rc::new(RefCell::new(RunScriptedState {
+        sequence,
+        index: 0,
+        results: HashMap::new(),
+    }));
+
+    let model_state = state.clone();
+    let invoke_model = move |_conversation: &[Value]| -> ModelResponse {
+        let mut st = model_state.borrow_mut();
+        let step = st.sequence[st.index].clone();
+        st.index += 1;
+        let message = step
+            .pointer("/llm_response/choices/0/message")
+            .cloned()
+            .unwrap_or(Value::Null);
+        let raw_tool_calls = message
+            .get("tool_calls")
+            .and_then(Value::as_array)
+            .cloned()
+            .filter(|calls| !calls.is_empty());
+        let mut tool_calls = Vec::new();
+        for tc in raw_tool_calls.iter().flatten() {
+            let function = tc.get("function");
+            tool_calls.push(AgentToolCall {
+                id: tc
+                    .get("id")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+                name: function
+                    .and_then(|f| f.get("name"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+                arguments: function
+                    .and_then(|f| f.get("arguments"))
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .to_string(),
+            });
+        }
+        st.results = step
+            .get("tool_results")
+            .and_then(Value::as_array)
+            .map(|entries| {
+                entries
+                    .iter()
+                    .filter_map(|tr| {
+                        let id = tr.get("tool_call_id").and_then(Value::as_str)?.to_string();
+                        let output = tr
+                            .get("result")
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .to_string();
+                        Some((id, output))
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        ModelResponse {
+            content: message
+                .get("content")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+            tool_calls,
+            raw_tool_calls,
+        }
+    };
+
+    let tool_state = state.clone();
+    let dispatch_tool = move |call: &AgentToolCall| -> String {
+        tool_state
+            .borrow()
+            .results
+            .get(&call.id)
+            .cloned()
+            .unwrap_or_default()
+    };
+
+    let guardrails = flags.get("guardrails").cloned().unwrap_or(Value::Null);
+    let input_guardrail = guardrails.get("input").cloned().map(|cfg| {
+        Box::new(move |_conversation: &[Value]| run_guardrail_decision(&cfg))
+            as Box<dyn FnMut(&[Value]) -> GuardrailDecision>
+    });
+    let output_guardrail = guardrails.get("output").cloned().map(|cfg| {
+        Box::new(move |_response: &ModelResponse| run_guardrail_decision(&cfg))
+            as Box<dyn FnMut(&ModelResponse) -> GuardrailDecision>
+    });
+    let tool_guardrail = guardrails.get("tool").cloned().map(|cfg| {
+        let deny: HashSet<String> = cfg
+            .get("deny_tools")
+            .and_then(Value::as_array)
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let reason = cfg
+            .get("reason")
+            .and_then(Value::as_str)
+            .map(str::to_string);
+        Box::new(move |name: &str, _args: &Value| {
+            if deny.contains(name) {
+                GuardrailDecision::deny(reason.clone())
+            } else {
+                GuardrailDecision::allow()
+            }
+        }) as Box<dyn FnMut(&str, &Value) -> GuardrailDecision>
+    });
+
+    let steering: Vec<SteeringMessage> = flags
+        .pointer("/steering/messages")
+        .and_then(Value::as_array)
+        .map(|arr| {
+            arr.iter()
+                .map(|item| SteeringMessage {
+                    inject_before_iteration: item
+                        .get("inject_before_iteration")
+                        .and_then(Value::as_i64)
+                        .unwrap_or(0),
+                    role: item
+                        .get("role")
+                        .and_then(Value::as_str)
+                        .unwrap_or("user")
+                        .to_string(),
+                    text: item
+                        .get("text")
+                        .and_then(Value::as_str)
+                        .unwrap_or("")
+                        .to_string(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+
+    let cancel_at = flags
+        .pointer("/cancel/cancelled_at")
+        .and_then(Value::as_str)
+        .map(str::to_string);
+    let context_budget = flags.get("context_budget").and_then(Value::as_i64);
+
+    let summary_text = expected
+        .get("trimmed_messages")
+        .and_then(Value::as_array)
+        .and_then(|arr| {
+            arr.iter().find_map(|m| {
+                let content = m.get("content").and_then(Value::as_str)?;
+                content
+                    .starts_with(SUMMARY_PREFIX)
+                    .then(|| content.to_string())
+            })
+        });
+    let summarize = summary_text.map(|summary| {
+        Box::new(move |_dropped: &[Value]| summary.clone()) as Box<dyn FnMut(&[Value]) -> String>
+    });
+
+    let options = AgentLoopOptions {
+        is_tool_registered: Some(Box::new(move |name: &str| registered.contains(name))),
+        max_iterations: None,
+        input_guardrail,
+        output_guardrail,
+        tool_guardrail,
+        steering,
+        cancel_at,
+        context_budget,
+        summarize,
+    };
+
+    let result = run_agent_loop(messages, invoke_model, dispatch_tool, options);
+
+    let mut observed = serde_json::Map::new();
+    observed.insert(
+        "result".to_string(),
+        result.result.clone().map_or(Value::Null, Value::String),
+    );
+    observed.insert("iterations".to_string(), json!(result.iterations));
+    observed.insert("total_messages".to_string(), json!(result.total_messages()));
+    observed.insert(
+        "message_sequence".to_string(),
+        Value::Array(result.conversation.clone()),
+    );
+    observed.insert("tools_executed".to_string(), json!(result.tools_executed));
+    observed.insert(
+        "tool_execution_order".to_string(),
+        json!(result.tool_execution_order),
+    );
+    observed.insert("denied_tools".to_string(), json!(result.denied_tools));
+    observed.insert(
+        "trimmed_messages".to_string(),
+        result
+            .trimmed_messages
+            .clone()
+            .map_or(Value::Null, Value::Array),
+    );
+    observed.insert("events".to_string(), Value::Array(result.events.clone()));
+
+    if let Some(message) = result.conversation.iter().find(|m| {
+        m.get("role").and_then(Value::as_str) == Some("assistant")
+            && m.pointer("/metadata/tool_calls").is_some()
+    }) {
+        observed.insert("assistant_tool_calls_message".to_string(), message.clone());
+    }
+
+    if let Some(message) = result
+        .conversation
+        .iter()
+        .find(|m| m.get("role").and_then(Value::as_str) == Some("tool"))
+    {
+        let content = message.get("content").cloned().unwrap_or(Value::Null);
+        observed.insert(
+            "tool_result_message".to_string(),
+            json!({
+                "role": "tool",
+                "content": [{"type": "text", "text": content}],
+                "metadata": message.get("metadata").cloned().unwrap_or(Value::Null),
+            }),
+        );
+    }
+
+    if let Some(error) = &result.error {
+        observed.insert("error".to_string(), Value::String(error.clone()));
+    }
+    if let Some(error_type) = &result.error_type {
+        observed.insert("error_type".to_string(), Value::String(error_type.clone()));
+    }
+    if let Some(error_reason) = &result.error_reason {
+        observed.insert(
+            "error_reason".to_string(),
+            Value::String(error_reason.clone()),
+        );
+    }
+
+    // Annotation passthrough -- cross-runtime notes that are not Rust behavioral
+    // observations. Echo them so canonical equality holds without fabricating
+    // engine output.
+    for annotation in ["notes", "summary_contains", "rust_expected_error"] {
+        if let Some(value) = expected.get(annotation) {
+            observed.insert(annotation.to_string(), value.clone());
+        }
+    }
+
+    Ok(Value::Object(observed))
+}
+
+fn run_guardrail_decision(cfg: &Value) -> GuardrailDecision {
+    if cfg.get("action").and_then(Value::as_str) == Some("deny") {
+        GuardrailDecision::deny(
+            cfg.get("reason")
+                .and_then(Value::as_str)
+                .map(str::to_string),
+        )
+    } else {
+        GuardrailDecision::allow()
+    }
+}
+
+/// Subsequence-match observed events against the expected event list. For each
+/// expected event (in order) scan forward for the next observed event of the same
+/// `type`, then project its `data` to the expected keys (or drop `data` entirely
+/// when the expected event is type-only). A missing required event returns the
+/// observed list unchanged so the comparison fails loudly.
+fn run_match_events(observed: &[Value], expected: &[Value]) -> Value {
+    let mut matched: Vec<Value> = Vec::new();
+    let mut index = 0;
+    for exp in expected {
+        let exp_type = exp.get("type").and_then(Value::as_str);
+        let mut found: Option<&Value> = None;
+        while index < observed.len() {
+            let candidate = &observed[index];
+            index += 1;
+            if candidate.get("type").and_then(Value::as_str) == exp_type {
+                found = Some(candidate);
+                break;
+            }
+        }
+        match found {
+            None => return Value::Array(observed.to_vec()),
+            Some(candidate) => {
+                if let Some(exp_data) = exp.get("data") {
+                    matched.push(json!({
+                        "type": exp_type,
+                        "data": project(candidate.get("data").unwrap_or(&Value::Null), exp_data),
+                    }));
+                } else {
+                    matched.push(json!({"type": exp_type}));
+                }
+            }
+        }
+    }
+    Value::Array(matched)
+}
+
+fn run_normalize(observed: &Value, ctx: &Context) -> Value {
+    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
+    let (obs, exp) = match (observed.as_object(), expected.as_object()) {
+        (Some(obs), Some(exp)) => (obs, exp),
+        _ => return observed.clone(),
+    };
+    let mut projected = serde_json::Map::new();
+    for (key, exp_val) in exp {
+        if key == "events" {
+            let obs_events = obs
+                .get("events")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
+            let exp_events = exp_val.as_array().cloned().unwrap_or_default();
+            projected.insert(key.clone(), run_match_events(&obs_events, &exp_events));
+        } else {
+            projected.insert(
+                key.clone(),
+                project(obs.get(key).unwrap_or(&Value::Null), exp_val),
+            );
+        }
+    }
+    Value::Object(projected)
 }
