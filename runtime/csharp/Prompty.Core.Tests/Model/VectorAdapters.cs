@@ -90,10 +90,6 @@ public static partial class VectorAdapters
         ["WireConformance.toRequest:chat_audio_mp3"] =
             "OpenAI SDK ChatMessageContentPart re-base64-encodes audio bytes; the synthetic " +
             "non-base64 placeholder 'base64data' cannot round-trip through the typed SDK wire path.",
-        ["WireConformance.toRequest:options_additional_properties"] =
-            "Typed OpenAI ChatCompletionOptions cannot carry arbitrary top-level request fields " +
-            "(generic additionalProperties passthrough); the executor uses the typed CompleteChatAsync " +
-            "path so passthrough props never reach the wire.",
         ["Processor.process:image_b64"] =
             "OpenAI SDK ModelReaderWriter rejects the synthetic non-base64 placeholder 'base64data' " +
             "in b64_json while deserializing GeneratedImageCollection.",
