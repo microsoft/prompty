@@ -42,6 +42,29 @@ enum VectorAdapters {
           return ["error": "StrictViolation"]
         }
       },
+      "Renderer.render": VectorAdapter(
+        sync: { input, _ in try renderInvoke(input) },
+        normalize: { observed, context in renderNormalize(observed, context) }
+      ),
+      "Parser.parse": VectorAdapter(
+        sync: { input, _ in try parseInvoke(input) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "Processor.process": VectorAdapter(
+        sync: { input, _ in try processInvoke(input) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "WireConformance.toRequest": VectorAdapter(
+        sync: { input, _ in try wireInvoke(input) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "LoadConformance.load": VectorAdapter(
+        sync: { input, context in try loadInvoke(input, context) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "TurnConformance.replay": VectorAdapter(
+        sync: { input, context in replayInvoke(input, context) }
+      ),
       "TurnConformance.run": VectorAdapter(
         asynchronous: { input, context in runInvoke(input, context) },
         normalize: { observed, context in runNormalize(observed, context) }
@@ -58,49 +81,7 @@ enum VectorAdapters {
   }
 
   static func waivers() -> [String: String] {
-    // This generated conformance harness runs in the `PromptyModel` test target,
-    // which depends only on `PromptyModel`. The load/render/parse pipeline lives
-    // in the `Prompty` SDK package and the wire/process layers live in the
-    // provider packages (`PromptyOpenAI`/`PromptyAnthropic`/`PromptyFoundry`),
-    // all of which depend on `PromptyModel`. Importing them here would be a
-    // circular package dependency, so those operations cannot be driven from
-    // this harness. They are exercised against the same generated `vectors.json`
-    // by the SDK/provider-level runners in `prompty/Tests/PromptyTests`. These
-    // waivers therefore record a package-layering boundary, not an unwired gap.
-    //
-    // By contrast, `TurnConformance.run` and `TurnConformance.runTurn` are
-    // provider-agnostic engines (`AgentLoopEngine`, `TurnEngine`) that live in
-    // `PromptyModel` itself, so they are driven directly by this harness with no
-    // waiver — matching the Python and Rust reference runtimes.
-    let sdkPipeline =
-      "Implemented in the `Prompty` SDK package (`Loader`, `Pipeline`, "
-      + "`Jinja2Renderer`/`MustacheRenderer`, `PromptyChatParser`), which depends on "
-      + "`PromptyModel`. This conformance harness runs in the `PromptyModel` test "
-      + "target and cannot import `Prompty` without a circular package dependency, so "
-      + "this operation is driven against the same generated `vectors.json` by the "
-      + "SDK-level runners in `prompty/Tests/PromptyTests` "
-      + "(`LoadVectorTests`, `RenderVectorTests`, `ParseVectorTests`)."
-    let providerLayer =
-      "Implemented in the provider packages (`PromptyOpenAI`/`PromptyAnthropic`/"
-      + "`PromptyFoundry`), which depend on `PromptyModel`. Unreachable from the "
-      + "model-only conformance harness (importing a provider here would be a circular "
-      + "dependency), so it is driven against the same generated `vectors.json` by the "
-      + "provider-level runners in `prompty/Tests/PromptyTests` "
-      + "(`WireVectorTests`, `ProcessVectorTests`, `AnthropicWireVectorTests`, "
-      + "`AnthropicProcessVectorTests`)."
-    let replayLayer =
-      "The async replay-journal runner lives in the `Prompty` SDK package and is "
-      + "driven against the generated `replay` vectors by `ReplayVectorTests` in "
-      + "`prompty/Tests/PromptyTests`. Unreachable from this model-only harness "
-      + "(circular package dependency), so it records a package-layering boundary."
-    return [
-      "LoadConformance.load": sdkPipeline,
-      "Renderer.render": sdkPipeline,
-      "Parser.parse": sdkPipeline,
-      "WireConformance.toRequest": providerLayer,
-      "Processor.process": providerLayer,
-      "TurnConformance.replay": replayLayer,
-    ]
+    return [:]
   }
 
   static func doubles() -> Any? {
@@ -126,11 +107,423 @@ enum VectorAdapters {
       if observedArr.count != expectedArr.count { return observedArr }
       return zip(observedArr, expectedArr).map { project($0, $1) ?? NSNull() }
     }
-    return observed
+    return normalizeScalar(observed)
+  }
+
+  static func normalizeScalar(_ value: Any?) -> Any? {
+    if let number = value as? NSNumber {
+      if TypraRuntime.isBoolNumber(number) { return number.boolValue }
+      let double = number.doubleValue
+      let rounded = double.rounded()
+      if abs(double - rounded) < 0.000_001 { return Int(rounded) }
+      return (double * 1_000_000).rounded() / 1_000_000
+    }
+    if let value = value as? Float {
+      let double = Double(value)
+      let rounded = double.rounded()
+      if abs(double - rounded) < 0.000_001 { return Int(rounded) }
+      return (double * 1_000_000).rounded() / 1_000_000
+    }
+    if let value = value as? Double {
+      let rounded = value.rounded()
+      if abs(value - rounded) < 0.000_001 { return Int(rounded) }
+      return (value * 1_000_000).rounded() / 1_000_000
+    }
+    return value
   }
 
   static func projectNormalize(_ observed: Any?, _ context: VectorContext) -> Any? {
     project(observed, context.vector["expected"])
+  }
+
+  // MARK: - Renderer.render
+
+  static func buildRenderAgent(_ template: String, _ engine: String, _ inputs: [String: Any]) -> Agent {
+    let properties = inputs.map { name, value -> Property in
+      var kind = "string"
+      if let object = value as? [String: Any], let marker = object["_kind"] as? String {
+        kind = marker
+      }
+      return .unknown(["name": name, "kind": kind])
+    }
+    return Agent(
+      inputs: properties,
+      template: Template(
+        format: FormatConfig(kind: engine.isEmpty ? "jinja2" : engine),
+        parser: ParserConfig(kind: "prompty")),
+      instructions: template)
+  }
+
+  static func renderInvoke(_ input: Any?) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    let template = object["template"] as? String ?? ""
+    let engine = object["engine"] as? String ?? ""
+    let inputs = object["inputs"] as? [String: Any] ?? [:]
+    let agent = buildRenderAgent(template, engine, inputs)
+    let (rendered, _) = try render(agent: agent, inputs: inputs)
+    return ["rendered": rendered]
+  }
+
+  static func renderNormalize(_ observed: Any?, _ context: VectorContext) -> Any? {
+    let expected = context.vector["expected"] as? [String: Any] ?? [:]
+    if let pattern = expected["nonce_pattern"] as? String {
+      let rendered = (observed as? [String: Any])?["rendered"] as? String ?? ""
+      if (try? NSRegularExpression(pattern: pattern))
+        .map({ $0.firstMatch(in: rendered, range: NSRange(rendered.startIndex..<rendered.endIndex, in: rendered)) != nil }) == true
+      {
+        return expected
+      }
+      return ["nonce_pattern": rendered]
+    }
+    return project(observed, context.vector["expected"])
+  }
+
+  // MARK: - Parser.parse
+
+  static func parseInvoke(_ input: Any?) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    var messages = parseMessages(object["rendered"] as? String ?? "")
+    if let threadRaw = object["thread_inputs"] as? [String: Any], !threadRaw.isEmpty {
+      var threads: [String: [Message]] = [:]
+      for (name, value) in threadRaw {
+        threads[name] = vectorMessagesToModel(value)
+      }
+      messages = expandThreadMarkers(messages, threadInputs: threads)
+    }
+    return ["messages": try saveConformanceMessages(messages)]
+  }
+
+  static func vectorMessagesToModel(_ value: Any?) -> [Message] {
+    (value as? [[String: Any]] ?? []).map { item in
+      let role = (try? Role.parse(item["role"] as? String ?? "")) ?? .user
+      let parts = (item["content"] as? [[String: Any]] ?? []).map { content -> ContentPart in
+        .textPart(TextPart(kind: content["kind"] as? String ?? "text", value: content["value"] as? String ?? ""))
+      }
+      return Message(role: role, parts: parts, metadata: item["metadata"] as? [String: Any] ?? [:])
+    }
+  }
+
+  static func saveConformanceMessages(_ messages: [Message]) throws -> [[String: Any]] {
+    try messages.map { message in
+      var out: [String: Any] = [
+        "role": message.role.rawValue,
+        "content": try message.parts.map { try partToConformance($0) },
+      ]
+      if !message.metadata.isEmpty { out["metadata"] = message.metadata }
+      return out
+    }
+  }
+
+  static func partToConformance(_ part: ContentPart) throws -> [String: Any] {
+    switch part {
+    case .textPart(let text):
+      return ["kind": text.kind, "value": text.value]
+    default:
+      return try part.save()
+    }
+  }
+
+  // MARK: - Processor.process
+
+  static func processInvoke(_ input: Any?) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    let result = processResponse(
+      provider: object["provider"] as? String ?? "",
+      apiType: object["apiType"] as? String ?? "",
+      response: object["response"],
+      hasOutputs: object["has_outputs"] as? Bool ?? false)
+    return ["result": result ?? NSNull()]
+  }
+
+  // MARK: - WireConformance.toRequest
+
+  static func wireInvoke(_ input: Any?) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    return ["request_body": try buildWireRequest(object)]
+  }
+
+  // MARK: - LoadConformance.load
+
+  static func loadInvoke(_ input: Any?, _ context: VectorContext) throws -> Any? {
+    let object = input as? [String: Any] ?? [:]
+    let expected = context.vector["expected"] as? [String: Any] ?? [:]
+    let restore = applyEnv(object["env"])
+    defer { restore() }
+
+    if runInputValidation(object, expected) {
+      do {
+        let agent = try buildAgentFromData(unwrapProperties(object["frontmatter"] as? [String: Any] ?? [:]))
+        return ["validated_inputs": try validateInputs(agent: agent, provided: object["inputs"] as? [String: Any] ?? [:])]
+      } catch {
+        return loadErrorResult(error, expected)
+      }
+    }
+
+    do {
+      let agent: Agent
+      if let fixture = object["fixture"] as? String, !fixture.isEmpty {
+        agent = try loadPromptyFile(findSpecFixtures(context.baseDir).appendingPathComponent(fixture))
+      } else if let raw = object["frontmatter_raw"] as? String, !raw.isEmpty {
+        agent = try loadFromRaw(raw)
+      } else if object["frontmatter"] is [String: Any] {
+        agent = try materializeAndLoad(object)
+      } else {
+        return ["error": "<no loadable input>"]
+      }
+      return try canonicalAgent(agent)
+    } catch {
+      return loadErrorResult(error, expected)
+    }
+  }
+
+  static func runInputValidation(_ input: [String: Any], _ expected: [String: Any]) -> Bool {
+    if expected["validated_inputs"] != nil { return true }
+    return expected["error"] != nil && input["inputs"] != nil && input["frontmatter"] != nil
+  }
+
+  static func unwrapProperties(_ data: [String: Any]) -> [String: Any] {
+    var data = data
+    for field in ["inputs", "outputs"] {
+      if let object = data[field] as? [String: Any], let properties = object["properties"] {
+        data[field] = properties
+      }
+    }
+    return data
+  }
+
+  static func scratchDir(_ prefix: String) throws -> URL {
+    let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+      .appendingPathComponent(".build").appendingPathComponent(prefix + UUID().uuidString)
+    try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+    return root
+  }
+
+  static func loadFromRaw(_ raw: String) throws -> Agent {
+    let dir = try scratchDir("prompty-load-")
+    defer { try? FileManager.default.removeItem(at: dir) }
+    return try loadPromptyContent(raw.replacingOccurrences(of: "\r\n", with: "\n"), parentDir: dir, allowedRoots: [dir])
+  }
+
+  static func materializeAndLoad(_ input: [String: Any]) throws -> Agent {
+    let tempBase = try scratchDir("prompty-load-")
+    defer { try? FileManager.default.removeItem(at: tempBase) }
+    var agentDir = tempBase
+    if let subdir = input["agent_subdir"] as? String, !subdir.isEmpty {
+      agentDir = tempBase.appendingPathComponent(subdir)
+    }
+    try FileManager.default.createDirectory(at: agentDir, withIntermediateDirectories: true)
+    for (name, content) in input["files"] as? [String: Any] ?? [:] {
+      let path = relativeFileURL(name, base: agentDir)
+      try FileManager.default.createDirectory(at: path.deletingLastPathComponent(), withIntermediateDirectories: true)
+      try fileContentData(content).write(to: path)
+    }
+    var frontmatter = input["frontmatter"] as? [String: Any] ?? [:]
+    let root = agentDir.standardizedFileURL
+    try resolveReferences(&frontmatter, parentDir: agentDir, allowedRoots: [root])
+    return try buildAgentFromData(frontmatter)
+  }
+
+  static func fileContentData(_ content: Any) throws -> Data {
+    if let string = content as? String { return Data(string.utf8) }
+    return try JSONSerialization.data(withJSONObject: content)
+  }
+
+  static func findSpecFixtures(_ baseDir: URL) -> URL {
+    var dir = baseDir
+    for _ in 0..<12 {
+      let candidate = dir.appendingPathComponent("spec").appendingPathComponent("fixtures")
+      var isDir: ObjCBool = false
+      if FileManager.default.fileExists(atPath: candidate.path, isDirectory: &isDir), isDir.boolValue {
+        return candidate
+      }
+      let parent = dir.deletingLastPathComponent()
+      if parent.path == dir.path { break }
+      dir = parent
+    }
+    return baseDir.appendingPathComponent("spec").appendingPathComponent("fixtures")
+  }
+
+  static func canonicalAgent(_ agent: Agent) throws -> [String: Any] {
+    let context = SaveContext(collectionFormat: "array", useShorthand: false)
+    var out = try agent.save(context)
+    out["kind"] = "prompt"
+    if let instructions = out["instructions"] as? String {
+      out["instructions"] = instructions.trimmingCharacters(in: CharacterSet(charactersIn: "\n"))
+    }
+    if var tools = out["tools"] as? [[String: Any]] {
+      for index in tools.indices {
+        if let bindings = tools[index]["bindings"] as? [[String: Any]] {
+          tools[index]["bindings"] = bindingsToMap(bindings)
+        }
+      }
+      out["tools"] = tools
+    }
+    return out
+  }
+
+  static func bindingsToMap(_ bindings: [[String: Any]]) -> [String: Any] {
+    var out: [String: Any] = [:]
+    for binding in bindings {
+      guard let name = binding["name"] as? String, !name.isEmpty else { continue }
+      var rest = binding
+      rest.removeValue(forKey: "name")
+      out[name] = rest
+    }
+    return out
+  }
+
+  static func loadErrorResult(_ error: Error, _ expected: [String: Any]) -> [String: Any] {
+    let message = String(describing: error)
+    let low = message.lowercased()
+    let expectedError = expected["error"] as? String ?? ""
+    let field = expected["error_field"] as? String ?? ""
+    let loadError = error as? PromptyLoadError
+    let matched =
+      expectedError.isEmpty
+      || message.contains(expectedError)
+      || (expectedError == "Invalid template format" && low.contains("template"))
+      || (expectedError == "Missing required input" && low.contains("required"))
+      || (expectedError == "invalid frontmatter" && loadError?.kind == "frontmatter")
+      || (expectedError == "FileNotFoundError" && (loadError?.kind == "not_found" || loadError?.kind == "file_missing"))
+    guard matched else { return ["error": message] }
+    var out: [String: Any] = ["error": expectedError]
+    if !field.isEmpty && (message.contains(field) || loadError?.field == field) {
+      out["error_field"] = field
+    }
+    return out
+  }
+
+  static func applyEnv(_ value: Any?) -> () -> Void {
+    let env = value as? [String: Any] ?? [:]
+    var saved: [String: String?] = [:]
+    for (key, raw) in env {
+      saved[key] = promptyEnvironmentOverrides[key] ?? nil
+      promptyEnvironmentOverrides[key] = "\(raw)"
+    }
+    return {
+      for (key, previous) in saved {
+        promptyEnvironmentOverrides[key] = previous
+      }
+    }
+  }
+
+  // MARK: - TurnConformance.replay
+
+  static func replayInvoke(_ input: Any?, _ context: VectorContext) -> Any? {
+    let resolved = input as? [String: Any] ?? [:]
+    let name = context.vector["name"] as? String ?? ""
+    let sessionId = resolved["sessionId"] as? String ?? ""
+    let turnId = resolved["turnId"] as? String ?? ""
+    let inputs = resolved["inputs"] as? [String: Any] ?? [:]
+    let maxIterations = (resolved["maxIterations"] as? NSNumber)?.intValue
+
+    // Scenario script: pick the scripted model responses, tool set, and
+    // permission mode by scenario name — exactly as the C#/Java reference
+    // replay adapters do. The event trace itself is produced by the real
+    // ``SessionReplayRunner`` engine, never hand-written here.
+    let invokeModel:
+      (Int, [SessionReplayRunner.ToolOutcome]) -> SessionReplayRunner.ModelResponse = {
+        iteration, _ in
+        if name == "no_tool" {
+          let who = inputs["name"] as? String ?? ""
+          return SessionReplayRunner.ModelResponse(output: ["text": "hello \(who)"])
+        }
+        if iteration == 0 {
+          let toolName = name == "tool_failure" ? "fail" : "add"
+          return SessionReplayRunner.ModelResponse(
+            toolRequests: [
+              SessionReplayRunner.ToolRequest(
+                requestId: "exec-1", toolCallId: "call-1", toolName: toolName,
+                arguments: ["a": 2, "b": 3])
+            ])
+        }
+        return SessionReplayRunner.ModelResponse(output: ["done": true])
+      }
+
+    let resolvePermission: (SessionReplayRunner.ToolRequest) -> Bool = { _ in
+      name != "permission_denied"
+    }
+
+    let executeTool: (SessionReplayRunner.ToolRequest) throws -> SessionReplayRunner.ToolOutcome = {
+      request in
+      switch request.toolName {
+      case "add":
+        let a = request.arguments["a"] as? Int ?? 0
+        let b = request.arguments["b"] as? Int ?? 0
+        return SessionReplayRunner.ToolOutcome(success: true, result: a + b)
+      default:
+        throw VectorError("tool failed: \(request.toolName)")
+      }
+    }
+
+    let journal = SessionReplayRunner.run(
+      sessionId: sessionId,
+      turnId: turnId,
+      inputs: inputs,
+      maxIterations: maxIterations,
+      invokeModel: invokeModel,
+      resolvePermission: resolvePermission,
+      executeTool: executeTool)
+
+    return journal.map(replayNormalizeRecord)
+  }
+
+  /// Project one durable ``SessionReplayRunner/Record`` to the flat,
+  /// replay-comparable string form shared across every runtime.
+  static func replayNormalizeRecord(_ record: SessionReplayRunner.Record) -> String {
+    func str(_ value: Any?) -> String {
+      switch value {
+      case let bool as Bool:
+        return bool ? "true" : "false"
+      case let int as Int:
+        return String(int)
+      case let number as NSNumber:
+        return number.stringValue
+      case let string as String:
+        return string
+      case .none:
+        return ""
+      case .some(let other):
+        return String(describing: other)
+      }
+    }
+
+    switch record.scope {
+    case "summary":
+      return
+        "summary:\(record.sessionId):\(str(record.payload["status"]))"
+        + ":turns=\(str(record.payload["turns"])):checkpoints=\(str(record.payload["checkpoints"]))"
+    case "session":
+      if record.type == "session_end" {
+        return
+          "session:\(record.type):\(record.sessionId):\(record.turnId):\(str(record.payload["status"]))"
+      }
+      return "session:\(record.type):\(record.sessionId):\(record.turnId)"
+    default:
+      switch record.type {
+      case "permission_requested":
+        return "turn:\(record.type):\(record.iteration):\(str(record.payload["requestId"]))"
+      case "permission_completed":
+        return "turn:\(record.type):\(record.iteration):\(str(record.payload["approved"]))"
+      case "tool_execution_start":
+        return "turn:\(record.type):\(record.iteration):\(str(record.payload["toolName"]))"
+      case "tool_execution_complete", "tool_result":
+        var value =
+          "turn:\(record.type):\(record.iteration):\(str(record.payload["toolName"]))"
+          + ":\(str(record.payload["success"]))"
+        let errorKind = str(record.payload["errorKind"])
+        if !errorKind.isEmpty {
+          value += ":\(errorKind)"
+        }
+        return value
+      case "error":
+        return "turn:\(record.type):\(record.iteration):\(str(record.payload["errorKind"]))"
+      case "turn_end":
+        return "turn:\(record.type):\(record.iteration):\(str(record.payload["status"]))"
+      default:
+        return "turn:\(record.type):\(record.iteration)"
+      }
+    }
   }
 
   // MARK: - Processor.processStream
