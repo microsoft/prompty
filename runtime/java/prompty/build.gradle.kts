@@ -20,6 +20,16 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+    // Test-only edges into the provider modules so the generated @vector
+    // conformance harness (emitted into this module's test source set) can drive
+    // the real wire/process/discovery layers instead of waiving them. This is a
+    // DAG, not a cycle: the providers consume only :prompty's production
+    // apiElements, never its test classpath, so resolving testCompileClasspath
+    // here pulls provider main -> :prompty main without ever looping back.
+    testImplementation(project(":prompty-openai"))
+    testImplementation(project(":prompty-anthropic"))
+    testImplementation(project(":prompty-foundry"))
+
     testFixturesApi(platform("org.junit:junit-bom:5.11.4"))
     testFixturesApi("org.junit.jupiter:junit-jupiter")
 }

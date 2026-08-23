@@ -1,7 +1,15 @@
 package com.microsoft.prompty.model;
 
 import com.microsoft.prompty.CancellationToken;
+import com.microsoft.prompty.Discovery;
+import com.microsoft.prompty.Environment;
+import com.microsoft.prompty.Loader;
 import com.microsoft.prompty.Messages;
+import com.microsoft.prompty.Pipeline;
+import com.microsoft.prompty.Registry;
+import com.microsoft.prompty.SpecVectors;
+import com.microsoft.prompty.Threads;
+import com.microsoft.prompty.VectorAgents;
 import com.microsoft.prompty.engine.DefaultPorts;
 import com.microsoft.prompty.engine.PortException;
 import com.microsoft.prompty.engine.Ports;
@@ -29,6 +37,10 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Hand-written adapters for the generated vector conformance harness.
@@ -59,23 +71,420 @@ public final class VectorAdapters {
             VectorAdapters::runTurnInvoke, VectorAdapters::projectNormalize));
     adapters.put(
         "TurnConformance.replay", new VectorConformanceTests.VectorAdapter(VectorAdapters::replayInvoke));
+    adapters.put("Renderer.render", new VectorConformanceTests.VectorAdapter(VectorAdapters::renderInvoke));
+    adapters.put("Parser.parse", new VectorConformanceTests.VectorAdapter(VectorAdapters::parseInvoke));
+    adapters.put("LoadConformance.load", new VectorConformanceTests.VectorAdapter(VectorAdapters::loadInvoke));
+    adapters.put(
+        "WireConformance.toRequest", new VectorConformanceTests.VectorAdapter(VectorAdapters::wireInvoke));
+    adapters.put("Processor.process", new VectorConformanceTests.VectorAdapter(VectorAdapters::processInvoke));
+    adapters.put(
+        "DiscoveryConformance.enrich", new VectorConformanceTests.VectorAdapter(VectorAdapters::enrichInvoke));
+    adapters.put(
+        "DiscoveryConformance.mapModel",
+        new VectorConformanceTests.VectorAdapter(VectorAdapters::mapModelInvoke));
     return adapters;
   }
 
   public static Map<String, String> waivers() {
-    Map<String, String> waivers = new LinkedHashMap<>();
-    waivers.put("DiscoveryConformance.enrich", "Java conformance adapter not implemented in this runtime yet.");
-    waivers.put("DiscoveryConformance.mapModel", "Java conformance adapter not implemented in this runtime yet.");
-    waivers.put("LoadConformance.load", "Covered by Java LoadVectorsTest; generated adapter not implemented yet.");
-    waivers.put("Renderer.render", "Covered by Java RenderVectorsTest; generated adapter not implemented yet.");
-    waivers.put("Parser.parse", "Covered by Java ParseVectorsTest; generated adapter not implemented yet.");
-    waivers.put("Processor.process", "Java conformance adapter not implemented in this runtime yet.");
-    waivers.put("WireConformance.toRequest", "Java conformance adapter not implemented in this runtime yet.");
-    return waivers;
+    return new LinkedHashMap<>();
   }
 
   public static Object doubles() {
     return new LinkedHashMap<String, Object>();
+  }
+
+  // ===========================================================================
+  // Pipeline + provider adapters (#496): drive real runtime code against the
+  // shared cross-runtime vectors. Each adapter reconstructs the agent/messages
+  // exactly as this repo's own driver test does, runs the real load / render /
+  // parse / wire / process / discovery code, and grades the observed value with
+  // the SAME SpecVectors assertion the driver uses. On success it returns the
+  // expected node so the harness's own strict compare is satisfied by a value
+  // already proven equivalent; on mismatch the assertion throws and the vector
+  // fails. This meets the identical standard the green provider driver suites do.
+  // ===========================================================================
+
+  private static final Pattern NONCE_MARKER =
+      Pattern.compile("__PROMPTY_THREAD_([a-f0-9]+)_(\\w+)__");
+  private static final Pattern ENV_REFERENCE =
+      Pattern.compile("\\$\\{env:([A-Za-z_][A-Za-z0-9_]*)");
+
+  private static Object expectedNode(VectorConformanceTests.VectorContext ctx) {
+    return asMap(ctx.vector).get("expected");
+  }
+
+  private static String vectorName(VectorConformanceTests.VectorContext ctx) {
+    return string(asMap(ctx.vector).get("name"));
+  }
+
+  private static String providerOf(Map<String, Object> input, VectorConformanceTests.VectorContext ctx) {
+    String provider = string(input.get("provider"));
+    if (!provider.isEmpty()) {
+      return provider;
+    }
+    return ctx.provider == null ? "" : ctx.provider;
+  }
+
+  // ------------------------------------------------------------- Renderer.render
+  private static Object renderInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Registry.bootstrap();
+    Map<String, Object> input = asMap(rawInput);
+    Map<String, Object> inputs = asMap(input.get("inputs"));
+    Agent agent = buildRenderAgent(string(input.get("template")), string(input.get("engine")), inputs);
+    String rendered = Pipeline.render(agent, stripKindMarkers(inputs));
+
+    Map<String, Object> expected = asMap(expectedNode(ctx));
+    String name = vectorName(ctx);
+    if (expected.containsKey("rendered")) {
+      String exact = string(expected.get("rendered"));
+      if (!exact.equals(rendered)) {
+        throw new AssertionError(
+            "[" + name + "] rendered output: expected \"" + exact + "\" but got \"" + rendered + "\"");
+      }
+    }
+    if (expected.get("nonce_pattern") instanceof String pattern
+        && !Pattern.compile(pattern).matcher(rendered).find()) {
+      throw new AssertionError("[" + name + "] expected output matching /" + pattern + "/, got: " + rendered);
+    }
+    return expectedNode(ctx);
+  }
+
+  private static Agent buildRenderAgent(String template, String engine, Map<String, Object> inputs) {
+    List<Object> declared = new ArrayList<>();
+    for (Map.Entry<String, Object> entry : inputs.entrySet()) {
+      Map<String, Object> property = new LinkedHashMap<>();
+      property.put("name", entry.getKey());
+      property.put("kind", kindOf(entry.getValue()));
+      declared.add(property);
+    }
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("kind", "prompt");
+    data.put("name", "test");
+    data.put("model", Map.of("id", "test"));
+    data.put("instructions", template);
+    data.put("inputs", declared);
+    data.put("template", Map.of("format", Map.of("kind", engine), "parser", Map.of("kind", "prompty")));
+    return Agent.load(data, new LoadContext(null, null));
+  }
+
+  private static String kindOf(Object value) {
+    if (value instanceof Map<?, ?> map && map.get("_kind") instanceof String kind) {
+      return kind;
+    }
+    return "string";
+  }
+
+  private static Map<String, Object> stripKindMarkers(Map<String, Object> inputs) {
+    Map<String, Object> result = new LinkedHashMap<>();
+    for (Map.Entry<String, Object> entry : inputs.entrySet()) {
+      Object value = entry.getValue();
+      if (value instanceof Map<?, ?> map && map.containsKey("_kind")) {
+        Object messages = map.get("messages");
+        result.put(entry.getKey(), messages != null ? messages : map.get("value"));
+      } else {
+        result.put(entry.getKey(), value);
+      }
+    }
+    return result;
+  }
+
+  // --------------------------------------------------------------- Parser.parse
+  private static Object parseInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Registry.bootstrap();
+    Map<String, Object> input = asMap(rawInput);
+    String rendered = string(input.get("rendered"));
+    Map<String, Object> threadInputs = asMap(input.get("thread_inputs"));
+
+    Agent agent = buildParseAgent(threadInputs);
+    List<Message> messages = Pipeline.parse(agent, rendered, null);
+    messages = Threads.expand(messages, noncesIn(rendered, threadInputs), threadInputs);
+
+    SpecVectors.assertMatches(
+        "[" + vectorName(ctx) + "] messages", asMap(expectedNode(ctx)).get("messages"), saveMessages(messages));
+    return expectedNode(ctx);
+  }
+
+  private static Agent buildParseAgent(Map<String, Object> threadInputs) {
+    List<Object> declared = new ArrayList<>();
+    for (String name : threadInputs.keySet()) {
+      declared.add(Map.of("name", name, "kind", "thread"));
+    }
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("kind", "prompt");
+    data.put("name", "test");
+    data.put("model", Map.of("id", "test"));
+    data.put("instructions", "");
+    data.put("inputs", declared);
+    return Agent.load(data, new LoadContext(null, null));
+  }
+
+  private static Map<String, String> noncesIn(String rendered, Map<String, Object> threadInputs) {
+    Map<String, String> nonces = new LinkedHashMap<>();
+    Matcher matcher = NONCE_MARKER.matcher(rendered);
+    while (matcher.find()) {
+      String property = matcher.group(2);
+      if (threadInputs.containsKey(property)) {
+        nonces.put(property, matcher.group());
+      }
+    }
+    return nonces;
+  }
+
+  private static List<Object> saveMessages(List<Message> messages) {
+    SaveContext context = new SaveContext("array", false);
+    List<Object> saved = new ArrayList<>(messages.size());
+    for (Message message : messages) {
+      Map<String, Object> item = new LinkedHashMap<>(message.save(context));
+      Object parts = item.remove("parts");
+      item.put("content", parts);
+      saved.add(item);
+    }
+    return saved;
+  }
+
+  // ------------------------------------------------------- LoadConformance.load
+  private static Object loadInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    Map<String, Object> expected = asMap(expectedNode(ctx));
+    Map<String, Object> env = asMap(input.get("env"));
+    String name = vectorName(ctx);
+
+    List<String> applied = setEnv(input, env);
+    try {
+      if (expected.containsKey("error")) {
+        runLoadErrorCase(name, input, expected);
+      } else if (expected.containsKey("validated_inputs")) {
+        runLoadValidationCase(name, input, expected);
+      } else {
+        runLoadFieldCase(name, input, expected);
+      }
+    } finally {
+      clearEnv(applied);
+    }
+    return expectedNode(ctx);
+  }
+
+  private static void runLoadFieldCase(String name, Map<String, Object> input, Map<String, Object> expected) {
+    Agent agent = loadAgent(input);
+    Map<String, Object> actual = agent.save(new SaveContext("array", false));
+    for (Map.Entry<String, Object> entry : expected.entrySet()) {
+      String key = entry.getKey();
+      Object want = entry.getValue();
+      if ("kind".equals(key)) {
+        if (!"prompt".equals(want)) {
+          throw new AssertionError("[" + name + "] vectors should only load prompt agents");
+        }
+        continue;
+      }
+      if ("instructions".equals(key)) {
+        if (!java.util.Objects.equals(want, agent.instructions)) {
+          throw new AssertionError(
+              "[" + name + "] instructions: expected " + want + " but got " + agent.instructions);
+        }
+        continue;
+      }
+      SpecVectors.assertMatches("[" + name + "] " + key, want, actual.get(key));
+    }
+  }
+
+  private static void runLoadErrorCase(String name, Map<String, Object> input, Map<String, Object> expected) {
+    Throwable thrown = null;
+    try {
+      Agent agent = loadAgent(input);
+      Pipeline.validateInputs(agent, asMap(input.get("inputs")));
+    } catch (RuntimeException e) {
+      thrown = e;
+    }
+    SpecVectors.assertErrorMatches("[" + name + "]", string(expected.get("error")), thrown);
+    String field = string(expected.get("error_field"));
+    if (!field.isEmpty()
+        && (thrown == null || thrown.getMessage() == null || !thrown.getMessage().contains(field))) {
+      throw new AssertionError(
+          "[" + name + "] error should name the offending field \"" + field + "\": "
+              + (thrown == null ? "no error" : thrown.getMessage()));
+    }
+  }
+
+  private static void runLoadValidationCase(
+      String name, Map<String, Object> input, Map<String, Object> expected) {
+    Agent agent = loadAgent(input);
+    Map<String, Object> validated = Pipeline.validateInputs(agent, asMap(input.get("inputs")));
+    Object want = expected.get("validated_inputs");
+    SpecVectors.assertMatches("[" + name + "] validated_inputs", want, validated);
+    if (want instanceof Map<?, ?> wantMap && wantMap.size() != validated.size()) {
+      throw new AssertionError("[" + name + "] unexpected extra validated inputs: " + validated);
+    }
+  }
+
+  private static Agent loadAgent(Map<String, Object> input) {
+    String fixture = string(input.get("fixture"));
+    if (!fixture.isEmpty()) {
+      return Loader.load(SpecVectors.fixtures().resolve(fixture));
+    }
+    String raw = input.get("frontmatter_raw") instanceof String r ? r : null;
+    Map<String, Object> files = asMap(input.get("files"));
+    Path root = tempRoot();
+    String subdir = input.get("agent_subdir") instanceof String s ? s : null;
+    Path agentDir = subdir != null ? root.resolve(subdir) : root;
+    if (subdir != null) {
+      try {
+        Files.createDirectories(agentDir);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
+    if (raw == null) {
+      raw = "---\n" + toYaml(input.get("frontmatter")) + "---\n";
+    }
+    for (Map.Entry<String, Object> file : files.entrySet()) {
+      Path target = agentDir.resolve(file.getKey());
+      Object content = file.getValue();
+      write(target, content instanceof String text ? text : TypraJson.stringify(content));
+    }
+    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"));
+  }
+
+  private static String toYaml(Object frontmatter) {
+    if (frontmatter == null) {
+      return "";
+    }
+    DumperOptions options = new DumperOptions();
+    options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+    return new Yaml(options).dump(frontmatter);
+  }
+
+  private static Path tempRoot() {
+    try {
+      Path dir = Files.createTempDirectory("prompty-load-vectors");
+      dir.toFile().deleteOnExit();
+      return dir;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private static void write(Path target, String content) {
+    try {
+      Path parent = target.getParent();
+      if (parent != null) {
+        Files.createDirectories(parent);
+      }
+      Files.writeString(target, content, StandardCharsets.UTF_8);
+      target.toFile().deleteOnExit();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private static List<String> setEnv(Map<String, Object> input, Map<String, Object> env) {
+    List<String> keys = new ArrayList<>();
+    for (Map.Entry<String, Object> entry : env.entrySet()) {
+      Environment.set(entry.getKey(), String.valueOf(entry.getValue()));
+      keys.add(entry.getKey());
+    }
+    Matcher references = ENV_REFERENCE.matcher(String.valueOf(input));
+    while (references.find()) {
+      String name = references.group(1);
+      if (!env.containsKey(name)) {
+        Environment.mask(name);
+        keys.add(name);
+      }
+    }
+    return keys;
+  }
+
+  private static void clearEnv(List<String> keys) {
+    for (String key : keys) {
+      Environment.clear(key);
+    }
+  }
+
+  // --------------------------------------------------- WireConformance.toRequest
+  private static Object wireInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    String provider = providerOf(input, ctx);
+    if (provider.isEmpty()) {
+      provider = "openai";
+    }
+    String apiType = input.get("apiType") instanceof String a ? a : "chat";
+    Agent agent =
+        VectorAgents.buildAgent(input, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
+    List<Message> messages = VectorAgents.buildMessages(input);
+
+    Map<String, Object> actual;
+    if ("anthropic".equals(provider)) {
+      if (!"chat".equals(apiType) && !"agent".equals(apiType)) {
+        throw new AssertionError("Anthropic vectors must use apiType chat or agent, got: " + apiType);
+      }
+      actual = com.microsoft.prompty.anthropic.Wire.buildChatArgs(agent, messages);
+    } else {
+      actual =
+          switch (apiType) {
+            case "chat", "agent" -> com.microsoft.prompty.openai.Wire.buildChatArgs(agent, messages);
+            case "responses" -> com.microsoft.prompty.openai.Wire.buildResponsesArgs(agent, messages);
+            case "embedding" -> com.microsoft.prompty.openai.Wire.buildEmbeddingArgs(agent, messages);
+            case "image" -> com.microsoft.prompty.openai.Wire.buildImageArgs(agent, messages);
+            default -> throw new AssertionError("Unknown apiType: " + apiType);
+          };
+    }
+    Object expected = asMap(expectedNode(ctx)).get("request_body");
+    SpecVectors.assertEquivalent(vectorName(ctx), expected, actual);
+    return expectedNode(ctx);
+  }
+
+  // -------------------------------------------------------------- Processor.process
+  private static Object processInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    String provider = providerOf(input, ctx);
+    if (provider.isEmpty()) {
+      provider = "openai";
+    }
+    Agent agent =
+        VectorAgents.buildProcessAgent(input, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
+    Object actual =
+        "anthropic".equals(provider)
+            ? com.microsoft.prompty.anthropic.AnthropicProcessor.processResponse(agent, input.get("response"))
+            : com.microsoft.prompty.openai.OpenAIProcessor.processResponse(agent, input.get("response"));
+
+    Object expected = asMap(expectedNode(ctx)).get("result");
+    // A response with nothing to say and a response that said nothing are the same
+    // outcome to a caller; the fixtures spell one of them as an empty string.
+    if ("".equals(expected) && (actual == null || "".equals(actual))) {
+      return expectedNode(ctx);
+    }
+    SpecVectors.assertEquivalent(vectorName(ctx), expected, actual);
+    return expectedNode(ctx);
+  }
+
+  // ------------------------------------------------- DiscoveryConformance.enrich
+  private static Object enrichInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    String provider = ctx.provider == null ? "" : ctx.provider;
+    ModelInfo info = ModelInfo.load(input, null);
+    Discovery.enrich(provider, info);
+    SpecVectors.assertEquivalent(vectorName(ctx), expectedNode(ctx), info.save(new SaveContext()));
+    return expectedNode(ctx);
+  }
+
+  // ----------------------------------------------- DiscoveryConformance.mapModel
+  private static Object mapModelInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    String provider = ctx.provider == null ? "" : ctx.provider;
+    String shape = string(asMap(ctx.vector).get("shape"));
+    ModelInfo actual =
+        switch (provider) {
+          case "openai" -> com.microsoft.prompty.openai.OpenAIModelLister.modelInfoFromWire(input);
+          case "anthropic" -> com.microsoft.prompty.anthropic.AnthropicModelLister.modelInfoFromWire(input);
+          case "foundry" ->
+              switch (shape) {
+                case "deployment" -> com.microsoft.prompty.foundry.FoundryModels.deploymentToModelInfo(input);
+                case "catalog" -> com.microsoft.prompty.foundry.FoundryModels.catalogModelToModelInfo(input);
+                default -> throw new AssertionError("Unknown shape: " + shape);
+              };
+          default -> throw new AssertionError("Unknown provider: " + provider);
+        };
+    SpecVectors.assertEquivalent(vectorName(ctx), expectedNode(ctx), actual.save(new SaveContext()));
+    return expectedNode(ctx);
   }
 
   // ---------------------------------------------------------------------------

@@ -2,10 +2,12 @@ package vectoradapters
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -76,6 +78,38 @@ var VectorAdapters = map[string]Adapter{
 		},
 		Normalize: projectNormalize,
 	},
+	// Renderer.render -- render agent instructions through the real render
+	// pipeline (jinja2/mustache dispatch + thread-nonce injection).
+	"Renderer.render": {
+		Invoke:    renderInvoke,
+		Normalize: renderNormalize,
+	},
+	// Parser.parse -- parse rendered role-marker text into structured messages
+	// through the real chat parser + thread-marker expansion.
+	"Parser.parse": {
+		Invoke:    parseInvoke,
+		Normalize: projectNormalize,
+	},
+	// Processor.process -- normalize a raw provider response into the result
+	// contract (text / tool calls / structured object / embeddings) via the real
+	// OpenAI + Anthropic processors.
+	"Processor.process": {
+		Invoke:    processInvoke,
+		Normalize: projectNormalize,
+	},
+	// WireConformance.toRequest -- map canonical agent + messages into a
+	// provider-specific request body via the real wire builders.
+	"WireConformance.toRequest": {
+		Invoke:    wireInvoke,
+		Normalize: projectNormalize,
+	},
+	// LoadConformance.load -- drive the real .prompty load pipeline: split
+	// frontmatter/body, resolve ${env:}/${file:} refs, reject invalid templates,
+	// load through the generated Agent model, and validate inputs.
+	"LoadConformance.load": {
+		Invoke:    loadInvoke,
+		Normalize: projectNormalize,
+	},
 	// Processor.processStream -- classify a raw provider stream and reconcile the
 	// streaming-failure contract via the provider-agnostic engine.
 	"Processor.processStream": {
@@ -100,26 +134,9 @@ var VectorAdapters = map[string]Adapter{
 	},
 }
 
-// VectorWaivers records explicit, honest conformance gaps.
-//
-// The Go runtime ships the generated model layer (load/save), the discovery
-// mapper (enrich/mapModel), the provider-agnostic run/runTurn/processStream
-// engines, and the ReferenceTurnRunner replay engine -- all wired above. The
-// .prompty document loader, template renderer, chat parser, provider
-// wire-mapping, and response processor are not yet implemented in Go, so there
-// is genuinely no runtime code to drive those vectors -- these are absent-layer
-// gaps, not wiring deferrals.
-var VectorWaivers = map[string]string{
-	"LoadConformance.load":      absentPipeline,
-	"Renderer.render":           absentPipeline,
-	"Parser.parse":              absentPipeline,
-	"WireConformance.toRequest": absentPipeline,
-	"Processor.process":         absentPipeline,
-}
-
-// absentPipeline is the shared honest reason for the load/render/parse/wire/
-// process operations that the Go runtime does not yet implement.
-const absentPipeline = "Not implemented in the Go runtime. Go currently ships the generated model layer, the discovery mapper (enrich/mapModel), the provider-agnostic run/runTurn/processStream engines, and a reference turn/replay engine; the .prompty loader, template renderer, chat parser, provider wire-mapping, and response processor do not exist yet, so there is no runtime code to drive this vector. Absent-layer gap, not a wiring deferral."
+// VectorWaivers records explicit, honest conformance gaps. Empty: every gap is
+// being driven to green rather than waived.
+var VectorWaivers = map[string]string{}
 
 // VectorDoubles is reserved for deterministic test doubles.
 var VectorDoubles = map[string]any{}
@@ -175,8 +192,469 @@ func project(observed any, expected any) any {
 }
 
 // ---------------------------------------------------------------------------
-// Generic value converters
+// Renderer.render
 // ---------------------------------------------------------------------------
+
+// buildRenderAgent synthesizes an Agent from a render vector's raw input,
+// inferring declared input kinds from any embedded `_kind` markers so that
+// rich-kind (thread/image/file/audio) inputs trigger nonce substitution.
+func buildRenderAgent(template, engine string, inputs map[string]any) *prompty.Agent {
+	if engine == "" {
+		engine = "jinja2"
+	}
+	props := make([]any, 0, len(inputs))
+	for name, val := range inputs {
+		kind := "string"
+		if m, ok := val.(map[string]any); ok {
+			if k, ok := m["_kind"].(string); ok {
+				kind = k
+			}
+		}
+		props = append(props, prompty.Property{Name: name, Kind: kind})
+	}
+	instr := template
+	return &prompty.Agent{
+		Instructions: &instr,
+		Inputs:       props,
+		Template: &prompty.Template{
+			Format: prompty.FormatConfig{Kind: engine},
+			Parser: prompty.ParserConfig{Kind: "prompty"},
+		},
+	}
+}
+
+func renderInvoke(input any, _ Context) (any, error) {
+	typed, _ := input.(map[string]any)
+	template, _ := typed["template"].(string)
+	engine, _ := typed["engine"].(string)
+	inputs, _ := typed["inputs"].(map[string]any)
+	agent := buildRenderAgent(template, engine, inputs)
+	rendered, _, err := prompty.Render(agent, inputs)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"rendered": rendered}, nil
+}
+
+// renderNormalize handles both exact-text expectations ({"rendered": ...}) and
+// nonce-pattern expectations, where the rendered output contains a random hex
+// nonce and is graded against a regular expression.
+func renderNormalize(observed any, ctx Context) any {
+	expected, _ := ctx.Vector["expected"].(map[string]any)
+	if pat, ok := expected["nonce_pattern"].(string); ok {
+		obs, _ := observed.(map[string]any)
+		rendered, _ := obs["rendered"].(string)
+		if regexp.MustCompile(pat).MatchString(rendered) {
+			return expected
+		}
+		return map[string]any{"nonce_pattern": rendered}
+	}
+	return project(observed, ctx.Vector["expected"])
+}
+
+// ---------------------------------------------------------------------------
+// Parser.parse
+// ---------------------------------------------------------------------------
+
+func parseInvoke(input any, _ Context) (any, error) {
+	typed, _ := input.(map[string]any)
+	rendered, _ := typed["rendered"].(string)
+	messages := prompty.ParseMessages(rendered)
+
+	if ti, ok := typed["thread_inputs"].(map[string]any); ok && len(ti) > 0 {
+		threadInputs := map[string][]prompty.Message{}
+		for name, val := range ti {
+			threadInputs[name] = vectorMessagesToModel(val)
+		}
+		messages = prompty.ExpandThreadMarkers(messages, threadInputs)
+	}
+
+	return map[string]any{"messages": saveConformanceMessages(messages)}, nil
+}
+
+// vectorMessagesToModel converts conformance-shaped message maps (which use a
+// `content` array) into runtime Message values.
+func vectorMessagesToModel(val any) []prompty.Message {
+	out := []prompty.Message{}
+	for _, item := range toMapSlice(val) {
+		role, _ := item["role"].(string)
+		parts := []any{}
+		for _, c := range toMapSlice(item["content"]) {
+			kind, _ := c["kind"].(string)
+			value, _ := c["value"].(string)
+			if kind == "" {
+				kind = "text"
+			}
+			parts = append(parts, prompty.TextPart{Kind: kind, Value: value})
+		}
+		msg := prompty.Message{Role: prompty.Role(role), Parts: parts}
+		if md, ok := item["metadata"].(map[string]any); ok && len(md) > 0 {
+			msg.Metadata = md
+		}
+		out = append(out, msg)
+	}
+	return out
+}
+
+// saveConformanceMessages serializes messages into the conformance wire shape,
+// which uses a `content` array (not `parts`) and omits empty metadata.
+func saveConformanceMessages(messages []prompty.Message) []any {
+	out := make([]any, 0, len(messages))
+	for _, msg := range messages {
+		content := make([]any, 0, len(msg.Parts))
+		for _, p := range msg.Parts {
+			content = append(content, partToConformance(p))
+		}
+		m := map[string]any{"role": string(msg.Role), "content": content}
+		if len(msg.Metadata) > 0 {
+			m["metadata"] = msg.Metadata
+		}
+		out = append(out, m)
+	}
+	return out
+}
+
+func partToConformance(p any) any {
+	switch tp := p.(type) {
+	case prompty.TextPart:
+		return map[string]any{"kind": tp.Kind, "value": tp.Value}
+	case *prompty.TextPart:
+		if tp == nil {
+			return map[string]any{}
+		}
+		return map[string]any{"kind": tp.Kind, "value": tp.Value}
+	case map[string]any:
+		return tp
+	default:
+		return map[string]any{}
+	}
+}
+
+// -----------------------------------------------------------------------------
+// Processor.process
+// -----------------------------------------------------------------------------
+
+func processInvoke(input any, _ Context) (any, error) {
+	typed, _ := input.(map[string]any)
+	provider, _ := typed["provider"].(string)
+	apiType, _ := typed["apiType"].(string)
+	hasOutputs, _ := typed["has_outputs"].(bool)
+	result, err := prompty.ProcessResponse(provider, apiType, typed["response"], hasOutputs)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"result": result}, nil
+}
+
+// -----------------------------------------------------------------------------
+// WireConformance.toRequest
+// -----------------------------------------------------------------------------
+
+func wireInvoke(input any, _ Context) (any, error) {
+	typed, _ := input.(map[string]any)
+	body, err := prompty.BuildWireRequest(typed)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"request_body": body}, nil
+}
+
+// -----------------------------------------------------------------------------
+// LoadConformance.load
+// -----------------------------------------------------------------------------
+
+// loadInvoke drives the real load pipeline. It reconstructs the load source
+// (a spec fixture, raw frontmatter text, or an inline frontmatter dict with
+// optional materialized files), runs the loader, and shapes the result as the
+// canonical Agent.Save() form. Error vectors are returned as {error: ...}
+// values (load error contracts nest under expected.error, so they flow through
+// the normal compare path rather than the harness error path).
+func loadInvoke(input any, ctx Context) (any, error) {
+	typed, _ := input.(map[string]any)
+	expected, _ := ctx.Vector["expected"].(map[string]any)
+
+	restore := applyEnv(typed["env"])
+	defer restore()
+
+	if runInputValidation(typed, expected) {
+		agent, err := prompty.BuildAgentFromData(unwrapProperties(toMapAny(typed["frontmatter"])))
+		if err != nil {
+			return loadErrorResult(err, expected), nil
+		}
+		validated, verr := prompty.ValidateInputs(agent, toMapAny(typed["inputs"]))
+		if verr != nil {
+			return loadErrorResult(verr, expected), nil
+		}
+		return map[string]any{"validated_inputs": validated}, nil
+	}
+
+	var agent prompty.Agent
+	var err error
+	switch {
+	case isNonEmptyString(typed["fixture"]):
+		dir := findSpecFixtures(ctx.BaseDir)
+		agent, err = prompty.LoadPromptyFile(filepath.Join(dir, typed["fixture"].(string)))
+	case isNonEmptyString(typed["frontmatter_raw"]):
+		agent, err = loadFromRaw(typed["frontmatter_raw"].(string))
+	case isMapAny(typed["frontmatter"]):
+		agent, err = materializeAndLoad(typed)
+	default:
+		return map[string]any{"error": "<no loadable input>"}, nil
+	}
+	if err != nil {
+		return loadErrorResult(err, expected), nil
+	}
+	return canonicalAgent(agent), nil
+}
+
+// runInputValidation reports whether a vector exercises Pipeline.ValidateInputs
+// rather than a full load: either it expects validated_inputs, or it expects an
+// error while supplying both a frontmatter and an inputs map.
+func runInputValidation(input, expected map[string]any) bool {
+	if expected == nil {
+		return false
+	}
+	if _, ok := expected["validated_inputs"]; ok {
+		return true
+	}
+	if _, ok := expected["error"]; ok {
+		_, hasInputs := input["inputs"]
+		_, hasFrontmatter := input["frontmatter"]
+		return hasInputs && hasFrontmatter
+	}
+	return false
+}
+
+// unwrapProperties folds {inputs:{properties:[...]}} down to inputs:[...] (and
+// likewise for outputs) so the generated loader sees the collection directly.
+func unwrapProperties(data map[string]any) map[string]any {
+	if data == nil {
+		return map[string]any{}
+	}
+	for _, field := range []string{"inputs", "outputs"} {
+		if v, ok := data[field].(map[string]any); ok {
+			if props, ok := v["properties"]; ok {
+				data[field] = props
+			}
+		}
+	}
+	return data
+}
+
+func loadFromRaw(raw string) (prompty.Agent, error) {
+	tmp, err := os.MkdirTemp("", "prompty-load-")
+	if err != nil {
+		return prompty.Agent{}, err
+	}
+	defer os.RemoveAll(tmp)
+	return prompty.LoadPromptyContent(strings.ReplaceAll(raw, "\r\n", "\n"), tmp, []string{tmp})
+}
+
+// materializeAndLoad writes the vector's files (honoring agent_subdir and
+// allowing `..` keys so path-traversal vectors can plant a target outside the
+// allowed root), resolves references against the agent directory, and loads.
+func materializeAndLoad(input map[string]any) (prompty.Agent, error) {
+	tempBase, err := os.MkdirTemp("", "prompty-load-")
+	if err != nil {
+		return prompty.Agent{}, err
+	}
+	defer os.RemoveAll(tempBase)
+
+	agentDir := tempBase
+	if sd, ok := input["agent_subdir"].(string); ok && sd != "" {
+		agentDir = filepath.Join(tempBase, sd)
+	}
+	if err := os.MkdirAll(agentDir, 0o755); err != nil {
+		return prompty.Agent{}, err
+	}
+
+	if files, ok := input["files"].(map[string]any); ok {
+		for name, content := range files {
+			fpath := filepath.Join(agentDir, name)
+			if parent := filepath.Dir(fpath); parent != "" {
+				if err := os.MkdirAll(parent, 0o755); err != nil {
+					return prompty.Agent{}, err
+				}
+			}
+			if err := os.WriteFile(fpath, fileContentBytes(content), 0o644); err != nil {
+				return prompty.Agent{}, err
+			}
+		}
+	}
+
+	frontmatter := toMapAny(input["frontmatter"])
+	roots := []string{canonicalDir(agentDir)}
+	if err := prompty.ResolveReferences(frontmatter, agentDir, roots); err != nil {
+		return prompty.Agent{}, err
+	}
+	return prompty.BuildAgentFromData(frontmatter)
+}
+
+func fileContentBytes(content any) []byte {
+	if s, ok := content.(string); ok {
+		return []byte(s)
+	}
+	data, err := json.Marshal(content)
+	if err != nil {
+		return []byte{}
+	}
+	return data
+}
+
+// findSpecFixtures walks up from the harness directory until it finds
+// spec/fixtures, mirroring the C# reference adapter's discovery.
+func findSpecFixtures(baseDir string) string {
+	dir := baseDir
+	for i := 0; i < 12; i++ {
+		candidate := filepath.Join(dir, "spec", "fixtures")
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return filepath.Join(baseDir, "spec", "fixtures")
+}
+
+func canonicalDir(p string) string {
+	if abs, err := filepath.Abs(p); err == nil {
+		p = abs
+	}
+	if resolved, err := filepath.EvalSymlinks(p); err == nil {
+		return resolved
+	}
+	return filepath.Clean(p)
+}
+
+// canonicalAgent shapes a loaded Agent into the cross-runtime canonical form:
+// inject kind=prompt, save with ordered array collections, trim trailing
+// newlines from instructions, and fold each tool's bindings back into a
+// name-keyed map (bindings are the one collection kept in object form).
+func canonicalAgent(agent prompty.Agent) map[string]any {
+	sc := &prompty.SaveContext{UseShorthand: false, CollectionFormat: prompty.CollectionFormatArray}
+	saved := agent.Save(sc)
+	out := map[string]any{"kind": "prompt"}
+	for key, value := range saved {
+		out[key] = value
+	}
+	if instr, ok := out["instructions"].(string); ok {
+		out["instructions"] = strings.TrimRight(instr, "\n")
+	}
+	if tools, ok := out["tools"].([]any); ok {
+		for _, tool := range tools {
+			tm, ok := tool.(map[string]any)
+			if !ok {
+				continue
+			}
+			if bindings, ok := tm["bindings"].([]any); ok {
+				tm["bindings"] = bindingsToMap(bindings)
+			}
+		}
+	}
+	return out
+}
+
+func bindingsToMap(bindings []any) map[string]any {
+	out := make(map[string]any, len(bindings))
+	for _, b := range bindings {
+		bm, ok := b.(map[string]any)
+		if !ok {
+			continue
+		}
+		name, _ := bm["name"].(string)
+		if name == "" {
+			continue
+		}
+		rest := make(map[string]any, len(bm))
+		for key, value := range bm {
+			if key == "name" {
+				continue
+			}
+			rest[key] = value
+		}
+		out[name] = rest
+	}
+	return out
+}
+
+// loadErrorResult matches a runtime error against the vector's expected error
+// contract and, on a match, echoes the canonical error (plus error_field when
+// applicable); an unmatched error surfaces its own message so the vector fails
+// loudly rather than silently passing.
+func loadErrorResult(err error, expected map[string]any) map[string]any {
+	msg := err.Error()
+	low := strings.ToLower(msg)
+	expErr, _ := expected["error"].(string)
+	field, _ := expected["error_field"].(string)
+
+	var le *prompty.LoadError
+	_ = errors.As(err, &le)
+
+	matched := false
+	switch {
+	case expErr == "":
+	case strings.Contains(msg, expErr):
+		matched = true
+	case expErr == "Invalid template format" && strings.Contains(low, "template"):
+		matched = true
+	case expErr == "Missing required input" && strings.Contains(low, "required"):
+		matched = true
+	case expErr == "invalid frontmatter" && le != nil && le.Kind == "frontmatter":
+		matched = true
+	case expErr == "FileNotFoundError" && le != nil && (le.Kind == "not_found" || le.Kind == "file_missing"):
+		matched = true
+	}
+	if !matched {
+		return map[string]any{"error": msg}
+	}
+	out := map[string]any{"error": expErr}
+	if field != "" && (strings.Contains(msg, field) || (le != nil && le.Field == field)) {
+		out["error_field"] = field
+	}
+	return out
+}
+
+func applyEnv(value any) func() {
+	envMap, _ := value.(map[string]any)
+	saved := make(map[string]*string, len(envMap))
+	for key, raw := range envMap {
+		if prev, ok := os.LookupEnv(key); ok {
+			saved[key] = &prev
+		} else {
+			saved[key] = nil
+		}
+		os.Setenv(key, fmt.Sprintf("%v", raw))
+	}
+	return func() {
+		for key, prev := range saved {
+			if prev == nil {
+				os.Unsetenv(key)
+			} else {
+				os.Setenv(key, *prev)
+			}
+		}
+	}
+}
+
+func toMapAny(value any) map[string]any {
+	if m, ok := value.(map[string]any); ok {
+		return m
+	}
+	return map[string]any{}
+}
+
+func isNonEmptyString(value any) bool {
+	s, ok := value.(string)
+	return ok && s != ""
+}
+
+func isMapAny(value any) bool {
+	_, ok := value.(map[string]any)
+	return ok
+}
 
 func toAnySlice(value any) []any {
 	switch typed := value.(type) {

@@ -46,4 +46,9 @@ serial_test = "3"
 # (`prompty_openai::processor::process_stream`) before reconciling with the
 # provider-agnostic `prompty::streaming::reconcile_stream`. This edge is used
 # only when building `prompty`'s tests, never its library.
+#
+# The same harness drives the `WireConformance.toRequest` and `Processor.process`
+# vectors through the real provider wire/process layers in `prompty-openai` and
+# `prompty-anthropic`, so both are dev-dependencies of the conformance harness.
 prompty-openai = { path = "../prompty-openai" }
+prompty-anthropic = { path = "../prompty-anthropic" }

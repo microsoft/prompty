@@ -2,7 +2,9 @@
 
 #pragma warning disable OPENAI001 // Responses API is in preview
 
+using System.ClientModel.Primitives;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using OpenAI.Chat;
 using OpenAI.Responses;
 using Prompty.Core;
@@ -62,6 +64,11 @@ public static class WireFormat
                             _ => ChatImageDetailLevel.Auto,
                         });
                     break;
+                case AudioPart a:
+                    yield return ChatMessageContentPart.CreateInputAudioPart(
+                        BinaryData.FromBytes(Convert.FromBase64String(a.Source)),
+                        AudioFormatFromMediaType(a.MediaType));
+                    break;
             }
         }
     }
@@ -82,6 +89,16 @@ public static class WireFormat
 
         return assistant;
     }
+
+    /// <summary>
+    /// Map an audio MIME type to the OpenAI chat input-audio format. Notably
+    /// <c>audio/mpeg</c> maps to <c>mp3</c> (not <c>mpeg</c>), per spec §7.1.2.
+    /// </summary>
+    private static ChatInputAudioFormat AudioFormatFromMediaType(string? mediaType) => mediaType switch
+    {
+        "audio/mpeg" or "audio/mp3" => ChatInputAudioFormat.Mp3,
+        _ => ChatInputAudioFormat.Wav,
+    };
 
     /// <summary>
     /// Convert Prompty tools to OpenAI ChatTool definitions.
@@ -175,7 +192,34 @@ public static class WireFormat
         if (responseFormat is not null)
             options.ResponseFormat = responseFormat;
 
+        // Passthrough: additionalProperties from ModelOptions MUST be merged into
+        // the request as top-level keys (§7.1.5). ChatCompletionOptions has no typed
+        // surface for arbitrary fields, but the SDK's generated model round-trips
+        // unknown JSON properties through its serialized additional data. Merge the
+        // passthrough keys into the serialized options and read them back so they
+        // survive to the wire when the executor sends the typed options.
+        if (opts.AdditionalProperties is { Count: > 0 })
+            options = MergeAdditionalProperties(options, opts.AdditionalProperties);
+
         return options;
+    }
+
+    /// <summary>
+    /// Merge arbitrary passthrough keys into a <see cref="ChatCompletionOptions"/> by
+    /// round-tripping through JSON. The returned options re-emit the extra top-level
+    /// keys when the SDK serializes the request body.
+    /// </summary>
+    private static ChatCompletionOptions MergeAdditionalProperties(
+        ChatCompletionOptions options, IDictionary<string, object?> additional)
+    {
+        var wire = ModelReaderWriter.Write(options, ModelReaderWriterOptions.Json);
+        var obj = JsonNode.Parse(wire.ToString())?.AsObject() ?? new JsonObject();
+        foreach (var kvp in additional)
+            obj[kvp.Key] = kvp.Value is null ? null : JsonSerializer.SerializeToNode(kvp.Value);
+
+        return ModelReaderWriter.Read<ChatCompletionOptions>(
+                   BinaryData.FromString(obj.ToJsonString()), ModelReaderWriterOptions.Json)
+               ?? options;
     }
 
     // -----------------------------------------------------------------------

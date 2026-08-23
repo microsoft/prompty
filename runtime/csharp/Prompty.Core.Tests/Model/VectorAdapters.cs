@@ -50,7 +50,7 @@ public sealed class VectorException(string message, JsonNode? payload = null) : 
 /// concrete C# implementation. It replaces the bespoke <c>SpecVectorTests</c> runner:
 /// the vectors are the source of truth and every runtime authors an adapter like this.
 /// </summary>
-public static class VectorAdapters
+public static partial class VectorAdapters
 {
     private static readonly string SpecFixtures = FindSpecFixtures();
 
@@ -75,22 +75,11 @@ public static class VectorAdapters
         ["TurnConformance.runTurn"] = new(RunTurnInvoke, ProjectNormalize),
         ["TurnConformance.replay"] = new(ReplayInvoke),
         ["Processor.processStream"] = new(ProcessStreamInvoke, ProjectNormalize),
+        ["WireConformance.toRequest"] = new(WireInvoke, AlignNormalize),
+        ["Processor.process"] = new(ProcessInvoke, AlignNormalize),
     };
 
-    public static IDictionary<string, string> Waivers() => new Dictionary<string, string>
-    {
-        ["WireConformance.toRequest"] =
-            "Provider request-building lives in the Prompty.OpenAI and Prompty.Anthropic assemblies " +
-            "(SDK-typed request builders), which the Prompty.Core conformance harness does not reference. " +
-            "The same toRequest vectors are driven against the real providers by the provider-level " +
-            "SpecVectorWireTests in Prompty.OpenAI.Tests; wiring them here would require a Core->provider " +
-            "dependency that inverts the layering.",
-        ["Processor.process"] =
-            "Response processing lives in the Prompty.OpenAI and Prompty.Anthropic assemblies " +
-            "(SDK-typed response parsers), not referenced by the Prompty.Core conformance harness. " +
-            "The same process vectors are driven against the real providers by the provider-level " +
-            "SpecVectorProcessTests in Prompty.OpenAI.Tests.",
-    };
+    public static IDictionary<string, string> Waivers() => new Dictionary<string, string>();
 
     public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();
 

@@ -220,7 +220,7 @@ const WireVectors = """
             "content": [
               {
                 "kind": "audio",
-                "value": "base64data",
+                "value": "YmFzZTY0ZGF0YQ==",
                 "mediaType": "audio/wav"
               }
             ]
@@ -240,7 +240,7 @@ const WireVectors = """
                 {
                   "type": "input_audio",
                   "input_audio": {
-                    "data": "base64data",
+                    "data": "YmFzZTY0ZGF0YQ==",
                     "format": "wav"
                   }
                 }
@@ -266,7 +266,7 @@ const WireVectors = """
             "content": [
               {
                 "kind": "audio",
-                "value": "base64data",
+                "value": "YmFzZTY0ZGF0YQ==",
                 "mediaType": "audio/mpeg"
               }
             ]
@@ -286,7 +286,7 @@ const WireVectors = """
                 {
                   "type": "input_audio",
                   "input_audio": {
-                    "data": "base64data",
+                    "data": "YmFzZTY0ZGF0YQ==",
                     "format": "mp3"
                   }
                 }
