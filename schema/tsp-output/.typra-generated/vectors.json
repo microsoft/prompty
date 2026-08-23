@@ -3176,7 +3176,7 @@
             "created": 1700000011,
             "data": [
               {
-                "b64_json": "base64data",
+                "b64_json": "YmFzZTY0ZGF0YQ==",
                 "url": null,
                 "revised_prompt": null
               }
@@ -3185,7 +3185,7 @@
           "has_outputs": false
         },
         "expected": {
-          "result": "base64data"
+          "result": "YmFzZTY0ZGF0YQ=="
         },
         "operation": "process"
       }
@@ -9245,7 +9245,7 @@
               "content": [
                 {
                   "kind": "audio",
-                  "value": "base64data",
+                  "value": "YmFzZTY0ZGF0YQ==",
                   "mediaType": "audio/mpeg"
                 }
               ]
@@ -9265,7 +9265,7 @@
                   {
                     "type": "input_audio",
                     "input_audio": {
-                      "data": "base64data",
+                      "data": "YmFzZTY0ZGF0YQ==",
                       "format": "mp3"
                     }
                   }
@@ -9302,7 +9302,7 @@
               "content": [
                 {
                   "kind": "audio",
-                  "value": "base64data",
+                  "value": "YmFzZTY0ZGF0YQ==",
                   "mediaType": "audio/wav"
                 }
               ]
@@ -9322,7 +9322,7 @@
                   {
                     "type": "input_audio",
                     "input_audio": {
-                      "data": "base64data",
+                      "data": "YmFzZTY0ZGF0YQ==",
                       "format": "wav"
                     }
                   }

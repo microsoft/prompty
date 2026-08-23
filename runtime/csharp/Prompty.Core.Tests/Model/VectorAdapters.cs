@@ -79,26 +79,7 @@ public static partial class VectorAdapters
         ["Processor.process"] = new(ProcessInvoke, AlignNormalize),
     };
 
-    public static IDictionary<string, string> Waivers() => new Dictionary<string, string>
-    {
-        // These three vectors use the opaque placeholder string "base64data" as a stand-in
-        // for real base64 binary payload. The C# adapters drive the REAL typed OpenAI SDK,
-        // which — unlike the hand-built wire dicts in the other runtimes — base64-decodes
-        // binary fields. "base64data" is not valid base64, so it cannot round-trip the typed
-        // SDK path. Production audio/image handling works for real base64 (covered by
-        // WireFormatTests); only the intentionally-invalid fixture value is unsupported.
-        ["WireConformance.toRequest:chat_audio_part"] =
-            "Typed OpenAI SDK CreateInputAudioPart base64-decodes AudioPart.Source into bytes; " +
-            "the fixture placeholder 'base64data' is not valid base64. Real audio round-trips " +
-            "(see WireFormatTests.AudioPart_ValidBase64_MapsToInputAudio).",
-        ["WireConformance.toRequest:chat_audio_mp3"] =
-            "Typed OpenAI SDK CreateInputAudioPart base64-decodes AudioPart.Source into bytes; " +
-            "the fixture placeholder 'base64data' is not valid base64. Real audio round-trips " +
-            "(see WireFormatTests.AudioPart_Mpeg_MapsToMp3Format).",
-        ["Processor.process:image_b64"] =
-            "OpenAI SDK ModelReaderWriter base64-decodes b64_json while deserializing " +
-            "GeneratedImageCollection; the fixture placeholder 'base64data' is not valid base64.",
-    };
+    public static IDictionary<string, string> Waivers() => new Dictionary<string, string>();
 
     public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();
 

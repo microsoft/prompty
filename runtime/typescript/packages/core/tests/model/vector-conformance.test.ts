@@ -3175,7 +3175,7 @@ const vectors = [
           created: 1700000011,
           data: [
             {
-              b64_json: "base64data",
+              b64_json: "YmFzZTY0ZGF0YQ==",
               url: null,
               revised_prompt: null,
             },
@@ -3184,7 +3184,7 @@ const vectors = [
         has_outputs: false,
       },
       expected: {
-        result: "base64data",
+        result: "YmFzZTY0ZGF0YQ==",
       },
       operation: "process",
     },
@@ -9288,7 +9288,7 @@ const vectors = [
             content: [
               {
                 kind: "audio",
-                value: "base64data",
+                value: "YmFzZTY0ZGF0YQ==",
                 mediaType: "audio/mpeg",
               },
             ],
@@ -9308,7 +9308,7 @@ const vectors = [
                 {
                   type: "input_audio",
                   input_audio: {
-                    data: "base64data",
+                    data: "YmFzZTY0ZGF0YQ==",
                     format: "mp3",
                   },
                 },
@@ -9346,7 +9346,7 @@ const vectors = [
             content: [
               {
                 kind: "audio",
-                value: "base64data",
+                value: "YmFzZTY0ZGF0YQ==",
                 mediaType: "audio/wav",
               },
             ],
@@ -9366,7 +9366,7 @@ const vectors = [
                 {
                   type: "input_audio",
                   input_audio: {
-                    data: "base64data",
+                    data: "YmFzZTY0ZGF0YQ==",
                     format: "wav",
                   },
                 },

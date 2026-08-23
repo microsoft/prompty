@@ -431,7 +431,7 @@ const ProcessVectors = """
           "created": 1700000011,
           "data": [
             {
-              "b64_json": "base64data",
+              "b64_json": "YmFzZTY0ZGF0YQ==",
               "url": null,
               "revised_prompt": null
             }
@@ -440,7 +440,7 @@ const ProcessVectors = """
         "has_outputs": false
       },
       "expected": {
-        "result": "base64data"
+        "result": "YmFzZTY0ZGF0YQ=="
       }
     },
     {
