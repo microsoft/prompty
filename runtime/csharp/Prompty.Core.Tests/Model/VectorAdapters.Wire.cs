@@ -48,40 +48,40 @@ public static partial class VectorAdapters
         switch (expected)
         {
             case JsonObject expObj:
-            {
-                // Subset projection: retain only keys present in expected.
-                var result = new JsonObject();
-                var obsObj = observed as JsonObject;
-                foreach (var kvp in expObj)
                 {
-                    JsonNode? obsChild = null;
-                    obsObj?.TryGetPropertyValue(kvp.Key, out obsChild);
-                    result[kvp.Key] = AlignValue(obsChild?.DeepClone(), kvp.Value);
-                }
-                return result;
-            }
-
-            case JsonArray expArr:
-            {
-                if (observed is JsonArray obsArr && obsArr.Count == expArr.Count)
-                {
-                    var result = new JsonArray();
-                    for (var i = 0; i < expArr.Count; i++)
-                        result.Add(AlignValue(obsArr[i]?.DeepClone(), expArr[i]));
+                    // Subset projection: retain only keys present in expected.
+                    var result = new JsonObject();
+                    var obsObj = observed as JsonObject;
+                    foreach (var kvp in expObj)
+                    {
+                        JsonNode? obsChild = null;
+                        obsObj?.TryGetPropertyValue(kvp.Key, out obsChild);
+                        result[kvp.Key] = AlignValue(obsChild?.DeepClone(), kvp.Value);
+                    }
                     return result;
                 }
 
-                // Content simplified: expected array of a single text block, observed a
-                // bare string (some providers collapse single-text content to a string).
-                if (TryGetString(observed, out var os) && expArr.Count == 1)
+            case JsonArray expArr:
                 {
-                    var text = ExtractText(expArr);
-                    if (text == os)
-                        return expArr.DeepClone();
-                }
+                    if (observed is JsonArray obsArr && obsArr.Count == expArr.Count)
+                    {
+                        var result = new JsonArray();
+                        for (var i = 0; i < expArr.Count; i++)
+                            result.Add(AlignValue(obsArr[i]?.DeepClone(), expArr[i]));
+                        return result;
+                    }
 
-                return observed?.DeepClone();
-            }
+                    // Content simplified: expected array of a single text block, observed a
+                    // bare string (some providers collapse single-text content to a string).
+                    if (TryGetString(observed, out var os) && expArr.Count == 1)
+                    {
+                        var text = ExtractText(expArr);
+                        if (text == os)
+                            return expArr.DeepClone();
+                    }
+
+                    return observed?.DeepClone();
+                }
 
             default:
                 return AlignLeaf(observed, expected);
@@ -290,33 +290,33 @@ public static partial class VectorAdapters
             switch (apiType)
             {
                 case "chat":
-                {
-                    var chat = ModelReaderWriter.Read<ChatCompletion>(raw, WireJson)
-                        ?? throw new InvalidOperationException("Failed to read ChatCompletion.");
-                    result = processor.ProcessAsync(agent, chat).GetAwaiter().GetResult();
-                    break;
-                }
+                    {
+                        var chat = ModelReaderWriter.Read<ChatCompletion>(raw, WireJson)
+                            ?? throw new InvalidOperationException("Failed to read ChatCompletion.");
+                        result = processor.ProcessAsync(agent, chat).GetAwaiter().GetResult();
+                        break;
+                    }
                 case "responses":
-                {
-                    var rr = ModelReaderWriter.Read<ResponseResult>(raw, WireJson)
-                        ?? throw new InvalidOperationException("Failed to read ResponseResult.");
-                    result = processor.ProcessAsync(agent, rr).GetAwaiter().GetResult();
-                    break;
-                }
+                    {
+                        var rr = ModelReaderWriter.Read<ResponseResult>(raw, WireJson)
+                            ?? throw new InvalidOperationException("Failed to read ResponseResult.");
+                        result = processor.ProcessAsync(agent, rr).GetAwaiter().GetResult();
+                        break;
+                    }
                 case "embedding":
-                {
-                    var emb = ModelReaderWriter.Read<OpenAIEmbeddingCollection>(raw, WireJson)
-                        ?? throw new InvalidOperationException("Failed to read embeddings.");
-                    result = processor.ProcessAsync(agent, emb).GetAwaiter().GetResult();
-                    break;
-                }
+                    {
+                        var emb = ModelReaderWriter.Read<OpenAIEmbeddingCollection>(raw, WireJson)
+                            ?? throw new InvalidOperationException("Failed to read embeddings.");
+                        result = processor.ProcessAsync(agent, emb).GetAwaiter().GetResult();
+                        break;
+                    }
                 case "image":
-                {
-                    var images = ModelReaderWriter.Read<GeneratedImageCollection>(raw, WireJson)
-                        ?? throw new InvalidOperationException("Failed to read images.");
-                    result = processor.ProcessAsync(agent, images[0]).GetAwaiter().GetResult();
-                    break;
-                }
+                    {
+                        var images = ModelReaderWriter.Read<GeneratedImageCollection>(raw, WireJson)
+                            ?? throw new InvalidOperationException("Failed to read images.");
+                        result = processor.ProcessAsync(agent, images[0]).GetAwaiter().GetResult();
+                        break;
+                    }
                 default:
                     throw new InvalidOperationException($"Unsupported apiType '{apiType}' for process vector.");
             }
@@ -340,28 +340,28 @@ public static partial class VectorAdapters
                     .Select(v => (JsonNode)new JsonArray(v.Select(f => (JsonNode)JsonValue.Create((double)f)!).ToArray()))
                     .ToArray());
             case ToolCallResult tcr:
-            {
-                var arr = new JsonArray();
-                foreach (var tc in tcr.ToolCalls)
-                    arr.Add(new JsonObject
-                    {
-                        ["id"] = tc.Id,
-                        ["name"] = tc.Name,
-                        ["arguments"] = tc.Arguments,
-                    });
-                return arr;
-            }
+                {
+                    var arr = new JsonArray();
+                    foreach (var tc in tcr.ToolCalls)
+                        arr.Add(new JsonObject
+                        {
+                            ["id"] = tc.Id,
+                            ["name"] = tc.Name,
+                            ["arguments"] = tc.Arguments,
+                        });
+                    return arr;
+                }
             case StructuredResult sr:
-            {
-                try
                 {
-                    return JsonNode.Parse(sr.RawJson) ?? JsonValue.Create(sr.RawJson)!;
+                    try
+                    {
+                        return JsonNode.Parse(sr.RawJson) ?? JsonValue.Create(sr.RawJson)!;
+                    }
+                    catch
+                    {
+                        return JsonValue.Create(sr.RawJson)!;
+                    }
                 }
-                catch
-                {
-                    return JsonValue.Create(sr.RawJson)!;
-                }
-            }
             default:
                 return JsonValue.Create(result.ToString() ?? string.Empty)!;
         }
