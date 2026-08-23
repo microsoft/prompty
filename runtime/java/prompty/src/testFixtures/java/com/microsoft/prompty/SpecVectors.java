@@ -2,7 +2,6 @@ package com.microsoft.prompty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.microsoft.prompty.model.TypraJson;
 import java.io.IOException;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -443,58 +441,5 @@ public final class SpecVectors {
       return map.isEmpty();
     }
     return false;
-  }
-
-  // ---------------------------------------------------------------- error matching
-
-  /**
-   * Assert that {@code actual} reports the failure a vector describes.
-   *
-   * <p>Vectors name errors loosely — "FileNotFoundError", "invalid frontmatter" — because exact
-   * wording is a runtime's own business and pinning it would make the shared vectors unusable. The
-   * match is therefore on meaning rather than text, but it requires <em>every</em> significant word
-   * of the expectation to appear: matching on any one shared word would let "invalid template" pass
-   * a vector that asked for "invalid frontmatter".
-   */
-  public static void assertErrorMatches(String label, String expected, Throwable actual) {
-    if (actual == null) {
-      fail(label + ": expected an error matching \"" + expected + "\", but the call succeeded");
-    }
-    String message = actual.getMessage() == null ? "" : actual.getMessage().toLowerCase(Locale.ROOT);
-    String wanted = expected.toLowerCase(Locale.ROOT);
-
-    if (wanted.contains("filenotfounderror")) {
-      boolean matched =
-          actual instanceof LoadException load && load.kind() == LoadException.Kind.FILE_NOT_FOUND;
-      assertTrue(matched || message.contains("not found"), label + ": expected a not-found error, got " + actual);
-      return;
-    }
-
-    if (message.contains(wanted)) {
-      return;
-    }
-
-    // Every distinguishing word must be present. Short words ("not", "set") and the generic
-    // "error" carry no signal, so they are not required — but they are not sufficient either.
-    List<String> required = new ArrayList<>();
-    for (String word : wanted.split("\\W+")) {
-      if (word.length() > 3 && !word.equals("error")) {
-        required.add(word);
-      }
-    }
-    if (!required.isEmpty()) {
-      boolean all = true;
-      for (String word : required) {
-        if (!message.contains(word)) {
-          all = false;
-          break;
-        }
-      }
-      if (all) {
-        return;
-      }
-    }
-
-    fail(label + ": expected an error matching \"" + expected + "\", got \"" + actual.getMessage() + "\"");
   }
 }

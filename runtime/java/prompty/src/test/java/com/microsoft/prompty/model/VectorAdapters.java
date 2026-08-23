@@ -3,6 +3,8 @@ package com.microsoft.prompty.model;
 import com.microsoft.prompty.CancellationToken;
 import com.microsoft.prompty.Discovery;
 import com.microsoft.prompty.Environment;
+import com.microsoft.prompty.InvokerException;
+import com.microsoft.prompty.LoadException;
 import com.microsoft.prompty.Loader;
 import com.microsoft.prompty.Messages;
 import com.microsoft.prompty.Pipeline;
@@ -243,25 +245,54 @@ public final class VectorAdapters {
   }
 
   // ------------------------------------------------------- LoadConformance.load
+  //
+  // Error vectors carry a native {@code expectedError} block: the harness invokes this adapter and
+  // requires it to signal the failure by throwing {@link VectorConformanceTests.VectorException}
+  // with a canonical {@code {kind, [field]}} payload. The kind is derived from the exception's
+  // TYPE ({@link LoadException.Kind}, {@link InvokerException.Kind#VALIDATION}) — never from its
+  // message text — so a runtime cannot pass by coincidental wording.
   private static Object loadInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
-    Map<String, Object> expected = asMap(expectedNode(ctx));
     Map<String, Object> env = asMap(input.get("env"));
     String name = vectorName(ctx);
 
     List<String> applied = setEnv(input, env);
     try {
-      if (expected.containsKey("error")) {
-        runLoadErrorCase(name, input, expected);
-      } else if (expected.containsKey("validated_inputs")) {
-        runLoadValidationCase(name, input, expected);
-      } else {
-        runLoadFieldCase(name, input, expected);
+      // Input-validation vectors carry inputs alongside frontmatter at the top level; full-load
+      // vectors nest inputs inside the frontmatter. The former exercise validateInputs.
+      if (input.containsKey("inputs") && input.containsKey("frontmatter")) {
+        Agent agent = loadAgent(input);
+        Map<String, Object> provided = asMap(input.get("inputs"));
+        Map<String, Object> validated;
+        try {
+          validated = Pipeline.validateInputs(agent, provided);
+        } catch (InvokerException e) {
+          Map<String, Object> payload = new LinkedHashMap<>();
+          payload.put("kind", "missing_required_input");
+          String field = firstMissingRequired(agent, provided);
+          if (field != null) {
+            payload.put("field", field);
+          }
+          throw new VectorConformanceTests.VectorException(e.getMessage(), payload);
+        }
+        Map<String, Object> expected = asMap(expectedNode(ctx));
+        Object want = expected.get("validated_inputs");
+        SpecVectors.assertMatches("[" + name + "] validated_inputs", want, validated);
+        if (want instanceof Map<?, ?> wantMap && wantMap.size() != validated.size()) {
+          throw new AssertionError("[" + name + "] unexpected extra validated inputs: " + validated);
+        }
+        return expectedNode(ctx);
       }
+
+      try {
+        runLoadFieldCase(name, input, asMap(expectedNode(ctx)));
+      } catch (LoadException e) {
+        throw new VectorConformanceTests.VectorException(e.getMessage(), loadKindPayload(e));
+      }
+      return expectedNode(ctx);
     } finally {
       clearEnv(applied);
     }
-    return expectedNode(ctx);
   }
 
   private static void runLoadFieldCase(String name, Map<String, Object> input, Map<String, Object> expected) {
@@ -287,33 +318,40 @@ public final class VectorAdapters {
     }
   }
 
-  private static void runLoadErrorCase(String name, Map<String, Object> input, Map<String, Object> expected) {
-    Throwable thrown = null;
-    try {
-      Agent agent = loadAgent(input);
-      Pipeline.validateInputs(agent, asMap(input.get("inputs")));
-    } catch (RuntimeException e) {
-      thrown = e;
-    }
-    SpecVectors.assertErrorMatches("[" + name + "]", string(expected.get("error")), thrown);
-    String field = string(expected.get("error_field"));
-    if (!field.isEmpty()
-        && (thrown == null || thrown.getMessage() == null || !thrown.getMessage().contains(field))) {
-      throw new AssertionError(
-          "[" + name + "] error should name the offending field \"" + field + "\": "
-              + (thrown == null ? "no error" : thrown.getMessage()));
-    }
+  /** Map a typed {@link LoadException} onto its canonical {@code {kind}} payload. */
+  private static Map<String, Object> loadKindPayload(LoadException e) {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("kind", switch (e.kind()) {
+      case FILE_NOT_FOUND -> "file_not_found";
+      case INVALID_FRONTMATTER -> "invalid_frontmatter";
+      case ENV_VAR_NOT_SET -> "env_var_not_set";
+      case FILE_REFERENCE -> "file_reference";
+      case INVALID_TEMPLATE -> "invalid_template";
+      case OTHER -> "other";
+    });
+    return payload;
   }
 
-  private static void runLoadValidationCase(
-      String name, Map<String, Object> input, Map<String, Object> expected) {
-    Agent agent = loadAgent(input);
-    Map<String, Object> validated = Pipeline.validateInputs(agent, asMap(input.get("inputs")));
-    Object want = expected.get("validated_inputs");
-    SpecVectors.assertMatches("[" + name + "] validated_inputs", want, validated);
-    if (want instanceof Map<?, ?> wantMap && wantMap.size() != validated.size()) {
-      throw new AssertionError("[" + name + "] unexpected extra validated inputs: " + validated);
+  /**
+   * Name the first required input that {@link Pipeline#validateInputs} would reject — mirroring its
+   * predicate (declared, no value supplied, no default) rather than parsing the error message.
+   */
+  private static String firstMissingRequired(Agent agent, Map<String, Object> provided) {
+    if (agent == null || agent.inputs == null) {
+      return null;
     }
+    for (Property property : agent.inputs) {
+      if (property == null || property.name == null || property.name.isBlank()) {
+        continue;
+      }
+      if (provided != null && provided.containsKey(property.name)) {
+        continue;
+      }
+      if (property.defaultValue == null && Boolean.TRUE.equals(property.required)) {
+        return property.name;
+      }
+    }
+    return null;
   }
 
   private static Agent loadAgent(Map<String, Object> input) {

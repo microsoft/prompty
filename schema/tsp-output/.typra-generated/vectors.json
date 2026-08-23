@@ -775,8 +775,8 @@
           },
           "env": {}
         },
-        "expected": {
-          "error": "Environment variable 'NONEXISTENT' not set"
+        "expectedError": {
+          "kind": "env_var_not_set"
         },
         "operation": "load"
       }
@@ -889,8 +889,8 @@
             }
           }
         },
-        "expected": {
-          "error": "outside allowed roots"
+        "expectedError": {
+          "kind": "file_reference"
         },
         "operation": "load"
       }
@@ -1156,9 +1156,9 @@
           },
           "inputs": {}
         },
-        "expected": {
-          "error": "Missing required input",
-          "error_field": "city"
+        "expectedError": {
+          "kind": "missing_required_input",
+          "field": "city"
         },
         "operation": "load"
       }
@@ -1203,8 +1203,8 @@
         "input": {
           "frontmatter_raw": "---\nname: [invalid\n---\nHello"
         },
-        "expected": {
-          "error": "invalid frontmatter"
+        "expectedError": {
+          "kind": "invalid_frontmatter"
         },
         "operation": "load"
       }
@@ -1274,8 +1274,8 @@
         "input": {
           "fixture": "nonexistent.prompty"
         },
-        "expected": {
-          "error": "FileNotFoundError"
+        "expectedError": {
+          "kind": "file_not_found"
         },
         "operation": "load"
       }
@@ -1397,8 +1397,8 @@
             "template": "jinja2"
           }
         },
-        "expected": {
-          "error": "Invalid template format"
+        "expectedError": {
+          "kind": "invalid_template"
         },
         "operation": "load"
       }

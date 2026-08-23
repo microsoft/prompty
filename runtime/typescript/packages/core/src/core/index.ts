@@ -3,6 +3,7 @@ export * from "./interfaces.js";
 export * from "./registry.js";
 export * from "./connections.js";
 export { load, defaultSaveContext, type LoadOptions } from "./loader.js";
+export { PromptyLoadError, type LoadErrorKind } from "./errors.js";
 export {
   validateInputs,
   render,

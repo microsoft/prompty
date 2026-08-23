@@ -108,7 +108,7 @@ var VectorAdapters = map[string]Adapter{
 	// load through the generated Agent model, and validate inputs.
 	"LoadConformance.load": {
 		Invoke:    loadInvoke,
-		Normalize: projectNormalize,
+		Normalize: loadNormalize,
 	},
 	// Processor.processStream -- classify a raw provider stream and reconcile the
 	// streaming-failure contract via the provider-agnostic engine.
@@ -366,24 +366,27 @@ func wireInvoke(input any, _ Context) (any, error) {
 // loadInvoke drives the real load pipeline. It reconstructs the load source
 // (a spec fixture, raw frontmatter text, or an inline frontmatter dict with
 // optional materialized files), runs the loader, and shapes the result as the
-// canonical Agent.Save() form. Error vectors are returned as {error: ...}
-// values (load error contracts nest under expected.error, so they flow through
-// the normal compare path rather than the harness error path).
+// canonical Agent.Save() form. Error vectors surface as a returned error
+// carrying its canonical {kind, [field]} via TypraVector(), so the harness
+// matches it against expectedError.
 func loadInvoke(input any, ctx Context) (any, error) {
 	typed, _ := input.(map[string]any)
-	expected, _ := ctx.Vector["expected"].(map[string]any)
 
 	restore := applyEnv(typed["env"])
 	defer restore()
 
-	if runInputValidation(typed, expected) {
+	// Input-validation vectors carry both a top-level `inputs` map and a
+	// `frontmatter`; full-load vectors nest inputs inside the frontmatter.
+	_, hasInputs := typed["inputs"]
+	_, hasFrontmatter := typed["frontmatter"]
+	if hasInputs && hasFrontmatter {
 		agent, err := prompty.BuildAgentFromData(unwrapProperties(toMapAny(typed["frontmatter"])))
 		if err != nil {
-			return loadErrorResult(err, expected), nil
+			return nil, wrapLoadError(err)
 		}
 		validated, verr := prompty.ValidateInputs(agent, toMapAny(typed["inputs"]))
 		if verr != nil {
-			return loadErrorResult(verr, expected), nil
+			return nil, wrapLoadError(verr)
 		}
 		return map[string]any{"validated_inputs": validated}, nil
 	}
@@ -399,30 +402,22 @@ func loadInvoke(input any, ctx Context) (any, error) {
 	case isMapAny(typed["frontmatter"]):
 		agent, err = materializeAndLoad(typed)
 	default:
-		return map[string]any{"error": "<no loadable input>"}, nil
+		return nil, fmt.Errorf("<no loadable input>")
 	}
 	if err != nil {
-		return loadErrorResult(err, expected), nil
+		return nil, wrapLoadError(err)
 	}
 	return canonicalAgent(agent), nil
 }
 
-// runInputValidation reports whether a vector exercises Pipeline.ValidateInputs
-// rather than a full load: either it expects validated_inputs, or it expects an
-// error while supplying both a frontmatter and an inputs map.
-func runInputValidation(input, expected map[string]any) bool {
-	if expected == nil {
-		return false
+// loadNormalize projects the observed value onto the vector's expected shape
+// (subset semantics). For error vectors it projects onto expectedError so the
+// canonical {kind, [field]} payload compares cleanly.
+func loadNormalize(observed any, ctx Context) any {
+	if exp, ok := ctx.Vector["expectedError"]; ok {
+		return project(observed, exp)
 	}
-	if _, ok := expected["validated_inputs"]; ok {
-		return true
-	}
-	if _, ok := expected["error"]; ok {
-		_, hasInputs := input["inputs"]
-		_, hasFrontmatter := input["frontmatter"]
-		return hasInputs && hasFrontmatter
-	}
-	return false
+	return project(observed, ctx.Vector["expected"])
 }
 
 // unwrapProperties folds {inputs:{properties:[...]}} down to inputs:[...] (and
@@ -580,41 +575,58 @@ func bindingsToMap(bindings []any) map[string]any {
 	return out
 }
 
-// loadErrorResult matches a runtime error against the vector's expected error
-// contract and, on a match, echoes the canonical error (plus error_field when
-// applicable); an unmatched error surfaces its own message so the vector fails
-// loudly rather than silently passing.
-func loadErrorResult(err error, expected map[string]any) map[string]any {
-	msg := err.Error()
-	low := strings.ToLower(msg)
-	expErr, _ := expected["error"].(string)
-	field, _ := expected["error_field"].(string)
+// vectorError carries a canonical {kind, [field]} payload alongside a load
+// error so the conformance harness can match it against expectedError via the
+// TypraVector() interface.
+type vectorError struct {
+	err     error
+	payload map[string]any
+}
 
+func (e *vectorError) Error() string    { return e.err.Error() }
+func (e *vectorError) Unwrap() error    { return e.err }
+func (e *vectorError) TypraVector() any { return e.payload }
+
+// loadErrorPayload maps a typed *prompty.LoadError onto the canonical
+// cross-runtime error taxonomy. Mapping is by the typed Kind only -- no message
+// substring matching -- so an unrecognized error surfaces its own message and
+// fails the vector loudly rather than passing silently.
+func loadErrorPayload(err error) (map[string]any, bool) {
 	var le *prompty.LoadError
-	_ = errors.As(err, &le)
+	if !errors.As(err, &le) {
+		return nil, false
+	}
+	var kind string
+	switch le.Kind {
+	case "env":
+		kind = "env_var_not_set"
+	case "file_traversal":
+		kind = "file_reference"
+	case "file_missing", "not_found":
+		kind = "file_not_found"
+	case "frontmatter":
+		kind = "invalid_frontmatter"
+	case "template":
+		kind = "invalid_template"
+	case "required_input":
+		kind = "missing_required_input"
+	default:
+		return nil, false
+	}
+	payload := map[string]any{"kind": kind}
+	if le.Field != "" {
+		payload["field"] = le.Field
+	}
+	return payload, true
+}
 
-	matched := false
-	switch {
-	case expErr == "":
-	case strings.Contains(msg, expErr):
-		matched = true
-	case expErr == "Invalid template format" && strings.Contains(low, "template"):
-		matched = true
-	case expErr == "Missing required input" && strings.Contains(low, "required"):
-		matched = true
-	case expErr == "invalid frontmatter" && le != nil && le.Kind == "frontmatter":
-		matched = true
-	case expErr == "FileNotFoundError" && le != nil && (le.Kind == "not_found" || le.Kind == "file_missing"):
-		matched = true
+// wrapLoadError attaches the canonical error payload to a load error when it is
+// a recognized typed error; otherwise the original error is returned unchanged.
+func wrapLoadError(err error) error {
+	if payload, ok := loadErrorPayload(err); ok {
+		return &vectorError{err: err, payload: payload}
 	}
-	if !matched {
-		return map[string]any{"error": msg}
-	}
-	out := map[string]any{"error": expErr}
-	if field != "" && (strings.Contains(msg, field) || (le != nil && le.Field == field)) {
-		out["error_field"] = field
-	}
-	return out
+	return err
 }
 
 func applyEnv(value any) func() {

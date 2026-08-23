@@ -102,7 +102,8 @@ public static class ReferenceResolver
         if (defaultValue is not null)
             return defaultValue;
 
-        throw new InvalidOperationException(
+        throw new PromptyLoadException(
+            "env_var_not_set",
             $"Environment variable '{varName}' is not set and no default provided (key: '{key}').");
     }
 
@@ -126,7 +127,8 @@ public static class ReferenceResolver
         fullPath = GetCanonicalPath(fullPath);
         if (!allowedRoots.Any(root => IsWithinRoot(fullPath, root)))
         {
-            throw new InvalidOperationException(
+            throw new PromptyLoadException(
+                "file_reference",
                 $"File reference '{relativePath}' resolves outside allowed roots (resolved to '{fullPath}', key: '{key}').");
         }
 

@@ -2,9 +2,11 @@ package com.microsoft.prompty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 import com.microsoft.prompty.model.Agent;
+import com.microsoft.prompty.model.Property;
 import com.microsoft.prompty.model.SaveContext;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -12,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -45,17 +48,19 @@ class LoadVectorsTest {
 
   private void runCase(String name, Map<String, Object> testCase) {
     Map<String, Object> input = SpecVectors.map(testCase, "input");
-    Map<String, Object> expected = SpecVectors.map(testCase, "expected");
     Map<String, Object> env = SpecVectors.map(input, "env");
 
     List<String> applied = setEnv(input, env);
     try {
-      if (expected.containsKey("error")) {
-        runErrorCase(name, input, expected);
-      } else if (expected.containsKey("validated_inputs")) {
-        runValidationCase(name, input, expected);
+      if (testCase.containsKey("expectedError")) {
+        runExpectedErrorCase(name, input, SpecVectors.map(testCase, "expectedError"));
       } else {
-        runFieldCase(name, input, expected);
+        Map<String, Object> expected = SpecVectors.map(testCase, "expected");
+        if (expected.containsKey("validated_inputs")) {
+          runValidationCase(name, input, expected);
+        } else {
+          runFieldCase(name, input, expected);
+        }
       }
     } finally {
       clearEnv(applied);
@@ -91,24 +96,27 @@ class LoadVectorsTest {
     }
   }
 
-  private void runErrorCase(String name, Map<String, Object> input, Map<String, Object> expected) {
+  /**
+   * A native {@code expectedError} vector: the load (or its input validation) must fail, and the
+   * failure's canonical {@code {kind, [field]}} is derived from the exception TYPE — never from its
+   * message text — so a match is on meaning, not coincidental wording.
+   */
+  private void runExpectedErrorCase(
+      String name, Map<String, Object> input, Map<String, Object> expectedError) {
+    Map<String, Object> provided = SpecVectors.map(input, "inputs");
     Throwable thrown = null;
+    Agent agent = null;
     try {
-      Agent agent = load(input);
-      Map<String, Object> inputs = SpecVectors.map(input, "inputs");
-      Pipeline.validateInputs(agent, inputs);
+      agent = load(input);
+      Pipeline.validateInputs(agent, provided);
     } catch (RuntimeException e) {
       thrown = e;
     }
-
-    SpecVectors.assertErrorMatches("[" + name + "]", SpecVectors.string(expected, "error"), thrown);
-
-    String field = SpecVectors.string(expected, "error_field");
-    if (field != null) {
-      assertTrue(
-          thrown.getMessage() != null && thrown.getMessage().contains(field),
-          "[" + name + "] error should name the offending field \"" + field + "\": " + thrown.getMessage());
+    if (thrown == null) {
+      fail("[" + name + "] expected an error, but the load succeeded");
     }
+    Map<String, Object> observed = canonicalError(thrown, agent, provided);
+    SpecVectors.assertMatches("[" + name + "]", expectedError, observed);
   }
 
   private void runValidationCase(String name, Map<String, Object> input, Map<String, Object> expected) {
@@ -122,6 +130,53 @@ class LoadVectorsTest {
     if (want instanceof Map<?, ?> wantMap) {
       assertEquals(wantMap.size(), validated.size(), "[" + name + "] unexpected extra validated inputs: " + validated);
     }
+  }
+
+  /** Map a thrown load/validation failure onto its canonical {@code {kind, [field]}} by TYPE. */
+  private static Map<String, Object> canonicalError(Throwable thrown, Agent agent, Map<String, Object> provided) {
+    Map<String, Object> payload = new LinkedHashMap<>();
+    if (thrown instanceof LoadException load) {
+      payload.put("kind", switch (load.kind()) {
+        case FILE_NOT_FOUND -> "file_not_found";
+        case INVALID_FRONTMATTER -> "invalid_frontmatter";
+        case ENV_VAR_NOT_SET -> "env_var_not_set";
+        case FILE_REFERENCE -> "file_reference";
+        case INVALID_TEMPLATE -> "invalid_template";
+        case OTHER -> "other";
+      });
+    } else if (thrown instanceof InvokerException invoker
+        && invoker.kind() == InvokerException.Kind.VALIDATION) {
+      payload.put("kind", "missing_required_input");
+      String field = firstMissingRequired(agent, provided);
+      if (field != null) {
+        payload.put("field", field);
+      }
+    } else {
+      payload.put("kind", "other");
+    }
+    return payload;
+  }
+
+  /**
+   * Name the first required input that {@link Pipeline#validateInputs} would reject — mirroring its
+   * predicate (declared, no value supplied, no default) rather than parsing the error message.
+   */
+  private static String firstMissingRequired(Agent agent, Map<String, Object> provided) {
+    if (agent == null || agent.inputs == null) {
+      return null;
+    }
+    for (Property property : agent.inputs) {
+      if (property == null || property.name == null || property.name.isBlank()) {
+        continue;
+      }
+      if (provided != null && provided.containsKey(property.name)) {
+        continue;
+      }
+      if (property.defaultValue == null && Boolean.TRUE.equals(property.required)) {
+        return property.name;
+      }
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------- loading

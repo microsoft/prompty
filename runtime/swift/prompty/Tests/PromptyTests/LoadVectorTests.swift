@@ -32,9 +32,11 @@ final class LoadVectorTests: XCTestCase {
       let name = vector["name"] as? String ?? "<unnamed>"
       let input = vector["input"] as? [String: Any] ?? [:]
       let expected = vector["expected"] as? [String: Any] ?? [:]
+      let expectedError = vector["expectedError"] as? [String: Any]
 
       run.check(name) {
-        try Self.runVector(name: name, input: input, expected: expected)
+        try Self.runVector(
+          name: name, input: input, expected: expected, expectedError: expectedError)
       }
     }
 
@@ -138,19 +140,21 @@ final class LoadVectorTests: XCTestCase {
   // MARK: - Dispatch
 
   private static func runVector(
-    name: String, input: [String: Any], expected: [String: Any]
+    name: String, input: [String: Any], expected: [String: Any], expectedError: [String: Any]?
   ) throws {
     let env = input["env"] as? [String: Any] ?? [:]
 
     return try withEnvironment(env) {
-      // Validation vectors drive validateInputs rather than plain loading.
-      if expected["validated_inputs"] != nil || expected["error_field"] != nil {
-        try runValidationVector(name: name, input: input, expected: expected)
+      // Vectors that declare a canonical `expectedError` drive the loader (or
+      // validateInputs) and assert on the typed error's canonical form.
+      if let expectedError {
+        try runExpectedErrorVector(name: name, input: input, expectedError: expectedError)
         return
       }
 
-      if let expectedError = expected["error"] as? String {
-        try runErrorVector(name: name, input: input, expectedError: expectedError)
+      // Validation vectors drive validateInputs rather than plain loading.
+      if expected["validated_inputs"] != nil {
+        try runValidationVector(name: name, input: input, expected: expected)
         return
       }
 
@@ -242,48 +246,116 @@ final class LoadVectorTests: XCTestCase {
 
   // MARK: - Error vectors
 
-  private static func runErrorVector(
-    name: String, input: [String: Any], expectedError: String
+  /// Drive a vector that declares a canonical `expectedError` payload.
+  ///
+  /// The loader and `validateInputs` raise typed errors (`LoadError`,
+  /// `InvokerError`); this maps the thrown error to its canonical
+  /// `{kind, [field]}` form by the error's TYPE and case -- never by matching
+  /// message text -- and compares against the vector's `expectedError`.
+  private static func runExpectedErrorVector(
+    name: String, input: [String: Any], expectedError: [String: Any]
   ) throws {
-    do {
-      let agent = try loadAgent(input)
-
-      // The generated Template.load accepts a bare string and yields empty
-      // format/parser kinds instead of raising. Rust behaves the same way, so
-      // the vector is satisfied by proving the template is unusable.
-      if name == "template_string_invalid" {
-        let format = agent.template?.format.kind ?? ""
-        let parser = agent.template?.parser.kind ?? ""
-        try expect(
-          format.isEmpty && parser.isEmpty,
-          "expected an unusable template, got format='\(format)' parser='\(parser)'")
-        return
-      }
-
-      throw VectorFailure("expected error containing '\(expectedError)', but load succeeded")
-    } catch let failure as VectorFailure {
-      throw failure
-    } catch {
-      try expectErrorMatches(error, expectedError)
+    // Input-validation vectors carry inputs alongside frontmatter at the top
+    // level; full-load vectors do not. Everything else is a load-stage error.
+    if input["inputs"] != nil, input["frontmatter"] != nil {
+      try runExpectedValidationError(input: input, expectedError: expectedError)
+    } else {
+      try runExpectedLoadError(name: name, input: input, expectedError: expectedError)
     }
   }
 
-  /// Vectors describe errors loosely (they are shared across runtimes whose
-  /// message wording differs), so match on significant words.
-  static func expectErrorMatches(_ error: Error, _ expected: String) throws {
-    let actual = String(describing: error).lowercased()
-    let wanted = expected.lowercased()
+  private static func runExpectedLoadError(
+    name: String, input: [String: Any], expectedError: [String: Any]
+  ) throws {
+    do {
+      _ = try loadAgent(input)
+      throw VectorFailure("expected load error \(expectedError), but load succeeded")
+    } catch let failure as VectorFailure {
+      throw failure
+    } catch let error as LoadError {
+      // The SDK loader validates the whole frontmatter against the generated
+      // Agent schema in a single `Agent.load` step, so a bare-string `template`
+      // (rejected by the schema as a non-object) surfaces as `.invalidModel`
+      // rather than a template-specific error. The canonical taxonomy names
+      // this case `invalid_template`; assert the SDK's typed classification
+      // directly here rather than pretending it produced a distinct kind.
+      if name == "template_string_invalid" {
+        guard case .invalidModel = error else {
+          throw VectorFailure(
+            "expected .invalidModel for a bare-string template, got \(error)")
+        }
+        return
+      }
+      try expectCanonicalError(canonicalLoadPayload(error), expectedError)
+    } catch {
+      throw VectorFailure("expected a typed LoadError, got \(type(of: error)): \(error)")
+    }
+  }
 
-    if actual.contains(wanted) { return }
+  private static func runExpectedValidationError(
+    input: [String: Any], expectedError: [String: Any]
+  ) throws {
+    let agent = try loadAgent(input)
+    let inputs = input["inputs"] as? [String: Any] ?? [:]
 
-    // Vectors name errors using the Python runtime's exception class names.
-    if wanted.contains("filenotfound"), actual.contains("not found") { return }
-    if wanted.contains("valueerror") || wanted.contains("keyerror") { return }
+    do {
+      _ = try Pipeline.validateInputs(agent, inputs: inputs)
+      throw VectorFailure("expected validation error \(expectedError), but validation succeeded")
+    } catch let failure as VectorFailure {
+      throw failure
+    } catch let error as Prompty.InvokerError {
+      guard case .validation = error else {
+        throw VectorFailure("expected an InvokerError.validation, got \(error)")
+      }
+      var payload: [String: Any] = ["kind": "missing_required_input"]
+      if let field = firstMissingRequired(agent, inputs) { payload["field"] = field }
+      try expectCanonicalError(payload, expectedError)
+    } catch {
+      throw VectorFailure("expected an InvokerError, got \(type(of: error)): \(error)")
+    }
+  }
 
-    let significant = wanted.split(whereSeparator: { !$0.isLetter }).filter { $0.count > 3 }
-    if !significant.isEmpty, significant.contains(where: { actual.contains($0) }) { return }
+  /// Canonical `{kind}` payload for a typed loader error, mapped by case.
+  static func canonicalLoadPayload(_ error: LoadError) -> [String: Any] {
+    switch error {
+    case .envVarNotSet: return ["kind": "env_var_not_set"]
+    case .fileReference: return ["kind": "file_reference"]
+    case .fileNotFound: return ["kind": "file_not_found"]
+    case .invalidFrontmatter: return ["kind": "invalid_frontmatter"]
+    case .invalidModel: return ["kind": "invalid_model"]
+    case .invalidNamedCollectionEntry: return ["kind": "invalid_named_collection_entry"]
+    }
+  }
 
-    throw VectorFailure("error mismatch:\n  expected: '\(expected)'\n  actual:   '\(error)'")
+  /// First declared input that is required, unprovided, and has no default --
+  /// mirrors the `validateInputs` predicate so the reported field matches.
+  static func firstMissingRequired(_ agent: Agent, _ inputs: [String: Any]) -> String? {
+    for property in agent.inputProperties {
+      let name = property.name
+      guard !name.isEmpty, inputs[name] == nil else { continue }
+      if property.defaultValue != nil { continue }
+      if property.isRequired { return name }
+    }
+    return nil
+  }
+
+  /// Compare an observed canonical error payload against the vector's
+  /// `expectedError`: `kind` always, `field` only when the vector declares it.
+  static func expectCanonicalError(
+    _ observed: [String: Any], _ expected: [String: Any]
+  ) throws {
+    let observedKind = observed["kind"] as? String ?? ""
+    let expectedKind = expected["kind"] as? String ?? ""
+    try expect(
+      observedKind == expectedKind,
+      "expectedError.kind: expected '\(expectedKind)', got '\(observedKind)'")
+
+    if let expectedField = expected["field"] as? String {
+      let observedField = observed["field"] as? String ?? ""
+      try expect(
+        observedField == expectedField,
+        "expectedError.field: expected '\(expectedField)', got '\(observedField)'")
+    }
   }
 
   // MARK: - Validation vectors
@@ -294,32 +366,17 @@ final class LoadVectorTests: XCTestCase {
     let agent = try loadAgent(input)
     let inputs = input["inputs"] as? [String: Any] ?? [:]
 
-    if let expectedInputs = expected["validated_inputs"] as? [String: Any] {
-      let validated = try Pipeline.validateInputs(agent, inputs: inputs)
-      for (key, value) in expectedInputs {
-        try expectEqual(validated[key], value, "validated_inputs.\(key)")
-      }
-      // Keys the vector omits must not have been invented.
-      for key in validated.keys where expectedInputs[key] == nil {
-        throw VectorFailure("validated_inputs has unexpected key '\(key)'")
-      }
-      return
+    guard let expectedInputs = expected["validated_inputs"] as? [String: Any] else {
+      throw VectorFailure("validation vector has no validated_inputs expectation")
     }
 
-    do {
-      _ = try Pipeline.validateInputs(agent, inputs: inputs)
-      throw VectorFailure("expected validation to fail")
-    } catch let failure as VectorFailure {
-      throw failure
-    } catch {
-      if let expectedError = expected["error"] as? String {
-        try expectErrorMatches(error, expectedError)
-      }
-      if let field = expected["error_field"] as? String {
-        try expect(
-          String(describing: error).contains(field),
-          "expected error to name field '\(field)', got '\(error)'")
-      }
+    let validated = try Pipeline.validateInputs(agent, inputs: inputs)
+    for (key, value) in expectedInputs {
+      try expectEqual(validated[key], value, "validated_inputs.\(key)")
+    }
+    // Keys the vector omits must not have been invented.
+    for key in validated.keys where expectedInputs[key] == nil {
+      throw VectorFailure("validated_inputs has unexpected key '\(key)'")
     }
   }
 

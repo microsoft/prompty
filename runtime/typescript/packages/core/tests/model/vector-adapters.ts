@@ -289,8 +289,7 @@ function makeAgentFromFrontmatter(frontmatter: Record<string, any>): Agent {
   return Agent.load(data, new LoadContext());
 }
 
-function loadInvoke(input: any, context: AdapterContext): unknown {
-  const expected = context.vector.expected;
+function loadInvoke(input: any, _context: AdapterContext): unknown {
   const envVars: Record<string, string> = input.env ?? {};
   const oldEnv: Record<string, string | undefined> = {};
   for (const [k, v] of Object.entries(envVars)) {
@@ -298,110 +297,32 @@ function loadInvoke(input: any, context: AdapterContext): unknown {
     process.env[k] = v;
   }
 
-  const asError = (err: any): Record<string, unknown> => {
-    const msg = err?.message ?? String(err);
-    const name = err?.constructor?.name ?? "Error";
-    const code = err?.code;
-    const low = String(msg).toLowerCase();
-    const lowName = String(name).toLowerCase();
-    const expErr =
-      expected && typeof expected === "object" ? expected.error : undefined;
-    const field =
-      expected && typeof expected === "object"
-        ? expected.error_field
-        : undefined;
-    let matched = false;
-    if (typeof expErr === "string") {
-      if (expErr === name || String(msg).includes(expErr)) {
-        matched = true;
-      } else if (
-        expErr === "FileNotFoundError" &&
-        (code === "ENOENT" ||
-          low.includes("no such file") ||
-          low.includes("enoent"))
-      ) {
-        matched = true;
-      } else if (
-        expErr === "invalid frontmatter" &&
-        (low.includes("yaml") ||
-          low.includes("mapping") ||
-          low.includes("flow collection") ||
-          lowName.includes("yaml"))
-      ) {
-        matched = true;
-      } else if (
-        expErr === "Invalid template format" &&
-        low.includes("template")
-      ) {
-        matched = true;
-      } else if (
-        expErr === "Missing required input" &&
-        low.includes("required")
-      ) {
-        matched = true;
-      }
-    }
-    if (!matched) return { error: msg };
-    const observed: Record<string, unknown> = { error: expErr };
-    if (field != null && String(msg).includes(String(field))) {
-      observed.error_field = field;
-    }
-    return observed;
-  };
-
   try {
-    // --- input validation vectors ---
-    if (
-      expected &&
-      typeof expected === "object" &&
-      "validated_inputs" in expected
-    ) {
+    // --- input-validation vectors ---
+    // Discriminate structurally: validation vectors carry BOTH a top-level
+    // `inputs` map and a `frontmatter`; full-load vectors nest inputs inside
+    // the frontmatter. On a missing required input, `validateInputs` throws a
+    // typed `PromptyLoadError` whose `typraVector` the harness classifies.
+    if (input.inputs !== undefined && input.frontmatter !== undefined) {
       const agent = makeAgentFromFrontmatter(input.frontmatter);
       return { validated_inputs: validateInputs(agent, input.inputs ?? {}) };
-    }
-    if (
-      expected &&
-      typeof expected === "object" &&
-      "error" in expected &&
-      input.inputs !== undefined &&
-      input.frontmatter !== undefined
-    ) {
-      const agent = makeAgentFromFrontmatter(input.frontmatter);
-      try {
-        validateInputs(agent, input.inputs ?? {});
-      } catch (err) {
-        return asError(err);
-      }
-      return { error: "<no error raised>" };
     }
 
     const base = mkdtempSync(join(tmpdir(), "prompty-vec-"));
     try {
       if ("fixture" in input) {
-        try {
-          return saveCanonical(load(join(SPEC_FIXTURES, input.fixture)));
-        } catch (err) {
-          return asError(err);
-        }
+        return saveCanonical(load(join(SPEC_FIXTURES, input.fixture)));
       }
       if ("frontmatter_raw" in input) {
         const p = join(base, "vector.prompty");
         writeFileSync(p, input.frontmatter_raw, "utf8");
-        try {
-          return saveCanonical(load(p));
-        } catch (err) {
-          return asError(err);
-        }
+        return saveCanonical(load(p));
       }
       const sub = input.agent_subdir ? join(base, input.agent_subdir) : base;
       mkdirSync(sub, { recursive: true });
       const p = join(sub, "vector.prompty");
       writePrompty(p, input.frontmatter, input.files);
-      try {
-        return saveCanonical(load(p));
-      } catch (err) {
-        return asError(err);
-      }
+      return saveCanonical(load(p));
     } finally {
       rmSync(base, { recursive: true, force: true });
     }
@@ -411,6 +332,14 @@ function loadInvoke(input: any, context: AdapterContext): unknown {
       else process.env[k] = v;
     }
   }
+}
+
+function loadNormalize(observed: unknown, context: AdapterContext): unknown {
+  const expected =
+    "expectedError" in context.vector
+      ? (context.vector as { expectedError: unknown }).expectedError
+      : context.vector.expected;
+  return project(observed, expected);
 }
 
 // ---------------------------------------------------------------------------
@@ -1261,7 +1190,7 @@ async function runTurnInvoke(
 // ---------------------------------------------------------------------------
 
 export const vectorAdapters = {
-  "LoadConformance.load": { invoke: loadInvoke, normalize: projectNormalize },
+  "LoadConformance.load": { invoke: loadInvoke, normalize: loadNormalize },
   "Renderer.render": { invoke: renderInvoke, normalize: projectNormalize },
   "Renderer.renderSegments": {
     invoke: renderSegmentsInvoke,

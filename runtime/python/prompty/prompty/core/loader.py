@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from ..model import Agent, LoadContext, SaveContext
+from .errors import PromptyLoadError
 from .utils import load_prompty, load_prompty_async
 
 __all__ = ["load", "load_async", "default_save_context"]
@@ -104,6 +105,17 @@ def _build_agent(
     if not isinstance(data, dict):
         data = {}
 
+    # v2 requires `template` to be an object ({format, parser}); a bare string
+    # (e.g. legacy `template: jinja2`) is invalid. Reject it with a typed error
+    # so callers can distinguish it from other load failures. A `${...}`
+    # reference is left for pre_process to resolve.
+    tmpl = data.get("template")
+    if isinstance(tmpl, str) and not tmpl.startswith("${"):
+        raise PromptyLoadError(
+            "invalid_template",
+            f"Invalid template format: {tmpl!r} (expected an object with format/parser)",
+        )
+
     # 2. Load via Agent.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path, allowed_file_roots=allowed_file_roots))
     agent = Agent.load(data, ctx)
@@ -165,7 +177,10 @@ def _pre_process(
                     if default:
                         data[key] = default
                     else:
-                        raise ValueError(f"Environment variable '{var_name}' not set for key '{key}'")
+                        raise PromptyLoadError(
+                            "env_var_not_set",
+                            f"Environment variable '{var_name}' not set for key '{key}'",
+                        )
                 else:
                     data[key] = env_val
 
@@ -229,7 +244,10 @@ def _resolve_contained_path(
         roots = ", ".join(str(root) for root in allowed_roots)
         label = subject or f"Path '{reference}'"
         where = f" for '{agent_file}'" if agent_file is not None else ""
-        raise ValueError(f"{label} resolves outside allowed roots{where}. Allowed roots: {roots}")
+        raise PromptyLoadError(
+            "file_reference",
+            f"{label} resolves outside allowed roots{where}. Allowed roots: {roots}",
+        )
 
     return resolved
 

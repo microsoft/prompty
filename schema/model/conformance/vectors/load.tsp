@@ -179,8 +179,8 @@ const LoadVectors = """
         },
         "env": {}
       },
-      "expected": {
-        "error": "Environment variable 'NONEXISTENT' not set"
+      "expectedError": {
+        "kind": "env_var_not_set"
       }
     },
     {
@@ -268,8 +268,8 @@ const LoadVectors = """
           }
         }
       },
-      "expected": {
-        "error": "outside allowed roots"
+      "expectedError": {
+        "kind": "file_reference"
       }
     },
     {
@@ -397,8 +397,8 @@ const LoadVectors = """
       "input": {
         "fixture": "nonexistent.prompty"
       },
-      "expected": {
-        "error": "FileNotFoundError"
+      "expectedError": {
+        "kind": "file_not_found"
       }
     },
     {
@@ -408,8 +408,8 @@ const LoadVectors = """
       "input": {
         "frontmatter_raw": "---\\nname: [invalid\\n---\\nHello"
       },
-      "expected": {
-        "error": "invalid frontmatter"
+      "expectedError": {
+        "kind": "invalid_frontmatter"
       }
     },
     {
@@ -430,9 +430,9 @@ const LoadVectors = """
         },
         "inputs": {}
       },
-      "expected": {
-        "error": "Missing required input",
-        "error_field": "city"
+      "expectedError": {
+        "kind": "missing_required_input",
+        "field": "city"
       }
     },
     {
@@ -608,8 +608,8 @@ const LoadVectors = """
           "template": "jinja2"
         }
       },
-      "expected": {
-        "error": "Invalid template format"
+      "expectedError": {
+        "kind": "invalid_template"
       }
     },
     {

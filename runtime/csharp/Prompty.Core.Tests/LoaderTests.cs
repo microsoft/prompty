@@ -230,7 +230,7 @@ public class LoaderTests
         Environment.SetEnvironmentVariable("TEST_ENDPOINT", null);
         Environment.SetEnvironmentVariable("TEST_API_KEY", null);
 
-        var ex = Assert.Throws<InvalidOperationException>(
+        var ex = Assert.Throws<PromptyLoadException>(
             () => PromptyLoader.Load(PromptPath("env_test.prompty")));
         Assert.Contains("TEST_ENDPOINT", ex.Message);
     }
@@ -261,7 +261,7 @@ public class LoaderTests
             var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
             File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:../secret.txt}\"\n---\nHello\n");
 
-            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            var ex = Assert.Throws<PromptyLoadException>(() => PromptyLoader.Load(prompt));
             Assert.Contains("outside allowed roots", ex.Message);
         }
         finally
@@ -284,7 +284,7 @@ public class LoaderTests
                 prompt,
                 $"---\nname: bad\ndescription: \"${{file:{secret.Replace("\\", "/")}}}\"\n---\nHello\n");
 
-            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            var ex = Assert.Throws<PromptyLoadException>(() => PromptyLoader.Load(prompt));
             Assert.Contains("outside allowed roots", ex.Message);
         }
         finally
@@ -339,7 +339,7 @@ public class LoaderTests
             var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
             File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:secret-link.txt}\"\n---\nHello\n");
 
-            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            var ex = Assert.Throws<PromptyLoadException>(() => PromptyLoader.Load(prompt));
             Assert.Contains("outside allowed roots", ex.Message);
         }
         finally
@@ -362,7 +362,7 @@ public class LoaderTests
             var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
             File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:assets/secret.txt}\"\n---\nHello\n");
 
-            var ex = Assert.Throws<InvalidOperationException>(() => PromptyLoader.Load(prompt));
+            var ex = Assert.Throws<PromptyLoadException>(() => PromptyLoader.Load(prompt));
             Assert.Contains("outside allowed roots", ex.Message);
         }
         finally
@@ -385,7 +385,7 @@ public class LoaderTests
             var prompt = Path.Combine(promptDir.FullName, "bad.prompty");
             File.WriteAllText(prompt, "---\nname: bad\ndescription: \"${file:assets/secret.txt}\"\n---\nHello\n");
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => PromptyLoader.LoadAsync(prompt));
+            var ex = await Assert.ThrowsAsync<PromptyLoadException>(() => PromptyLoader.LoadAsync(prompt));
             Assert.Contains("outside allowed roots", ex.Message);
         }
         finally
