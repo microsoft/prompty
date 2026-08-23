@@ -12,7 +12,6 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
-restoreGoModelImport(join("..", "runtime", "go", "prompty", "model"));
 restoreSwiftPackageResources(join("..", "runtime", "swift", "prompty-model", "Package.swift"));
 
 // Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
@@ -63,57 +62,22 @@ function trimTrailingWhitespace(root) {
   }
 }
 
-// Workaround for upstream typra emitter bug (sethjuarez/typra#262): the Go test
-// emitter prunes the `prompty/model` import from generated external-test files
-// (`package prompty_test`). The Go module is `prompty` and the model package is
-// declared `package prompty` (folder `model`), so `import "prompty/model"` binds
-// the identifier `prompty` — which the tests use via `prompty.LoadAgent(...)`,
-// `prompty.NewLoadContext()`, etc. The emitter's import-usage detection keys on
-// the path-derived segment (`model.`) instead of the real package name
-// (`prompty.`), decides the import is unused, and drops it — breaking
-// `go vet`/`go test` with "undefined: prompty". Re-inject the import after every
-// regenerate for test files that reference the `prompty.` qualifier but lack it.
-// Remove this once #262 ships and the emitter preserves the import natively.
-function restoreGoModelImport(root) {
-  if (!existsSync(root)) {
-    return;
-  }
-  for (const entry of readdirSync(root)) {
-    const path = join(root, entry);
-    if (statSync(path).isDirectory()) {
-      restoreGoModelImport(path);
-      continue;
-    }
-    if (!path.endsWith("_test.go")) {
-      continue;
-    }
-    const content = readFileSync(path, "utf8");
-    if (
-      !content.includes("package prompty_test") ||
-      content.includes('"prompty/model"') ||
-      !/\bprompty\.[A-Z]/u.test(content)
-    ) {
-      continue;
-    }
-    // Append the local import as a trailing group inside the first import block.
-    const patched = content.replace(
-      /import \(\n([\s\S]*?)\n\)/u,
-      (_match, body) => `import (\n${body}\n\n\t"prompty/model"\n)`,
-    );
-    if (patched !== content) {
-      writeFileSync(path, patched);
-    }
-  }
-}
-
-// Workaround for upstream typra emitter bug (sethjuarez/typra#260): the Swift
-// driver regenerates Package.swift without the main target's
-// `resources: [.process("Resources")]` stanza. The PromptyModel target bundles
-// Resources (model_capabilities.json plus vector fixtures) that `swift test`
-// loads via Bundle.module, so a regenerate silently breaks resource loading and
-// trips the regen-drift gate until the stanza is re-added by hand. Re-inject it
-// deterministically after every regenerate. Remove this once #260 ships and the
-// emitter preserves the stanza natively.
+// Re-inject the main PromptyModel target's `resources: [.process("Resources")]`
+// stanza, which the typra Swift driver drops every time it regenerates
+// Package.swift. The main target bundles Resources (model_capabilities.json)
+// that the *public* `Discovery` API loads via `Bundle.module` from production
+// source (Sources/PromptyModel/Discovery.swift) — not just tests — so the
+// stanza must live on the main target.
+//
+// This is NOT replaceable by the emitter's `test-resources` option (typra#260,
+// shipped in 1.0.1). That option only attaches resources to the *test* target.
+// Verified empirically: moving Resources to the test target makes `swift test`
+// fail to compile the main target with "type 'Bundle' has no member 'module'",
+// because SwiftPM only synthesizes `Bundle.module` for a target that owns
+// resources. The emitter exposes no main-target resources option, so this hand
+// re-injection remains load-bearing. Fully removing it requires relocating
+// Discovery + the capabilities resource into a package the emitter does not
+// regenerate (tracked with the Swift split-package work in #487).
 function restoreSwiftPackageResources(packagePath) {
   if (!existsSync(packagePath)) {
     return;
