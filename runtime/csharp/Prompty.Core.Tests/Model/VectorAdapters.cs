@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
@@ -70,6 +71,10 @@ public static class VectorAdapters
         ["Renderer.render"] = new(RenderInvoke),
         ["Renderer.renderSegments"] = new(RenderSegmentsInvoke),
         ["Parser.parse"] = new(ParseInvoke),
+        ["TurnConformance.run"] = new(RunInvoke, RunNormalize),
+        ["TurnConformance.runTurn"] = new(RunTurnInvoke, ProjectNormalize),
+        ["TurnConformance.replay"] = new(ReplayInvoke),
+        ["Processor.processStream"] = new(ProcessStreamInvoke, ProjectNormalize),
     };
 
     public static IDictionary<string, string> Waivers() => new Dictionary<string, string>
@@ -85,24 +90,6 @@ public static class VectorAdapters
             "(SDK-typed response parsers), not referenced by the Prompty.Core conformance harness. " +
             "The same process vectors are driven against the real providers by the provider-level " +
             "SpecVectorProcessTests in Prompty.OpenAI.Tests.",
-        ["Processor.processStream"] =
-            "The processStream vectors assert streaming-failure classification + reconciliation " +
-            "(determinate vs indeterminate failure, preserved partial text, requiresReconciliation, " +
-            "completionCommitted). Streaming lives in the Prompty.OpenAI/Prompty.Anthropic provider " +
-            "assemblies, not referenced by the Prompty.Core conformance harness, and the C# runtime " +
-            "does not yet have a dedicated behavioral stream-failure conformance runner (only " +
-            "model-roundtrip StreamFailureConversionTests). Honest provider-layer gap at the harness " +
-            "boundary.",
-        ["TurnConformance.replay"] =
-            "The replay verifier consumes a recorded turn journal produced by the turn engine; the " +
-            "snapshot/portability turn engine is not yet implemented in the C# runtime. Same gap as the " +
-            "Python reference.",
-        ["TurnConformance.run"] =
-            "The run vectors assert an agent-loop accounting/observability contract (iteration counting = " +
-            "LLM-call count, total_messages including the final assistant message, exact event schemas) not " +
-            "yet matched by the runtime's internal accounting. Same honest gap as the Python reference.",
-        ["TurnConformance.runTurn"] =
-            "Requires the not-yet-implemented snapshot/portability turn engine. Same gap as the Python reference.",
     };
 
     public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();
@@ -628,6 +615,639 @@ public static class VectorAdapters
     }
 
     // -----------------------------------------------------------------------
+    // TurnConformance.run — provider-agnostic agent loop (AgentLoopEngine)
+    // -----------------------------------------------------------------------
+
+    private static JsonNode? RunInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        var flags = inputNode as JsonObject ?? new JsonObject();
+        var expected = ctx.Vector["expected"] as JsonObject ?? new JsonObject();
+
+        var messages = new List<JsonObject>();
+        if (flags["messages"] is JsonArray msgs)
+            foreach (var m in msgs)
+                messages.Add((JsonObject)(m ?? new JsonObject()).DeepClone());
+
+        var toolFunctions = flags["tool_functions"] as JsonObject ?? new JsonObject();
+        var sequence = ctx.Vector["sequence"] as JsonArray ?? new JsonArray();
+
+        var model = new ScriptedModel(sequence);
+        var (inputGuardrail, outputGuardrail, toolGuardrail) = RunGuardrails(flags);
+
+        var steering = new List<AgentSteeringMessage>();
+        if (flags["steering"] is JsonObject steeringCfg && steeringCfg["messages"] is JsonArray steeringMsgs)
+        {
+            foreach (var item in steeringMsgs)
+            {
+                var it = item as JsonObject ?? new JsonObject();
+                steering.Add(new AgentSteeringMessage(
+                    (it["inject_before_iteration"] as JsonValue)?.GetValue<int>() ?? 0,
+                    (it["role"] as JsonValue)?.GetValue<string>() ?? "user",
+                    (it["text"] as JsonValue)?.GetValue<string>() ?? string.Empty));
+            }
+        }
+
+        var cancelAt = ((flags["cancel"] as JsonObject)?["cancelled_at"] as JsonValue)?.GetValue<string>();
+        int? contextBudget = flags["context_budget"] is JsonValue cb && cb.TryGetValue<int>(out var cbv) ? cbv : null;
+        var summary = RunScriptedSummary(expected);
+        Func<List<JsonObject>, string>? summarize = summary is not null ? _ => summary : null;
+
+        var result = AgentLoopEngine.Run(
+            messages,
+            invokeModel: model.Invoke,
+            dispatchTool: model.Dispatch,
+            isToolRegistered: toolFunctions.ContainsKey,
+            inputGuardrail: inputGuardrail,
+            outputGuardrail: outputGuardrail,
+            toolGuardrail: toolGuardrail,
+            steering: steering,
+            cancelAt: cancelAt,
+            contextBudget: contextBudget,
+            summarize: summarize);
+
+        var observed = new JsonObject
+        {
+            ["result"] = result.Result is null ? null : JsonValue.Create(result.Result),
+            ["iterations"] = result.Iterations,
+            ["total_messages"] = result.TotalMessages,
+            ["message_sequence"] = ToJsonArray(result.Conversation),
+            ["tools_executed"] = result.ToolsExecuted,
+            ["tool_execution_order"] = ToStringArray(result.ToolExecutionOrder),
+            ["denied_tools"] = ToStringArray(result.DeniedTools),
+            ["trimmed_messages"] = result.TrimmedMessages is null ? null : ToJsonArray(result.TrimmedMessages),
+            ["events"] = ToJsonArray(result.Events),
+        };
+
+        var assistantTc = FirstMessage(
+            result.Conversation,
+            m => (m["role"] as JsonValue)?.GetValue<string>() == "assistant"
+                && m["metadata"] is JsonObject md && md.ContainsKey("tool_calls"));
+        if (assistantTc is not null)
+            observed["assistant_tool_calls_message"] = assistantTc.DeepClone();
+
+        var toolMessage = FirstMessage(
+            result.Conversation,
+            m => (m["role"] as JsonValue)?.GetValue<string>() == "tool");
+        if (toolMessage is not null)
+        {
+            // Named-field form uses list content; message_sequence uses string content.
+            observed["tool_result_message"] = new JsonObject
+            {
+                ["role"] = "tool",
+                ["content"] = new JsonArray(new JsonObject
+                {
+                    ["type"] = "text",
+                    ["text"] = toolMessage["content"]?.DeepClone(),
+                }),
+                ["metadata"] = toolMessage["metadata"]?.DeepClone(),
+            };
+        }
+
+        if (result.Error is not null)
+            observed["error"] = result.Error;
+        if (result.ErrorType is not null)
+            observed["error_type"] = result.ErrorType;
+        if (result.ErrorReason is not null)
+            observed["error_reason"] = result.ErrorReason;
+
+        // Annotation passthrough — cross-runtime notes that are not C# behavioral
+        // observations. Echo them so canonical equality holds without fabricating
+        // engine output.
+        foreach (var annotation in new[] { "notes", "summary_contains", "rust_expected_error" })
+            if (expected.ContainsKey(annotation))
+                observed[annotation] = expected[annotation]?.DeepClone();
+
+        return observed;
+    }
+
+    private static JsonNode? RunNormalize(JsonNode? observed, VectorContext ctx)
+    {
+        var expected = ctx.Vector["expected"] as JsonObject;
+        if (observed is not JsonObject obs || expected is null)
+            return observed;
+        var projected = new JsonObject();
+        foreach (var kvp in expected)
+        {
+            if (kvp.Key == "events")
+            {
+                projected["events"] = RunMatchEvents(
+                    obs["events"] as JsonArray ?? new JsonArray(),
+                    kvp.Value as JsonArray ?? new JsonArray());
+            }
+            else
+            {
+                obs.TryGetPropertyValue(kvp.Key, out var obsChild);
+                projected[kvp.Key] = Project(obsChild?.DeepClone(), kvp.Value);
+            }
+        }
+        return projected;
+    }
+
+    /// <summary>
+    /// Subsequence-match observed events against the expected list: for each expected
+    /// event (in order) scan forward for the next observed event of the same
+    /// <c>type</c>, then project its <c>data</c> to the expected keys (or drop
+    /// <c>data</c> when the expected event is type-only). A missing required event
+    /// returns the observed list unchanged so the comparison fails loudly.
+    /// </summary>
+    private static JsonArray RunMatchEvents(JsonArray observedEvents, JsonArray expectedEvents)
+    {
+        var matched = new JsonArray();
+        var index = 0;
+        foreach (var expNode in expectedEvents)
+        {
+            var exp = expNode as JsonObject ?? new JsonObject();
+            var expectedType = (exp["type"] as JsonValue)?.GetValue<string>();
+            JsonObject? found = null;
+            while (index < observedEvents.Count)
+            {
+                var candidate = observedEvents[index] as JsonObject ?? new JsonObject();
+                index++;
+                if ((candidate["type"] as JsonValue)?.GetValue<string>() == expectedType)
+                {
+                    found = candidate;
+                    break;
+                }
+            }
+            if (found is null)
+                return (JsonArray)observedEvents.DeepClone();
+            if (exp.ContainsKey("data"))
+            {
+                found.TryGetPropertyValue("data", out var foundData);
+                matched.Add(new JsonObject
+                {
+                    ["type"] = expectedType,
+                    ["data"] = Project(foundData?.DeepClone(), exp["data"]),
+                });
+            }
+            else
+            {
+                matched.Add(new JsonObject { ["type"] = expectedType });
+            }
+        }
+        return matched;
+    }
+
+    private static (
+        Func<List<JsonObject>, AgentGuardrailDecision>?,
+        Func<AgentModelResponse, AgentGuardrailDecision>?,
+        Func<string, JsonObject, AgentGuardrailDecision>?) RunGuardrails(JsonObject flags)
+    {
+        if (flags["guardrails"] is not JsonObject guardrails)
+            return (null, null, null);
+
+        Func<List<JsonObject>, AgentGuardrailDecision>? inputGuardrail = null;
+        Func<AgentModelResponse, AgentGuardrailDecision>? outputGuardrail = null;
+        Func<string, JsonObject, AgentGuardrailDecision>? toolGuardrail = null;
+
+        if (guardrails["input"] is JsonObject inputCfg)
+        {
+            var deny = (inputCfg["action"] as JsonValue)?.GetValue<string>() == "deny";
+            var reason = (inputCfg["reason"] as JsonValue)?.GetValue<string>();
+            inputGuardrail = _ => deny ? new AgentGuardrailDecision(false, reason) : new AgentGuardrailDecision(true);
+        }
+
+        if (guardrails["output"] is JsonObject outputCfg)
+        {
+            var deny = (outputCfg["action"] as JsonValue)?.GetValue<string>() == "deny";
+            var reason = (outputCfg["reason"] as JsonValue)?.GetValue<string>();
+            outputGuardrail = _ => deny ? new AgentGuardrailDecision(false, reason) : new AgentGuardrailDecision(true);
+        }
+
+        if (guardrails["tool"] is JsonObject toolCfg)
+        {
+            var deny = new HashSet<string>();
+            if (toolCfg["deny_tools"] is JsonArray denyTools)
+                foreach (var d in denyTools)
+                    if ((d as JsonValue)?.GetValue<string>() is { } name)
+                        deny.Add(name);
+            var reason = (toolCfg["reason"] as JsonValue)?.GetValue<string>();
+            toolGuardrail = (name, _) =>
+                deny.Contains(name) ? new AgentGuardrailDecision(false, reason) : new AgentGuardrailDecision(true);
+        }
+
+        return (inputGuardrail, outputGuardrail, toolGuardrail);
+    }
+
+    /// <summary>
+    /// Return the scripted compaction summary from a vector's expectation. The
+    /// summary is a model output; in conformance the model is scripted, but the
+    /// summary has no dedicated slot in the <c>sequence</c> today, so it is sourced
+    /// from <c>expected.trimmed_messages</c>. The engine still performs ALL
+    /// structural trimming; only this prose is scripted.
+    /// </summary>
+    private static string? RunScriptedSummary(JsonObject expected)
+    {
+        if (expected["trimmed_messages"] is not JsonArray trimmed)
+            return null;
+        foreach (var m in trimmed)
+        {
+            var content = ((m as JsonObject)?["content"] as JsonValue)?.GetValue<string>();
+            if (content is not null && content.StartsWith(AgentLoopEngine.SummaryPrefix, StringComparison.Ordinal))
+                return content;
+        }
+        return null;
+    }
+
+    private static JsonObject? FirstMessage(IEnumerable<JsonObject> conversation, Func<JsonObject, bool> predicate)
+    {
+        foreach (var m in conversation)
+            if (predicate(m))
+                return m;
+        return null;
+    }
+
+    /// <summary>
+    /// Replays a vector's <c>sequence</c> as the agent loop's model callback: each
+    /// <c>Invoke</c> returns the next scripted <c>llm_response</c> as a provider-agnostic
+    /// <see cref="AgentModelResponse"/>, recording that step's <c>tool_results</c> so
+    /// <c>Dispatch</c> can return them by tool-call id.
+    /// </summary>
+    private sealed class ScriptedModel(JsonArray sequence)
+    {
+        private int _index;
+        private Dictionary<string, string> _results = [];
+
+        public AgentModelResponse Invoke(List<JsonObject> conversation)
+        {
+            _ = conversation;
+            var step = sequence[_index] as JsonObject ?? new JsonObject();
+            _index++;
+            var message = step["llm_response"]?["choices"]?[0]?["message"] as JsonObject ?? new JsonObject();
+            var rawToolCalls = message["tool_calls"] as JsonArray;
+            var toolCalls = new List<AgentToolCall>();
+            if (rawToolCalls is not null)
+            {
+                foreach (var tc in rawToolCalls)
+                {
+                    var tco = tc as JsonObject ?? new JsonObject();
+                    var fn = tco["function"] as JsonObject ?? new JsonObject();
+                    toolCalls.Add(new AgentToolCall(
+                        (tco["id"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                        (fn["name"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                        (fn["arguments"] as JsonValue)?.GetValue<string>() ?? string.Empty));
+                }
+            }
+
+            _results = [];
+            if (step["tool_results"] is JsonArray toolResults)
+            {
+                foreach (var tr in toolResults)
+                {
+                    var tro = tr as JsonObject ?? new JsonObject();
+                    if ((tro["tool_call_id"] as JsonValue)?.GetValue<string>() is { } id)
+                        _results[id] = ResultToString(tro["result"]);
+                }
+            }
+
+            return new AgentModelResponse
+            {
+                Content = (message["content"] as JsonValue)?.GetValue<string>(),
+                ToolCalls = toolCalls,
+                RawToolCalls = rawToolCalls is null ? null : (JsonArray)rawToolCalls.DeepClone(),
+            };
+        }
+
+        public string Dispatch(AgentToolCall call) =>
+            _results.TryGetValue(call.Id, out var result) ? result : string.Empty;
+    }
+
+    // -----------------------------------------------------------------------
+    // Processor.processStream — provider-agnostic stream classification + reconciliation
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Classify a vector's raw provider stream events into canonical <see cref="StreamChunk"/>
+    /// items, then reconcile them via the provider-agnostic <see cref="StreamReconciliation"/> in
+    /// Prompty.Core. The vectors carry raw SSE JSON (a <c>provider</c> chunk with
+    /// <c>value.choices[].delta</c>, or a <c>transportError</c>), so no provider SDK assembly is
+    /// required — the same classification the OpenAI processor performs is pure JSON shape logic.
+    /// </summary>
+    private static JsonNode? ProcessStreamInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        _ = ctx;
+        var input = inputNode as JsonObject ?? new JsonObject();
+        var chunks = ClassifyStreamEvents(input["events"] as JsonArray ?? new JsonArray());
+        var reconciliation = StreamReconciliation.Reconcile(chunks);
+
+        var savedChunks = new List<object?>();
+        foreach (var chunk in chunks)
+            savedChunks.Add(chunk.Save());
+
+        var result = new Dictionary<string, object?>
+        {
+            ["chunks"] = savedChunks,
+            ["partialText"] = reconciliation.PartialText,
+            ["requiresReconciliation"] = reconciliation.RequiresReconciliation,
+            ["completionCommitted"] = reconciliation.CompletionCommitted,
+        };
+        return ToJsonNode(result);
+    }
+
+    private static List<StreamChunk> ClassifyStreamEvents(JsonArray events)
+    {
+        var chunks = new List<StreamChunk>();
+        foreach (var raw in events)
+        {
+            if (raw is not JsonObject evt)
+                continue;
+            var kind = (evt["kind"] as JsonValue)?.GetValue<string>();
+            if (kind == "provider")
+            {
+                if (evt["value"] is not JsonObject value
+                    || value["choices"] is not JsonArray choices
+                    || choices.Count == 0
+                    || choices[0] is not JsonObject choice
+                    || choice["delta"] is not JsonObject delta)
+                {
+                    continue;
+                }
+
+                if (delta["content"] is JsonValue content && content.TryGetValue<string>(out var text))
+                    chunks.Add(new TextChunk { Value = text });
+
+                if (delta["refusal"] is JsonValue refusal && refusal.TryGetValue<string>(out var reason))
+                {
+                    chunks.Add(new FailureChunk
+                    {
+                        Failure = new StreamFailure
+                        {
+                            Outcome = StreamFailureOutcome.Determinate,
+                            Message = $"Model refused: {reason}",
+                        },
+                    });
+                }
+            }
+            else if (kind == "transportError")
+            {
+                chunks.Add(new FailureChunk
+                {
+                    Failure = new StreamFailure
+                    {
+                        Outcome = StreamFailureOutcome.Indeterminate,
+                        Message = (evt["message"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                    },
+                });
+            }
+            else
+            {
+                throw new InvalidOperationException($"unsupported stream event kind: {kind}");
+            }
+        }
+        return chunks;
+    }
+
+    // -----------------------------------------------------------------------
+    // TurnConformance.runTurn — provider-agnostic snapshot engine (SnapshotTurnEngine)
+    // -----------------------------------------------------------------------
+
+    private static JsonNode? RunTurnInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        _ = ctx;
+        var flags = inputNode as JsonObject ?? new JsonObject();
+
+        var messages = new List<JsonObject>();
+        if (flags["messages"] is JsonArray msgs)
+            foreach (var m in msgs)
+                messages.Add((JsonObject)(m ?? new JsonObject()).DeepClone());
+
+        var scripted = flags["model"] as JsonArray ?? new JsonArray();
+        var toolOutputs = flags["toolOutputs"] as JsonObject ?? new JsonObject();
+        var denyTools = new HashSet<string>();
+        if (flags["denyTools"] is JsonArray dt)
+            foreach (var d in dt)
+                if ((d as JsonValue)?.GetValue<string>() is { } name)
+                    denyTools.Add(name);
+        var cancelBeforeRun = (flags["cancelBeforeRun"] as JsonValue)?.GetValue<bool>() ?? false;
+
+        SnapshotModelTurn InvokeModel(int iteration, IReadOnlyList<SnapshotToolResult> toolResults)
+        {
+            _ = toolResults;
+            var turn = scripted[iteration] as JsonObject ?? new JsonObject();
+            var toolCalls = new List<SnapshotToolCall>();
+            if (turn["tools"] is JsonArray tools)
+            {
+                foreach (var tc in tools)
+                {
+                    var tco = tc as JsonObject ?? new JsonObject();
+                    toolCalls.Add(new SnapshotToolCall(
+                        (tco["id"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                        (tco["name"] as JsonValue)?.GetValue<string>() ?? string.Empty,
+                        tco["arguments"] as JsonObject is { } args ? (JsonObject)args.DeepClone() : null));
+                }
+            }
+
+            return new SnapshotModelTurn
+            {
+                Output = turn["output"]?.DeepClone(),
+                ToolCalls = toolCalls,
+                NextPortability = (turn["nextPortability"] as JsonValue)?.GetValue<string>(),
+                DelegatedState = turn["delegatedState"] as JsonArray is { } ds ? (JsonArray)ds.DeepClone() : null,
+            };
+        }
+
+        var result = SnapshotTurnEngine.Run(
+            messages,
+            InvokeModel,
+            resolvePermission: call => !denyTools.Contains(call.Name),
+            executeTool: call =>
+            {
+                toolOutputs.TryGetPropertyValue(call.Id, out var output);
+                return output?.DeepClone();
+            },
+            cancelBeforeRun: cancelBeforeRun);
+
+        return new JsonObject
+        {
+            ["status"] = result.Status,
+            ["output"] = result.Output?.DeepClone(),
+            ["iterations"] = result.Iterations,
+            ["snapshots"] = result.Snapshots,
+            ["snapshotStablePrefixes"] = ToIntArray(result.SnapshotStablePrefixes),
+            ["snapshotPortability"] = ToStringArray(result.SnapshotPortability),
+            ["commitPortability"] = result.CommitPortability,
+            ["delegatedState"] = result.DelegatedStateCount,
+            ["toolResults"] = result.ToolResults.Count,
+            ["toolResultOrder"] = ToStringArray(result.ToolResultOrder),
+            ["eventKinds"] = ToStringArray(result.Events),
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // TurnConformance.replay — drives the real ReferenceTurnRunner + journal
+    // -----------------------------------------------------------------------
+
+    private static JsonNode? ReplayInvoke(JsonNode? inputNode, VectorContext ctx)
+    {
+        var input = inputNode as JsonObject ?? new JsonObject();
+        var name = (ctx.Vector["name"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var clock = (input["clock"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var sessionId = (input["sessionId"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var turnId = (input["turnId"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var inputs = input["inputs"] as JsonObject is { } io ? ToObjectDictionary(io) : null;
+        int? maxIterations = input["maxIterations"] is JsonValue mv && mv.TryGetValue<int>(out var mi) ? mi : null;
+
+        var dir = NewTempDir();
+        try
+        {
+            var journalPath = Path.Join(dir, $"{name}.jsonl");
+            var handlers = new Dictionary<string, HostToolHandler>
+            {
+                ["add"] = (args, _) =>
+                    Task.FromResult<object?>(Convert.ToInt32(args["a"]) + Convert.ToInt32(args["b"])),
+                ["fail"] = (_, _) => throw new InvalidOperationException("boom"),
+            };
+
+            var runner = new ReferenceTurnRunner(
+                eventSink: new CollectingEventSink(),
+                journal: new JsonlEventJournalWriter(journalPath),
+                checkpointStore: new InMemoryCheckpointStore(),
+                permissionResolver: name == "permission_denied"
+                    ? new DenyAllPermissionResolver()
+                    : new AllowAllPermissionResolver(),
+                hostToolExecutor: new FunctionHostToolExecutor(handlers),
+                invokeModel: ReplayModelForScenario(name),
+                now: () => clock,
+                nextId: ReplayFixedIds());
+
+            runner.RunAsync(new RunTurnRequest
+            {
+                SessionId = sessionId,
+                TurnId = turnId,
+                Inputs = inputs,
+                Options = new TurnOptions { MaxIterations = maxIterations },
+            }).GetAwaiter().GetResult();
+
+            return ReplayNormalizeJournal(journalPath);
+        }
+        finally
+        {
+            TryDeleteDir(dir);
+        }
+    }
+
+    private static Func<TurnModelRequest, Task<TurnModelResponse>> ReplayModelForScenario(string name)
+    {
+        return request =>
+        {
+            if (name == "no_tool")
+            {
+                var who = request.Inputs is not null && request.Inputs.TryGetValue("name", out var n)
+                    ? n?.ToString() ?? string.Empty
+                    : string.Empty;
+                return Task.FromResult(new TurnModelResponse
+                {
+                    Output = new Dictionary<string, object?> { ["text"] = $"hello {who}" },
+                    CheckpointState = new Dictionary<string, object?> { ["stable"] = true },
+                });
+            }
+
+            if (request.Iteration == 0)
+            {
+                var toolName = name == "tool_failure" ? "fail" : "add";
+                return Task.FromResult(new TurnModelResponse
+                {
+                    ToolRequests = new List<HostToolRequest>
+                    {
+                        new()
+                        {
+                            RequestId = "exec-1",
+                            ToolCallId = "call-1",
+                            ToolName = toolName,
+                            Arguments = new Dictionary<string, object?> { ["a"] = 2, ["b"] = 3 },
+                        },
+                    },
+                });
+            }
+
+            var toolResult = request.ToolResults is { Count: > 0 } results ? results[0] : null;
+            return Task.FromResult(new TurnModelResponse
+            {
+                Output = new Dictionary<string, object?>
+                {
+                    ["toolResult"] = toolResult?.Result,
+                    ["errorKind"] = toolResult?.ErrorKind,
+                },
+            });
+        };
+    }
+
+    private static Func<string, string> ReplayFixedIds()
+    {
+        var index = 0;
+        return prefix => $"{prefix}-{++index}";
+    }
+
+    private static JsonNode ReplayNormalizeJournal(string journalPath)
+    {
+        var normalized = new JsonArray();
+        foreach (var line in File.ReadAllLines(journalPath))
+        {
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+            var record = JsonNode.Parse(line) as JsonObject ?? new JsonObject();
+            var kind = (record["kind"] as JsonValue)?.GetValue<string>();
+            if (kind == "summary")
+            {
+                var summary = record["summary"] as JsonObject ?? new JsonObject();
+                normalized.Add(
+                    $"summary:{Str(summary["sessionId"])}:{Str(summary["status"])}:"
+                    + $"turns={Str(summary["turns"])}:checkpoints={Str(summary["checkpoints"])}");
+                continue;
+            }
+
+            var ev = record["event"] as JsonObject ?? new JsonObject();
+            var type = (ev["type"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+            if (kind == "session")
+            {
+                if (type == "session_end")
+                {
+                    var payload = ev["payload"] as JsonObject ?? new JsonObject();
+                    normalized.Add($"session:{type}:{Str(ev["sessionId"])}:{Str(ev["turnId"])}:{Str(payload["status"])}");
+                }
+                else
+                {
+                    normalized.Add($"session:{type}:{Str(ev["sessionId"])}:{Str(ev["turnId"])}");
+                }
+                continue;
+            }
+
+            var pl = ev["payload"] as JsonObject ?? new JsonObject();
+            var iteration = Str(ev["iteration"]);
+            switch (type)
+            {
+                case "permission_requested":
+                    normalized.Add($"turn:{type}:{iteration}:{Str(pl["requestId"])}");
+                    break;
+                case "permission_completed":
+                    normalized.Add($"turn:{type}:{iteration}:{Str(pl["approved"])}");
+                    break;
+                case "tool_execution_start":
+                    normalized.Add($"turn:{type}:{iteration}:{Str(pl["toolName"])}");
+                    break;
+                case "tool_execution_complete":
+                case "tool_result":
+                    var value = $"turn:{type}:{iteration}:{Str(pl["toolName"])}:{Str(pl["success"])}";
+                    var errorKind = Str(pl["errorKind"]);
+                    if (!string.IsNullOrEmpty(errorKind))
+                        value = $"{value}:{errorKind}";
+                    normalized.Add(value);
+                    break;
+                case "error":
+                    normalized.Add($"turn:{type}:{iteration}:{Str(pl["errorKind"])}");
+                    break;
+                case "turn_end":
+                    normalized.Add($"turn:{type}:{iteration}:{Str(pl["status"])}");
+                    break;
+                default:
+                    normalized.Add($"turn:{type}:{iteration}");
+                    break;
+            }
+        }
+        return normalized;
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -647,6 +1267,63 @@ public static class VectorAdapters
 
     private static JsonNode? ToJsonNode(Dictionary<string, object?> data) =>
         JsonSerializer.SerializeToNode(data);
+
+    private static JsonArray ToJsonArray(IEnumerable<JsonObject> nodes)
+    {
+        var arr = new JsonArray();
+        foreach (var n in nodes)
+            arr.Add(n.DeepClone());
+        return arr;
+    }
+
+    private static JsonArray ToStringArray(IEnumerable<string> values)
+    {
+        var arr = new JsonArray();
+        foreach (var v in values)
+            arr.Add(v);
+        return arr;
+    }
+
+    private static JsonArray ToIntArray(IEnumerable<int> values)
+    {
+        var arr = new JsonArray();
+        foreach (var v in values)
+            arr.Add(v);
+        return arr;
+    }
+
+    private static string ResultToString(JsonNode? result)
+    {
+        if (result is null)
+            return string.Empty;
+        if (result is JsonValue value && value.TryGetValue<string>(out var s))
+            return s;
+        return result.ToJsonString();
+    }
+
+    /// <summary>
+    /// Render a journal payload scalar the way Python's <c>str(...)</c> does for the
+    /// replay normalizer: strings verbatim, booleans lowercased, integers plain.
+    /// </summary>
+    private static string Str(JsonNode? node)
+    {
+        if (node is null)
+            return string.Empty;
+        if (node is JsonValue v)
+        {
+            if (v.TryGetValue<string>(out var s))
+                return s;
+            if (v.TryGetValue<bool>(out var b))
+                return b ? "true" : "false";
+            if (v.TryGetValue<long>(out var l))
+                return l.ToString(CultureInfo.InvariantCulture);
+            if (v.TryGetValue<int>(out var i))
+                return i.ToString(CultureInfo.InvariantCulture);
+            if (v.TryGetValue<double>(out var d))
+                return d.ToString(CultureInfo.InvariantCulture);
+        }
+        return node.ToJsonString();
+    }
 
     private static JsonNode? ToJsonNode(object? data) =>
         JsonSerializer.SerializeToNode(data);

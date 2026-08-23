@@ -1,11 +1,16 @@
 //! Rust-first execution engine contracts incubated against real application workloads.
 
+pub mod agent_loop;
 pub mod cancellation;
 pub mod context;
 pub mod event;
 pub mod ports;
 pub mod turn;
 
+pub use agent_loop::{
+    AgentLoopOptions, AgentLoopResult, DEFAULT_MAX_ITERATIONS, GuardrailDecision, ModelResponse,
+    SUMMARY_PREFIX, SteeringMessage, ToolCall, run_agent_loop,
+};
 pub use cancellation::CancellationToken;
 pub use context::{
     AppendContextPackingStrategy, ContextCandidate, ContextDecision, ContextDisposition,

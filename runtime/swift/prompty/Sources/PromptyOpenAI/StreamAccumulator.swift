@@ -1,5 +1,4 @@
 import Foundation
-
 /// Assembles streamed OpenAI events into generated `StreamChunk` values.
 ///
 /// Text deltas are emitted as they arrive; tool calls arrive in fragments and
@@ -7,7 +6,6 @@ import Foundation
 /// across many events. Usage totals are emitted last when the provider reports
 /// them.
 import Prompty
-
 import PromptyModel
 
 struct StreamAccumulator {
@@ -17,6 +15,19 @@ struct StreamAccumulator {
   /// Fold one streamed event into the accumulator, emitting any chunks it
   /// completes.
   mutating func consume(_ event: [String: Any]) -> [StreamChunk] {
+    // Transport-level failures arrive as a synthetic `error` envelope. A
+    // provider-transport failure (`sse_transport_error`) is indeterminate — the
+    // stream broke after opening, so the completion outcome is unknown and the
+    // caller must reconcile. Any other classified error is determinate.
+    if event["type"] == nil, let error = event["error"] as? [String: Any] {
+      let message = error["message"] as? String ?? "stream error"
+      let outcome: StreamFailureOutcome =
+        (error["type"] as? String) == "sse_transport_error" ? .indeterminate : .determinate
+      return [
+        .failureChunk(FailureChunk(failure: StreamFailure(outcome: outcome, message: message)))
+      ]
+    }
+
     // Responses API events carry their delta at the top level.
     if let type = event["type"] as? String {
       return consumeResponsesEvent(type: type, event: event)
@@ -30,6 +41,14 @@ struct StreamAccumulator {
     else { return [] }
 
     var chunks: [StreamChunk] = []
+    // A model refusal is a determinate terminal failure: the model decided not
+    // to answer, so no completion is committed and no reconciliation is needed.
+    if let refusal = delta["refusal"] as? String, !refusal.isEmpty {
+      chunks.append(
+        .failureChunk(
+          FailureChunk(
+            failure: StreamFailure(outcome: .determinate, message: "Model refused: \(refusal)"))))
+    }
     if let piece = delta["content"] as? String, !piece.isEmpty {
       chunks.append(.text(piece))
     }

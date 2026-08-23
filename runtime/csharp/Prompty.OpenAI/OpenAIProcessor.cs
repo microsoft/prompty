@@ -155,6 +155,77 @@ public class OpenAIProcessor : IProcessor
     }
 
     /// <summary>
+    /// Classify raw OpenAI stream events into canonical <see cref="StreamChunk"/> items.
+    ///
+    /// Each event is either a provider SSE payload
+    /// (<c>{"kind":"provider","value":{...}}</c>) or a transport failure
+    /// (<c>{"kind":"transportError","message":"..."}</c>). A content delta becomes a
+    /// <see cref="TextChunk"/>; a refusal delta becomes a determinate
+    /// <see cref="FailureChunk"/>; and a transport error becomes an indeterminate
+    /// <see cref="FailureChunk"/> that requires reconciliation. This drives the
+    /// <c>Processor.processStream</c> conformance vectors together with
+    /// <see cref="StreamReconciliation.Reconcile"/>.
+    /// </summary>
+    public static IReadOnlyList<StreamChunk> ClassifyStreamEvents(JsonElement events)
+    {
+        var chunks = new List<StreamChunk>();
+        foreach (var ev in events.EnumerateArray())
+        {
+            var kind = ev.TryGetProperty("kind", out var k) ? k.GetString() : null;
+            if (kind == "provider")
+            {
+                if (!ev.TryGetProperty("value", out var value)
+                    || !value.TryGetProperty("choices", out var choices)
+                    || choices.ValueKind != JsonValueKind.Array
+                    || choices.GetArrayLength() == 0)
+                {
+                    continue;
+                }
+
+                if (!choices[0].TryGetProperty("delta", out var delta) || delta.ValueKind != JsonValueKind.Object)
+                {
+                    continue;
+                }
+
+                if (delta.TryGetProperty("content", out var content) && content.ValueKind != JsonValueKind.Null)
+                {
+                    chunks.Add(new TextChunk { Value = content.GetString() ?? string.Empty });
+                }
+
+                if (delta.TryGetProperty("refusal", out var refusal) && refusal.ValueKind != JsonValueKind.Null)
+                {
+                    chunks.Add(new FailureChunk
+                    {
+                        Failure = new StreamFailure
+                        {
+                            Outcome = StreamFailureOutcome.Determinate,
+                            Message = $"Model refused: {refusal.GetString()}",
+                        },
+                    });
+                }
+            }
+            else if (kind == "transportError")
+            {
+                var message = ev.TryGetProperty("message", out var m) ? m.GetString() ?? string.Empty : string.Empty;
+                chunks.Add(new FailureChunk
+                {
+                    Failure = new StreamFailure
+                    {
+                        Outcome = StreamFailureOutcome.Indeterminate,
+                        Message = message,
+                    },
+                });
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported stream event kind: {kind}");
+            }
+        }
+
+        return chunks;
+    }
+
+    /// <summary>
     /// Reconstructs a final result from accumulated streaming chunks.
     /// Handles tool calls, text content, and structured output.
     /// </summary>

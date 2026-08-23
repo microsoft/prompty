@@ -67,3 +67,33 @@ export {
   isStructuredResult,
   cast,
 } from "./structured.js";
+
+// Provider-agnostic conformance engines (TurnConformance.run / runTurn,
+// Processor.processStream). These own the observable contracts the @vector
+// suite asserts; providers supply only wire translation.
+export {
+  DEFAULT_MAX_ITERATIONS as AGENT_LOOP_DEFAULT_MAX_ITERATIONS,
+  SUMMARY_PREFIX,
+  runAgentLoop,
+  totalMessages,
+  type AgentLoopResult,
+  type AgentToolCall,
+  type ModelResponse,
+  type GuardrailDecision,
+  type SteeringMessage,
+  type RunAgentLoopOptions,
+} from "./agent-loop-engine.js";
+export {
+  PORTABILITY_PORTABLE,
+  PORTABILITY_DELEGATED,
+  runTurnEngine,
+  type TurnResult,
+  type TurnToolCall,
+  type TurnModelTurn,
+  type TurnToolResult,
+  type RunTurnEngineOptions,
+} from "./turn-engine.js";
+export {
+  reconcileStream,
+  type StreamReconciliation,
+} from "./stream-reconcile.js";

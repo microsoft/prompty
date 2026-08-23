@@ -1063,6 +1063,7 @@ dependencies = [
  "opentelemetry",
  "opentelemetry-stdout",
  "opentelemetry_sdk",
+ "prompty-openai",
  "rand 0.9.4",
  "regex",
  "ribboncurls",
