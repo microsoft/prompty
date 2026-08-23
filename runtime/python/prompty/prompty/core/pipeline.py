@@ -46,6 +46,7 @@ from .discovery import (
     get_processor,
     get_renderer,
 )
+from .errors import PromptyLoadError
 from .guardrails import GuardrailError, Guardrails
 from .steering import Steering
 from .structured import cast
@@ -139,7 +140,11 @@ def validate_inputs(
             if prop.default is not None:
                 result[name] = prop.default
             elif prop.required:
-                raise ValueError(f"Required input '{name}' not provided and has no default value.")
+                raise PromptyLoadError(
+                    "missing_required_input",
+                    f"Required input '{name}' not provided and has no default value.",
+                    field=name,
+                )
 
     return result
 

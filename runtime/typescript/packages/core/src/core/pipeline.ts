@@ -50,6 +50,7 @@ import {
 import { getLastNonces, clearLastNonces } from "../renderers/common.js";
 import { traceSpan, sanitizeValue } from "../tracing/tracer.js";
 import { load } from "./loader.js";
+import { PromptyLoadError } from "./errors.js";
 import { dispatchTool, resilientJsonParse } from "./tool-dispatch.js";
 import { type EventCallback, emitEvent } from "./agent-events.js";
 import { CancelledError, checkCancellation } from "./cancellation.js";
@@ -175,7 +176,11 @@ export function validateInputs(
       if (prop.default !== undefined) {
         result[name] = prop.default;
       } else if (prop.required) {
-        throw new Error(`Missing required input: "${name}"`);
+        throw new PromptyLoadError(
+          "missing_required_input",
+          `Missing required input: "${name}"`,
+          name,
+        );
       }
     }
   }

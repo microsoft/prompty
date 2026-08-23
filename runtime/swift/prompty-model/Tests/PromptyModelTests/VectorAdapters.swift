@@ -246,16 +246,17 @@ enum VectorAdapters {
 
   static func loadInvoke(_ input: Any?, _ context: VectorContext) throws -> Any? {
     let object = input as? [String: Any] ?? [:]
-    let expected = context.vector["expected"] as? [String: Any] ?? [:]
     let restore = applyEnv(object["env"])
     defer { restore() }
 
-    if runInputValidation(object, expected) {
+    // Input-validation vectors carry inputs alongside frontmatter at the top level;
+    // full-load vectors nest inputs inside the frontmatter.
+    if object["inputs"] != nil, object["frontmatter"] != nil {
       do {
         let agent = try buildAgentFromData(unwrapProperties(object["frontmatter"] as? [String: Any] ?? [:]))
         return ["validated_inputs": try validateInputs(agent: agent, provided: object["inputs"] as? [String: Any] ?? [:])]
       } catch {
-        return loadErrorResult(error, expected)
+        throw VectorError(String(describing: error), payload: canonicalLoadPayload(error))
       }
     }
 
@@ -272,13 +273,8 @@ enum VectorAdapters {
       }
       return try canonicalAgent(agent)
     } catch {
-      return loadErrorResult(error, expected)
+      throw VectorError(String(describing: error), payload: canonicalLoadPayload(error))
     }
-  }
-
-  static func runInputValidation(_ input: [String: Any], _ expected: [String: Any]) -> Bool {
-    if expected["validated_inputs"] != nil { return true }
-    return expected["error"] != nil && input["inputs"] != nil && input["frontmatter"] != nil
   }
 
   static func unwrapProperties(_ data: [String: Any]) -> [String: Any] {
@@ -372,25 +368,24 @@ enum VectorAdapters {
     return out
   }
 
-  static func loadErrorResult(_ error: Error, _ expected: [String: Any]) -> [String: Any] {
-    let message = String(describing: error)
-    let low = message.lowercased()
-    let expectedError = expected["error"] as? String ?? ""
-    let field = expected["error_field"] as? String ?? ""
-    let loadError = error as? PromptyLoadError
-    let matched =
-      expectedError.isEmpty
-      || message.contains(expectedError)
-      || (expectedError == "Invalid template format" && low.contains("template"))
-      || (expectedError == "Missing required input" && low.contains("required"))
-      || (expectedError == "invalid frontmatter" && loadError?.kind == "frontmatter")
-      || (expectedError == "FileNotFoundError" && (loadError?.kind == "not_found" || loadError?.kind == "file_missing"))
-    guard matched else { return ["error": message] }
-    var out: [String: Any] = ["error": expectedError]
-    if !field.isEmpty && (message.contains(field) || loadError?.field == field) {
-      out["error_field"] = field
+  // Map a typed `PromptyLoadError` onto its canonical `{kind, [field]}` payload by the error's
+  // TYPE and taxonomy variant -- never by matching message text. Returns nil for an untyped error
+  // so the harness compares its message instead and an unexpected failure surfaces plainly.
+  static func canonicalLoadPayload(_ error: Error) -> Any? {
+    guard let load = error as? PromptyLoadError else { return nil }
+    let kind: String
+    switch load.kind {
+    case "env": kind = "env_var_not_set"
+    case "file_traversal", "file_missing": kind = "file_reference"
+    case "not_found": kind = "file_not_found"
+    case "frontmatter": kind = "invalid_frontmatter"
+    case "template": kind = "invalid_template"
+    case "required_input": kind = "missing_required_input"
+    default: kind = load.kind
     }
-    return out
+    var payload: [String: Any] = ["kind": kind]
+    if let field = load.field { payload["field"] = field }
+    return payload
   }
 
   static func applyEnv(_ value: Any?) -> () -> Void {

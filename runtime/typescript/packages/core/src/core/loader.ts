@@ -13,6 +13,7 @@ import { dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
 import { Agent } from "../model/agent.js";
+import { PromptyLoadError } from "./errors.js";
 
 export interface LoadOptions {
   /**
@@ -35,7 +36,18 @@ export interface LoadOptions {
  */
 export function load(path: string, options: LoadOptions = {}): Agent {
   const resolved = resolve(path);
-  const raw = readFileSync(resolved, "utf-8");
+  let raw: string;
+  try {
+    raw = readFileSync(resolved, "utf-8");
+  } catch (err) {
+    if ((err as { code?: string })?.code === "ENOENT") {
+      throw new PromptyLoadError(
+        "file_not_found",
+        `Prompty file not found: ${resolved}`,
+      );
+    }
+    throw err;
+  }
   return buildAgent(raw, resolved, options);
 }
 
@@ -83,17 +95,41 @@ function buildAgent(
   options: LoadOptions,
 ): Agent {
   // 1. Split frontmatter + body
-  const { data, content } = matter(raw, {
-    engines: {
-      js: { parse: rejectExecutableFrontmatter },
-      javascript: { parse: rejectExecutableFrontmatter },
-    },
-  });
+  let data: Record<string, unknown> | undefined;
+  let content: string;
+  try {
+    ({ data, content } = matter(raw, {
+      engines: {
+        js: { parse: rejectExecutableFrontmatter },
+        javascript: { parse: rejectExecutableFrontmatter },
+      },
+    }) as unknown as {
+      data: Record<string, unknown> | undefined;
+      content: string;
+    });
+  } catch (err) {
+    if (err instanceof PromptyLoadError) throw err;
+    throw new PromptyLoadError(
+      "invalid_frontmatter",
+      `Invalid frontmatter: ${(err as Error)?.message ?? String(err)}`,
+    );
+  }
 
   // If there's a body (instructions), merge it in
   const frontmatter: Record<string, unknown> = data ?? {};
   if (content.trim()) {
     frontmatter.instructions = content.trim();
+  }
+
+  // v2 requires `template` to be an object ({format, parser}); a bare string
+  // (e.g. legacy `template: jinja2`) is invalid. A `${...}` reference is left
+  // for preProcess to resolve.
+  const tmpl = frontmatter.template;
+  if (typeof tmpl === "string" && !tmpl.startsWith("${")) {
+    throw new PromptyLoadError(
+      "invalid_template",
+      `Invalid template format: ${JSON.stringify(tmpl)} (expected an object with format/parser)`,
+    );
   }
 
   // 2. Load via Prompty.load() with preProcess for ${protocol:value} expansion
@@ -180,7 +216,8 @@ function makePreProcess(
         } else if (defaultVal !== undefined) {
           record[key] = defaultVal;
         } else {
-          throw new Error(
+          throw new PromptyLoadError(
+            "env_var_not_set",
             `Environment variable '${varName}' not set for key '${key}'`,
           );
         }
@@ -204,19 +241,22 @@ function resolveFileReference(
     ? resolve(reference)
     : resolve(agentDir, reference);
   if (!isWithinAnyRoot(candidate, allowedRoots)) {
-    throw new Error(
+    throw new PromptyLoadError(
+      "file_reference",
       `File reference '${reference}' resolves outside allowed roots for key '${key}'. Allowed roots: ${allowedRoots.join(", ")}`,
     );
   }
   if (!existsSync(candidate)) {
-    throw new Error(
+    throw new PromptyLoadError(
+      "file_reference",
       `Referenced file '${reference}' not found for key '${key}' (resolved to ${candidate})`,
     );
   }
 
   const resolved = realpathSync(candidate);
   if (!isWithinAnyRoot(resolved, allowedRoots)) {
-    throw new Error(
+    throw new PromptyLoadError(
+      "file_reference",
       `File reference '${reference}' resolves outside allowed roots for key '${key}'. Allowed roots: ${allowedRoots.join(", ")}`,
     );
   }

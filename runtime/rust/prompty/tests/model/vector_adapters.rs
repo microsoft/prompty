@@ -378,7 +378,12 @@ fn canon_floats(v: &Value) -> Value {
 }
 
 fn load_normalize(observed: &Value, ctx: &Context) -> Value {
-    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
+    let expected = ctx
+        .vector
+        .get("expectedError")
+        .or_else(|| ctx.vector.get("expected"))
+        .cloned()
+        .unwrap_or(Value::Null);
     project(&canon_floats(observed), &expected)
 }
 
@@ -434,56 +439,46 @@ fn write_files(root: &std::path::Path, files: &Value) {
     }
 }
 
-/// Map a load/validation error to the canonical `{ error, error_field? }` shape,
-/// matching the fuzzy error semantics of the Python reference adapter.
-fn err_map(msg: &str, expected: &Value) -> Value {
-    let low = msg.to_lowercase();
-    let exp_err = expected.get("error").and_then(|v| v.as_str());
-    let field = expected.get("error_field");
-    let mut matched = false;
-    if let Some(exp) = exp_err {
-        let el = exp.to_lowercase();
-        if exp == msg || msg.contains(exp) {
-            matched = true;
-        } else if exp == "invalid frontmatter"
-            && (low.contains("yaml")
-                || low.contains("mapping")
-                || low.contains("frontmatter")
-                || low.contains("flow"))
-        {
-            matched = true;
-        } else if exp == "FileNotFoundError"
-            && (low.contains("not found")
-                || low.contains("no such file")
-                || low.contains("cannot find")
-                || low.contains("os error 2")
-                || low.contains("filenotfound"))
-        {
-            matched = true;
-        } else if exp == "Invalid template format" && low.contains("template") {
-            matched = true;
-        } else if exp == "Missing required input" && low.contains("required") {
-            matched = true;
-        } else if el.contains("outside allowed roots") && low.contains("outside allowed roots") {
-            matched = true;
+/// Map a typed [`prompty::LoadError`] to the canonical `{ kind }` payload used
+/// by `expectedError` conformance vectors. Classification is by variant only —
+/// no message-substring matching.
+fn load_error_payload(err: &prompty::LoadError) -> Value {
+    use prompty::LoadError as LE;
+    let kind = match err {
+        LE::FileNotFound(..) => "file_not_found",
+        LE::InvalidFrontmatter(..) => "invalid_frontmatter",
+        LE::InvalidTemplate(..) => "invalid_template",
+        LE::EnvVarNotSet { .. } => "env_var_not_set",
+        LE::FileReference { .. } => "file_reference",
+        LE::Other(..) => return serde_json::json!({ "message": err.to_string() }),
+    };
+    serde_json::json!({ "kind": kind })
+}
+
+/// Wrap a typed load error into a [`VectorError`] carrying the canonical payload.
+fn load_vector_error(err: prompty::LoadError) -> VectorError {
+    VectorError {
+        message: err.to_string(),
+        payload: Some(load_error_payload(&err)),
+    }
+}
+
+/// Identify the first required input that is absent (and has no default) —
+/// mirrors the production `validate_inputs` predicate structurally so the
+/// missing-input field can be reported without parsing the error message.
+fn missing_required_field(agent: &Agent, inputs: &Value) -> Option<String> {
+    let props = agent.as_inputs()?;
+    let obj = inputs.as_object();
+    for prop in props {
+        if prop.name.is_empty() {
+            continue;
+        }
+        let present = obj.map(|o| o.contains_key(&prop.name)).unwrap_or(false);
+        if !present && prop.default.is_none() && prop.required.unwrap_or(false) {
+            return Some(prop.name.clone());
         }
     }
-    if !matched {
-        return serde_json::json!({ "error": msg });
-    }
-    let mut out = serde_json::Map::new();
-    out.insert(
-        "error".to_string(),
-        Value::String(exp_err.unwrap_or(msg).to_string()),
-    );
-    if let Some(f) = field {
-        if let Some(fs) = f.as_str() {
-            if msg.contains(fs) {
-                out.insert("error_field".to_string(), f.clone());
-            }
-        }
-    }
-    Value::Object(out)
+    None
 }
 
 /// Build an Agent directly from an inline frontmatter dict (used by the
@@ -505,14 +500,13 @@ fn agent_from_frontmatter(frontmatter: &Value) -> Agent {
 }
 
 fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
-    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
     let obj = input.as_object().cloned().unwrap_or_default();
 
     // --- input-validation vectors -----------------------------------------
-    let is_validation = expected.get("validated_inputs").is_some()
-        || (expected.get("error").is_some()
-            && obj.contains_key("inputs")
-            && obj.contains_key("frontmatter"));
+    // Discriminate structurally: validation vectors carry BOTH a top-level
+    // `inputs` map and a `frontmatter`; full-load vectors nest inputs inside
+    // the frontmatter. (Same discriminator as the Python/Go reference adapters.)
+    let is_validation = obj.contains_key("inputs") && obj.contains_key("frontmatter");
     if is_validation {
         let frontmatter = obj.get("frontmatter").cloned().unwrap_or(Value::Null);
         let inputs = obj
@@ -522,7 +516,18 @@ fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
         let agent = agent_from_frontmatter(&frontmatter);
         return match validate_inputs(&agent, &inputs) {
             Ok(validated) => Ok(serde_json::json!({ "validated_inputs": validated })),
-            Err(e) => Ok(err_map(&e.to_string(), &expected)),
+            Err(e) => {
+                let payload = match missing_required_field(&agent, &inputs) {
+                    Some(field) => {
+                        serde_json::json!({ "kind": "missing_required_input", "field": field })
+                    }
+                    None => serde_json::json!({ "message": e.to_string() }),
+                };
+                Err(VectorError {
+                    message: e.to_string(),
+                    payload: Some(payload),
+                })
+            }
         };
     }
 
@@ -539,7 +544,7 @@ fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
         }
     }
 
-    let result = load_agent_from_input(&obj, &expected, ctx);
+    let result = load_agent_from_input(&obj, ctx);
 
     for (k, old) in restore {
         match old {
@@ -552,7 +557,6 @@ fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
 
 fn load_agent_from_input(
     obj: &serde_json::Map<String, Value>,
-    expected: &Value,
     ctx: &Context,
 ) -> Result<Value, VectorError> {
     // fixture path
@@ -560,7 +564,7 @@ fn load_agent_from_input(
         let path = spec_fixtures(ctx).join(fixture);
         return match load(&path) {
             Ok(agent) => Ok(agent_to_canonical(&agent)),
-            Err(e) => Ok(err_map(&e.to_string(), expected)),
+            Err(e) => Err(load_vector_error(e)),
         };
     }
 
@@ -593,7 +597,7 @@ fn load_agent_from_input(
 
     let out = match load(&prompty_path) {
         Ok(agent) => Ok(agent_to_canonical(&agent)),
-        Err(e) => Ok(err_map(&e.to_string(), expected)),
+        Err(e) => Err(load_vector_error(e)),
     };
     cleanup(&temp);
     out

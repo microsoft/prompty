@@ -62,6 +62,7 @@ from prompty.core.agent_loop import (
 from prompty.core.agent_loop import (
     run_agent_loop as _run_agent_loop,
 )
+from prompty.core.errors import PromptyLoadError
 from prompty.core.loader import default_save_context
 from prompty.core.streaming import reconcile_stream
 from prompty.core.turn_engine import (
@@ -221,79 +222,73 @@ def _make_agent_from_frontmatter(frontmatter: dict) -> Agent:
     return Agent.load(d, LoadContext())
 
 
+def _load_error_detail(exc: Exception) -> dict[str, Any] | None:
+    """Map a production load exception to its canonical ``{kind, [field]}``.
+
+    Mapping is by exception *type* only -- no message substring matching -- so
+    the harness stays faithful to the runtime's typed load-error taxonomy.
+    """
+    if isinstance(exc, PromptyLoadError):
+        detail: dict[str, Any] = {"kind": exc.kind}
+        if exc.field is not None:
+            detail["field"] = exc.field
+        return detail
+    if isinstance(exc, FileNotFoundError):
+        return {"kind": "file_not_found"}
+    if _is_yaml_error(exc):
+        return {"kind": "invalid_frontmatter"}
+    return None
+
+
+def _load_normalize(observed: Any, context: dict) -> Any:
+    vector = context["vector"]
+    if "expectedError" in vector:
+        return _project(observed, vector["expectedError"])
+    return _project(observed, vector["expected"])
+
+
 def _load_invoke(input: dict, context: dict) -> Any:
-    expected = context["vector"]["expected"]
     env_vars = input.get("env", {})
     old_env: dict[str, str | None] = {}
     for k, v in env_vars.items():
         old_env[k] = os.environ.get(k)
         os.environ[k] = v
-    # Error vectors that assert a missing env var explicitly clear it
-    if isinstance(expected, dict) and "error" in expected and "NONEXISTENT" in json.dumps(input):
+    # Vectors that assert a missing env var reference ${env:NONEXISTENT}; ensure
+    # it is actually unset regardless of the ambient environment.
+    if "NONEXISTENT" in json.dumps(input):
         old_env.setdefault("NONEXISTENT", os.environ.get("NONEXISTENT"))
         os.environ.pop("NONEXISTENT", None)
 
-    def _err(exc: Exception) -> dict:
-        name = type(exc).__name__
-        msg = str(exc)
-        low = msg.lower()
-        exp_err = expected.get("error") if isinstance(expected, dict) else None
-        field = expected.get("error_field") if isinstance(expected, dict) else None
-        matched = False
-        if isinstance(exp_err, str):
-            if exp_err == name or exp_err in msg:
-                matched = True
-            elif exp_err == "invalid frontmatter" and (_is_yaml_error(exc) or "yaml" in low or "mapping" in low):
-                matched = True
-            elif exp_err == "Invalid template format" and "template" in low:
-                matched = True
-            elif exp_err == "Missing required input" and "required" in low:
-                matched = True
-        if not matched:
-            return {"error": msg}
-        observed: dict[str, Any] = {"error": exp_err}
-        if field is not None and str(field) in msg:
-            observed["error_field"] = field
-        return observed
-
     try:
-        # --- input validation vectors ---
-        if isinstance(expected, dict) and "validated_inputs" in expected:
+        # --- input-validation vectors ---
+        if "inputs" in input and "frontmatter" in input:
             agent = _make_agent_from_frontmatter(input["frontmatter"])
             return {"validated_inputs": validate_inputs(agent, input.get("inputs", {}))}
-        if isinstance(expected, dict) and "error" in expected and "inputs" in input and "frontmatter" in input:
-            agent = _make_agent_from_frontmatter(input["frontmatter"])
-            try:
-                validate_inputs(agent, input.get("inputs", {}))
-            except Exception as exc:  # noqa: BLE001
-                return _err(exc)
-            return {"error": "<no error raised>"}
 
+        # --- load vectors ---
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             if "fixture" in input:
-                try:
-                    agent = load(SPEC_FIXTURES / input["fixture"])
-                except Exception as exc:  # noqa: BLE001
-                    return _err(exc)
+                agent = load(SPEC_FIXTURES / input["fixture"])
             elif "frontmatter_raw" in input:
                 p = tmp_path / "vector.prompty"
                 p.write_text(input["frontmatter_raw"], encoding="utf-8")
-                try:
-                    agent = load(p)
-                except Exception as exc:  # noqa: BLE001
-                    return _err(exc)
+                agent = load(p)
             else:
                 frontmatter = dict(input["frontmatter"])
                 sub = tmp_path / input["agent_subdir"] if input.get("agent_subdir") else tmp_path
                 sub.mkdir(parents=True, exist_ok=True)
                 p = sub / "vector.prompty"
                 _write_prompty(p, frontmatter, input.get("files"))
-                try:
-                    agent = load(p)
-                except Exception as exc:  # noqa: BLE001
-                    return _err(exc)
+                agent = load(p)
             return _agent_to_canonical(agent.save(default_save_context(use_shorthand=False)))
+    except Exception as exc:  # noqa: BLE001
+        # Error vectors: attach the canonical {kind, [field]} so the harness can
+        # match it against expectedError, then let the exception propagate.
+        detail = _load_error_detail(exc)
+        if detail is not None:
+            exc.typra_vector = detail  # type: ignore[attr-defined]
+        raise
     finally:
         for k, v in old_env.items():
             if v is None:
@@ -1105,7 +1100,7 @@ def _run_turn_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, 
 # ---------------------------------------------------------------------------
 
 VECTOR_ADAPTERS: dict[str, Any] = {
-    "LoadConformance.load": {"invoke": _load_invoke, "normalize": _project_normalize},
+    "LoadConformance.load": {"invoke": _load_invoke, "normalize": _load_normalize},
     "Renderer.render": {"invoke": _render_invoke, "normalize": _project_normalize},
     "Renderer.renderSegments": {"invoke": _render_segments_invoke, "normalize": _project_normalize},
     "Parser.parse": {"invoke": _parse_invoke, "normalize": _project_normalize},

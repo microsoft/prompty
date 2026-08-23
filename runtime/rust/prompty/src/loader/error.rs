@@ -9,6 +9,8 @@ pub enum LoadError {
     FileNotFound(PathBuf, String),
     /// The YAML frontmatter is malformed.
     InvalidFrontmatter(String),
+    /// The `template` field is not a valid object (e.g. a bare string).
+    InvalidTemplate(String),
     /// A `${env:VAR}` reference could not be resolved.
     EnvVarNotSet {
         /// The variable name
@@ -35,6 +37,9 @@ impl std::fmt::Display for LoadError {
             }
             LoadError::InvalidFrontmatter(msg) => {
                 write!(f, "Invalid frontmatter: {msg}")
+            }
+            LoadError::InvalidTemplate(msg) => {
+                write!(f, "Invalid template: {msg}")
             }
             LoadError::EnvVarNotSet { var_name, key } => {
                 write!(

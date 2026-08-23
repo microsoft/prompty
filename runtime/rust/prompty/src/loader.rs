@@ -187,6 +187,17 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Age
     //    `LoadError` by validating first — this keeps negative-path callers
     //    (e.g. a bare-string `template`) on the `Result` seam instead of
     //    unwinding.
+    //
+    //    A bare-string (or otherwise non-object) `template` is reported as a
+    //    distinct `InvalidTemplate` so conformance can classify it separately
+    //    from generic frontmatter shape errors.
+    if let Some(template) = value.get("template") {
+        if !template.is_object() && !template.is_null() {
+            return Err(LoadError::InvalidTemplate(format!(
+                "template must be an object, got {template}"
+            )));
+        }
+    }
     if let Err(message) = Agent::validate_input_at(&value, "") {
         return Err(LoadError::InvalidFrontmatter(message));
     }

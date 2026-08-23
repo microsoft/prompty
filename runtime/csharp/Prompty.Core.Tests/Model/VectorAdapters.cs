@@ -67,7 +67,7 @@ public static partial class VectorAdapters
             var provider = ctx.Provider ?? string.Empty;
             return ToJsonNode(Discovery.MapModel(input, provider).Save());
         }),
-        ["LoadConformance.load"] = new(LoadInvoke, ProjectNormalize),
+        ["LoadConformance.load"] = new(LoadInvoke, LoadNormalize),
         ["Renderer.render"] = new(RenderInvoke),
         ["Renderer.renderSegments"] = new(RenderSegmentsInvoke),
         ["Parser.parse"] = new(ParseInvoke),
@@ -139,6 +139,16 @@ public static partial class VectorAdapters
     private static JsonNode? ProjectNormalize(JsonNode? observed, VectorContext ctx) =>
         Project(observed, ctx.Vector["expected"]);
 
+    /// <summary>
+    /// Normalize LOAD observations: error vectors project onto <c>expectedError</c>,
+    /// success vectors onto <c>expected</c> (subset semantics either way).
+    /// </summary>
+    private static JsonNode? LoadNormalize(JsonNode? observed, VectorContext ctx)
+    {
+        var expectedError = (ctx.Vector as JsonObject)?["expectedError"];
+        return Project(observed, expectedError ?? ctx.Vector["expected"]);
+    }
+
     // -----------------------------------------------------------------------
     // LOAD
     // -----------------------------------------------------------------------
@@ -146,7 +156,6 @@ public static partial class VectorAdapters
     private static JsonNode? LoadInvoke(JsonNode? inputNode, VectorContext ctx)
     {
         var input = inputNode as JsonObject ?? new JsonObject();
-        var expected = ctx.Vector["expected"];
 
         var savedEnv = new Dictionary<string, string?>();
         if (input["env"] is JsonObject envObj)
@@ -158,8 +167,9 @@ public static partial class VectorAdapters
             }
         }
 
-        var expectsError = expected is JsonObject e && e.ContainsKey("error");
-        if (expectsError && input.ToJsonString().Contains("NONEXISTENT"))
+        // Vectors that assert a missing env var reference ${env:NONEXISTENT}; ensure it
+        // is actually unset regardless of the ambient environment.
+        if (input.ToJsonString().Contains("NONEXISTENT"))
         {
             savedEnv.TryAdd("NONEXISTENT", Environment.GetEnvironmentVariable("NONEXISTENT"));
             Environment.SetEnvironmentVariable("NONEXISTENT", null);
@@ -167,39 +177,34 @@ public static partial class VectorAdapters
 
         try
         {
-            // --- input validation vectors ---
-            var expObj = expected as JsonObject;
-            if (expObj is not null && expObj.ContainsKey("validated_inputs"))
+            // --- input-validation vectors: BOTH a top-level `inputs` map AND `frontmatter` ---
+            if (input.ContainsKey("inputs") && input.ContainsKey("frontmatter"))
             {
                 var agent = MakeAgentFromFrontmatter(input["frontmatter"]);
-                var validated = Pipeline.ValidateInputs(agent, ToObjectDictionary(input["inputs"] as JsonObject ?? new JsonObject()));
-                return new JsonObject { ["validated_inputs"] = ToJsonNode(validated) };
-            }
-            if (expObj is not null && expObj.ContainsKey("error") && input.ContainsKey("inputs") && input.ContainsKey("frontmatter"))
-            {
-                var agent = MakeAgentFromFrontmatter(input["frontmatter"]);
+                var provided = ToObjectDictionary(input["inputs"] as JsonObject ?? new JsonObject());
                 try
                 {
-                    Pipeline.ValidateInputs(agent, ToObjectDictionary(input["inputs"] as JsonObject ?? new JsonObject()));
+                    var validated = Pipeline.ValidateInputs(agent, provided);
+                    return new JsonObject { ["validated_inputs"] = ToJsonNode(validated) };
                 }
-                catch (Exception exc)
+                catch (ArgumentException)
                 {
-                    return ErrorResult(exc, expected);
+                    // Missing-required-input is a pipeline validation error; derive the
+                    // offending field structurally (mirrors ValidateInputs' own predicate)
+                    // rather than parsing the exception message.
+                    var payload = new JsonObject { ["kind"] = "missing_required_input" };
+                    var field = MissingRequiredField(agent, provided);
+                    if (field is not null)
+                        payload["field"] = field;
+                    throw new VectorException("missing required input", payload);
                 }
-                return new JsonObject { ["error"] = "<no error raised>" };
             }
 
+            // --- load vectors ---
             Agent loaded;
             if (input["fixture"] is JsonValue fixtureVal)
             {
-                try
-                {
-                    loaded = PromptyLoader.Load(Path.Combine(SpecFixtures, fixtureVal.GetValue<string>()));
-                }
-                catch (Exception exc)
-                {
-                    return ErrorResult(exc, expected);
-                }
+                loaded = PromptyLoader.Load(Path.Combine(SpecFixtures, fixtureVal.GetValue<string>()));
             }
             else if (input["frontmatter_raw"] is JsonValue rawVal)
             {
@@ -210,10 +215,6 @@ public static partial class VectorAdapters
                     File.WriteAllText(p, rawVal.GetValue<string>());
                     loaded = PromptyLoader.Load(p);
                 }
-                catch (Exception exc)
-                {
-                    return ErrorResult(exc, expected);
-                }
                 finally
                 {
                     TryDeleteDir(tmp);
@@ -221,14 +222,7 @@ public static partial class VectorAdapters
             }
             else if (input["frontmatter"] is JsonObject)
             {
-                try
-                {
-                    loaded = MaterializeAndLoad(input);
-                }
-                catch (Exception exc)
-                {
-                    return ErrorResult(exc, expected);
-                }
+                loaded = MaterializeAndLoad(input);
             }
             else
             {
@@ -237,11 +231,70 @@ public static partial class VectorAdapters
 
             return AgentToCanonical(loaded.Save(new SaveContext { UseShorthand = false }));
         }
+        catch (VectorException)
+        {
+            throw;
+        }
+        catch (Exception exc)
+        {
+            // Error vectors: map the typed load failure to its canonical {kind, [field]}
+            // by exception TYPE (never message text) and signal it to the harness.
+            var detail = LoadErrorDetail(exc);
+            if (detail is not null)
+                throw new VectorException(exc.Message, detail);
+            throw;
+        }
         finally
         {
             foreach (var (key, val) in savedEnv)
                 Environment.SetEnvironmentVariable(key, val);
         }
+    }
+
+    /// <summary>
+    /// Map a production load exception to its canonical <c>{kind, [field]}</c> by exception
+    /// type only — no message substring matching — so the harness stays faithful to the
+    /// runtime's typed load-error taxonomy.
+    /// </summary>
+    private static JsonNode? LoadErrorDetail(Exception exc)
+    {
+        if (exc is PromptyLoadException ple)
+        {
+            var detail = new JsonObject { ["kind"] = ple.Kind };
+            if (ple.Field is not null)
+                detail["field"] = ple.Field;
+            return detail;
+        }
+
+        if (exc is FileNotFoundException)
+            return new JsonObject { ["kind"] = "file_not_found" };
+
+        return null;
+    }
+
+    /// <summary>
+    /// Structurally derive the first required input that is missing and has no default or
+    /// example — mirroring <see cref="Pipeline.ValidateInputs"/>' own predicate so the
+    /// vector's <c>field</c> is produced without inspecting exception text.
+    /// </summary>
+    private static string? MissingRequiredField(Agent agent, Dictionary<string, object?> provided)
+    {
+        if (agent.Inputs is null)
+            return null;
+
+        foreach (var prop in agent.Inputs)
+        {
+            if (string.IsNullOrEmpty(prop.Name))
+                continue;
+            if (provided.ContainsKey(prop.Name))
+                continue;
+            if (prop.Default is not null || prop.Example is not null)
+                continue;
+            if (prop.Required == true)
+                return prop.Name;
+        }
+
+        return null;
     }
 
     private static Agent MakeAgentFromFrontmatter(JsonNode? frontmatter)
@@ -296,71 +349,6 @@ public static partial class VectorAdapters
         {
             TryDeleteDir(tempBase);
         }
-    }
-
-    /// <summary>Match a runtime exception to the vector's expected error contract.</summary>
-    private static JsonNode ErrorResult(Exception exc, JsonNode? expected)
-    {
-        var name = exc.GetType().Name;
-        var msg = exc.Message;
-        var low = msg.ToLowerInvariant();
-        var expObj = expected as JsonObject;
-        var expErr = (expObj?["error"] as JsonValue)?.GetValue<string>();
-        var field = (expObj?["error_field"] as JsonValue)?.GetValue<string>();
-
-        var matched = false;
-        if (expErr is not null)
-        {
-            if (expErr == name || msg.Contains(expErr))
-                matched = true;
-            else if (expErr == "invalid frontmatter" && IsYamlError(exc, low))
-                matched = true;
-            else if (expErr == "Invalid template format" && low.Contains("template"))
-                matched = true;
-            else if (expErr == "Missing required input" && low.Contains("required"))
-                matched = true;
-            else if (StemMatches(expErr, name))
-                matched = true;
-            else if (AllTokensPresent(expErr, msg))
-                matched = true;
-        }
-
-        if (!matched)
-            return new JsonObject { ["error"] = msg };
-
-        var observed = new JsonObject { ["error"] = expErr };
-        if (field is not null && msg.Contains(field))
-            observed["error_field"] = field;
-        return observed;
-    }
-
-    // "FileNotFoundError" (canonical) matches "FileNotFoundException" (C#) by stem.
-    private static bool StemMatches(string expErr, string typeName)
-    {
-        static string Stem(string s) => s.Replace("Exception", "").Replace("Error", "");
-        return Stem(expErr).Length > 0 && Stem(expErr) == Stem(typeName);
-    }
-
-    /// <summary>
-    /// Detect a YAML frontmatter parse failure across YamlDotNet's exception surface.
-    /// YamlDotNet raises <c>SemanticErrorException</c>/<c>SyntaxErrorException</c> (namespace
-    /// <c>YamlDotNet.Core</c>) with messages like "While parsing a flow sequence ..." that
-    /// don't contain the literal token "yaml"/"parse".
-    /// </summary>
-    private static bool IsYamlError(Exception exc, string low)
-    {
-        var fullName = exc.GetType().FullName ?? string.Empty;
-        if (fullName.Contains("YamlDotNet", StringComparison.OrdinalIgnoreCase))
-            return true;
-        return low.Contains("yaml") || low.Contains("mapping") || low.Contains("parse")
-            || low.Contains("parsing") || low.Contains("sequence") || low.Contains("flow")
-            || low.Contains("scalar") || low.Contains("frontmatter");
-    }
-
-    private static bool AllTokensPresent(string expErr, string msg)
-    {
-        var tokens = expErr.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return tokens.Length > 0 && tokens.All(t => msg.Contains(t, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>

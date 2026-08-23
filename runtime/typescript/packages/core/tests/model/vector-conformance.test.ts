@@ -743,8 +743,8 @@ const vectors = [
         },
         env: {},
       },
-      expected: {
-        error: "Environment variable 'NONEXISTENT' not set",
+      expectedError: {
+        kind: "env_var_not_set",
       },
       operation: "load",
     },
@@ -860,8 +860,8 @@ const vectors = [
           },
         },
       },
-      expected: {
-        error: "outside allowed roots",
+      expectedError: {
+        kind: "file_reference",
       },
       operation: "load",
     },
@@ -1133,9 +1133,9 @@ const vectors = [
         },
         inputs: {},
       },
-      expected: {
-        error: "Missing required input",
-        error_field: "city",
+      expectedError: {
+        kind: "missing_required_input",
+        field: "city",
       },
       operation: "load",
     },
@@ -1182,8 +1182,8 @@ const vectors = [
       input: {
         frontmatter_raw: "---\nname: [invalid\n---\nHello",
       },
-      expected: {
-        error: "invalid frontmatter",
+      expectedError: {
+        kind: "invalid_frontmatter",
       },
       operation: "load",
     },
@@ -1256,8 +1256,8 @@ const vectors = [
       input: {
         fixture: "nonexistent.prompty",
       },
-      expected: {
-        error: "FileNotFoundError",
+      expectedError: {
+        kind: "file_not_found",
       },
       operation: "load",
     },
@@ -1382,8 +1382,8 @@ const vectors = [
           template: "jinja2",
         },
       },
-      expected: {
-        error: "Invalid template format",
+      expectedError: {
+        kind: "invalid_template",
       },
       operation: "load",
     },

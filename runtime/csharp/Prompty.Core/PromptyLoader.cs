@@ -62,8 +62,34 @@ public static class PromptyLoader
     /// </summary>
     private static Agent Build(string contents, string fullPath, PromptyLoadOptions? options)
     {
-        // 1. Split frontmatter + body
-        var data = FrontmatterParser.Parse(contents);
+        // 1. Split frontmatter + body. A YAML parse failure surfaces as a typed
+        //    invalid_frontmatter load error rather than a raw YamlDotNet exception.
+        Dictionary<string, object?> data;
+        try
+        {
+            data = FrontmatterParser.Parse(contents);
+        }
+        catch (PromptyLoadException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new PromptyLoadException(
+                "invalid_frontmatter",
+                $"Invalid frontmatter in '{fullPath}': {ex.Message}");
+        }
+
+        // A bare-string template (e.g. `template: jinja2`) is not valid v2 — it must be
+        // an object with format/parser. ${...} references are resolved later, so skip them.
+        if (data.TryGetValue("template", out var tmpl)
+            && tmpl is string templateString
+            && !templateString.StartsWith("${", StringComparison.Ordinal))
+        {
+            throw new PromptyLoadException(
+                "invalid_template",
+                $"Template must be an object with format/parser, got string '{templateString}'.");
+        }
 
         // 2. Load via typed model with ${env:}/${file:} resolution
         var ctx = new LoadContext
