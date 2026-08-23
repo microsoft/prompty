@@ -103,7 +103,10 @@ function buildAgent(
         js: { parse: rejectExecutableFrontmatter },
         javascript: { parse: rejectExecutableFrontmatter },
       },
-    }) as unknown as { data: Record<string, unknown> | undefined; content: string });
+    }) as unknown as {
+      data: Record<string, unknown> | undefined;
+      content: string;
+    });
   } catch (err) {
     if (err instanceof PromptyLoadError) throw err;
     throw new PromptyLoadError(
