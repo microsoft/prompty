@@ -11,18 +11,18 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.7",
-    "@mermaid-js/layout-elk": "^0.2.0",
-    "astro": "^7.2.2",
+    "@mermaid-js/layout-elk": "^0.2.3",
+    "astro": "^7.2.4",
     "astro-mermaid": "^2.0.1",
-    "mermaid": "^11.15.0",
-    "sass": "^1.89.1",
+    "mermaid": "^11.17.0",
+    "sass": "^1.103.1",
     "sharp": "^0.35.3",
-    "starlight-auto-sidebar": "^0.3.0"
+    "starlight-auto-sidebar": "^0.4.0"
   },
   "overrides": {
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "starlight-links-validator": "0.24.0"
+    "starlight-links-validator": "0.25.3"
   }
 }
