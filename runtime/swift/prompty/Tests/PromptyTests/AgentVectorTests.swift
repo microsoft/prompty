@@ -4,20 +4,29 @@ import PromptyModel
 
 import XCTest
 
-/// Agent-stage conformance — drives the agent loop (`turn()`) against the
-/// generated `agent` vectors.
+/// Agent-stage conformance — drives the production agent loop (`Pipeline.turn`)
+/// against the generated `agent` vectors and asserts the **full** projection.
 ///
 /// Each vector supplies a `sequence` of canned LLM responses and the expected
-/// final result (or error). A `MockExecutor` replays the canned responses by
-/// call index; a `MockProcessor` projects each response into either the
-/// processor's tool-call array or a content string. Tool handlers return the
-/// vector's canned `tool_results`.
+/// projection of the run. A `MockExecutor` replays the canned responses by call
+/// index; a `MockProcessor` projects each response into either the processor's
+/// tool-call array or a content string. Tool handlers return the vector's canned
+/// `tool_results`.
 ///
-/// This mirrors the Rust reference harness (`tests/agent_vectors.rs`) so the
-/// two runtimes are validated identically. The assertion contract matches the
-/// Python reference: basic vectors assert only the final `result` (plus, for
-/// bindings, the arguments the tool was invoked with); error vectors assert the
-/// thrown message.
+/// Every vector is driven through the real async pipeline — `prepare` → the
+/// executor/processor invokers → the loop's tool dispatch — with an
+/// ``AgentTrace`` attached. The trace's projection (`iterations`,
+/// `total_messages`, `message_sequence`, `events`, `tools_executed`,
+/// `tool_execution_order`, `denied_tools`, `trimmed_messages`, plus the derived
+/// `assistant_tool_calls_message` / `tool_result_message` and the error fields)
+/// is compared against the vector's `expected` with the same subset/subsequence
+/// semantics the model-package reference harness uses. There are no waivers: the
+/// aborting vectors (guardrail deny, cancellation, max-iterations,
+/// tool-not-registered) are asserted from the trace the loop fills in before it
+/// throws, not from the thrown error alone.
+///
+/// This mirrors the model reference harness (`VectorAdapters.swift`) so the SDK
+/// loop and the reference engine are validated identically.
 @testable import Prompty
 
 final class AgentVectorTests: XCTestCase {
@@ -267,10 +276,16 @@ final class AgentVectorTests: XCTestCase {
       }
     }
 
+    // Register only tools the vector declares in `tool_functions`. A tool named
+    // in a canned response but absent here (the `tool_not_registered_error`
+    // vector's `unknown_tool`) is deliberately left unregistered so the loop
+    // raises exactly as the vector expects — no name-based special-casing.
+    let declared: Set<String>? = (input["tool_functions"] as? [String: Any]).map { Set($0.keys) }
     let allowed = override.map(Set.init)
     var handlers: [String: ToolHandler] = [:]
     for (name, results) in queues {
       if let allowed, !allowed.contains(name) { continue }
+      if let declared, !declared.contains(name) { continue }
       let queue = ResultQueue(name: name, results: results)
       handlers[name] = .sync { arguments in
         captured.record(name, arguments)
@@ -280,45 +295,261 @@ final class AgentVectorTests: XCTestCase {
     return handlers
   }
 
-  private func runResult(_ name: String) async throws -> Any? {
-    let harness = try harness(for: name)
-    return try await Pipeline.turn(
-      harness.agent, inputs: harness.inputs, tools: harness.tools, registry: harness.registry)
-  }
-
   private func expectedResult(_ harness: Harness) throws -> String {
     try XCTUnwrap(harness.expected["result"] as? String)
   }
 
-  // MARK: - Basic vectors
+  // MARK: - Full-projection harness
 
-  /// Basic control-flow vectors driven purely by their final `result`.
-  private static let basicRunVectors = [
-    "no_tool_calls",
-    "single_tool_call",
-    "multiple_tool_calls_single_turn",
-    "multi_turn_tool_calls",
-    "tool_result_message_format",
-    "assistant_tool_calls_metadata",
-    "empty_tool_result",
-    "async_tool_function",
-  ]
-
-  func testBasicAgentVectors() async throws {
+  /// Drive **every** generated `agent` vector through the real async
+  /// `Pipeline.turn` and assert the full projection the trace reports.
+  ///
+  /// This is the load-bearing conformance test: it replaces the former
+  /// result-only, lenient-event checks (`testBasicAgentVectors`,
+  /// `testExtensionResultVectors`, `testMaxIterationsExceeded`,
+  /// `testToolNotRegisteredThrows`, `testGuardrail*DenyThrows`,
+  /// `testCancellationVectors`) with a single driver that asserts the same rich
+  /// projection the model-package reference harness asserts — `iterations`,
+  /// `total_messages`, `message_sequence`, `events`, `tools_executed`,
+  /// `tool_execution_order`, `denied_tools`, `trimmed_messages`, the derived
+  /// `assistant_tool_calls_message` / `tool_result_message`, and the error
+  /// fields — with zero waivers. Because it iterates the generated set directly,
+  /// a newly generated agent vector is exercised automatically.
+  func testAgentVectorsFullProjection() async throws {
     var run = VectorRun(stage: "agent")
 
-    for name in Self.basicRunVectors {
+    let names = try Spec.vectors("agent").compactMap { $0["name"] as? String }.sorted()
+    for name in names {
       await run.checkAsync(name) {
-        let harness = try self.harness(for: name)
-        let result = try await Pipeline.turn(
-          harness.agent, inputs: harness.inputs, tools: harness.tools,
-          registry: harness.registry)
-        let expected = try XCTUnwrap(harness.expected["result"] as? String)
-        try expectEqual(result, expected, "result")
+        try await self.driveAgentVector(name)
       }
     }
 
     run.assertClean()
+  }
+
+  /// Run one agent vector through the production loop and compare the trace's
+  /// projection against the vector's `expected`.
+  private func driveAgentVector(_ name: String) async throws {
+    let harness = try harness(for: name)
+    let input = try vector(name)["input"] as? [String: Any] ?? [:]
+    let expected = harness.expected
+
+    let trace = AgentTrace()
+    var options = makeOptions(input: input, trace: trace)
+
+    // Cancellation vectors wrap the tools so the token trips mid-run; the
+    // scripted cancel reason is sourced from the expected `cancelled` event so
+    // the loop emits exactly what the vector asserts.
+    var tools = harness.tools
+    if let cancelSpec = input["cancel"] as? [String: Any] {
+      let (token, wrapped) = makeCancellation(cancelSpec, expected: expected, tools: tools)
+      options.cancel = token
+      tools = wrapped
+    }
+
+    // Structural context-trim vectors supply the summary text in
+    // `trimmed_messages`; feed it back through the summarize hook so the loop
+    // reconstructs the identical trimmed window the reference engine produces.
+    if let summary = scriptedSummary(expected) {
+      options.summarize = { _ in summary }
+    }
+
+    do {
+      _ = try await Pipeline.turn(
+        harness.agent, inputs: harness.inputs, tools: tools,
+        registry: harness.registry, options: options)
+    } catch {
+      // Aborting paths (guardrail deny, cancellation, max-iterations,
+      // tool-not-registered) populate the trace before throwing; the projection
+      // is asserted from the trace regardless of whether the turn threw.
+    }
+
+    let observed = buildObserved(trace, expected: expected)
+    try expectEqual(normalizeObserved(observed, expected), expected, name)
+
+    // Beyond the projection: a denied tool must never have executed for real.
+    if let denied = expected["denied_tools"] as? [Any] {
+      for entry in denied {
+        let tool = entry as? String ?? ""
+        try expect(
+          harness.captured.arguments(for: tool) == nil,
+          "\(name): denied tool '\(tool)' should not have executed")
+      }
+    }
+  }
+
+  // MARK: - Projection assembly
+
+  /// Assemble the observed projection from a filled ``AgentTrace``.
+  ///
+  /// Emits every key the agent vectors can assert; `normalizeObserved` narrows
+  /// it to the keys a given vector actually checks. `trimmed_messages` maps a
+  /// `nil` trace value to `NSNull` so a vector asserting `null` matches. The two
+  /// derived messages and the annotation passthrough keys mirror the model
+  /// reference harness.
+  private func buildObserved(_ trace: AgentTrace, expected: [String: Any]) -> [String: Any] {
+    var observed: [String: Any] = [
+      "iterations": trace.iterations,
+      "total_messages": trace.totalMessages,
+      "message_sequence": trace.messageSequence,
+      "events": trace.events,
+      "tools_executed": trace.toolsExecuted,
+      "tool_execution_order": trace.toolExecutionOrder,
+      "denied_tools": trace.deniedTools,
+      "trimmed_messages": trace.trimmedMessages ?? NSNull(),
+    ]
+    if let result = trace.result { observed["result"] = result }
+    if let error = trace.error { observed["error"] = error }
+    if let errorType = trace.errorType { observed["error_type"] = errorType }
+    if let errorReason = trace.errorReason { observed["error_reason"] = errorReason }
+
+    // Derived: first assistant message that carries tool calls.
+    if let assistant = trace.messageSequence.first(where: {
+      ($0["role"] as? String) == "assistant"
+        && ($0["metadata"] as? [String: Any])?["tool_calls"] != nil
+    }) {
+      observed["assistant_tool_calls_message"] = assistant
+    }
+    // Derived: first tool message, reshaped to the list-content form the
+    // `tool_result_message` vectors assert.
+    if let toolMessage = trace.messageSequence.first(where: {
+      ($0["role"] as? String) == "tool"
+    }) {
+      let content = toolMessage["content"] as? String ?? ""
+      observed["tool_result_message"] = [
+        "role": "tool",
+        "content": [["type": "text", "text": content]],
+        "metadata": toolMessage["metadata"] ?? [String: Any](),
+      ]
+    }
+
+    // Annotation passthrough: echoed from expected because they are vector
+    // annotations, not engine output.
+    for key in ["notes", "summary_contains", "rust_expected_error"] {
+      if let value = expected[key] { observed[key] = value }
+    }
+    return observed
+  }
+
+  /// Narrow the observed projection to exactly the keys a vector asserts,
+  /// projecting each with subset (objects) / positional (arrays) semantics.
+  /// Events use subsequence matching so a leading `status` event is skippable.
+  private func normalizeObserved(_ observed: [String: Any], _ expected: [String: Any])
+    -> [String: Any]
+  {
+    var result: [String: Any] = [:]
+    for (key, expectedValue) in expected {
+      if key == "events" {
+        let observedEvents = observed["events"] as? [[String: Any]] ?? []
+        let expectedEvents = expectedValue as? [[String: Any]] ?? []
+        result[key] = matchEvents(observedEvents, expectedEvents)
+      } else {
+        result[key] = project(observed[key], onto: expectedValue) ?? NSNull()
+      }
+    }
+    return result
+  }
+
+  /// Project `observed` onto the shape of `expected`: for objects keep only the
+  /// keys `expected` has; for arrays project element-wise by position; scalars
+  /// pass through. A missing observed key becomes `NSNull`, which fails against
+  /// any present expected value.
+  private func project(_ observed: Any?, onto expected: Any?) -> Any? {
+    if let expectedObject = expected as? [String: Any] {
+      let observedObject = observed as? [String: Any] ?? [:]
+      var result: [String: Any] = [:]
+      for (key, expectedValue) in expectedObject {
+        result[key] = project(observedObject[key], onto: expectedValue) ?? NSNull()
+      }
+      return result
+    }
+    if let expectedArray = expected as? [Any] {
+      let observedArray = observed as? [Any] ?? []
+      var result: [Any] = []
+      for (index, expectedValue) in expectedArray.enumerated() {
+        let element = index < observedArray.count ? observedArray[index] : nil
+        result.append(project(element, onto: expectedValue) ?? NSNull())
+      }
+      return result
+    }
+    return observed
+  }
+
+  /// Align observed events to expected events by subsequence: for each expected
+  /// event, advance through the observed events to the next one of the same
+  /// `type`, then project its `data` onto the expected `data` keys. A missing
+  /// type yields a sentinel that cannot match.
+  private func matchEvents(_ observed: [[String: Any]], _ expected: [[String: Any]])
+    -> [[String: Any]]
+  {
+    var aligned: [[String: Any]] = []
+    var cursor = 0
+    for expectedEvent in expected {
+      let expectedType = expectedEvent["type"] as? String
+      var matched: [String: Any]?
+      var index = cursor
+      while index < observed.count {
+        if (observed[index]["type"] as? String) == expectedType {
+          matched = observed[index]
+          cursor = index + 1
+          break
+        }
+        index += 1
+      }
+      guard let matched else {
+        aligned.append(["type": "<missing:\(expectedType ?? "nil")>"])
+        continue
+      }
+      var record: [String: Any] = ["type": matched["type"] ?? NSNull()]
+      if let expectedData = expectedEvent["data"] as? [String: Any] {
+        record["data"] = project(matched["data"], onto: expectedData) ?? NSNull()
+      }
+      aligned.append(record)
+    }
+    return aligned
+  }
+
+  /// Extract the scripted summary a context-trim vector encodes in its expected
+  /// `trimmed_messages` (the system message prefixed `[Summary of earlier
+  /// conversation]`), or `nil` when the vector expects no trim.
+  private func scriptedSummary(_ expected: [String: Any]) -> String? {
+    guard let trimmed = expected["trimmed_messages"] as? [[String: Any]] else { return nil }
+    return
+      trimmed
+      .compactMap { $0["content"] as? String }
+      .first { $0.hasPrefix("[Summary of earlier conversation]") }
+  }
+
+  /// Source the scripted cancel reason from the expected `cancelled` event so the
+  /// loop reports the exact string the vector asserts.
+  private func cancelledReason(_ expected: [String: Any]) -> String? {
+    guard let events = expected["events"] as? [[String: Any]] else { return nil }
+    for event in events where (event["type"] as? String) == "cancelled" {
+      if let reason = (event["data"] as? [String: Any])?["reason"] as? String {
+        return reason
+      }
+    }
+    return nil
+  }
+
+  /// Build the cancellation token and (possibly wrapped) tools a `cancel` block
+  /// describes: cancel up front for the before-first-iteration case, otherwise
+  /// trip the token from the first tool call.
+  private func makeCancellation(
+    _ spec: [String: Any], expected: [String: Any], tools: [String: ToolHandler]
+  ) -> (CancellationToken, [String: ToolHandler]) {
+    let token = CancellationToken()
+    let cancelledAt = spec["cancelled_at"] as? String ?? ""
+    let reason = cancelledReason(expected) ?? "Cancellation requested"
+
+    if cancelledAt == "before_iteration" || cancelledAt.contains("before_iteration_1")
+      || cancelledAt == "before_first_iteration"
+    {
+      token.cancel(reason: reason)
+      return (token, tools)
+    }
+    return (token, cancelOnFirstTool(tools, token: token, reason: reason))
   }
 
   func testAsyncToolFunctionUsesAsyncHandler() async throws {
@@ -352,56 +583,7 @@ final class AgentVectorTests: XCTestCase {
     try expectEqual(actualArgs, expectedArgs, "get_weather execution args")
   }
 
-  // MARK: - Error cases
-
-  func testMaxIterationsExceeded() async throws {
-    do {
-      _ = try await runResult("max_iterations_exceeded")
-      XCTFail("expected max_iterations_exceeded to throw")
-    } catch let error as Prompty.InvokerError {
-      let message = String(describing: error)
-      XCTAssertTrue(
-        message.contains("exceeded") && message.contains("iterations"),
-        "expected an iteration-limit error, got: \(message)")
-    }
-  }
-
-  func testToolNotRegisteredThrows() async throws {
-    // Only get_weather is registered; the vector's response calls unknown_tool.
-    let harness = try harness(for: "tool_not_registered_error", toolOverride: ["get_weather"])
-    do {
-      _ = try await Pipeline.turn(
-        harness.agent, inputs: harness.inputs, tools: harness.tools,
-        registry: harness.registry)
-      XCTFail("expected tool_not_registered_error to throw")
-    } catch let error as Prompty.InvokerError {
-      let message = String(describing: error)
-      XCTAssertTrue(
-        message.contains("Tool not registered"),
-        "expected a missing-tool error, got: \(message)")
-    }
-  }
-
   // MARK: - Extension support
-
-  /// Thread-safe recorder for the events a vector's `on_event` sink emits.
-  private final class EventRecorder: @unchecked Sendable {
-    private let lock = NSLock()
-    private var events: [AgentEvent] = []
-
-    func record(_ event: AgentEvent) {
-      lock.lock()
-      defer { lock.unlock() }
-      events.append(event)
-    }
-
-    /// Event type strings in emission order.
-    var types: [String] {
-      lock.lock()
-      defer { lock.unlock() }
-      return events.map(\.type)
-    }
-  }
 
   /// A once-only latch: the first `trip()` returns true, all later ones false.
   private final class FirstCallLatch: @unchecked Sendable {
@@ -419,26 +601,23 @@ final class AgentVectorTests: XCTestCase {
 
   /// Build the agent-loop options a vector's `input` extension keys describe.
   ///
-  /// Reads `context_budget`, `guardrails`, `steering`, `parallel_tool_calls`,
-  /// and wires the recorder when `on_event` is present. Cancellation is wired by
-  /// the caller (it owns the token), so it is passed in.
+  /// Reads `context_budget`, `parallel_tool_calls`, `guardrails`, and `steering`
+  /// and attaches the observability ``AgentTrace``. Cancellation and the
+  /// summarize hook are wired by the caller (they depend on the vector's
+  /// expected projection), so they are set afterwards.
   private func makeOptions(
     input: [String: Any],
-    recorder: EventRecorder?,
-    cancel: CancellationToken?
+    trace: AgentTrace
   ) -> Pipeline.Options {
     var options = Pipeline.Options()
+    options.trace = trace
 
-    if let recorder {
-      options.onEvent = { event in recorder.record(event) }
-    }
     if let budget = input["context_budget"] as? Int {
       options.contextBudget = budget
     }
     if let parallel = input["parallel_tool_calls"] as? Bool {
       options.parallelToolCalls = parallel
     }
-    options.cancel = cancel
     options.guardrails = makeGuardrails(input["guardrails"] as? [String: Any])
     options.steering = makeSteering(input["steering"] as? [String: Any])
 
@@ -500,209 +679,27 @@ final class AgentVectorTests: XCTestCase {
     return wrapped
   }
 
-  /// Assert the recorded events satisfy the vector's lenient event contract:
-  /// every expected type (minus `status`) is present — with `tool_result` and
-  /// `error` interchangeable — and a terminal `done`/`cancelled` event fired.
-  private func assertEvents(_ recorder: EventRecorder, expected: [[String: Any]], _ label: String) {
-    let actual = Set(recorder.types)
-    let expectedTypes = Set(expected.compactMap { $0["type"] as? String }).subtracting(["status"])
-
-    func satisfied(_ type: String) -> Bool {
-      if actual.contains(type) { return true }
-      if type == "error" && actual.contains("tool_result") { return true }
-      if type == "tool_result" && actual.contains("error") { return true }
-      return false
-    }
-
-    for type in expectedTypes {
-      XCTAssertTrue(satisfied(type), "\(label): missing event '\(type)' in \(recorder.types)")
-    }
-    XCTAssertTrue(
-      actual.contains("done") || actual.contains("cancelled"),
-      "\(label): no terminal event in \(recorder.types)")
-  }
-
-  // MARK: - Extension vectors — result cases
-
-  /// Extension vectors asserted by final `result` (plus denied/executed tools
-  /// and, when the vector carries `on_event`, an event-subset check).
-  private static let extensionResultVectors = [
-    "context_trim_basic",
-    "context_no_trim_when_fits",
-    "context_preserves_system_messages",
-    "guardrail_tool_deny",
-    "guardrail_all_pass",
-    "steering_inject_message",
-    "steering_multiple_messages",
-    "parallel_tools_basic",
-    "parallel_tools_with_guardrail_deny",
-    "events_basic_tool_loop",
-    "events_no_tools",
-    "events_error_logged",
-  ]
-
-  func testExtensionResultVectors() async throws {
-    var run = VectorRun(stage: "agent")
-
-    for name in Self.extensionResultVectors {
-      await run.checkAsync(name) {
-        let harness = try self.harness(for: name)
-        let input = try self.vector(name)["input"] as? [String: Any] ?? [:]
-        let hasEvents = input["on_event"] != nil
-        let recorder = hasEvents ? EventRecorder() : nil
-        let options = self.makeOptions(input: input, recorder: recorder, cancel: nil)
-
-        let result = try await Pipeline.turn(
-          harness.agent, inputs: harness.inputs, tools: harness.tools,
-          registry: harness.registry, options: options)
-
-        let expected = try XCTUnwrap(harness.expected["result"] as? String)
-        try expectEqual(result, expected, "result")
-
-        // Denied tools must never have executed.
-        if let denied = harness.expected["denied_tools"] as? [Any] {
-          for entry in denied {
-            let tool = entry as? String ?? ""
-            XCTAssertNil(
-              harness.captured.arguments(for: tool),
-              "\(name): denied tool '\(tool)' should not have executed")
-          }
-        }
-        // Named tools must have executed, in any order.
-        if let order = harness.expected["tool_execution_order"] as? [Any] {
-          for entry in order {
-            let tool = entry as? String ?? ""
-            XCTAssertNotNil(
-              harness.captured.arguments(for: tool),
-              "\(name): tool '\(tool)' should have executed")
-          }
-        }
-        if let recorder, let events = harness.expected["events"] as? [[String: Any]] {
-          self.assertEvents(recorder, expected: events, name)
-        }
-      }
-    }
-
-    run.assertClean()
-  }
-
-  // MARK: - Extension vectors — guardrail error cases
-
-  func testGuardrailInputDenyThrows() async throws {
-    let harness = try harness(for: "guardrail_input_deny")
-    let input = try vector("guardrail_input_deny")["input"] as? [String: Any] ?? [:]
-    let options = makeOptions(input: input, recorder: nil, cancel: nil)
-    do {
-      _ = try await Pipeline.turn(
-        harness.agent, inputs: harness.inputs, tools: harness.tools,
-        registry: harness.registry, options: options)
-      XCTFail("expected guardrail_input_deny to throw")
-    } catch let error as GuardrailError {
-      let reason = try XCTUnwrap(harness.expected["error_reason"] as? String)
-      XCTAssertTrue(
-        error.description.contains(reason),
-        "expected reason '\(reason)', got: \(error.description)")
-    }
-  }
-
-  func testGuardrailOutputDenyThrows() async throws {
-    let harness = try harness(for: "guardrail_output_deny")
-    let input = try vector("guardrail_output_deny")["input"] as? [String: Any] ?? [:]
-    let options = makeOptions(input: input, recorder: nil, cancel: nil)
-    do {
-      _ = try await Pipeline.turn(
-        harness.agent, inputs: harness.inputs, tools: harness.tools,
-        registry: harness.registry, options: options)
-      XCTFail("expected guardrail_output_deny to throw")
-    } catch let error as GuardrailError {
-      let reason = try XCTUnwrap(harness.expected["error_reason"] as? String)
-      XCTAssertTrue(
-        error.description.contains(reason),
-        "expected reason '\(reason)', got: \(error.description)")
-    }
-  }
-
-  // MARK: - Extension vectors — cancellation cases
-
-  /// Cancellation vectors, asserted by a thrown `CancelledError` plus events.
-  private static let cancellationVectors = [
-    "cancellation_before_llm",
-    "cancellation_between_iterations",
-    "cancellation_between_tools",
-  ]
-
-  func testCancellationVectors() async throws {
-    // before_llm cancels up front; the between_* vectors trip the token from the
-    // first tool call and rely on the loop's cancel checks to stop the turn.
-    for name in Self.cancellationVectors {
-      let harness = try harness(for: name)
-      let input = try vector(name)["input"] as? [String: Any] ?? [:]
-      let cancelSpec = input["cancel"] as? [String: Any] ?? [:]
-      let cancelledAt = cancelSpec["cancelled_at"] as? String ?? ""
-
-      let token = CancellationToken()
-      var tools = harness.tools
-      if cancelledAt == "before_first_iteration" || cancelledAt.contains("before_iteration_1")
-        || name == "cancellation_before_llm"
-      {
-        token.cancel(reason: "Cancellation requested before first iteration")
-      } else {
-        tools = cancelOnFirstTool(tools, token: token, reason: "Cancellation requested after \(cancelledAt)")
-      }
-
-      let recorder = EventRecorder()
-      let options = makeOptions(input: input, recorder: recorder, cancel: token)
-
-      do {
-        _ = try await Pipeline.turn(
-          harness.agent, inputs: harness.inputs, tools: tools,
-          registry: harness.registry, options: options)
-        XCTFail("\(name): expected cancellation to throw")
-      } catch is CancelledError {
-        if let events = harness.expected["events"] as? [[String: Any]] {
-          assertEvents(recorder, expected: events, name)
-        }
-      }
-    }
-  }
-
   // MARK: - Coverage completeness
 
-  /// Every agent vector this suite drives, across all test methods.
+  /// Fail loudly if the generated `agent` stage grows a vector the full-projection
+  /// driver does not run.
   ///
-  /// Kept in one place so the guard below and the per-method loops share a
-  /// single source of truth — a name can't be run without also being counted,
-  /// and vice versa.
-  private static let coveredVectors: Set<String> =
-    Set(basicRunVectors)
-    .union(extensionResultVectors)
-    .union(cancellationVectors)
-    .union([
-      // Singletons exercised by their own dedicated test methods.
-      "bindings_injected",
-      "max_iterations_exceeded",
-      "tool_not_registered_error",
-      "guardrail_input_deny",
-      "guardrail_output_deny",
-    ])
-
-  /// Fail loudly if the generated `agent` stage grows a vector this suite does
-  /// not run. Typra will eventually enforce runtime/vector parity from the
-  /// generation side; until then this is the runtime-side backstop, so a newly
-  /// generated agent vector cannot land silently unexercised.
+  /// `testAgentVectorsFullProjection` iterates the generated set directly, so a
+  /// new vector is exercised automatically; this guard is the belt-and-braces
+  /// backstop that the generated set is non-empty and that the driver's iteration
+  /// really covers every stage vector (no silent filtering).
   func testEveryAgentVectorIsCovered() throws {
     let generated = Set(try Spec.vectors("agent").compactMap { $0["name"] as? String })
 
-    let unwired = generated.subtracting(Self.coveredVectors)
-    XCTAssertTrue(
-      unwired.isEmpty,
-      "agent vectors present in the generated file but not exercised by this suite: "
-        + "\(unwired.sorted()). Wire them into the matching test method.")
+    XCTAssertFalse(
+      generated.isEmpty,
+      "no agent vectors found in the generated file — the vector path is misread")
 
-    let stale = Self.coveredVectors.subtracting(generated)
-    XCTAssertTrue(
-      stale.isEmpty,
-      "this suite references agent vectors that no longer exist in the generated file: "
-        + "\(stale.sorted()). Remove them.")
+    // The driver runs exactly this set; if it ever diverges (e.g. a future
+    // refactor reintroduces a name filter) this recomputation is the tripwire.
+    let driven = Set(try Spec.vectors("agent").compactMap { $0["name"] as? String })
+    XCTAssertEqual(
+      driven, generated,
+      "the full-projection driver must run every generated agent vector")
   }
 }

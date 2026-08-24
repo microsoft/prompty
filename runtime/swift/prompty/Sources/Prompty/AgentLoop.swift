@@ -73,6 +73,21 @@ extension Pipeline {
     /// loop always executes a turn's calls in order, which matches the reference
     /// result vectors. It never rejects `true`.
     public var parallelToolCalls: Bool
+    /// An optional observability record the loop fills in as it runs.
+    ///
+    /// Off by default. When set, the loop reports its conversation, tool
+    /// dispatches, events, and (on aborting paths) its failure into the trace
+    /// without changing any behaviour. See ``AgentTrace``.
+    public var trace: AgentTrace?
+    /// An optional summarization strategy for context compaction.
+    ///
+    /// Off by default, which leaves ``contextBudget`` trimming as a best-effort
+    /// drop of the oldest non-system messages. When supplied, an over-budget
+    /// conversation is compacted the way the reference engine does it: every
+    /// system message is preserved, a single summary system message (built from
+    /// this callback, applied to the dropped exchanges) is inserted after them,
+    /// and the most recent user message is kept.
+    public var summarize: (([Message]) -> String)?
 
     public init(
       onEvent: EventCallback? = nil,
@@ -80,7 +95,9 @@ extension Pipeline {
       contextBudget: Int? = nil,
       guardrails: Guardrails? = nil,
       steering: Steering? = nil,
-      parallelToolCalls: Bool = false
+      parallelToolCalls: Bool = false,
+      trace: AgentTrace? = nil,
+      summarize: (([Message]) -> String)? = nil
     ) {
       self.onEvent = onEvent
       self.cancel = cancel
@@ -88,6 +105,8 @@ extension Pipeline {
       self.guardrails = guardrails
       self.steering = steering
       self.parallelToolCalls = parallelToolCalls
+      self.trace = trace
+      self.summarize = summarize
     }
   }
 
@@ -105,15 +124,18 @@ extension Pipeline {
     let executor = try registry.executor(for: agent.providerKind)
     let processor = try registry.processor(for: agent.providerKind)
 
+    let trace = options.trace
     let emit: (AgentEvent) -> Void = { options.onEvent?($0) }
 
     func checkCancel() throws {
       guard let cancel = options.cancel, cancel.isCancelled else { return }
       let reason = cancel.reason ?? "Cancellation requested"
       emit(.cancelled(reason: reason))
+      trace?.recordCancelled(reason: reason)
       throw CancelledError(reason: reason)
     }
 
+    trace?.begin(initial: messages)
     emit(.status(message: "Starting agent loop"))
 
     var iteration = 0
@@ -127,19 +149,30 @@ extension Pipeline {
       if let steering = options.steering {
         let due = steering.drain(iteration: iteration)
         if !due.isEmpty {
-          for message in due {
-            messages.append(Message.withText(Role.parseOptional(message.role) ?? .user, message.text))
+          let injected = due.map {
+            Message.withText(Role.parseOptional($0.role) ?? .user, $0.text)
           }
+          messages.append(contentsOf: injected)
           emit(.status(message: "Injecting steering message"))
           emit(.messagesUpdated(count: messages.count))
+          trace?.recordSteering(injected)
         }
       }
 
       // 3. Context budget — best-effort trim (never alters the vector result,
       // which the mock executor drives by call index, so this stays a no-op on
-      // the conformance path while remaining a real hook for live use).
+      // the conformance path while remaining a real hook for live use). With a
+      // summarization strategy supplied it compacts the way the reference engine
+      // does and reports the trimmed window to the trace.
       if let budget = options.contextBudget {
-        messages = trimToContextBudget(messages, budget: budget)
+        if let summarize = options.summarize {
+          if let trimmed = summaryTrim(messages, budget: budget, summarize: summarize) {
+            messages = trimmed
+            trace?.recordTrim(trimmed)
+          }
+        } else {
+          messages = trimToContextBudget(messages, budget: budget)
+        }
       }
 
       // 4. Input guardrail — a deny aborts the turn.
@@ -147,12 +180,14 @@ extension Pipeline {
         let verdict = check(messages)
         if !verdict.allowed {
           emit(.error(message: verdict.reason))
+          trace?.recordGuardrailDenied(reason: verdict.reason)
           throw GuardrailError(reason: verdict.reason)
         }
       }
 
       let response = try await executor.execute(agent: agent, messages: messages)
       let processed = try await processor.process(agent: agent, response: response)
+      trace?.recordIteration()
 
       let calls = toolCalls(in: processed)
       if calls.isEmpty {
@@ -161,18 +196,23 @@ extension Pipeline {
           let verdict = check(text)
           if !verdict.allowed {
             emit(.error(message: verdict.reason))
+            trace?.recordGuardrailDenied(reason: verdict.reason)
             throw GuardrailError(reason: verdict.reason)
           }
         }
         emit(.done(response: processed))
+        trace?.recordDone(processed)
         return processed
       }
 
       if iteration > maxIterations {
+        trace?.recordMaxIterationsExceeded(maxIterations)
         throw InvokerError.execution(
           "Agent loop exceeded \(maxIterations) iterations. "
             + "The model kept requesting tool calls without producing a final answer.")
       }
+
+      trace?.beginToolRound(calls: calls)
 
       var results: [String] = []
       results.reserveCapacity(calls.count)
@@ -185,6 +225,7 @@ extension Pipeline {
 
         let arguments = boundArguments(agent, call: call, inputs: inputs)
         emit(.toolCallStart(name: call.name, arguments: call.arguments))
+        trace?.recordToolCallStart(name: call.name, arguments: call.arguments)
 
         // Tool guardrail — a deny skips execution and substitutes a denial.
         if let check = options.guardrails?.tool {
@@ -193,11 +234,13 @@ extension Pipeline {
             let denial = "Tool '\(call.name)' denied by guardrail: \(verdict.reason)"
             results.append(denial)
             emit(.toolResult(name: call.name, result: denial))
+            trace?.recordToolDenied(name: call.name, callId: call.id, denial: denial)
             continue
           }
         }
 
         guard let handler = tools[call.name] else {
+          trace?.recordToolNotRegistered(name: call.name)
           throw InvokerError.execution("Tool not registered: \(call.name)")
         }
 
@@ -211,6 +254,7 @@ extension Pipeline {
         }
         results.append(result)
         emit(.toolResult(name: call.name, result: result))
+        trace?.recordToolExecuted(name: call.name, callId: call.id, result: result)
       }
 
       let toolTurn = try executor.formatToolMessages(
@@ -221,6 +265,7 @@ extension Pipeline {
       )
       messages.append(contentsOf: toolTurn)
       emit(.messagesUpdated(count: messages.count))
+      trace?.recordToolRoundComplete()
     }
   }
 
@@ -243,6 +288,36 @@ extension Pipeline {
     {
       total -= estimate(trimmed[dropIndex])
       trimmed.remove(at: dropIndex)
+    }
+    return trimmed
+  }
+
+  /// Compact the conversation the way the reference engine does, or return `nil`
+  /// when it already fits.
+  ///
+  /// Unlike ``trimToContextBudget(_:budget:)``'s best-effort drop, this preserves
+  /// every system message, inserts one summary system message (built by
+  /// `summarize`, applied to the dropped user turns) after them, and keeps only
+  /// the most recent user message. It is opt-in through ``Options/summarize`` and
+  /// mirrors `AgentLoopEngine`'s structural trim so both engines report an
+  /// identical trimmed window. The budget is measured in characters of message
+  /// content, matching the reference engine.
+  static func summaryTrim(
+    _ messages: [Message],
+    budget: Int,
+    summarize: ([Message]) -> String
+  ) -> [Message]? {
+    let total = messages.reduce(0) { $0 + $1.textContent.count }
+    guard total > budget else { return nil }
+
+    let systems = messages.filter { $0.role == .system }
+    let users = messages.filter { $0.role == .user }
+    let droppedUsers = users.count > 1 ? Array(users.dropLast()) : []
+
+    var trimmed = systems
+    trimmed.append(Message.withText(.system, summarize(droppedUsers)))
+    if let lastUser = users.last {
+      trimmed.append(Message.withText(.user, lastUser.textContent))
     }
     return trimmed
   }
