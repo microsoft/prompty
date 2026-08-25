@@ -1,17 +1,18 @@
 {
   "name": "@prompty/core",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Prompty core package",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
     "build": "tsup src/index.ts --format cjs,esm --dts",
+    "prepublishOnly": "npm run build",
     "dev": "npm run build -- --watch",
     "publish-packages": "turbo run build lint test && changeset version && changeset publish --access public"
   },
