@@ -41,6 +41,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm install -g npm@11.6.4
       - run: npm ci
+      - run: npm run build
       - name: Verify package version
-        run: test "$(node -p "require('./package.json').version")" = "0.1.5"
+        run: test "$(node -p "require('./package.json').version")" = "0.1.6"
       - run: npm publish --provenance --access public
