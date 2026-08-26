@@ -1096,6 +1096,237 @@ def _run_turn_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, 
 
 
 # ---------------------------------------------------------------------------
+# LIVE PROVIDER CONFORMANCE (capability-gated, structure-not-content)
+# ---------------------------------------------------------------------------
+#
+# Live vectors call a real provider API and assert STRUCTURE, not content: a
+# chat completion must reduce to an assistant message with non-empty content and
+# a finishReason drawn from the canonical enum. They self-skip when the required
+# capability/credential is absent, via the Typra >= 1.1.0 capability guard.
+#
+# A vector declares an ordered ``requires`` list of capability tokens, e.g.::
+#
+#     "requires": ["provider:openai"]
+#
+# The generated harness resolves each token against ``VECTOR_CAPABILITIES``
+# (below) in author order and, on the first predicate that returns falsy, calls
+# ``pytest.skip("requirement unavailable: <token>")``. A token with no registered
+# predicate is a HARD failure -- @vector conformance never skips silently. The
+# emitter treats tokens as opaque strings; the ``namespace:name`` grammar is an
+# authoring convention only. Env-presence is just ONE predicate flavor:
+# ``entra:foundry-project`` is a token PROBE (can we mint an Entra token for the
+# project URL), and ``var:live-enabled`` is a plain feature flag -- neither is a
+# bare env-key lookup.
+#
+# Canonical live-chat vector ``input`` (opaque to the emitter; the harness
+# resolves ``$env``/``$file``/``$json`` refs before invoke)::
+#
+#     {
+#       "provider": "openai",
+#       "model":    "gpt-4o-mini",              # or {"$env": "OPENAI_MODEL"}
+#       "apiKey":   {"$env": "OPENAI_API_KEY"},
+#       "endpoint": {"$env": "OPENAI_BASE_URL"},  # optional
+#       "messages": [{"role": "user", "content": "Say hello in one word."}],
+#       "options":  {"temperature": 0, "maxOutputTokens": 16}
+#     }
+#
+# and its structural ``expected``::
+#
+#     {"role": "assistant", "contentNonEmpty": true, "finishReasonInEnum": true}
+
+_FINISH_REASONS = {"stop", "length", "tool_calls", "content_filter", "function_call"}
+
+# Anthropic stop reasons mapped onto the canonical finishReason enum so the
+# structural shape is provider-agnostic.
+_ANTHROPIC_STOP_REASONS = {"end_turn": "stop", "max_tokens": "length", "tool_use": "tool_calls"}
+
+
+def _cap_provider_openai(context: dict) -> bool:
+    """Capability ``provider:openai`` -- an OpenAI API key is present."""
+    return bool(os.environ.get("OPENAI_API_KEY"))
+
+
+def _cap_provider_anthropic(context: dict) -> bool:
+    """Capability ``provider:anthropic`` -- an Anthropic API key is present."""
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+
+def _cap_provider_azure(context: dict) -> bool:
+    """Capability ``provider:azure`` / ``provider:foundry`` -- Azure key auth is present."""
+    return bool(
+        os.environ.get("AZURE_OPENAI_API_KEY")
+        and os.environ.get("AZURE_OPENAI_ENDPOINT")
+        and os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT")
+    )
+
+
+def _cap_var_live_enabled(context: dict) -> bool:
+    """Capability ``var:live-enabled`` -- a plain feature flag (the 'variable' flavor).
+
+    This is deliberately NOT a credential: it lets a suite opt live vectors in or
+    out independently of whether keys happen to be present.
+    """
+    return os.environ.get("PROMPTY_LIVE_VECTORS", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _cap_entra_foundry_project(context: dict) -> bool:
+    """Capability ``entra:foundry-project`` -- a token PROBE, not an env-key check.
+
+    Resolves a project URL/endpoint (preferring the ref-resolved vector input,
+    falling back to ``AZURE_OPENAI_ENDPOINT``) and asks ``DefaultAzureCredential``
+    whether it can mint a Cognitive Services token. Any failure -- missing
+    ``azure-identity``, no endpoint, no signed-in identity -- means unavailable.
+    """
+    try:
+        from azure.identity import DefaultAzureCredential
+    except Exception:  # noqa: BLE001 -- azure-identity is optional
+        return False
+
+    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+    resolve = context.get("resolveInput")
+    vector = context.get("vector") or {}
+    raw_input = vector.get("input")
+    if callable(resolve) and isinstance(raw_input, dict):
+        try:
+            resolved = resolve(raw_input)
+            if isinstance(resolved, dict):
+                endpoint = resolved.get("projectUrl") or resolved.get("endpoint") or endpoint
+        except Exception:  # noqa: BLE001 -- a bad ref must not crash the probe
+            pass
+    if not endpoint:
+        return False
+
+    try:
+        credential = DefaultAzureCredential(exclude_interactive_browser_credential=True)
+        token = credential.get_token("https://cognitiveservices.azure.com/.default")
+        return bool(getattr(token, "token", None))
+    except Exception:  # noqa: BLE001 -- no usable identity == capability absent
+        return False
+
+
+def _live_provider_impls(provider: str) -> tuple[Any, Any]:
+    """Return ``(executor, processor)`` instances for a live provider."""
+    normalized = (provider or "openai").lower()
+    if normalized == "openai":
+        from prompty.providers.openai.executor import OpenAIExecutor
+        from prompty.providers.openai.processor import OpenAIProcessor
+
+        return OpenAIExecutor(), OpenAIProcessor()
+    if normalized in ("foundry", "azure"):
+        from prompty.providers.foundry.executor import FoundryExecutor
+        from prompty.providers.foundry.processor import FoundryProcessor
+
+        return FoundryExecutor(), FoundryProcessor()
+    if normalized == "anthropic":
+        from prompty.providers.anthropic.executor import AnthropicExecutor
+        from prompty.providers.anthropic.processor import AnthropicProcessor
+
+        return AnthropicExecutor(), AnthropicProcessor()
+    raise ValueError(f"live-chat adapter: unknown provider {provider!r}")
+
+
+def _build_live_agent(resolved_input: dict) -> Any:
+    """Construct a chat ``Agent`` from a resolved live-chat vector input."""
+    from prompty.model import Agent
+
+    provider = (resolved_input.get("provider") or "openai").lower()
+    api_key = resolved_input.get("apiKey")
+    endpoint = resolved_input.get("endpoint")
+
+    if provider in ("foundry", "azure") and not api_key:
+        # Entra ID path: no key, DefaultAzureCredential drives auth.
+        connection: dict[str, Any] = {"kind": "foundry"}
+        if endpoint:
+            connection["endpoint"] = endpoint
+    else:
+        connection = {"kind": "key"}
+        if api_key:
+            connection["apiKey"] = api_key
+        if endpoint:
+            connection["endpoint"] = endpoint
+
+    data: dict[str, Any] = {
+        "name": "live-chat-vector",
+        "model": {
+            "id": resolved_input.get("model") or "gpt-4o-mini",
+            "provider": provider,
+            "apiType": "chat",
+            "connection": connection,
+        },
+    }
+    options = resolved_input.get("options")
+    if options:
+        data["model"]["options"] = options
+    return Agent.load(data)
+
+
+def _extract_chat_structure(observed: Any) -> tuple[Any, Any, Any]:
+    """Reduce a raw provider chat response to ``(role, content, finishReason)``."""
+    # OpenAI / Foundry: ChatCompletion.choices[0].message + .finish_reason
+    choices = getattr(observed, "choices", None)
+    if not choices and isinstance(observed, dict):
+        choices = observed.get("choices")
+    if choices:
+        choice = choices[0]
+        message = getattr(choice, "message", None)
+        if message is None and isinstance(choice, dict):
+            message = choice.get("message")
+        role = getattr(message, "role", None)
+        content = getattr(message, "content", None)
+        if isinstance(message, dict):
+            role = message.get("role")
+            content = message.get("content")
+        finish = getattr(choice, "finish_reason", None)
+        if isinstance(choice, dict):
+            finish = choice.get("finish_reason")
+        return role, content, finish
+
+    # Anthropic Messages: .role, .content (list of blocks), .stop_reason
+    role = getattr(observed, "role", None)
+    content = getattr(observed, "content", None)
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            text = getattr(block, "text", None)
+            if text is None and isinstance(block, dict):
+                text = block.get("text")
+            if text:
+                parts.append(text)
+        content = "".join(parts)
+    finish = getattr(observed, "stop_reason", None)
+    finish = _ANTHROPIC_STOP_REASONS.get(finish, finish)
+    return role, content, finish
+
+
+def _live_chat_invoke(resolved_input: dict, context: dict) -> Any:
+    """Call a real provider and return its raw chat response.
+
+    Only reached when the capability guard has already confirmed the required
+    credentials/capabilities are present, so this makes a genuine network call.
+    """
+    from prompty.core.types import Message, TextPart
+
+    messages_spec = resolved_input.get("messages") or []
+    messages = [
+        Message(role=spec.get("role", "user"), parts=[TextPart(value=spec.get("content", ""))])
+        for spec in messages_spec
+    ]
+    agent = _build_live_agent(resolved_input)
+    executor, _processor = _live_provider_impls(resolved_input.get("provider") or "openai")
+    return executor.execute(agent, messages)
+
+
+def _live_chat_normalize(observed: Any, context: dict) -> dict:
+    """Project a raw chat response onto the canonical structural shape."""
+    role, content, finish = _extract_chat_structure(observed)
+    return {
+        "role": role,
+        "contentNonEmpty": bool(content and str(content).strip()),
+        "finishReasonInEnum": finish in _FINISH_REASONS,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Adapter registry
 # ---------------------------------------------------------------------------
 
@@ -1112,6 +1343,7 @@ VECTOR_ADAPTERS: dict[str, Any] = {
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},
     "DiscoveryConformance.mapModel": {"invoke": _discovery_map_invoke},
     "TurnConformance.replay": {"invoke": _replay_invoke},
+    "LiveChatConformance.complete": {"invoke": _live_chat_invoke, "normalize": _live_chat_normalize},
 }
 
 # Contracts introduced/tightened by Typra 0.12.0 that the Python runtime does not
@@ -1120,3 +1352,18 @@ VECTOR_ADAPTERS: dict[str, Any] = {
 VECTOR_WAIVERS: dict[str, str] = {}
 
 VECTOR_DOUBLES: dict[str, Any] = {}
+
+# Capability predicates for the Typra >= 1.1.0 requirement guard. The generated
+# harness loads this via ``getattr(_ADAPTER_MODULE, "VECTOR_CAPABILITIES", {})``,
+# so it is backward-compatible with harnesses that predate the guard. Each token
+# maps to ``predicate(context) -> bool`` (truthy = available). ``context`` is the
+# same object adapters receive (contract, operation, vector, provider, targetApi,
+# doubles, baseDir, resolveInput), so probes can inspect the resolved input.
+VECTOR_CAPABILITIES: dict[str, Any] = {
+    "provider:openai": _cap_provider_openai,
+    "provider:anthropic": _cap_provider_anthropic,
+    "provider:azure": _cap_provider_azure,
+    "provider:foundry": _cap_provider_azure,
+    "entra:foundry-project": _cap_entra_foundry_project,
+    "var:live-enabled": _cap_var_live_enabled,
+}
