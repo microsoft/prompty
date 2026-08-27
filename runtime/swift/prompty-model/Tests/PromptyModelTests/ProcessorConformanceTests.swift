@@ -31,9 +31,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("anthropic_multiple_text_blocks: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("anthropic_multiple_text_blocks: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -49,9 +49,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("anthropic_structured_output: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("anthropic_structured_output: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -67,9 +67,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("anthropic_text: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("anthropic_text: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -85,9 +85,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("anthropic_tool_use: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("anthropic_tool_use: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -103,9 +103,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_empty_content: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_empty_content: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -121,9 +121,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_multiple_tool_calls: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_multiple_tool_calls: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -139,9 +139,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_null_content: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_null_content: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -157,9 +157,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_refusal: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_refusal: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -175,9 +175,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_structured_invalid_json: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_structured_invalid_json: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -193,9 +193,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_structured_output: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_structured_output: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -211,9 +211,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_text_content: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_text_content: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -229,9 +229,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("chat_tool_calls: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("chat_tool_calls: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -247,9 +247,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("embedding_batch: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("embedding_batch: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -265,9 +265,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("embedding_single: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("embedding_single: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -283,9 +283,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("image_b64: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("image_b64: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -301,9 +301,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("image_revised_prompt: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("image_revised_prompt: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -319,9 +319,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("image_url: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("image_url: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -337,9 +337,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let stream = input["stream"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("partial_text_then_indeterminate_failure: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("partial_text_then_indeterminate_failure: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.processStream(agent: agent, stream: stream)
@@ -355,9 +355,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("responses_empty_output: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_empty_output: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -373,9 +373,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("responses_structured: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_structured: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -391,9 +391,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("responses_text: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_text: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -409,9 +409,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let response = input["response"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("responses_tool_calls: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_tool_calls: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.process(agent: agent, response: response)
@@ -427,9 +427,9 @@ final class ProcessorConformanceTests: XCTestCase {
     }
     let agent = try Agent.load(input["agent"]!)
     let stream = input["stream"] as! Any
-    let provider = try (agent.model!.save())["provider"] as! String
-    guard let impl = ProcessorResolver.resolve(provider: provider, registry: provider()) else {
-      XCTFail("stream_refusal_is_determinate: no Processor attached for " + provider)
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("stream_refusal_is_determinate: no Processor attached for " + providerKind)
       return
     }
     let actual = try await impl.processStream(agent: agent, stream: stream)

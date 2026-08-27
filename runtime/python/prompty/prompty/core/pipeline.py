@@ -1011,7 +1011,12 @@ def turn(
         emit_event(
             on_event,
             "llm_start",
-            {"provider": agent.model.provider or default_provider(), "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+            {
+                "provider": agent.model.provider or default_provider(),
+                "modelId": agent.model.id,
+                "messageCount": len(messages),
+                "attempt": 0,
+            },
         )
         try:
             response = _invoke_executor(agent, messages)
@@ -1303,7 +1308,12 @@ async def turn_async(
         emit_event(
             on_event,
             "llm_start",
-            {"provider": agent.model.provider or default_provider(), "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+            {
+                "provider": agent.model.provider or default_provider(),
+                "modelId": agent.model.id,
+                "messageCount": len(messages),
+                "attempt": 0,
+            },
         )
         try:
             response = await _invoke_executor_async(agent, messages)
