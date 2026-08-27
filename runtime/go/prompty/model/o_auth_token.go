@@ -96,6 +96,32 @@ func (obj *OAuthToken) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// OAuthTokenFromWire loads a OAuthToken from a provider-specific wire payload.
+func OAuthTokenFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (OAuthToken, error) {
+	wireMap := map[string]map[string]string{
+		"accessToken":  {"foundry": "access_token"},
+		"tokenType":    {"foundry": "token_type"},
+		"expiresIn":    {"foundry": "expires_in"},
+		"refreshToken": {"foundry": "refresh_token"},
+		"scope":        {"foundry": "scope"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadOAuthToken(canonical, ctx)
+}
+
 // ToJSON serializes OAuthToken to JSON string
 func (obj *OAuthToken) ToJSON() (string, error) {
 	ctx := NewSaveContext()

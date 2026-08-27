@@ -21,5 +21,5 @@ namespace Prompty.Core;
         /// <summary>
         /// Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support.
         /// </summary>
-        Task<object> ProcessStreamAsync(object stream) => Task.FromResult<object>(default!);
+        Task<object> ProcessStreamAsync(Agent agent, object stream) => Task.FromResult<object>(default!);
     }

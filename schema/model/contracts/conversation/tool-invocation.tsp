@@ -42,7 +42,6 @@ model ToolCall {
   #{ parts: #[#{ kind: "text", value: "{value}" }] },
   #{ value: "string" }
 )
-@method("text", "string", "Concatenate all TextPart values joined by newline")
 model ToolResult {
   @doc("The content parts of the tool result")
   @sample(ToolResultPartsSample)

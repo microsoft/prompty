@@ -77,8 +77,7 @@ export class CompactionStartPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): CompactionStartPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return CompactionStartPayload.load(
       data as Record<string, unknown>,
       context,

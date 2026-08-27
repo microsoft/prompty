@@ -96,8 +96,7 @@ export class TurnStartPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnStartPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnStartPayload.load(data as Record<string, unknown>, context);
   }
 

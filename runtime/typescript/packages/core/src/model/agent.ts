@@ -426,8 +426,7 @@ export class Agent {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Agent {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Agent.load(data as Record<string, unknown>, context);
   }
 

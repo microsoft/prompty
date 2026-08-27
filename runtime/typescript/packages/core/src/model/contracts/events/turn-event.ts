@@ -161,8 +161,7 @@ export class TurnEvent {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnEvent {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnEvent.load(data as Record<string, unknown>, context);
   }
 

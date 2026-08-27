@@ -130,8 +130,7 @@ export class DoneEventPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): DoneEventPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return DoneEventPayload.load(data as Record<string, unknown>, context);
   }
 

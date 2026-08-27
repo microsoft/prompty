@@ -14,7 +14,7 @@ const ProcessVectors = """
       "description": "Basic chat completion with text content — extracts the message string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-abc123",
@@ -49,7 +49,7 @@ const ProcessVectors = """
       "description": "Chat completion with a single tool call — extracts ToolCall list",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-tool1",
@@ -100,7 +100,7 @@ const ProcessVectors = """
       "description": "Chat completion with two parallel tool calls — extracts both ToolCall objects",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-tool2",
@@ -164,7 +164,7 @@ const ProcessVectors = """
       "description": "Chat completion with structured output (has_outputs=true) — JSON-parses the content string into an object",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-struct1",
@@ -202,7 +202,7 @@ const ProcessVectors = """
       "description": "Chat completion with has_outputs=true but content is not valid JSON — falls back to raw string gracefully",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-struct2",
@@ -237,7 +237,7 @@ const ProcessVectors = """
       "description": "Chat completion where the model refused the request — returns the refusal string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-refusal1",
@@ -272,7 +272,7 @@ const ProcessVectors = """
       "description": "Chat completion with null content and no tool calls — returns empty string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-null1",
@@ -307,7 +307,7 @@ const ProcessVectors = """
       "description": "Single embedding response — extracts the vector directly",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "embedding",
         "response": {
           "object": "list",
@@ -343,7 +343,7 @@ const ProcessVectors = """
       "description": "Batch embedding response with 3 inputs — returns list of 3 vectors",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "embedding",
         "response": {
           "object": "list",
@@ -403,7 +403,7 @@ const ProcessVectors = """
       "description": "Image generation response with URL — extracts the image URL",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "image",
         "response": {
           "created": 1700000010,
@@ -425,7 +425,7 @@ const ProcessVectors = """
       "description": "Image generation response with base64 data — extracts the b64_json string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "image",
         "response": {
           "created": 1700000011,
@@ -448,7 +448,7 @@ const ProcessVectors = """
       "description": "Image generation response with revised_prompt — primary result is the URL, revised_prompt is metadata",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "image",
         "response": {
           "created": 1700000012,
@@ -470,7 +470,7 @@ const ProcessVectors = """
       "description": "Responses API with plain text output — extracts output_text",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "response": {
           "id": "resp_abc123",
@@ -511,7 +511,7 @@ const ProcessVectors = """
       "description": "Responses API with function_call output items — extracts ToolCall list with call_id preserved",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "response": {
           "id": "resp_tool1",
@@ -553,7 +553,7 @@ const ProcessVectors = """
       "description": "Responses API with structured output (has_outputs=true) — JSON-parses output_text into object",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "response": {
           "id": "resp_struct1",
@@ -596,7 +596,7 @@ const ProcessVectors = """
       "description": "Anthropic message response with a single text content block — extracts the text",
       "stage": "process",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "response": {
           "id": "msg_01XFDUDYJgAACzvnptvVoYEL",
@@ -627,7 +627,7 @@ const ProcessVectors = """
       "description": "Anthropic message response with tool_use content block — extracts ToolCall with JSON-stringified input",
       "stage": "process",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "response": {
           "id": "msg_02YGEUEKHgBBDzvnquwWpZMN",
@@ -668,7 +668,7 @@ const ProcessVectors = """
       "description": "Anthropic message response with two text content blocks — concatenates them",
       "stage": "process",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "response": {
           "id": "msg_03ZHFVFLIiCCEzvnrwxXqaNO",
@@ -703,7 +703,7 @@ const ProcessVectors = """
       "description": "Chat completion with empty string content returns empty string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "response": {
           "id": "chatcmpl-empty",
@@ -738,7 +738,7 @@ const ProcessVectors = """
       "description": "Anthropic text response JSON-parsed when has_outputs is true",
       "stage": "process",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "response": {
           "id": "msg-struct",
@@ -772,7 +772,7 @@ const ProcessVectors = """
       "description": "Responses API with output_text empty returns empty string",
       "stage": "process",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "response": {
           "id": "resp-empty",

@@ -46,6 +46,7 @@ pub mod jinja_subset;
 pub mod loader;
 pub mod memory;
 pub mod model;
+pub mod model_access;
 pub use model::contracts::pipeline::{
     RunTurnRequest, RunTurnResult, TurnModelRequest, TurnModelResponse,
 };

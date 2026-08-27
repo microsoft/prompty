@@ -89,8 +89,7 @@ export class Binding {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Binding {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Binding.load(data as Record<string, unknown>, context);
   }
 

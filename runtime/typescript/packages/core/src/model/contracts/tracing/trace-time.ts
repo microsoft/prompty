@@ -87,8 +87,7 @@ export class TraceTime {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TraceTime {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TraceTime.load(data as Record<string, unknown>, context);
   }
 

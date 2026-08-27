@@ -104,8 +104,7 @@ export class MemoryEntry {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): MemoryEntry {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return MemoryEntry.load(data as Record<string, unknown>, context);
   }
 

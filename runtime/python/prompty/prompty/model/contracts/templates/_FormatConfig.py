@@ -13,7 +13,8 @@ from ..._context import LoadContext, SaveContext
 
 @dataclass
 class FormatConfig:
-    """Template format definition
+    """Template format definition. `kind` is the `@dispatch` discriminator for the
+    Renderer seam, reached from a seam param as `agent.template.format.kind`.
 
     Attributes
     ----------
@@ -48,17 +49,13 @@ class FormatConfig:
 
         # handle alternate representations
         if isinstance(data, str):
-            instance = FormatConfig()
-            instance.kind = data
-            if context is not None:
-                instance = context.process_output(instance)
-            return instance
+            return FormatConfig.load_kind({"kind": data}, context)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for FormatConfig: {data}")
 
-        # create new instance
-        instance = FormatConfig()
+        # load polymorphic FormatConfig instance
+        instance = FormatConfig.load_kind(data, context)
 
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
@@ -69,6 +66,22 @@ class FormatConfig:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+    @staticmethod
+    def load_kind(data: dict, context: LoadContext | None) -> "FormatConfig":
+        # load polymorphic FormatConfig instance
+        discriminator_raw = data.get("kind") if data is not None else None
+        discriminator_value = ""
+        if isinstance(discriminator_raw, str):
+            discriminator_value = discriminator_raw
+        if discriminator_value == "jinja2":
+            return Jinja2Format.load(data, context)
+        elif discriminator_value == "mustache":
+            return MustacheFormat.load(data, context)
+
+        else:
+            # load default instance
+            return CustomFormat.load(data, context)
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the FormatConfig instance to a dictionary.
@@ -109,6 +122,265 @@ class FormatConfig:
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the FormatConfig instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class Jinja2Format(FormatConfig):
+    """Jinja2 template dialect. Pin-only subtype.
+
+    Attributes
+    ----------
+    kind : str
+        The Jinja2 format discriminator
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="jinja2")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "Jinja2Format":
+        """Load a Jinja2Format instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            Jinja2Format: The loaded Jinja2Format instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for Jinja2Format: {data}")
+
+        # create new instance
+        instance = Jinja2Format()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the Jinja2Format instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the Jinja2Format instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the Jinja2Format instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class MustacheFormat(FormatConfig):
+    """Mustache template dialect. Pin-only subtype.
+
+    Attributes
+    ----------
+    kind : str
+        The Mustache format discriminator
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="mustache")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "MustacheFormat":
+        """Load a MustacheFormat instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            MustacheFormat: The loaded MustacheFormat instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for MustacheFormat: {data}")
+
+        # create new instance
+        instance = MustacheFormat()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the MustacheFormat instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the MustacheFormat instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the MustacheFormat instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class CustomFormat(FormatConfig):
+    """Wildcard catch-all format for downstream/unregistered template dialects. The
+    `"*"` discriminator lowers to the Renderer dispatch decl's `defaultVariant`.
+
+    Attributes
+    ----------
+    kind : str
+        The wildcard format discriminator for any dialect not explicitly modeled
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="*")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "CustomFormat":
+        """Load a CustomFormat instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            CustomFormat: The loaded CustomFormat instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for CustomFormat: {data}")
+
+        # create new instance
+        instance = CustomFormat()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the CustomFormat instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the CustomFormat instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the CustomFormat instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

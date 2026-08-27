@@ -152,6 +152,45 @@ impl InvocationUsage {
         }
         serde_json::Value::Object(result)
     }
+
+    /// Load from a provider-specific wire-format payload.
+    pub fn from_wire(provider: &str, data: &serde_json::Value, ctx: &LoadContext) -> Self {
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> =
+            std::collections::HashMap::from([
+                (
+                    "inputTokens",
+                    std::collections::HashMap::from([
+                        ("openai", "prompt_tokens"),
+                        ("anthropic", "input_tokens"),
+                    ]),
+                ),
+                (
+                    "outputTokens",
+                    std::collections::HashMap::from([
+                        ("openai", "completion_tokens"),
+                        ("anthropic", "output_tokens"),
+                    ]),
+                ),
+                (
+                    "totalTokens",
+                    std::collections::HashMap::from([("openai", "total_tokens")]),
+                ),
+            ]);
+        let mut inverse: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
+        for (field, mapping) in &wire_map {
+            if let Some(wire_name) = mapping.get(provider) {
+                inverse.insert(*wire_name, *field);
+            }
+        }
+        let mut canonical = serde_json::Map::new();
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                let field = inverse.get(key.as_str()).copied().unwrap_or(key.as_str());
+                canonical.insert(field.to_string(), value.clone());
+            }
+        }
+        Self::load_from_value(&serde_json::Value::Object(canonical), ctx)
+    }
 }
 
 // Serde for `InvocationUsage` delegates to the canonical to_value/load_from_value

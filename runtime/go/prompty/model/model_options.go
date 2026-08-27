@@ -224,6 +224,36 @@ func (obj *ModelOptions) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// ModelOptionsFromWire loads a ModelOptions from a provider-specific wire payload.
+func ModelOptionsFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (ModelOptions, error) {
+	wireMap := map[string]map[string]string{
+		"frequencyPenalty":       {"openai": "frequency_penalty"},
+		"maxOutputTokens":        {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
+		"presencePenalty":        {"openai": "presence_penalty"},
+		"seed":                   {"openai": "seed"},
+		"temperature":            {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
+		"topK":                   {"openai": "top_k", "anthropic": "top_k"},
+		"topP":                   {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
+		"stopSequences":          {"openai": "stop", "anthropic": "stop_sequences"},
+		"allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadModelOptions(canonical, ctx)
+}
+
 // ToJSON serializes ModelOptions to JSON string
 func (obj *ModelOptions) ToJSON() (string, error) {
 	ctx := NewSaveContext()

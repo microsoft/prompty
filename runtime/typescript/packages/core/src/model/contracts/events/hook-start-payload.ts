@@ -121,8 +121,7 @@ export class HookStartPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): HookStartPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return HookStartPayload.load(data as Record<string, unknown>, context);
   }
 

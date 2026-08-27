@@ -135,8 +135,7 @@ export class ToolCallCompletePayload {
     yaml: string,
     context?: LoadContext,
   ): ToolCallCompletePayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ToolCallCompletePayload.load(
       data as Record<string, unknown>,
       context,

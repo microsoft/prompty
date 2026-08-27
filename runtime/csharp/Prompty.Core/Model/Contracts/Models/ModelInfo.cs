@@ -233,6 +233,36 @@ public partial class ModelInfo
         return result;
     }
 
+    /// <summary>
+    /// Load an instance from a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <param name="data">A dictionary with provider-specific field names.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded ModelInfo instance.</returns>
+    public static ModelInfo FromWire(string provider, Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["id"] = new Dictionary<string, string> { ["openai"] = "id", ["anthropic"] = "id" },
+            ["displayName"] = new Dictionary<string, string> { ["anthropic"] = "display_name" },
+            ["ownedBy"] = new Dictionary<string, string> { ["openai"] = "owned_by" },
+            ["contextWindow"] = new Dictionary<string, string> { ["anthropic"] = "context_length" },
+            ["inputModalities"] = new Dictionary<string, string> { ["anthropic"] = "input_modalities" },
+            ["outputModalities"] = new Dictionary<string, string> { ["anthropic"] = "output_modalities" },
+        };
+        var inverse = new Dictionary<string, string>();
+        foreach (var (field, mapping) in wireMap)
+        {
+            if (mapping.TryGetValue(provider, out var wireName))
+                inverse[wireName] = field;
+        }
+        var canonical = new Dictionary<string, object?>();
+        foreach (var (key, value) in data)
+            canonical[inverse.TryGetValue(key, out var field) ? field : key] = value;
+        return Load(canonical, context);
+    }
+
 
     /// <summary>
     /// Convert the ModelInfo instance to a YAML string.

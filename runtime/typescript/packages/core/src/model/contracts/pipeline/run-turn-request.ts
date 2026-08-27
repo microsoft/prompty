@@ -106,8 +106,7 @@ export class RunTurnRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RunTurnRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RunTurnRequest.load(data as Record<string, unknown>, context);
   }
 

@@ -1,6 +1,6 @@
-// Hand-written helper methods for generated model types.
-// Implements the MessageHelpers and ToolResultHelpers interfaces
-// declared by the TypeSpec emitter.
+// Hand-written text-fold helpers for generated model types.
+// These concatenate TextPart values; the retired @method decorator used to
+// declare a matching contract, but they are now plain runtime helpers.
 
 package prompty
 

@@ -101,8 +101,7 @@ export class CompactionCompletePayload {
     yaml: string,
     context?: LoadContext,
   ): CompactionCompletePayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return CompactionCompletePayload.load(
       data as Record<string, unknown>,
       context,

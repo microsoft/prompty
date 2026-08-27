@@ -3607,11 +3607,12 @@
           "namespace": "Prompty.Contracts.Models",
           "name": "Model"
         },
-        "description": "Model for defining the structure and behavior of AI agents.\nThis model includes properties for specifying the model's provider, connection details, and various options.\nIt allows for flexible configuration of AI models to suit different use cases and requirements.",
+        "description": "Model for defining the structure and behavior of AI agents.\nThis model includes properties for specifying the model's provider, connection details, and various options.\nIt allows for flexible configuration of AI models to suit different use cases and requirements.\n\n`provider` is the `@dispatch` discriminator for the Executor / Processor seams.\nThe string shorthand (`model: \"gpt-4\"`) coerces to `#{ id }` only — it carries\nno provider — so `provider` stays optional and absent/unknown providers are\nresolved by the runtime registry (global defaults) out of band.",
         "base": {},
         "isAbstract": false,
         "isProtocol": false,
         "entryShorthand": null,
+        "discriminator": "provider",
         "coercions": [
           {
             "scalar": "string",
@@ -3624,7 +3625,140 @@
         ],
         "factories": [],
         "methods": [],
-        "childTypes": [],
+        "childTypes": [
+          {
+            "typeName": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "OpenAIModel"
+            },
+            "description": "OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and\ninherits every base field.",
+            "base": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "Model"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "entryShorthand": null,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "provider",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The OpenAI provider discriminator",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "dictValueType": null,
+                "defaultValue": "openai",
+                "hasExplicitDefault": false,
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "AzureModel"
+            },
+            "description": "Azure OpenAI-hosted model. Pin-only subtype.",
+            "base": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "Model"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "entryShorthand": null,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "provider",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The Azure provider discriminator",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "dictValueType": null,
+                "defaultValue": "azure",
+                "hasExplicitDefault": false,
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false
+              }
+            ]
+          },
+          {
+            "typeName": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "CustomModel"
+            },
+            "description": "Wildcard catch-all model for downstream/unregistered providers. The `\"*\"`\ndiscriminator lowers to the dispatch decl's `defaultVariant` (the fallback\nseam) while the known providers stay enumerated `variants`. A runtime provider\nvalue that is none of the known literals routes here — the downstream-registry\ndelegation hook.",
+            "base": {
+              "namespace": "Prompty.Contracts.Models",
+              "name": "Model"
+            },
+            "isAbstract": false,
+            "isProtocol": false,
+            "entryShorthand": null,
+            "coercions": [],
+            "factories": [],
+            "methods": [],
+            "childTypes": [],
+            "properties": [
+              {
+                "name": "provider",
+                "typeName": {
+                  "namespace": "",
+                  "name": "string"
+                },
+                "description": "The wildcard provider discriminator for any provider not explicitly modeled",
+                "samples": [],
+                "knownAs": [],
+                "defaultFor": [],
+                "isScalar": true,
+                "isOptional": false,
+                "isCollection": false,
+                "isAny": false,
+                "isDict": false,
+                "dictValueType": null,
+                "defaultValue": "*",
+                "hasExplicitDefault": false,
+                "allowedValues": [],
+                "parseAliases": {},
+                "enumName": null,
+                "isOpenEnum": false,
+                "isNamedCollection": false
+              }
+            ]
+          }
+        ],
         "properties": [
           {
             "name": "id",
@@ -3684,10 +3818,13 @@
             "dictValueType": null,
             "defaultValue": "null",
             "hasExplicitDefault": false,
-            "allowedValues": [],
+            "allowedValues": [
+              "openai",
+              "azure"
+            ],
             "parseAliases": {},
-            "enumName": null,
-            "isOpenEnum": false,
+            "enumName": "ModelProvider",
+            "isOpenEnum": true,
             "isNamedCollection": false
           },
           {
@@ -6274,7 +6411,7 @@
                 "namespace": "Prompty.Contracts.Templates",
                 "name": "FormatConfig"
               },
-              "description": "Template format definition",
+              "description": "Template format definition. `kind` is the `@dispatch` discriminator for the\nRenderer seam, reached from a seam param as `agent.template.format.kind`.",
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
@@ -6292,7 +6429,140 @@
               ],
               "factories": [],
               "methods": [],
-              "childTypes": [],
+              "childTypes": [
+                {
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  },
+                  "description": "Jinja2 template dialect. Pin-only subtype.",
+                  "base": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "FormatConfig"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "entryShorthand": null,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Jinja2 format discriminator",
+                      "samples": [],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "dictValueType": null,
+                      "defaultValue": "jinja2",
+                      "hasExplicitDefault": false,
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  },
+                  "description": "Mustache template dialect. Pin-only subtype.",
+                  "base": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "FormatConfig"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "entryShorthand": null,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Mustache format discriminator",
+                      "samples": [],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "dictValueType": null,
+                      "defaultValue": "mustache",
+                      "hasExplicitDefault": false,
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "CustomFormat"
+                  },
+                  "description": "Wildcard catch-all format for downstream/unregistered template dialects. The\n`\"*\"` discriminator lowers to the Renderer dispatch decl's `defaultVariant`.",
+                  "base": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "FormatConfig"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "entryShorthand": null,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The wildcard format discriminator for any dialect not explicitly modeled",
+                      "samples": [],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "dictValueType": null,
+                      "defaultValue": "*",
+                      "hasExplicitDefault": false,
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                }
+              ],
               "properties": [
                 {
                   "name": "kind",
@@ -6320,10 +6590,13 @@
                   "dictValueType": null,
                   "defaultValue": "*",
                   "hasExplicitDefault": true,
-                  "allowedValues": [],
+                  "allowedValues": [
+                    "jinja2",
+                    "mustache"
+                  ],
                   "parseAliases": {},
-                  "enumName": null,
-                  "isOpenEnum": false,
+                  "enumName": "FormatKind",
+                  "isOpenEnum": true,
                   "isNamedCollection": false
                 },
                 {
@@ -6433,7 +6706,7 @@
                 "namespace": "Prompty.Contracts.Templates",
                 "name": "ParserConfig"
               },
-              "description": "Template parser definition",
+              "description": "Template parser definition. `kind` is the `@dispatch` discriminator for the\nParser seam, reached from a seam param as `agent.template.parser.kind`.",
               "base": {},
               "isAbstract": false,
               "isProtocol": false,
@@ -6451,7 +6724,96 @@
               ],
               "factories": [],
               "methods": [],
-              "childTypes": [],
+              "childTypes": [
+                {
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  },
+                  "description": "The default Prompty chat parser. Pin-only subtype.",
+                  "base": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "ParserConfig"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "entryShorthand": null,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The Prompty parser discriminator",
+                      "samples": [],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "dictValueType": null,
+                      "defaultValue": "prompty",
+                      "hasExplicitDefault": false,
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                },
+                {
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "CustomParser"
+                  },
+                  "description": "Wildcard catch-all parser for downstream/unregistered parser kinds. The `\"*\"`\ndiscriminator lowers to the Parser dispatch decl's `defaultVariant`.",
+                  "base": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "ParserConfig"
+                  },
+                  "isAbstract": false,
+                  "isProtocol": false,
+                  "entryShorthand": null,
+                  "coercions": [],
+                  "factories": [],
+                  "methods": [],
+                  "childTypes": [],
+                  "properties": [
+                    {
+                      "name": "kind",
+                      "typeName": {
+                        "namespace": "",
+                        "name": "string"
+                      },
+                      "description": "The wildcard parser discriminator for any kind not explicitly modeled",
+                      "samples": [],
+                      "knownAs": [],
+                      "defaultFor": [],
+                      "isScalar": true,
+                      "isOptional": false,
+                      "isCollection": false,
+                      "isAny": false,
+                      "isDict": false,
+                      "dictValueType": null,
+                      "defaultValue": "*",
+                      "hasExplicitDefault": false,
+                      "allowedValues": [],
+                      "parseAliases": {},
+                      "enumName": null,
+                      "isOpenEnum": false,
+                      "isNamedCollection": false
+                    }
+                  ]
+                }
+              ],
               "properties": [
                 {
                   "name": "kind",
@@ -6479,10 +6841,12 @@
                   "dictValueType": null,
                   "defaultValue": "*",
                   "hasExplicitDefault": true,
-                  "allowedValues": [],
+                  "allowedValues": [
+                    "prompty"
+                  ],
                   "parseAliases": {},
-                  "enumName": null,
-                  "isOpenEnum": false,
+                  "enumName": "ParserKind",
+                  "isOpenEnum": true,
                   "isNamedCollection": false
                 },
                 {

@@ -4,9 +4,11 @@ import "../../agent.tsp";
 using Prompty;
 using Prompty.Conformance.Vectors;
 using Prompty.Contracts.Events;
+using Prompty.Contracts.Models;
 namespace Prompty.Operations.Pipeline;
 
 /** Extracts a clean, typed result from a raw LLM provider response. */
+@dispatch(Model.provider)
 interface Processor {
   @doc("Extract a clean result from a raw LLM response")
   @vector(ProcessVectors)
@@ -15,5 +17,5 @@ interface Processor {
   @doc("Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support.")
   @optionalOperation
   @vector(StreamFailureVectors)
-  processStream(stream: unknown): unknown;
+  processStream(agent: Agent, stream: unknown): unknown;
 }

@@ -143,8 +143,7 @@ export class TurnOptions {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnOptions {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnOptions.load(data as Record<string, unknown>, context);
   }
 

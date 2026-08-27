@@ -172,8 +172,7 @@ export class TurnModelResponse {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnModelResponse {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnModelResponse.load(data as Record<string, unknown>, context);
   }
 

@@ -61,7 +61,7 @@ extension Executor {
 }
 extension Processor {
   /// Report that this provider cannot stream.
-  public func processStream(stream: Any) async throws -> Any {
+  public func processStream(agent _: Agent, stream _: Any) async throws -> Any {
     throw InvokerError.execution("streaming is not supported by this processor")
   }
 }

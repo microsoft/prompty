@@ -180,8 +180,7 @@ export class TurnModelRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnModelRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnModelRequest.load(data as Record<string, unknown>, context);
   }
 

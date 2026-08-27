@@ -52,13 +52,7 @@ pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, Sch
     // Model ID
     body.insert(
         "model".into(),
-        json!(
-            agent
-                .model
-                .as_ref()
-                .map(|model| model.id.clone())
-                .unwrap_or_default()
-        ),
+        json!(prompty::model_access::model_id(&agent.model)),
     );
 
     // Extract system messages → top-level `system` field
@@ -245,7 +239,7 @@ fn fix_f32_value(v: Value) -> Value {
 fn apply_options(agent: &Agent, body: &mut Map<String, Value>) {
     let mut max_tokens = DEFAULT_MAX_TOKENS;
 
-    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
+    if let Some(opts) = &prompty::model_access::model_options(&agent.model) {
         let wire = opts.to_wire("anthropic");
         if let Value::Object(map) = wire {
             for (k, v) in map {

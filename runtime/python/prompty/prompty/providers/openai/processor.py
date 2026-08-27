@@ -86,6 +86,24 @@ class OpenAIProcessor:
     ) -> Any:
         return _process_response(response, agent)
 
+    @trace
+    def process_stream(
+        self,
+        agent: Agent,
+        stream: Any,
+    ) -> list[StreamChunk]:
+        """Classify a provider's raw stream events into canonical StreamChunk items."""
+        return process_stream_events(stream)
+
+    @trace
+    async def process_stream_async(
+        self,
+        agent: Agent,
+        stream: Any,
+    ) -> list[StreamChunk]:
+        """Async variant of :meth:`process_stream`."""
+        return process_stream_events(stream)
+
 
 # ---------------------------------------------------------------------------
 # Shared extraction logic (also used by Azure processor)

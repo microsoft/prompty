@@ -54,11 +54,15 @@ final class InvocationUsageGeneratedTest {
     assertTrue(!openaiWire.containsKey("outputTokens"), "Expected openai wire output to omit outputTokens");
     assertTrue(openaiWire.containsKey("total_tokens"), "Expected openai wire output to include total_tokens");
     assertTrue(!openaiWire.containsKey("totalTokens"), "Expected openai wire output to omit totalTokens");
+    InvocationUsage openaiRestored = InvocationUsage.fromWire("openai", openaiWire);
+    assertEquals(openaiWire.keySet(), openaiRestored.toWire("openai").keySet(), "Expected openai FromWire round-trip to reproduce the wire keys");
     java.util.Map<String, Object> anthropicWire = wireInstance.toWire("anthropic");
     assertTrue(anthropicWire.containsKey("input_tokens"), "Expected anthropic wire output to include input_tokens");
     assertTrue(!anthropicWire.containsKey("inputTokens"), "Expected anthropic wire output to omit inputTokens");
     assertTrue(anthropicWire.containsKey("output_tokens"), "Expected anthropic wire output to include output_tokens");
     assertTrue(!anthropicWire.containsKey("outputTokens"), "Expected anthropic wire output to omit outputTokens");
+    InvocationUsage anthropicRestored = InvocationUsage.fromWire("anthropic", anthropicWire);
+    assertEquals(anthropicWire.keySet(), anthropicRestored.toWire("anthropic").keySet(), "Expected anthropic FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

@@ -36,6 +36,34 @@ public static partial class VectorAdapters
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    private static string SeamDiscriminator(JsonElement input, params string[] path)
+    {
+        if (input.ValueKind != JsonValueKind.Object || !input.TryGetProperty("agent", out var node))
+            return MissingSeamDiscriminator(path);
+
+        foreach (var key in path)
+        {
+            if (node.ValueKind != JsonValueKind.Object || !node.TryGetProperty(key, out node))
+                return MissingSeamDiscriminator(path);
+        }
+
+        if (node.ValueKind == JsonValueKind.String)
+        {
+            var text = node.GetString();
+            if (!string.IsNullOrEmpty(text))
+                return text;
+        }
+
+        return MissingSeamDiscriminator(path);
+    }
+
+    private static string MissingSeamDiscriminator(params string[] path)
+    {
+        var dotted = string.Join(".", new[] { "agent" }.Concat(path));
+        throw new InvalidOperationException(
+            $"vector input missing @dispatch discriminator at '{dotted}'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback).");
+    }
+
     // =======================================================================
     // Normalization shared by wire + process — align observed to expected shape.
     // =======================================================================
@@ -193,7 +221,7 @@ public static partial class VectorAdapters
     private static JsonNode? WireInvoke(JsonNode? inputNode, VectorContext ctx)
     {
         var input = JsonSerializer.Deserialize<JsonElement>((inputNode ?? new JsonObject()).ToJsonString());
-        var provider = input.GetProperty("provider").GetString() ?? "openai";
+        var provider = SeamDiscriminator(input, "model", "provider");
         var apiType = input.TryGetProperty("apiType", out var at) ? at.GetString() ?? "chat" : "chat";
         var modelId = input.GetProperty("model_id").GetString() ?? string.Empty;
 
@@ -271,7 +299,7 @@ public static partial class VectorAdapters
     private static JsonNode? ProcessInvoke(JsonNode? inputNode, VectorContext ctx)
     {
         var input = JsonSerializer.Deserialize<JsonElement>((inputNode ?? new JsonObject()).ToJsonString());
-        var provider = input.GetProperty("provider").GetString() ?? "openai";
+        var provider = SeamDiscriminator(input, "model", "provider");
         var apiType = input.TryGetProperty("apiType", out var at) ? at.GetString() ?? "chat" : "chat";
         var response = input.GetProperty("response");
         var hasOutputs = input.TryGetProperty("has_outputs", out var ho) && ho.GetBoolean();
@@ -374,7 +402,7 @@ public static partial class VectorAdapters
     private static Core.Agent BuildWireAgent(JsonElement input)
     {
         var modelId = input.GetProperty("model_id").GetString()!;
-        var provider = input.GetProperty("provider").GetString()!;
+        var provider = SeamDiscriminator(input, "model", "provider");
         var apiType = input.GetProperty("apiType").GetString()!;
 
         var modelDict = new Dictionary<string, object?>

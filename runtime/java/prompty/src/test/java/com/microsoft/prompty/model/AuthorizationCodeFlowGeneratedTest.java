@@ -48,6 +48,8 @@ final class AuthorizationCodeFlowGeneratedTest {
     assertTrue(!foundryWire.containsKey("authUrl"), "Expected foundry wire output to omit authUrl");
     assertTrue(foundryWire.containsKey("code_verifier"), "Expected foundry wire output to include code_verifier");
     assertTrue(!foundryWire.containsKey("codeVerifier"), "Expected foundry wire output to omit codeVerifier");
+    AuthorizationCodeFlow foundryRestored = AuthorizationCodeFlow.fromWire("foundry", foundryWire);
+    assertEquals(foundryWire.keySet(), foundryRestored.toWire("foundry").keySet(), "Expected foundry FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

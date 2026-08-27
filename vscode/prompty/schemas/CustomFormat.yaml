@@ -1,0 +1,15 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomFormat.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: "*"
+    description: The wildcard format discriminator for any dialect not explicitly modeled
+required:
+  - kind
+allOf:
+  - $ref: FormatConfig.yaml
+description: |-
+  Wildcard catch-all format for downstream/unregistered template dialects. The
+  `"*"` discriminator lowers to the Renderer dispatch decl's `defaultVariant`.

@@ -453,7 +453,6 @@ mod tests {
 
     #[test]
     fn test_to_text_content_single() {
-        use crate::model::MessageHelpers;
         let msg = Message::with_text(Role::User, "simple");
         assert_eq!(
             msg.to_text_content(),
@@ -463,7 +462,6 @@ mod tests {
 
     #[test]
     fn test_to_text_content_multipart() {
-        use crate::model::MessageHelpers;
         let msg = Message {
             role: Role::User,
             parts: vec![

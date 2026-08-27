@@ -94,8 +94,4 @@ public struct ToolResult: TypraModel {
   public static func text(value: String) -> ToolResult {
     return ToolResult(parts: [.textPart(TextPart(kind: "text", value: value))])
   }
-
-  public func text() async throws -> String {
-    throw TypraRuntimeError.unsupported("text must be implemented by hand-authored code.")
-  }
 }

@@ -23,8 +23,7 @@ final class ProcessVectorTests: XCTestCase {
       let input = vector["input"] as? [String: Any] ?? [:]
       let expected = vector["expected"] as? [String: Any] ?? [:]
 
-      guard (input["provider"] as? String ?? "openai") == "openai" else { continue }
-
+      guard (((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai") == "openai" else { continue }
       do {
         let agent = try Self.agent(hasOutputs: input["has_outputs"] as? Bool ?? false)
         let result = try await OpenAIProcessor().process(

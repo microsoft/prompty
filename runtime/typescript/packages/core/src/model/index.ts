@@ -119,7 +119,12 @@ export { MemoryEntry } from "./contracts/memory/memory-entry";
 export { MemoryStore } from "./contracts/memory/memory-store";
 
 export { ModelOptions } from "./contracts/models/model-options";
-export { Model } from "./contracts/models/model";
+export {
+  Model,
+  OpenAIModel,
+  AzureModel,
+  CustomModel,
+} from "./contracts/models/model";
 export { TokenUsage } from "./contracts/models/token-usage";
 export { InvocationUsage } from "./contracts/models/invocation-usage";
 export { ModelInfo } from "./contracts/models/model-info";
@@ -162,8 +167,17 @@ export { ReplayVerificationResult } from "./contracts/pipeline/replay-verificati
 
 export { StreamOptions } from "./contracts/streaming/stream-options";
 
-export { FormatConfig } from "./contracts/templates/format-config";
-export { ParserConfig } from "./contracts/templates/parser-config";
+export {
+  FormatConfig,
+  Jinja2Format,
+  MustacheFormat,
+  CustomFormat,
+} from "./contracts/templates/format-config";
+export {
+  ParserConfig,
+  PromptyParser,
+  CustomParser,
+} from "./contracts/templates/parser-config";
 export { Template } from "./contracts/templates/template";
 
 export { Binding } from "./contracts/tooling/binding";

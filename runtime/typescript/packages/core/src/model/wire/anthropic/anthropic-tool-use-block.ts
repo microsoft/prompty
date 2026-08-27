@@ -98,8 +98,7 @@ export class AnthropicToolUseBlock {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicToolUseBlock {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicToolUseBlock.load(data as Record<string, unknown>, context);
   }
 

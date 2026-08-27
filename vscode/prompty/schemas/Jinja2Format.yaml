@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: Jinja2Format.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: jinja2
+    description: The Jinja2 format discriminator
+required:
+  - kind
+allOf:
+  - $ref: FormatConfig.yaml
+description: Jinja2 template dialect. Pin-only subtype.

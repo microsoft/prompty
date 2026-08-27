@@ -5,9 +5,11 @@ import "../../contracts/conversation/tool-invocation.tsp";
 
 using Prompty;
 using Prompty.Contracts.Conversation;
+using Prompty.Contracts.Models;
 namespace Prompty.Operations.Pipeline;
 
 /** Calls an LLM provider with messages and returns the raw provider response. */
+@dispatch(Model.provider)
 interface Executor {
   @doc("Call an LLM provider with messages and return the raw response")
   execute(agent: Agent, messages: Message[]): unknown;

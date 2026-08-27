@@ -286,8 +286,7 @@ export class ModelInvocationContextSnapshot {
     yaml: string,
     context?: LoadContext,
   ): ModelInvocationContextSnapshot {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelInvocationContextSnapshot.load(
       data as Record<string, unknown>,
       context,

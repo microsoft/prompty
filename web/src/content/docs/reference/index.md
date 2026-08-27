@@ -252,8 +252,6 @@ classDiagram
         +string role
         +ContentPart[] parts
         +dictionary metadata
-        +toTextContent() unknown [async-capable]
-        +text() string [async-capable]
     }
     class ContentPart {
       <<abstract>>
@@ -290,7 +288,6 @@ classDiagram
         +string errorKind
         +string errorMessage
         +float64 durationMs
-        +text() string [async-capable]
     }
     class ToolDispatchResult {
         +string toolCallId
@@ -402,14 +399,11 @@ classDiagram
         +string errorKind
         +string errorMessage
         +float64 durationMs
-        +text() string [async-capable]
     }
     class Message {
         +string role
         +ContentPart[] parts
         +dictionary metadata
-        +toTextContent() unknown [async-capable]
-        +text() string [async-capable]
     }
     ToolResultPayload *-- ToolResult
     MessagesUpdatedPayload *-- Message
@@ -436,8 +430,6 @@ classDiagram
         +string role
         +ContentPart[] parts
         +dictionary metadata
-        +toTextContent() unknown [async-capable]
-        +text() string [async-capable]
     }
     DoneEventPayload *-- Message
 ```

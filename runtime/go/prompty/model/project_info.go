@@ -67,6 +67,30 @@ func (obj *ProjectInfo) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// ProjectInfoFromWire loads a ProjectInfo from a provider-specific wire payload.
+func ProjectInfoFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (ProjectInfo, error) {
+	wireMap := map[string]map[string]string{
+		"name":        {"foundry": "name"},
+		"displayName": {"foundry": "display_name"},
+		"endpoint":    {"foundry": "endpoint"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadProjectInfo(canonical, ctx)
+}
+
 // ToJSON serializes ProjectInfo to JSON string
 func (obj *ProjectInfo) ToJSON() (string, error) {
 	ctx := NewSaveContext()

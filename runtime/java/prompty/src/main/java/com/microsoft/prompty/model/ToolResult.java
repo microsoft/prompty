@@ -103,10 +103,6 @@ public class ToolResult {
     return new ToolResult() {{ this.parts = new java.util.ArrayList<>(java.util.Arrays.asList(new TextPart() {{ this.value = value; }})); }};
   }
 
-  public String text() {
-    return ToolResultMethods.text(this);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

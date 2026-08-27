@@ -161,9 +161,9 @@ durationMs: 42
     }
 
     [Fact]
-    public void FactoryCreateText()
+    public void FactoryText()
     {
-        var instance = ToolResult.CreateText("test");
+        var instance = ToolResult.Text("test");
         Assert.NotNull(instance);
     }
 }

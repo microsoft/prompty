@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..model import Agent
+from ..model import Agent, RenderSegment
 from ..tracing.tracer import trace
 from ._common import _prepare_render_inputs, _thread_nonces_local
 
@@ -55,3 +55,23 @@ class MustacheRenderer:
         inputs: dict[str, Any],
     ) -> str:
         return self._render(agent, template, inputs)
+
+    @trace
+    def render_segments(
+        self,
+        agent: Agent,
+        template: str,
+        inputs: dict[str, Any],
+    ) -> list[RenderSegment]:
+        rendered = self._render(agent, template, inputs)
+        return [RenderSegment(kind="literal", text=rendered)]
+
+    @trace
+    async def render_segments_async(
+        self,
+        agent: Agent,
+        template: str,
+        inputs: dict[str, Any],
+    ) -> list[RenderSegment]:
+        rendered = self._render(agent, template, inputs)
+        return [RenderSegment(kind="literal", text=rendered)]

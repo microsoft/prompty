@@ -61,6 +61,29 @@ func (obj *AuthorizationCodeFlow) ToWire(provider string) map[string]interface{}
 	return result
 }
 
+// AuthorizationCodeFlowFromWire loads a AuthorizationCodeFlow from a provider-specific wire payload.
+func AuthorizationCodeFlowFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (AuthorizationCodeFlow, error) {
+	wireMap := map[string]map[string]string{
+		"authUrl":      {"foundry": "auth_url"},
+		"codeVerifier": {"foundry": "code_verifier"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadAuthorizationCodeFlow(canonical, ctx)
+}
+
 // ToJSON serializes AuthorizationCodeFlow to JSON string
 func (obj *AuthorizationCodeFlow) ToJSON() (string, error) {
 	ctx := NewSaveContext()

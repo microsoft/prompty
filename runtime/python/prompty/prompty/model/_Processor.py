@@ -22,10 +22,10 @@ class Processor(Protocol):
         """Extract a clean result from a raw LLM response (async variant)"""
         raise NotImplementedError
 
-    def process_stream(self, stream: Any) -> Any:
+    def process_stream(self, agent: Agent, stream: Any) -> Any:
         """Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support."""
         raise NotImplementedError
 
-    async def process_stream_async(self, stream: Any) -> Any:
+    async def process_stream_async(self, agent: Agent, stream: Any) -> Any:
         """Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support. (async variant)"""
         raise NotImplementedError

@@ -20,9 +20,9 @@ use super::parser_config::ParserConfig;
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Template {
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
-    pub format: FormatConfig,
+    pub format: serde_json::Value,
     /// Parser used to process the rendered template into API-compatible format
-    pub parser: ParserConfig,
+    pub parser: serde_json::Value,
 }
 
 impl Template {
@@ -70,14 +70,24 @@ impl Template {
         Self {
             format: value
                 .get("format")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| FormatConfig::load_from_value(v, ctx))
-                .unwrap_or_default(),
+                .map(|v| {
+                    if let Some(s) = v.as_str() {
+                        serde_json::json!({ "kind": s })
+                    } else {
+                        v.clone()
+                    }
+                })
+                .unwrap_or(serde_json::Value::Null),
             parser: value
                 .get("parser")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| ParserConfig::load_from_value(v, ctx))
-                .unwrap_or_default(),
+                .map(|v| {
+                    if let Some(s) = v.as_str() {
+                        serde_json::json!({ "kind": s })
+                    } else {
+                        v.clone()
+                    }
+                })
+                .unwrap_or(serde_json::Value::Null),
         }
     }
 
@@ -111,14 +121,8 @@ impl Template {
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         // Write base fields
-        {
-            let nested = self.format.to_value(ctx);
-            result.insert("format".to_string(), nested);
-        }
-        {
-            let nested = self.parser.to_value(ctx);
-            result.insert("parser".to_string(), nested);
-        }
+        result.insert("format".to_string(), self.format.clone());
+        result.insert("parser".to_string(), self.parser.clone());
         ctx.process_dict(serde_json::Value::Object(result))
     }
 

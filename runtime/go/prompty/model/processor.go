@@ -9,5 +9,5 @@ type Processor interface {
 	// Process — Extract a clean result from a raw LLM response
 	Process(agent Agent, response interface{}) (interface{}, error)
 	// ProcessStream — Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support.
-	ProcessStream(stream interface{}) (interface{}, error)
+	ProcessStream(agent Agent, stream interface{}) (interface{}, error)
 }

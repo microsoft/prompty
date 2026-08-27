@@ -164,8 +164,7 @@ export class SessionStartPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionStartPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionStartPayload.load(data as Record<string, unknown>, context);
   }
 

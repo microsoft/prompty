@@ -12,13 +12,35 @@
 
 use super::super::super::context::{LoadContext, SaveContext};
 
-/// Template parser definition
+/// Variant-specific data for [`ParserConfig`], discriminated by `kind`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ParserConfigKind {
+    /// `kind` = `"prompty"`
+    PromptyParser,
+    /// Wildcard / catch-all variant for unrecognized `kind` values.
+    CustomParser {
+        /// The raw `kind` string for this unknown variant.
+        kind_name: String,
+        /// Unmodeled fields preserved for forward-compatible round trips.
+        raw: serde_json::Map<String, serde_json::Value>,
+    },
+}
+
+impl Default for ParserConfigKind {
+    fn default() -> Self {
+        ParserConfigKind::CustomParser {
+            kind_name: String::new(),
+            raw: serde_json::Map::new(),
+        }
+    }
+}
+/// Template parser definition. `kind` is the `@dispatch` discriminator for the Parser seam, reached from a seam param as `agent.template.parser.kind`.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ParserConfig {
-    /// Parser used to process the rendered template into API-compatible format
-    pub kind: String,
     /// Options for the parser
     pub options: serde_json::Value,
+    /// Variant-specific data, discriminated by `kind`.
+    pub kind: ParserConfigKind,
 }
 
 impl ParserConfig {
@@ -66,20 +88,32 @@ impl ParserConfig {
         if let Some(s) = value.as_str() {
             let value = s.to_string();
             return ParserConfig {
-                kind: value.into(),
+                kind: ParserConfigKind::CustomParser {
+                    kind_name: value,
+                    raw: serde_json::Map::new(),
+                },
                 ..Default::default()
             };
         }
+        let kind_str = value.get("kind").and_then(|v| v.as_str()).unwrap_or("");
+        let kind = match kind_str {
+            "prompty" => ParserConfigKind::PromptyParser,
+            _ => ParserConfigKind::CustomParser {
+                kind_name: kind_str.to_string(),
+                raw: {
+                    let mut raw = value.as_object().cloned().unwrap_or_default();
+                    raw.remove("kind");
+                    raw.remove("options");
+                    raw
+                },
+            },
+        };
         Self {
-            kind: value
-                .get("kind")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default()
-                .to_string(),
             options: value
                 .get("options")
                 .cloned()
                 .unwrap_or(serde_json::Value::Null),
+            kind: kind,
         }
     }
 
@@ -87,7 +121,23 @@ impl ParserConfig {
         if !value.is_object() {
             return Ok(());
         }
+        let discriminator = value
+            .get("kind")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("");
+        match discriminator {
+            "prompty" => {}
+            _ => {}
+        }
         Ok(())
+    }
+
+    /// Returns the `kind` discriminator string for this instance.
+    pub fn kind_str(&self) -> &str {
+        match &self.kind {
+            ParserConfigKind::PromptyParser => "prompty",
+            ParserConfigKind::CustomParser { kind_name, .. } => kind_name.as_str(),
+        }
     }
 
     /// Serialize ParserConfig to a `serde_json::Value`.
@@ -95,13 +145,26 @@ impl ParserConfig {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
-        // Write base fields
+        // Write the discriminator
         result.insert(
             "kind".to_string(),
-            serde_json::Value::String(self.kind.clone()),
+            serde_json::Value::String(self.kind_str().to_string()),
         );
+        // Write base fields
         if !self.options.is_null() {
             result.insert("options".to_string(), self.options.clone());
+        }
+        // Write variant-specific fields
+        match &self.kind {
+            ParserConfigKind::PromptyParser => {}
+            ParserConfigKind::CustomParser { raw, .. } => {
+                for (key, value) in raw {
+                    if matches!(key.as_str(), "kind" | "options") {
+                        continue;
+                    }
+                    result.insert(key.clone(), value.clone());
+                }
+            }
         }
         ctx.process_dict(serde_json::Value::Object(result))
     }
@@ -123,7 +186,7 @@ impl ParserConfig {
 }
 
 // Serde for `ParserConfig` delegates to the canonical to_value/load_from_value
-// logic so its scalar-coercion shorthand round-trips through the canonical semantics. Uses a default (no-op) context — no ${env:}/${file:}
+// logic so the `kind` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
 // resolution here — leaving the context-aware LoadContext/SaveContext API intact.
 #[cfg(feature = "serde")]
 impl serde::Serialize for ParserConfig {
@@ -138,5 +201,29 @@ impl<'de> serde::Deserialize<'de> for ParserConfig {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
         Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `ParserConfigKind` wraps the variant into its parent `ParserConfig` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `ParserConfigKind`
+// serializes to internally-tagged `{"kind": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+#[cfg(feature = "serde")]
+impl serde::Serialize for ParserConfigKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = ParserConfig {
+            kind: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for ParserConfigKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        ParserConfig::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
+        Ok(ParserConfig::load_from_value(&value, &LoadContext::default()).kind)
     }
 }

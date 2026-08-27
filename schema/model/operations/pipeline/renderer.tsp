@@ -3,6 +3,7 @@ import "../../agent.tsp";
 
 using Prompty;
 using Prompty.Conformance.Vectors;
+using Prompty.Contracts.Templates;
 namespace Prompty.Operations.Pipeline;
 
 /** The provenance of a rendered output span (Prompty Jinja Subset §7). */
@@ -37,6 +38,7 @@ model RenderSegment {
 }
 
 /** Renders a template string with input values to produce the final prompt text. */
+@dispatch(FormatConfig.kind)
 interface Renderer {
   @doc("Render the template string with input values")
   @vector(RenderVectors)

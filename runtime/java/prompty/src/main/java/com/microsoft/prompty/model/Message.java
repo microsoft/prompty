@@ -103,14 +103,6 @@ public class Message {
     return new Message() {{ this.role = Role.fromValue("user"); this.parts = new java.util.ArrayList<>(java.util.Arrays.asList(new TextPart() {{ this.value = text; }})); }};
   }
 
-  public Object toTextContent() {
-    return MessageMethods.toTextContent(this);
-  }
-
-  public String text() {
-    return MessageMethods.text(this);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

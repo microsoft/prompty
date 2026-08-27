@@ -114,8 +114,7 @@ export abstract class StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): StreamChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return StreamChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -195,8 +194,7 @@ export class TextChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TextChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TextChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -279,8 +277,7 @@ export class ThinkingChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ThinkingChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ThinkingChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -368,8 +365,7 @@ export class ToolChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ToolChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ToolChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -460,8 +456,7 @@ export class UsageChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): UsageChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return UsageChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -544,8 +539,7 @@ export class ErrorChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ErrorChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ErrorChunk.load(data as Record<string, unknown>, context);
   }
 
@@ -636,8 +630,7 @@ export class FailureChunk extends StreamChunk {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FailureChunk {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FailureChunk.load(data as Record<string, unknown>, context);
   }
 

@@ -128,8 +128,7 @@ export class ResumeContext {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ResumeContext {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ResumeContext.load(data as Record<string, unknown>, context);
   }
 

@@ -39,10 +39,10 @@ class RenderVectorsTest {
     Map<String, Object> expected = SpecVectors.map(testCase, "expected");
 
     String template = SpecVectors.string(input, "template");
-    String engine = SpecVectors.string(input, "engine");
+    Map<String, Object> vectorAgent = SpecVectors.map(input, "agent");
     Map<String, Object> inputs = SpecVectors.map(input, "inputs");
 
-    Agent agent = buildAgent(template, engine, inputs);
+    Agent agent = buildAgent(template, vectorAgent, inputs);
     String rendered = Pipeline.render(agent, stripKindMarkers(inputs));
 
     String exact = SpecVectors.string(expected, "rendered");
@@ -66,7 +66,7 @@ class RenderVectorsTest {
    * of the agent's declaration, so a vector that exercises that path signals it with a {@code _kind}
    * marker on the value and the declaration is reconstructed from it here.
    */
-  private static Agent buildAgent(String template, String engine, Map<String, Object> inputs) {
+  private static Agent buildAgent(String template, Map<String, Object> vectorAgent, Map<String, Object> inputs) {
     List<Object> declared = new ArrayList<>();
     for (Map.Entry<String, Object> entry : inputs.entrySet()) {
       Map<String, Object> property = new LinkedHashMap<>();
@@ -75,13 +75,21 @@ class RenderVectorsTest {
       declared.add(property);
     }
 
+    // The vector carries the agent's template config directly (format/parser kinds); the engine is
+    // no longer a flat `input.engine` field. Read it from the vector's agent, defaulting sensibly.
+    Map<String, Object> vectorTemplate = SpecVectors.map(vectorAgent, "template");
+    String engine = SpecVectors.string(SpecVectors.map(vectorTemplate, "format"), "kind");
+    String parser = SpecVectors.string(SpecVectors.map(vectorTemplate, "parser"), "kind");
+    engine = engine == null ? "jinja2" : engine;
+    parser = parser == null ? "prompty" : parser;
+
     Map<String, Object> data = new LinkedHashMap<>();
     data.put("kind", "prompt");
     data.put("name", "test");
     data.put("model", Map.of("id", "test"));
     data.put("instructions", template);
     data.put("inputs", declared);
-    data.put("template", Map.of("format", Map.of("kind", engine), "parser", Map.of("kind", "prompty")));
+    data.put("template", Map.of("format", Map.of("kind", engine), "parser", Map.of("kind", parser)));
     return Agent.load(data, new LoadContext(null, null));
   }
 

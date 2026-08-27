@@ -24,6 +24,16 @@ public class ParserConfig {
       result.kind = String.valueOf(data);
       return ctx.processOutput(result);
     }
+    if (data instanceof Map<?, ?> dispatchMap) {
+      Object discriminator = dispatchMap.get("kind");
+      String discriminatorString = discriminator instanceof String discriminatorRaw ? discriminatorRaw : "";
+      switch (discriminatorString) {
+        case "prompty":
+          return PromptyParser.load(data, ctx);
+        default:
+          return CustomParser.load(data, ctx);
+      }
+    }
     if (!(data instanceof Map<?, ?> map)) {
       return ctx.processOutput(new ParserConfig());
     }

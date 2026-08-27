@@ -83,8 +83,7 @@ export class CompactionFailedPayload {
     yaml: string,
     context?: LoadContext,
   ): CompactionFailedPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return CompactionFailedPayload.load(
       data as Record<string, unknown>,
       context,

@@ -171,6 +171,46 @@ class ModelOptions:
                 result[mapping[provider]] = value
         return result
 
+    @staticmethod
+    def from_wire(provider: str, data: dict[str, Any], context: LoadContext | None = None) -> "ModelOptions":
+        """Load a ModelOptions instance from a provider-specific wire payload.
+        Args:
+            provider (str): The provider the payload came from (e.g., "openai", "anthropic").
+            data (dict[str, Any]): The wire-format dictionary with provider-specific field names.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            ModelOptions: The loaded ModelOptions instance.
+
+        """
+        wire_map: dict[str, dict[str, str]] = {
+            "frequencyPenalty": {"openai": "frequency_penalty"},
+            "maxOutputTokens": {
+                "openai": "max_completion_tokens",
+                "responses": "max_output_tokens",
+                "anthropic": "max_tokens",
+            },
+            "presencePenalty": {"openai": "presence_penalty"},
+            "seed": {"openai": "seed"},
+            "temperature": {
+                "openai": "temperature",
+                "responses": "temperature",
+                "anthropic": "temperature",
+            },
+            "topK": {"openai": "top_k", "anthropic": "top_k"},
+            "topP": {"openai": "top_p", "responses": "top_p", "anthropic": "top_p"},
+            "stopSequences": {"openai": "stop", "anthropic": "stop_sequences"},
+            "allowMultipleToolCalls": {"openai": "parallel_tool_calls"},
+        }
+        inverse: dict[str, str] = {}
+        for field_name, m in wire_map.items():
+            w = m.get(provider)
+            if w:
+                inverse[w] = field_name
+        canonical: dict[str, Any] = {}
+        for k, v in data.items():
+            canonical[inverse.get(k, k)] = v
+        return ModelOptions.load(canonical, context)
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ModelOptions instance to a YAML string.
         Args:

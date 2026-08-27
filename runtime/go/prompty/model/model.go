@@ -23,6 +23,11 @@ const (
 // Model represents Model for defining the structure and behavior of AI agents.
 // This model includes properties for specifying the model's provider, connection details, and various options.
 // It allows for flexible configuration of AI models to suit different use cases and requirements.
+//
+// `provider` is the `@dispatch` discriminator for the Executor / Processor seams.
+// The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries
+// no provider — so `provider` stays optional and absent/unknown providers are
+// resolved by the runtime registry (global defaults) out of band.
 
 type Model struct {
 	Id         string        `json:"id" yaml:"id"`
@@ -33,7 +38,8 @@ type Model struct {
 }
 
 // LoadModel creates a Model from a map[string]interface{}
-func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func LoadModel(data interface{}, ctx *LoadContext) (interface{}, error) {
 	if ctx == nil {
 		ctx = NewLoadContext()
 	}
@@ -45,6 +51,26 @@ func LoadModel(data interface{}, ctx *LoadContext) (Model, error) {
 		// Shorthand: string -> Model
 		expansion := map[string]interface{}{"id": v}
 		return LoadModel(expansion, ctx)
+	}
+	// Handle polymorphic types based on discriminator
+	if m, ok := data.(map[string]interface{}); ok {
+		if discriminator, ok := m["provider"]; ok {
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "openai":
+					return LoadOpenAIModel(data, ctx)
+				case "azure":
+					return LoadAzureModel(data, ctx)
+				default:
+					return LoadCustomModel(data, ctx)
+				}
+			default:
+				return LoadCustomModel(data, ctx)
+			}
+		} else {
+			return LoadCustomModel(data, ctx)
+		}
 	}
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -132,21 +158,385 @@ func (obj *Model) ToYAML() (string, error) {
 }
 
 // FromJSON creates Model from JSON string
-func ModelFromJSON(jsonStr string) (Model, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func ModelFromJSON(jsonStr string) (interface{}, error) {
 	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return Model{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadModel(data, ctx)
 }
 
 // FromYAML creates Model from YAML string
-func ModelFromYAML(yamlStr string) (Model, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func ModelFromYAML(yamlStr string) (interface{}, error) {
 	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return Model{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadModel(data, ctx)
+}
+
+// OpenAIModel represents OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and
+// inherits every base field.
+
+type OpenAIModel struct {
+	Id         string        `json:"id" yaml:"id"`
+	Provider   string        `json:"provider" yaml:"provider"`
+	ApiType    *apiType      `json:"apiType,omitempty" yaml:"apiType,omitempty"`
+	Connection interface{}   `json:"connection,omitempty" yaml:"connection,omitempty"`
+	Options    *ModelOptions `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadOpenAIModel creates a OpenAIModel from a map[string]interface{}
+func LoadOpenAIModel(data interface{}, ctx *LoadContext) (OpenAIModel, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := OpenAIModel{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["id"]; ok && val != nil {
+			result.Id = string(val.(string))
+		}
+		if val, ok := m["provider"]; ok && val != nil {
+			result.Provider = string(val.(string))
+		}
+		if val, ok := m["apiType"]; ok && val != nil {
+			v := apiType(val.(string))
+			result.ApiType = &v
+		}
+		if val, ok := m["connection"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadConnection(m, ctx.At("connection"))
+				if err != nil {
+					return result, err
+				}
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
+				result.Connection = loaded
+			}
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadModelOptions(m, ctx.At("options"))
+				if err != nil {
+					return result, err
+				}
+				result.Options = &loaded
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes OpenAIModel to map[string]interface{}
+func (obj OpenAIModel) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["id"] = obj.Id
+	result["provider"] = obj.Provider
+	if obj.ApiType != nil {
+		result["apiType"] = string(*obj.ApiType)
+	}
+	if obj.Connection != nil {
+		// Handle polymorphic type (stored as interface{} without pointer)
+		if obj.Connection != nil {
+			switch v := obj.Connection.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				result["connection"] = v.Save(ctx)
+			default:
+				result["connection"] = obj.Connection
+			}
+		}
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options.Save(ctx)
+	}
+
+	return result
+}
+
+// ToJSON serializes OpenAIModel to JSON string
+func (obj *OpenAIModel) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes OpenAIModel to YAML string
+func (obj *OpenAIModel) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates OpenAIModel from JSON string
+func OpenAIModelFromJSON(jsonStr string) (OpenAIModel, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return OpenAIModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadOpenAIModel(data, ctx)
+}
+
+// FromYAML creates OpenAIModel from YAML string
+func OpenAIModelFromYAML(yamlStr string) (OpenAIModel, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return OpenAIModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadOpenAIModel(data, ctx)
+}
+
+// AzureModel represents Azure OpenAI-hosted model. Pin-only subtype.
+
+type AzureModel struct {
+	Id         string        `json:"id" yaml:"id"`
+	Provider   string        `json:"provider" yaml:"provider"`
+	ApiType    *apiType      `json:"apiType,omitempty" yaml:"apiType,omitempty"`
+	Connection interface{}   `json:"connection,omitempty" yaml:"connection,omitempty"`
+	Options    *ModelOptions `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadAzureModel creates a AzureModel from a map[string]interface{}
+func LoadAzureModel(data interface{}, ctx *LoadContext) (AzureModel, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := AzureModel{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["id"]; ok && val != nil {
+			result.Id = string(val.(string))
+		}
+		if val, ok := m["provider"]; ok && val != nil {
+			result.Provider = string(val.(string))
+		}
+		if val, ok := m["apiType"]; ok && val != nil {
+			v := apiType(val.(string))
+			result.ApiType = &v
+		}
+		if val, ok := m["connection"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadConnection(m, ctx.At("connection"))
+				if err != nil {
+					return result, err
+				}
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
+				result.Connection = loaded
+			}
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadModelOptions(m, ctx.At("options"))
+				if err != nil {
+					return result, err
+				}
+				result.Options = &loaded
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes AzureModel to map[string]interface{}
+func (obj AzureModel) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["id"] = obj.Id
+	result["provider"] = obj.Provider
+	if obj.ApiType != nil {
+		result["apiType"] = string(*obj.ApiType)
+	}
+	if obj.Connection != nil {
+		// Handle polymorphic type (stored as interface{} without pointer)
+		if obj.Connection != nil {
+			switch v := obj.Connection.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				result["connection"] = v.Save(ctx)
+			default:
+				result["connection"] = obj.Connection
+			}
+		}
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options.Save(ctx)
+	}
+
+	return result
+}
+
+// ToJSON serializes AzureModel to JSON string
+func (obj *AzureModel) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes AzureModel to YAML string
+func (obj *AzureModel) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates AzureModel from JSON string
+func AzureModelFromJSON(jsonStr string) (AzureModel, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return AzureModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadAzureModel(data, ctx)
+}
+
+// FromYAML creates AzureModel from YAML string
+func AzureModelFromYAML(yamlStr string) (AzureModel, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return AzureModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadAzureModel(data, ctx)
+}
+
+// CustomModel represents Wildcard catch-all model for downstream/unregistered providers. The `"*"`
+// discriminator lowers to the dispatch decl's `defaultVariant` (the fallback
+// seam) while the known providers stay enumerated `variants`. A runtime provider
+// value that is none of the known literals routes here — the downstream-registry
+// delegation hook.
+
+type CustomModel struct {
+	Id         string        `json:"id" yaml:"id"`
+	Provider   string        `json:"provider" yaml:"provider"`
+	ApiType    *apiType      `json:"apiType,omitempty" yaml:"apiType,omitempty"`
+	Connection interface{}   `json:"connection,omitempty" yaml:"connection,omitempty"`
+	Options    *ModelOptions `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadCustomModel creates a CustomModel from a map[string]interface{}
+func LoadCustomModel(data interface{}, ctx *LoadContext) (CustomModel, error) {
+	if ctx == nil {
+		ctx = NewLoadContext()
+	}
+	result := CustomModel{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["id"]; ok && val != nil {
+			result.Id = string(val.(string))
+		}
+		if val, ok := m["provider"]; ok && val != nil {
+			result.Provider = string(val.(string))
+		}
+		if val, ok := m["apiType"]; ok && val != nil {
+			v := apiType(val.(string))
+			result.ApiType = &v
+		}
+		if val, ok := m["connection"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadConnection(m, ctx.At("connection"))
+				if err != nil {
+					return result, err
+				}
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
+				result.Connection = loaded
+			}
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				loaded, err := LoadModelOptions(m, ctx.At("options"))
+				if err != nil {
+					return result, err
+				}
+				result.Options = &loaded
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes CustomModel to map[string]interface{}
+func (obj CustomModel) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["id"] = obj.Id
+	result["provider"] = obj.Provider
+	if obj.ApiType != nil {
+		result["apiType"] = string(*obj.ApiType)
+	}
+	if obj.Connection != nil {
+		// Handle polymorphic type (stored as interface{} without pointer)
+		if obj.Connection != nil {
+			switch v := obj.Connection.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				result["connection"] = v.Save(ctx)
+			default:
+				result["connection"] = obj.Connection
+			}
+		}
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options.Save(ctx)
+	}
+
+	return result
+}
+
+// ToJSON serializes CustomModel to JSON string
+func (obj *CustomModel) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes CustomModel to YAML string
+func (obj *CustomModel) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates CustomModel from JSON string
+func CustomModelFromJSON(jsonStr string) (CustomModel, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return CustomModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomModel(data, ctx)
+}
+
+// FromYAML creates CustomModel from YAML string
+func CustomModelFromYAML(yamlStr string) (CustomModel, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return CustomModel{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomModel(data, ctx)
 }

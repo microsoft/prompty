@@ -74,8 +74,7 @@ export class StatusEventPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): StatusEventPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return StatusEventPayload.load(data as Record<string, unknown>, context);
   }
 

@@ -121,6 +121,33 @@ export class DeviceAuthorization {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): DeviceAuthorization {
+    const wireMap: Record<string, Record<string, string>> = {
+      deviceCode: { foundry: "device_code" },
+      userCode: { foundry: "user_code" },
+      verificationUri: { foundry: "verification_uri" },
+      expiresIn: { foundry: "expires_in" },
+      interval: { foundry: "interval" },
+      message: { foundry: "message" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return DeviceAuthorization.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -137,8 +164,7 @@ export class DeviceAuthorization {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): DeviceAuthorization {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return DeviceAuthorization.load(data as Record<string, unknown>, context);
   }
 

@@ -9,7 +9,7 @@ import { processResponse } from "../src/processor.js";
 interface StreamFailureVector {
   name: string;
   input: {
-    provider: string;
+    agent: { model: { provider: string } };
     events: Array<
       | { kind: "provider"; value: Record<string, unknown> }
       | { kind: "transportError"; message: string }
@@ -106,7 +106,7 @@ describe("OpenAI classified stream failure vectors", () => {
 
   for (const vector of loadVectors()) {
     it(vector.name, async () => {
-      expect(vector.input.provider).toBe("openai");
+      expect(vector.input.agent.model.provider).toBe("openai");
       const agent = new Agent({ name: "stream-vector", model: "gpt-test" });
       const processed = processResponse(agent, responseFromVector(vector));
       const actual: unknown[] = [];

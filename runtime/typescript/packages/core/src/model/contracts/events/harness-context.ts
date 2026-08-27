@@ -96,8 +96,7 @@ export class HarnessContext {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): HarnessContext {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return HarnessContext.load(data as Record<string, unknown>, context);
   }
 

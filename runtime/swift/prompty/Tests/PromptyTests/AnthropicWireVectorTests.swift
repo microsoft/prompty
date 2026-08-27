@@ -23,7 +23,7 @@ final class AnthropicWireVectorTests: XCTestCase {
       let input = vector["input"] as? [String: Any] ?? [:]
       let expected = vector["expected"] as? [String: Any] ?? [:]
 
-      guard (input["provider"] as? String ?? "openai") == "anthropic" else { continue }
+      guard (((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai") == "anthropic" else { continue }
       run.started()
 
       do {
@@ -51,7 +51,7 @@ final class AnthropicWireVectorTests: XCTestCase {
 
   private static func agent(from input: [String: Any]) throws -> Agent {
     var model: [String: Any] = [
-      "provider": input["provider"] as? String ?? "anthropic"
+      "provider": ((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "anthropic"
     ]
     if let id = input["model_id"] as? String { model["id"] = id }
     if let apiType = input["apiType"] as? String { model["apiType"] = apiType }

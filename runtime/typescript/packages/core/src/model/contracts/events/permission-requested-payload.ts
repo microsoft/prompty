@@ -157,8 +157,7 @@ export class PermissionRequestedPayload {
     yaml: string,
     context?: LoadContext,
   ): PermissionRequestedPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return PermissionRequestedPayload.load(
       data as Record<string, unknown>,
       context,

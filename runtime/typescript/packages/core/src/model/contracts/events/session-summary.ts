@@ -131,8 +131,7 @@ export class SessionSummary {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionSummary {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionSummary.load(data as Record<string, unknown>, context);
   }
 

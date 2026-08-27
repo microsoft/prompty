@@ -143,12 +143,3 @@ func NewSystemMessage(text string) Message {
 func NewUserMessage(text string) Message {
 	return Message{Role: "user", Parts: []interface{}{TextPart{Kind: "text", Value: text}}}
 }
-
-// MessageHelpers defines helper methods for Message.
-// Implement these in a separate file (e.g., message_helpers.go).
-type MessageHelpers interface {
-	// ToTextContent — Return plain string if all parts are text, else a list of content part dicts for wire serialization
-	ToTextContent() interface{}
-	// Text — Concatenate all TextPart values joined by newline
-	Text() string
-}

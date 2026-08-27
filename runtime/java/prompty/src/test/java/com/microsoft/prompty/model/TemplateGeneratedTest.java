@@ -19,15 +19,18 @@ final class TemplateGeneratedTest {
       }
       """;
     Template instance1 = Template.fromJson(jsonData1);
-    assertEquals("mustache", instance1.format.kind, "Expected instance1.format.kind");
-    assertEquals("mustache", instance1.parser.kind, "Expected instance1.parser.kind");
+    assertTrue(instance1.format instanceof MustacheFormat, "Expected format to be MustacheFormat");
+    MustacheFormat instance1FormatValue = (MustacheFormat) instance1.format;
+    assertEquals("mustache", instance1FormatValue.kind, "Expected kind");
     String yamlRoundtrip1 = instance1.toYaml();
     Template fromYaml1 = Template.fromYaml(yamlRoundtrip1);
-    assertEquals("mustache", fromYaml1.format.kind, "Expected fromYaml1.format.kind");
-    assertEquals("mustache", fromYaml1.parser.kind, "Expected fromYaml1.parser.kind");
+    assertTrue(fromYaml1.format instanceof MustacheFormat, "Expected format to be MustacheFormat");
+    MustacheFormat fromYaml1FormatValue = (MustacheFormat) fromYaml1.format;
+    assertEquals("mustache", fromYaml1FormatValue.kind, "Expected kind");
     Template reloaded1 = Template.load(instance1.save(new SaveContext()), new LoadContext());
-    assertEquals("mustache", reloaded1.format.kind, "Expected reloaded1.format.kind");
-    assertEquals("mustache", reloaded1.parser.kind, "Expected reloaded1.parser.kind");
+    assertTrue(reloaded1.format instanceof MustacheFormat, "Expected format to be MustacheFormat");
+    MustacheFormat reloaded1FormatValue = (MustacheFormat) reloaded1.format;
+    assertEquals("mustache", reloaded1FormatValue.kind, "Expected kind");
 
     assertThrows(() -> Template.fromJson("{"), "Template.fromJson should reject malformed JSON");
 

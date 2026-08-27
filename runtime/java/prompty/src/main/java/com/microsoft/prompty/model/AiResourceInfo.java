@@ -106,6 +106,54 @@ public class AiResourceInfo {
     return result;
   }
 
+  public static AiResourceInfo fromWire(String provider, Map<String, Object> data) {
+    return fromWire(provider, data, new LoadContext());
+  }
+
+  public static AiResourceInfo fromWire(String provider, Map<String, Object> data, LoadContext context) {
+    Map<String, Map<String, String>> wireMap = new LinkedHashMap<>();
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "name");
+      wireMap.put("name", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "kind");
+      wireMap.put("kind", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "endpoint");
+      wireMap.put("endpoint", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "location");
+      wireMap.put("location", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "resource_group");
+      wireMap.put("resourceGroup", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("foundry", "foundry_url");
+      wireMap.put("serviceUrl", m);
+    }
+    Map<String, String> inverse = new LinkedHashMap<>();
+    for (Map.Entry<String, Map<String, String>> e : wireMap.entrySet()) {
+      String w = e.getValue().get(provider);
+      if (w != null) inverse.put(w, e.getKey());
+    }
+    Map<String, Object> canonical = new LinkedHashMap<>();
+    for (Map.Entry<String, Object> e : data.entrySet()) {
+      canonical.put(inverse.getOrDefault(e.getKey(), e.getKey()), e.getValue());
+    }
+    return load(canonical, context);
+  }
+
   public String toYaml() {
     return TypraYaml.stringify(save(new SaveContext()));
   }

@@ -134,7 +134,7 @@ func TestStreamingUnsupported(t *testing.T) {
 	if _, err := (Executor{}).ExecuteStream(agent, userMsg("hi")); err != providers.ErrStreamingUnsupported {
 		t.Fatalf("ExecuteStream err = %v", err)
 	}
-	if _, err := (Processor{}).ProcessStream(nil); err != providers.ErrStreamingUnsupported {
+	if _, err := (Processor{}).ProcessStream(agent, nil); err != providers.ErrStreamingUnsupported {
 		t.Fatalf("ProcessStream err = %v", err)
 	}
 }

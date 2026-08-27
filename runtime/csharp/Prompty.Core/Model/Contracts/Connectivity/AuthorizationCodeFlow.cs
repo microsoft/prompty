@@ -138,6 +138,32 @@ public partial class AuthorizationCodeFlow
         return result;
     }
 
+    /// <summary>
+    /// Load an instance from a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <param name="data">A dictionary with provider-specific field names.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded AuthorizationCodeFlow instance.</returns>
+    public static AuthorizationCodeFlow FromWire(string provider, Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["authUrl"] = new Dictionary<string, string> { ["foundry"] = "auth_url" },
+            ["codeVerifier"] = new Dictionary<string, string> { ["foundry"] = "code_verifier" },
+        };
+        var inverse = new Dictionary<string, string>();
+        foreach (var (field, mapping) in wireMap)
+        {
+            if (mapping.TryGetValue(provider, out var wireName))
+                inverse[wireName] = field;
+        }
+        var canonical = new Dictionary<string, object?>();
+        foreach (var (key, value) in data)
+            canonical[inverse.TryGetValue(key, out var field) ? field : key] = value;
+        return Load(canonical, context);
+    }
+
 
     /// <summary>
     /// Convert the AuthorizationCodeFlow instance to a YAML string.

@@ -289,8 +289,3 @@ impl<'de> serde::Deserialize<'de> for ToolResult {
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
-/// Helpers for [`ToolResult`]. Implement in a separate file.
-pub trait ToolResultHelpers {
-    /// Concatenate all TextPart values joined by newline
-    fn text(&self) -> String;
-}

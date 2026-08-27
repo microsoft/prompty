@@ -103,6 +103,33 @@ export class TokenUsage {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): TokenUsage {
+    const wireMap: Record<string, Record<string, string>> = {
+      promptTokens: { openai: "prompt_tokens", anthropic: "input_tokens" },
+      completionTokens: {
+        openai: "completion_tokens",
+        anthropic: "output_tokens",
+      },
+      totalTokens: { openai: "total_tokens" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return TokenUsage.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -119,8 +146,7 @@ export class TokenUsage {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TokenUsage {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TokenUsage.load(data as Record<string, unknown>, context);
   }
 

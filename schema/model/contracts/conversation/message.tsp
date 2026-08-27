@@ -28,12 +28,6 @@ alias Role = "system" | "user" | "assistant" | "developer" | "tool";
   #{ role: "assistant", parts: #[#{ kind: "text", value: "{text}" }] },
   #{ text: "string" }
 )
-@method("text", "string", "Concatenate all TextPart values joined by newline")
-@method(
-  "toTextContent",
-  "unknown",
-  "Return plain string if all parts are text, else a list of content part dicts for wire serialization"
-)
 model Message {
   @doc("The role of the message sender")
   @sample(MessageRoleSample)

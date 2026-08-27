@@ -228,8 +228,7 @@ export class Property {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Property {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Property.load(data as Record<string, unknown>, context);
   }
 
@@ -320,8 +319,7 @@ export class ArrayProperty extends Property {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ArrayProperty {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ArrayProperty.load(data as Record<string, unknown>, context);
   }
 
@@ -492,8 +490,7 @@ export class ObjectProperty extends Property {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ObjectProperty {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ObjectProperty.load(data as Record<string, unknown>, context);
   }
 
@@ -682,8 +679,7 @@ export class UnionProperty extends Property {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): UnionProperty {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return UnionProperty.load(data as Record<string, unknown>, context);
   }
 

@@ -78,6 +78,19 @@ export class LoadContext {
     }
     return result;
   }
+
+  /**
+   * Parse a YAML document into a plain data structure.
+   *
+   * Centralizes the "yaml" dependency in this module — which already imports
+   * it for SaveContext.toYaml — so generated model classes can parse YAML from
+   * their fromYaml() factory without a CommonJS require(). require() is
+   * undefined under native ESM and in the browser, so keeping it out of the
+   * emitted classes lets the generated library load in web/non-Node runtimes.
+   */
+  static parseYaml(text: string): unknown {
+    return yaml.parse(text);
+  }
 }
 
 /**

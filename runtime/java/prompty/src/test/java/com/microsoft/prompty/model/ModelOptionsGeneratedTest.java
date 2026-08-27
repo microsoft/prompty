@@ -107,12 +107,16 @@ final class ModelOptionsGeneratedTest {
     assertTrue(!openaiWire.containsKey("stopSequences"), "Expected openai wire output to omit stopSequences");
     assertTrue(openaiWire.containsKey("parallel_tool_calls"), "Expected openai wire output to include parallel_tool_calls");
     assertTrue(!openaiWire.containsKey("allowMultipleToolCalls"), "Expected openai wire output to omit allowMultipleToolCalls");
+    ModelOptions openaiRestored = ModelOptions.fromWire("openai", openaiWire);
+    assertEquals(openaiWire.keySet(), openaiRestored.toWire("openai").keySet(), "Expected openai FromWire round-trip to reproduce the wire keys");
     java.util.Map<String, Object> responsesWire = wireInstance.toWire("responses");
     assertTrue(responsesWire.containsKey("max_output_tokens"), "Expected responses wire output to include max_output_tokens");
     assertTrue(!responsesWire.containsKey("maxOutputTokens"), "Expected responses wire output to omit maxOutputTokens");
     assertTrue(responsesWire.containsKey("temperature"), "Expected responses wire output to include temperature");
     assertTrue(responsesWire.containsKey("top_p"), "Expected responses wire output to include top_p");
     assertTrue(!responsesWire.containsKey("topP"), "Expected responses wire output to omit topP");
+    ModelOptions responsesRestored = ModelOptions.fromWire("responses", responsesWire);
+    assertEquals(responsesWire.keySet(), responsesRestored.toWire("responses").keySet(), "Expected responses FromWire round-trip to reproduce the wire keys");
     java.util.Map<String, Object> anthropicWire = wireInstance.toWire("anthropic");
     assertTrue(anthropicWire.containsKey("max_tokens"), "Expected anthropic wire output to include max_tokens");
     assertTrue(!anthropicWire.containsKey("maxOutputTokens"), "Expected anthropic wire output to omit maxOutputTokens");
@@ -123,6 +127,8 @@ final class ModelOptionsGeneratedTest {
     assertTrue(!anthropicWire.containsKey("topP"), "Expected anthropic wire output to omit topP");
     assertTrue(anthropicWire.containsKey("stop_sequences"), "Expected anthropic wire output to include stop_sequences");
     assertTrue(!anthropicWire.containsKey("stopSequences"), "Expected anthropic wire output to omit stopSequences");
+    ModelOptions anthropicRestored = ModelOptions.fromWire("anthropic", anthropicWire);
+    assertEquals(anthropicWire.keySet(), anthropicRestored.toWire("anthropic").keySet(), "Expected anthropic FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

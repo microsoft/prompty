@@ -88,6 +88,33 @@ func (obj *AiResourceInfo) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// AiResourceInfoFromWire loads a AiResourceInfo from a provider-specific wire payload.
+func AiResourceInfoFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (AiResourceInfo, error) {
+	wireMap := map[string]map[string]string{
+		"name":          {"foundry": "name"},
+		"kind":          {"foundry": "kind"},
+		"endpoint":      {"foundry": "endpoint"},
+		"location":      {"foundry": "location"},
+		"resourceGroup": {"foundry": "resource_group"},
+		"serviceUrl":    {"foundry": "foundry_url"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadAiResourceInfo(canonical, ctx)
+}
+
 // ToJSON serializes AiResourceInfo to JSON string
 func (obj *AiResourceInfo) ToJSON() (string, error) {
 	ctx := NewSaveContext()

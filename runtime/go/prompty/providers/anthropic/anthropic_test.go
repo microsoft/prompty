@@ -130,7 +130,7 @@ func TestStreamingUnsupported(t *testing.T) {
 	if _, err := (Executor{}).ExecuteStream(keyAgent(t, "https://x"), nil); err != providers.ErrStreamingUnsupported {
 		t.Fatalf("ExecuteStream err = %v", err)
 	}
-	if _, err := (Processor{}).ProcessStream(nil); err != providers.ErrStreamingUnsupported {
+	if _, err := (Processor{}).ProcessStream(keyAgent(t, "https://x"), nil); err != providers.ErrStreamingUnsupported {
 		t.Fatalf("ProcessStream err = %v", err)
 	}
 }

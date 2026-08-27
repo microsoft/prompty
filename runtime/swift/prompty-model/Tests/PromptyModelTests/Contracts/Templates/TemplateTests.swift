@@ -18,11 +18,23 @@ final class TemplateTests: XCTestCase {
 }
 """
     let instance = try Template.fromJSON(json)
-    XCTAssertEqual(instance.format.kind, "mustache")
-    XCTAssertEqual(instance.parser.kind, "mustache")
+    if case .mustacheFormat = instance.format {
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
+    if case .customParser = instance.parser {
+    } else {
+      XCTFail("Expected CustomParser")
+    }
     let reloaded = try Template.fromJSON(try instance.toJSON())
-    XCTAssertEqual(reloaded.format.kind, "mustache")
-    XCTAssertEqual(reloaded.parser.kind, "mustache")
+    if case .mustacheFormat = reloaded.format {
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
+    if case .customParser = reloaded.parser {
+    } else {
+      XCTFail("Expected CustomParser")
+    }
   }
 
   func testYAMLRoundTrip1() throws {
@@ -34,11 +46,23 @@ parser:
 
 """
     let instance = try Template.fromYAML(yaml)
-    XCTAssertEqual(instance.format.kind, "mustache")
-    XCTAssertEqual(instance.parser.kind, "mustache")
+    if case .mustacheFormat = instance.format {
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
+    if case .customParser = instance.parser {
+    } else {
+      XCTFail("Expected CustomParser")
+    }
     let reloaded = try Template.fromYAML(try instance.toYAML())
-    XCTAssertEqual(reloaded.format.kind, "mustache")
-    XCTAssertEqual(reloaded.parser.kind, "mustache")
+    if case .mustacheFormat = reloaded.format {
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
+    if case .customParser = reloaded.parser {
+    } else {
+      XCTFail("Expected CustomParser")
+    }
   }
 
 }

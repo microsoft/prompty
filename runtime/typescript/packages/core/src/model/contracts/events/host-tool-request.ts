@@ -117,8 +117,7 @@ export class HostToolRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): HostToolRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return HostToolRequest.load(data as Record<string, unknown>, context);
   }
 

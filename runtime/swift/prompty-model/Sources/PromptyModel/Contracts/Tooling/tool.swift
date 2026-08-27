@@ -12,10 +12,7 @@ public enum Tool: TypraModel {
   public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Tool {
     let normalizedData: Any = data
     let object = try TypraRuntime.object(normalizedData, typeName: "Tool")
-    let discriminator = try TypraRuntime.string(object["kind"] ?? NSNull(), field: "kind")
-    if discriminator.isEmpty {
-      throw TypraRuntimeError.invalidField(field: context.at("kind").path, expected: "non-blank string")
-    }
+    let discriminator = object["kind"] as? String ?? ""
     switch discriminator {
     case "function": return .functionTool(try FunctionTool.load(normalizedData, context: context))
     case "mcp": return .mcpTool(try McpTool.load(normalizedData, context: context))

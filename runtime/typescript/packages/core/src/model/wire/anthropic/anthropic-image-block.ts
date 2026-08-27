@@ -91,8 +91,7 @@ export class AnthropicImageBlock {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicImageBlock {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicImageBlock.load(data as Record<string, unknown>, context);
   }
 

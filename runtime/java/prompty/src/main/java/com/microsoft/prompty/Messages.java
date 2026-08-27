@@ -30,22 +30,22 @@ public final class Messages {
   private Messages() {}
 
   /**
-   * Concatenated text of a message's text parts.
+   * The message's text parts joined with newlines; non-text parts are ignored.
    *
-   * <p>Non-text parts contribute nothing, so an image-only message yields an empty string rather
-   * than a placeholder.
+   * <p>Mirrors the Rust reference {@code Message::text} in {@code model_ext.rs}. Non-text parts
+   * contribute nothing, so an image-only message yields an empty string rather than a placeholder.
    */
   public static String text(Message message) {
     if (message == null || message.parts == null) {
       return "";
     }
-    StringBuilder builder = new StringBuilder();
+    List<String> texts = new ArrayList<>();
     for (ContentPart part : message.parts) {
-      if (part instanceof TextPart textPart && textPart.value != null) {
-        builder.append(textPart.value);
+      if (part instanceof TextPart textPart) {
+        texts.add(textPart.value == null ? "" : textPart.value);
       }
     }
-    return builder.toString();
+    return String.join("\n", texts);
   }
 
   /** Whether a message carries any part that is not plain text. */

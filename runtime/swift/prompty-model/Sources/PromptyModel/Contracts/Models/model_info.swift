@@ -117,6 +117,26 @@ public struct ModelInfo: TypraModel {
     return result
   }
 
+  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> ModelInfo {
+    let wireMap: [String: [String: String]] = [
+      "id": ["openai": "id", "anthropic": "id"],
+      "displayName": ["anthropic": "display_name"],
+      "ownedBy": ["openai": "owned_by"],
+      "contextWindow": ["anthropic": "context_length"],
+      "inputModalities": ["anthropic": "input_modalities"],
+      "outputModalities": ["anthropic": "output_modalities"],
+    ]
+    var inverse: [String: String] = [:]
+    for (field, mapping) in wireMap {
+      if let wireName = mapping[provider] { inverse[wireName] = field }
+    }
+    var canonical: [String: Any] = [:]
+    for (key, value) in data {
+      canonical[inverse[key] ?? key] = value
+    }
+    return try load(canonical, context: context)
+  }
+
   public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelInfo {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelInfo"), context: context)
   }

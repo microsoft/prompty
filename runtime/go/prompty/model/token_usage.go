@@ -108,6 +108,30 @@ func (obj *TokenUsage) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// TokenUsageFromWire loads a TokenUsage from a provider-specific wire payload.
+func TokenUsageFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (TokenUsage, error) {
+	wireMap := map[string]map[string]string{
+		"promptTokens":     {"openai": "prompt_tokens", "anthropic": "input_tokens"},
+		"completionTokens": {"openai": "completion_tokens", "anthropic": "output_tokens"},
+		"totalTokens":      {"openai": "total_tokens"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadTokenUsage(canonical, ctx)
+}
+
 // ToJSON serializes TokenUsage to JSON string
 func (obj *TokenUsage) ToJSON() (string, error) {
 	ctx := NewSaveContext()

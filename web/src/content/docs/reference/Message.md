@@ -24,8 +24,6 @@ classDiagram
         +string role
         +ContentPart[] parts
         +dictionary metadata
-        +toTextContent() unknown [async-capable]
-        +text() string [async-capable]
     }
     class ContentPart {
       <<abstract>>
@@ -52,15 +50,6 @@ metadata:
 | role | string | The role of the message sender |
 | parts | [ContentPart[]](../contentpart/) | The content parts of the message(Related Types: [TextPart](../textpart/), [ImagePart](../imagepart/), [FilePart](../filepart/), [AudioPart](../audiopart/)) |
 | metadata | dictionary | Optional metadata associated with the message. Values may be explicit null. |
-
-## Helper Methods
-
-The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
-
-| Name | Signature | Runtime shape | Description |
-| ---- | --------- | ------------- | ----------- |
-| `toTextContent` | `toTextContent() -> unknown` | async-capable | Return plain string if all parts are text, else a list of content part dicts for wire serialization |
-| `text` | `text() -> string` | async-capable | Concatenate all TextPart values joined by newline |
 
 ## Factory Methods
 

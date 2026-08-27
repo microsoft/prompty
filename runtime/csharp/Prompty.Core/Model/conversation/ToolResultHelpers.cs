@@ -17,11 +17,6 @@ public partial class ToolResult
         new() { Parts = [new TextPart { Value = text }] };
 
     /// <summary>
-    /// Concatenated text from all TextParts in this result.
-    /// </summary>
-    public string Text => string.Join("", Parts.OfType<TextPart>().Select(p => p.Value));
-
-    /// <summary>
     /// Implicit conversion from string for backward compatibility.
     /// Existing code returning strings from tool handlers will continue to work.
     /// </summary>

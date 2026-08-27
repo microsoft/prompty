@@ -134,8 +134,7 @@ export class PermissionRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): PermissionRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return PermissionRequest.load(data as Record<string, unknown>, context);
   }
 

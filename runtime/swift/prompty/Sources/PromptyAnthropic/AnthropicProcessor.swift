@@ -15,7 +15,7 @@ public struct AnthropicProcessor: Processor {
     try AnthropicProcessor.processResponse(agent, response: response)
   }
 
-  public func processStream(stream: Any) async throws -> Any {
+  public func processStream(agent _: Agent, stream _: Any) async throws -> Any {
     throw InvokerError.execution("Anthropic stream processing is not implemented")
   }
 

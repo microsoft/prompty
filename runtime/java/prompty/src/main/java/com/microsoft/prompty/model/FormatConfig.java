@@ -25,6 +25,18 @@ public class FormatConfig {
       result.kind = String.valueOf(data);
       return ctx.processOutput(result);
     }
+    if (data instanceof Map<?, ?> dispatchMap) {
+      Object discriminator = dispatchMap.get("kind");
+      String discriminatorString = discriminator instanceof String discriminatorRaw ? discriminatorRaw : "";
+      switch (discriminatorString) {
+        case "jinja2":
+          return Jinja2Format.load(data, ctx);
+        case "mustache":
+          return MustacheFormat.load(data, ctx);
+        default:
+          return CustomFormat.load(data, ctx);
+      }
+    }
     if (!(data instanceof Map<?, ?> map)) {
       return ctx.processOutput(new FormatConfig());
     }

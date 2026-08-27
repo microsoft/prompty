@@ -90,6 +90,25 @@ public struct OAuthToken: TypraModel {
     return result
   }
 
+  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> OAuthToken {
+    let wireMap: [String: [String: String]] = [
+      "accessToken": ["foundry": "access_token"],
+      "tokenType": ["foundry": "token_type"],
+      "expiresIn": ["foundry": "expires_in"],
+      "refreshToken": ["foundry": "refresh_token"],
+      "scope": ["foundry": "scope"],
+    ]
+    var inverse: [String: String] = [:]
+    for (field, mapping) in wireMap {
+      if let wireName = mapping[provider] { inverse[wireName] = field }
+    }
+    var canonical: [String: Any] = [:]
+    for (key, value) in data {
+      canonical[inverse[key] ?? key] = value
+    }
+    return try load(canonical, context: context)
+  }
+
   public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> OAuthToken {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "OAuthToken"), context: context)
   }

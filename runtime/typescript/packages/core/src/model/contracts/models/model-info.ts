@@ -154,6 +154,33 @@ export class ModelInfo {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ModelInfo {
+    const wireMap: Record<string, Record<string, string>> = {
+      id: { openai: "id", anthropic: "id" },
+      displayName: { anthropic: "display_name" },
+      ownedBy: { openai: "owned_by" },
+      contextWindow: { anthropic: "context_length" },
+      inputModalities: { anthropic: "input_modalities" },
+      outputModalities: { anthropic: "output_modalities" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return ModelInfo.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -170,8 +197,7 @@ export class ModelInfo {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ModelInfo {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelInfo.load(data as Record<string, unknown>, context);
   }
 

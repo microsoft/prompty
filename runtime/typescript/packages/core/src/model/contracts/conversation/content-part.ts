@@ -107,8 +107,7 @@ export abstract class ContentPart {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ContentPart {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ContentPart.load(data as Record<string, unknown>, context);
   }
 
@@ -188,8 +187,7 @@ export class TextPart extends ContentPart {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TextPart {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TextPart.load(data as Record<string, unknown>, context);
   }
 
@@ -289,8 +287,7 @@ export class ImagePart extends ContentPart {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ImagePart {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ImagePart.load(data as Record<string, unknown>, context);
   }
 
@@ -380,8 +377,7 @@ export class FilePart extends ContentPart {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FilePart {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FilePart.load(data as Record<string, unknown>, context);
   }
 
@@ -471,8 +467,7 @@ export class AudioPart extends ContentPart {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AudioPart {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AudioPart.load(data as Record<string, unknown>, context);
   }
 

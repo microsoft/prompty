@@ -52,10 +52,31 @@ model ModelOptions {
 }
 
 /**
+ * Open discriminator union naming the providers Prompty ships typed conformance
+ * seams for, plus a bare `string` escape hatch for downstream/unregistered
+ * providers. The bare `string` member keeps the discriminated set OPEN
+ * (`isClosed=false`), so an unknown provider value routes to the `CustomModel`
+ * fallback rather than hard-erroring at the decl level. The runtime registry is
+ * fully open and resolves any provider key (e.g. `foundry`, `anthropic`) via
+ * entry points / LIFO overrides / defaults, independent of this typed set.
+ */
+union ModelProvider {
+  openai: "openai",
+  azure: "azure",
+  string,
+}
+
+/**
  * Model for defining the structure and behavior of AI agents.
  * This model includes properties for specifying the model's provider, connection details, and various options.
  * It allows for flexible configuration of AI models to suit different use cases and requirements.
+ *
+ * `provider` is the `@dispatch` discriminator for the Executor / Processor seams.
+ * The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries
+ * no provider — so `provider` stays optional and absent/unknown providers are
+ * resolved by the runtime registry (global defaults) out of band.
  */
+@discriminator("provider")
 @coerce(
   string,
   #{ id: "{value}" },
@@ -69,7 +90,7 @@ model Model {
 
   @doc("The provider of the model (e.g., 'openai', 'foundry', 'anthropic')")
   @sample(ModelProviderSample)
-  provider?: string;
+  provider?: ModelProvider;
 
   @doc("The type of API to use for the model (e.g., 'chat', 'response', etc.)")
   @sample(ModelApiTypeSample)
@@ -82,4 +103,33 @@ model Model {
   @doc("Additional options for the model")
   @sample(ModelOptionsSample)
   options?: ModelOptions;
+}
+
+/**
+ * OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and
+ * inherits every base field.
+ */
+model OpenAIModel extends Model {
+  @doc("The OpenAI provider discriminator")
+  provider: "openai";
+}
+
+/**
+ * Azure OpenAI-hosted model. Pin-only subtype.
+ */
+model AzureModel extends Model {
+  @doc("The Azure provider discriminator")
+  provider: "azure";
+}
+
+/**
+ * Wildcard catch-all model for downstream/unregistered providers. The `"*"`
+ * discriminator lowers to the dispatch decl's `defaultVariant` (the fallback
+ * seam) while the known providers stay enumerated `variants`. A runtime provider
+ * value that is none of the known literals routes here — the downstream-registry
+ * delegation hook.
+ */
+model CustomModel extends Model {
+  @doc("The wildcard provider discriminator for any provider not explicitly modeled")
+  provider: "*";
 }

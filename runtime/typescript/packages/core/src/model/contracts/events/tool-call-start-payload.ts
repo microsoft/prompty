@@ -92,8 +92,7 @@ export class ToolCallStartPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ToolCallStartPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ToolCallStartPayload.load(data as Record<string, unknown>, context);
   }
 

@@ -158,8 +158,7 @@ export class TrajectoryEvent {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TrajectoryEvent {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TrajectoryEvent.load(data as Record<string, unknown>, context);
   }
 

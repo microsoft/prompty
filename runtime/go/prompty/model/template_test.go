@@ -35,11 +35,12 @@ func TestTemplateLoadJSON(t *testing.T) {
 		t.Fatalf("Failed to load Template: %v", err)
 	}
 	_ = instance // No scalar properties to validate
-	if instance.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	formatValue, ok := instance.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", instance.Format)
 	}
-	if instance.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -63,11 +64,12 @@ parser:
 		t.Fatalf("Failed to load Template: %v", err)
 	}
 	_ = instance // No scalar properties to validate
-	if instance.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	formatValue, ok := instance.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", instance.Format)
 	}
-	if instance.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -89,11 +91,12 @@ func TestTemplateFromJSON(t *testing.T) {
 		t.Fatalf("Failed to load Template from JSON helper: %v", err)
 	}
 	_ = instance // No scalar properties to validate
-	if instance.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	formatValue, ok := instance.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", instance.Format)
 	}
-	if instance.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -112,11 +115,12 @@ parser:
 		t.Fatalf("Failed to load Template from YAML helper: %v", err)
 	}
 	_ = instance // No scalar properties to validate
-	if instance.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, instance.Format.Kind)
+	formatValue, ok := instance.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", instance.Format)
 	}
-	if instance.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, instance.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -150,11 +154,12 @@ func TestTemplateRoundtrip(t *testing.T) {
 		t.Fatalf("Failed to reload Template: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
-	if reloaded.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	formatValue, ok := reloaded.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", reloaded.Format)
 	}
-	if reloaded.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -195,11 +200,12 @@ func TestTemplateToJSON(t *testing.T) {
 		t.Fatalf("Failed to reload generated JSON: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
-	if reloaded.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	formatValue, ok := reloaded.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", reloaded.Format)
 	}
-	if reloaded.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 
@@ -240,11 +246,12 @@ func TestTemplateToYAML(t *testing.T) {
 		t.Fatalf("Failed to reload generated YAML: %v", err)
 	}
 	_ = reloaded // No scalar properties to validate
-	if reloaded.Format.Kind != "mustache" {
-		t.Errorf(`Expected Format.Kind to be "mustache", got %v`, reloaded.Format.Kind)
+	formatValue, ok := reloaded.Format.(prompty.MustacheFormat)
+	if !ok {
+		t.Fatalf("Expected Format to be prompty.MustacheFormat, got %T", reloaded.Format)
 	}
-	if reloaded.Parser.Kind != "mustache" {
-		t.Errorf(`Expected Parser.Kind to be "mustache", got %v`, reloaded.Parser.Kind)
+	if formatValue.Kind != "mustache" {
+		t.Errorf(`Expected Kind to be "mustache", got %v`, formatValue.Kind)
 	}
 }
 

@@ -27,6 +27,18 @@ public class Model {
       result.id = String.valueOf(data);
       return ctx.processOutput(result);
     }
+    if (data instanceof Map<?, ?> dispatchMap) {
+      Object discriminator = dispatchMap.get("provider");
+      String discriminatorString = discriminator instanceof String discriminatorRaw ? discriminatorRaw : "";
+      switch (discriminatorString) {
+        case "openai":
+          return OpenAIModel.load(data, ctx);
+        case "azure":
+          return AzureModel.load(data, ctx);
+        default:
+          return CustomModel.load(data, ctx);
+      }
+    }
     if (!(data instanceof Map<?, ?> map)) {
       return ctx.processOutput(new Model());
     }

@@ -140,8 +140,7 @@ export class AnthropicMessagesResponse {
     yaml: string,
     context?: LoadContext,
   ): AnthropicMessagesResponse {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicMessagesResponse.load(
       data as Record<string, unknown>,
       context,

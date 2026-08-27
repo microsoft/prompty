@@ -9,10 +9,20 @@ from .context import estimate_chars, format_dropped_messages, summarize_dropped,
 from .discovery import (
     InvokerError,
     clear_cache,
+    clear_registry,
+    default_provider,
     get_executor,
     get_parser,
     get_processor,
     get_renderer,
+    register_default,
+    register_default_provider,
+    register_executor,
+    register_parser,
+    register_processor,
+    register_provider,
+    register_renderer,
+    resolve_provider_key,
 )
 from .guardrails import GuardrailError, GuardrailResult, Guardrails
 from .loader import default_save_context, load, load_async

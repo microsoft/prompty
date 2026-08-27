@@ -122,8 +122,7 @@ export class MemoryStore {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): MemoryStore {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return MemoryStore.load(data as Record<string, unknown>, context);
   }
 

@@ -82,10 +82,14 @@ final class AgentTests: XCTestCase {
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -94,10 +98,14 @@ final class AgentTests: XCTestCase {
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip1() throws {
@@ -157,10 +165,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -169,10 +181,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip2() throws {
@@ -250,10 +266,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -262,10 +282,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip2() throws {
@@ -325,10 +349,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -337,10 +365,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip3() throws {
@@ -420,10 +452,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -432,10 +468,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip3() throws {
@@ -495,10 +535,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -507,10 +551,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip4() throws {
@@ -589,10 +637,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -601,10 +653,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip4() throws {
@@ -664,10 +720,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -676,10 +736,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip5() throws {
@@ -761,10 +825,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -773,10 +841,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip5() throws {
@@ -836,10 +908,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -848,10 +924,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip6() throws {
@@ -932,10 +1012,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -944,10 +1028,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip6() throws {
@@ -1007,10 +1095,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -1019,10 +1111,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip7() throws {
@@ -1105,10 +1201,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -1117,10 +1217,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip7() throws {
@@ -1180,10 +1284,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -1192,10 +1300,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testJSONRoundTrip8() throws {
@@ -1277,10 +1389,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromJSON(try instance.toJSON())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -1289,10 +1405,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
   func testYAMLRoundTrip8() throws {
@@ -1352,10 +1472,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(instance.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(instance.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(instance.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(instance.template)).parser.save()["kind"] as? String, "prompty")
     let reloaded = try Agent.fromYAML(try instance.toYAML())
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
@@ -1364,10 +1488,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.model)).id, "gpt-35-turbo")
+    if case .customModel(let concrete, _) = (try XCTUnwrap(reloaded.model)) {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
     XCTAssertEqual((try XCTUnwrap(reloaded.tools)).count, 1)
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).format.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.template)).parser.kind, "prompty")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).format.save()["kind"] as? String, "mustache")
+    XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
 }

@@ -80,6 +80,8 @@ final class ModelInfoGeneratedTest {
     assertTrue(openaiWire.containsKey("id"), "Expected openai wire output to include id");
     assertTrue(openaiWire.containsKey("owned_by"), "Expected openai wire output to include owned_by");
     assertTrue(!openaiWire.containsKey("ownedBy"), "Expected openai wire output to omit ownedBy");
+    ModelInfo openaiRestored = ModelInfo.fromWire("openai", openaiWire);
+    assertEquals(openaiWire.keySet(), openaiRestored.toWire("openai").keySet(), "Expected openai FromWire round-trip to reproduce the wire keys");
     java.util.Map<String, Object> anthropicWire = wireInstance.toWire("anthropic");
     assertTrue(anthropicWire.containsKey("id"), "Expected anthropic wire output to include id");
     assertTrue(anthropicWire.containsKey("display_name"), "Expected anthropic wire output to include display_name");
@@ -90,6 +92,8 @@ final class ModelInfoGeneratedTest {
     assertTrue(!anthropicWire.containsKey("inputModalities"), "Expected anthropic wire output to omit inputModalities");
     assertTrue(anthropicWire.containsKey("output_modalities"), "Expected anthropic wire output to include output_modalities");
     assertTrue(!anthropicWire.containsKey("outputModalities"), "Expected anthropic wire output to omit outputModalities");
+    ModelInfo anthropicRestored = ModelInfo.fromWire("anthropic", anthropicWire);
+    assertEquals(anthropicWire.keySet(), anthropicRestored.toWire("anthropic").keySet(), "Expected anthropic FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

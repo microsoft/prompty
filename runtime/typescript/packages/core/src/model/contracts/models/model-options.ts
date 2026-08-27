@@ -207,6 +207,44 @@ export class ModelOptions {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ModelOptions {
+    const wireMap: Record<string, Record<string, string>> = {
+      frequencyPenalty: { openai: "frequency_penalty" },
+      maxOutputTokens: {
+        openai: "max_completion_tokens",
+        responses: "max_output_tokens",
+        anthropic: "max_tokens",
+      },
+      presencePenalty: { openai: "presence_penalty" },
+      seed: { openai: "seed" },
+      temperature: {
+        openai: "temperature",
+        responses: "temperature",
+        anthropic: "temperature",
+      },
+      topK: { openai: "top_k", anthropic: "top_k" },
+      topP: { openai: "top_p", responses: "top_p", anthropic: "top_p" },
+      stopSequences: { openai: "stop", anthropic: "stop_sequences" },
+      allowMultipleToolCalls: { openai: "parallel_tool_calls" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return ModelOptions.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -223,8 +261,7 @@ export class ModelOptions {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ModelOptions {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelOptions.load(data as Record<string, unknown>, context);
   }
 

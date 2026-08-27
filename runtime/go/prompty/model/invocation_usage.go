@@ -104,6 +104,30 @@ func (obj *InvocationUsage) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// InvocationUsageFromWire loads a InvocationUsage from a provider-specific wire payload.
+func InvocationUsageFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (InvocationUsage, error) {
+	wireMap := map[string]map[string]string{
+		"inputTokens":  {"openai": "prompt_tokens", "anthropic": "input_tokens"},
+		"outputTokens": {"openai": "completion_tokens", "anthropic": "output_tokens"},
+		"totalTokens":  {"openai": "total_tokens"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadInvocationUsage(canonical, ctx)
+}
+
 // ToJSON serializes InvocationUsage to JSON string
 func (obj *InvocationUsage) ToJSON() (string, error) {
 	ctx := NewSaveContext()

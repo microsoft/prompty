@@ -198,8 +198,7 @@ export class EngineEvent {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): EngineEvent {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return EngineEvent.load(data as Record<string, unknown>, context);
   }
 

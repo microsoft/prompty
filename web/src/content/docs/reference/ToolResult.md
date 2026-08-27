@@ -29,7 +29,6 @@ classDiagram
         +string errorKind
         +string errorMessage
         +float64 durationMs
-        +text() string [async-capable]
     }
     class ContentPart {
       <<abstract>>
@@ -58,14 +57,6 @@ durationMs: 42
 | errorKind | string | Stable machine-readable error category when status is not success |
 | errorMessage | string | Human-readable error message when status is not success |
 | durationMs | float64 | Tool execution duration in milliseconds |
-
-## Helper Methods
-
-The following helper methods are declared via `@method` and must be implemented by every runtime. The schema declares the logical protocol contract; each runtime maps async-capable methods to idiomatic sync/async shapes for that language.
-
-| Name | Signature | Runtime shape | Description |
-| ---- | --------- | ------------- | ----------- |
-| `text` | `text() -> string` | async-capable | Concatenate all TextPart values joined by newline |
 
 ## Factory Methods
 

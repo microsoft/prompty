@@ -25,27 +25,19 @@ final class ModelTests: XCTestCase {
 }
 """
     let instance = try Model.fromJSON(json)
-    XCTAssertEqual(instance.id, "gpt-35-turbo")
-    XCTAssertEqual((try XCTUnwrap(instance.provider)), "foundry")
-    XCTAssertEqual((try XCTUnwrap(instance.apiType)), ApiType(rawValue: "chat"))
-    if case .apiKeyConnection(let concrete) = (try XCTUnwrap(instance.connection)) {
-      XCTAssertEqual(concrete.endpoint, "https://{your-custom-endpoint}.openai.azure.com/")
+    if case .customModel(let concrete, _) = instance {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+      XCTAssertEqual((try XCTUnwrap(concrete.apiType)).rawValue, "chat")
     } else {
-      XCTFail("Expected ApiKeyConnection")
+      XCTFail("Expected CustomModel")
     }
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(instance.options)).temperature)), 0.7)
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(instance.options)).maxOutputTokens)), 1000)
     let reloaded = try Model.fromJSON(try instance.toJSON())
-    XCTAssertEqual(reloaded.id, "gpt-35-turbo")
-    XCTAssertEqual((try XCTUnwrap(reloaded.provider)), "foundry")
-    XCTAssertEqual((try XCTUnwrap(reloaded.apiType)), ApiType(rawValue: "chat"))
-    if case .apiKeyConnection(let concrete) = (try XCTUnwrap(reloaded.connection)) {
-      XCTAssertEqual(concrete.endpoint, "https://{your-custom-endpoint}.openai.azure.com/")
+    if case .customModel(let concrete, _) = reloaded {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+      XCTAssertEqual((try XCTUnwrap(concrete.apiType)).rawValue, "chat")
     } else {
-      XCTFail("Expected ApiKeyConnection")
+      XCTFail("Expected CustomModel")
     }
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(reloaded.options)).temperature)), 0.7)
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(reloaded.options)).maxOutputTokens)), 1000)
   }
 
   func testYAMLRoundTrip1() throws {
@@ -64,32 +56,28 @@ options:
 
 """
     let instance = try Model.fromYAML(yaml)
-    XCTAssertEqual(instance.id, "gpt-35-turbo")
-    XCTAssertEqual((try XCTUnwrap(instance.provider)), "foundry")
-    XCTAssertEqual((try XCTUnwrap(instance.apiType)), ApiType(rawValue: "chat"))
-    if case .apiKeyConnection(let concrete) = (try XCTUnwrap(instance.connection)) {
-      XCTAssertEqual(concrete.endpoint, "https://{your-custom-endpoint}.openai.azure.com/")
+    if case .customModel(let concrete, _) = instance {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+      XCTAssertEqual((try XCTUnwrap(concrete.apiType)).rawValue, "chat")
     } else {
-      XCTFail("Expected ApiKeyConnection")
+      XCTFail("Expected CustomModel")
     }
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(instance.options)).temperature)), 0.7)
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(instance.options)).maxOutputTokens)), 1000)
     let reloaded = try Model.fromYAML(try instance.toYAML())
-    XCTAssertEqual(reloaded.id, "gpt-35-turbo")
-    XCTAssertEqual((try XCTUnwrap(reloaded.provider)), "foundry")
-    XCTAssertEqual((try XCTUnwrap(reloaded.apiType)), ApiType(rawValue: "chat"))
-    if case .apiKeyConnection(let concrete) = (try XCTUnwrap(reloaded.connection)) {
-      XCTAssertEqual(concrete.endpoint, "https://{your-custom-endpoint}.openai.azure.com/")
+    if case .customModel(let concrete, _) = reloaded {
+      XCTAssertEqual(concrete.id, "gpt-35-turbo")
+      XCTAssertEqual((try XCTUnwrap(concrete.apiType)).rawValue, "chat")
     } else {
-      XCTFail("Expected ApiKeyConnection")
+      XCTFail("Expected CustomModel")
     }
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(reloaded.options)).temperature)), 0.7)
-    XCTAssertEqual((try XCTUnwrap((try XCTUnwrap(reloaded.options)).maxOutputTokens)), 1000)
   }
 
   func testScalarCoercion1() throws {
     let instance = try Model.load("example")
-    XCTAssertEqual(instance.id, "example")
+    if case .customModel(let concrete, _) = instance {
+      XCTAssertEqual(concrete.id, "example")
+    } else {
+      XCTFail("Expected CustomModel")
+    }
   }
 
 }

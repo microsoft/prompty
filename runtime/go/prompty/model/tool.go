@@ -34,9 +34,6 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 		if discriminator, ok := m["kind"]; ok {
 			switch discriminator := discriminator.(type) {
 			case string:
-				if discriminator == "" {
-					return nil, fmt.Errorf("invalid Tool discriminator field 'kind': expected non-blank string")
-				}
 				switch discriminator {
 				case "function":
 					return LoadFunctionTool(data, ctx)
@@ -48,10 +45,10 @@ func LoadTool(data interface{}, ctx *LoadContext) (interface{}, error) {
 					return LoadCustomTool(data, ctx)
 				}
 			default:
-				return nil, fmt.Errorf("invalid Tool discriminator field 'kind': expected non-blank string")
+				return LoadCustomTool(data, ctx)
 			}
 		} else {
-			return nil, fmt.Errorf("missing Tool discriminator property: kind")
+			return LoadCustomTool(data, ctx)
 		}
 	}
 	// Load from map

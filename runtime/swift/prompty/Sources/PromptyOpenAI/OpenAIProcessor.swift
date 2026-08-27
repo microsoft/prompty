@@ -18,7 +18,7 @@ public struct OpenAIProcessor: Processor {
 
   /// Decode a ``RawChunkStream`` of provider events into generated
   /// `StreamChunk` values.
-  public func processStream(stream: Any) async throws -> Any {
+  public func processStream(agent _: Agent, stream: Any) async throws -> Any {
     guard let raw = stream as? RawChunkStream else {
       throw InvokerError.execution("expected a raw provider chunk stream")
     }

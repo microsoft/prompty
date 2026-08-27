@@ -6,7 +6,12 @@
 ##########################################
 from ._AiResourceInfo import AiResourceInfo
 from ._InvocationUsage import InvocationUsage
-from ._Model import Model
+from ._Model import (
+    AzureModel,
+    CustomModel,
+    Model,
+    OpenAIModel,
+)
 from ._ModelInfo import ModelInfo
 from ._ModelOptions import ModelOptions
 from ._ProjectInfo import ProjectInfo
@@ -16,6 +21,9 @@ from ._TokenUsage import TokenUsage
 __all__ = [
     "ModelOptions",
     "Model",
+    "OpenAIModel",
+    "AzureModel",
+    "CustomModel",
     "TokenUsage",
     "InvocationUsage",
     "ModelInfo",

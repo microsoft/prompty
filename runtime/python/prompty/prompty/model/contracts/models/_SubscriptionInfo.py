@@ -108,6 +108,32 @@ class SubscriptionInfo:
                 result[mapping[provider]] = value
         return result
 
+    @staticmethod
+    def from_wire(provider: str, data: dict[str, Any], context: LoadContext | None = None) -> "SubscriptionInfo":
+        """Load a SubscriptionInfo instance from a provider-specific wire payload.
+        Args:
+            provider (str): The provider the payload came from (e.g., "openai", "anthropic").
+            data (dict[str, Any]): The wire-format dictionary with provider-specific field names.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            SubscriptionInfo: The loaded SubscriptionInfo instance.
+
+        """
+        wire_map: dict[str, dict[str, str]] = {
+            "subscriptionId": {"foundry": "subscription_id"},
+            "displayName": {"foundry": "display_name"},
+            "state": {"foundry": "state"},
+        }
+        inverse: dict[str, str] = {}
+        for field_name, m in wire_map.items():
+            w = m.get(provider)
+            if w:
+                inverse[w] = field_name
+        canonical: dict[str, Any] = {}
+        for k, v in data.items():
+            canonical[inverse.get(k, k)] = v
+        return SubscriptionInfo.load(canonical, context)
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the SubscriptionInfo instance to a YAML string.
         Args:

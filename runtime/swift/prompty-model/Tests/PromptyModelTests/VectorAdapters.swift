@@ -136,9 +136,26 @@ enum VectorAdapters {
     project(observed, context.vector["expected"])
   }
 
+  static func seamDiscriminator(_ input: [String: Any], _ path: String...) throws -> String {
+    var node: Any? = input["agent"]
+    for key in path {
+      guard let object = node as? [String: Any] else {
+        node = nil
+        break
+      }
+      node = object[key]
+    }
+    if let value = node as? String, !value.isEmpty {
+      return value
+    }
+    let dotted = (["agent"] + path).joined(separator: ".")
+    throw VectorError(
+      "vector input missing @dispatch discriminator at '\(dotted)'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback).")
+  }
+
   // MARK: - Renderer.render
 
-  static func buildRenderAgent(_ template: String, _ engine: String, _ inputs: [String: Any]) -> Agent {
+  static func buildRenderAgent(_ template: String, _ engine: String, _ inputs: [String: Any]) throws -> Agent {
     let properties = inputs.map { name, value -> Property in
       var kind = "string"
       if let object = value as? [String: Any], let marker = object["_kind"] as? String {
@@ -149,17 +166,17 @@ enum VectorAdapters {
     return Agent(
       inputs: properties,
       template: Template(
-        format: FormatConfig(kind: engine.isEmpty ? "jinja2" : engine),
-        parser: ParserConfig(kind: "prompty")),
+        format: try FormatConfig.load(["kind": engine]),
+        parser: try ParserConfig.load(["kind": "prompty"])),
       instructions: template)
   }
 
   static func renderInvoke(_ input: Any?) throws -> Any? {
     let object = input as? [String: Any] ?? [:]
     let template = object["template"] as? String ?? ""
-    let engine = object["engine"] as? String ?? ""
+    let engine = try seamDiscriminator(object, "template", "format", "kind")
     let inputs = object["inputs"] as? [String: Any] ?? [:]
-    let agent = buildRenderAgent(template, engine, inputs)
+    let agent = try buildRenderAgent(template, engine, inputs)
     let (rendered, _) = try render(agent: agent, inputs: inputs)
     return ["rendered": rendered]
   }
@@ -227,8 +244,9 @@ enum VectorAdapters {
 
   static func processInvoke(_ input: Any?) throws -> Any? {
     let object = input as? [String: Any] ?? [:]
+    let provider = try seamDiscriminator(object, "model", "provider")
     let result = processResponse(
-      provider: object["provider"] as? String ?? "",
+      provider: provider,
       apiType: object["apiType"] as? String ?? "",
       response: object["response"],
       hasOutputs: object["has_outputs"] as? Bool ?? false)
@@ -238,7 +256,8 @@ enum VectorAdapters {
   // MARK: - WireConformance.toRequest
 
   static func wireInvoke(_ input: Any?) throws -> Any? {
-    let object = input as? [String: Any] ?? [:]
+    var object = input as? [String: Any] ?? [:]
+    object["provider"] = try seamDiscriminator(object, "model", "provider")
     return ["request_body": try buildWireRequest(object)]
   }
 
@@ -531,6 +550,10 @@ enum VectorAdapters {
   /// Rust, TypeScript, Go and Java reference runtimes.
   static func processStreamInvoke(_ input: Any?) throws -> Any? {
     let object = input as? [String: Any] ?? [:]
+    let provider = try seamDiscriminator(object, "model", "provider")
+    guard provider == "openai" else {
+      throw VectorError("Unsupported stream provider: \(provider)")
+    }
     let events = object["events"] as? [[String: Any]] ?? []
     let chunks = try classifyStreamEvents(events)
     let reconciliation = reconcileStream(chunks)

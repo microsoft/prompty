@@ -200,7 +200,8 @@ public enum Pipeline {
   ) async throws -> ChunkStream {
     let raw = try await registry.executor(for: agent.providerKind)
       .executeStream(agent: agent, messages: messages)
-    let decoded = try await registry.processor(for: agent.providerKind).processStream(stream: raw)
+    let decoded = try await registry.processor(for: agent.providerKind)
+      .processStream(agent: agent, stream: raw)
 
     guard let stream = decoded as? ChunkStream else {
       throw InvokerError.execution("processor did not return a decoded chunk stream")

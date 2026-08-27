@@ -124,7 +124,7 @@ func (Processor) Process(agent prompty.Agent, response interface{}) (interface{}
 }
 
 // ProcessStream is not supported by the raw-HTTP Anthropic processor.
-func (Processor) ProcessStream(stream interface{}) (interface{}, error) {
+func (Processor) ProcessStream(_ prompty.Agent, stream interface{}) (interface{}, error) {
 	return nil, providers.ErrStreamingUnsupported
 }
 

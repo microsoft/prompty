@@ -64,17 +64,77 @@ fn wrap_structured_if_needed(agent: &Agent, result: Value) -> Value {
 // Config resolution helpers
 // ---------------------------------------------------------------------------
 
+// The Model|string and FormatConfig|string / ParserConfig|string coerce unions
+// lower to `serde_json::Value`, so model/format/parser fields are read through
+// the value. A bare-string shorthand IS the coerce target: `id` for Model,
+// `kind` for FormatConfig/ParserConfig — so non-target fields (provider,
+// apiType, strict, options) are only present in the object form.
+
+/// The model id, honoring the `model: gpt-4o` bare-string shorthand.
+pub(crate) fn model_id(model: &serde_json::Value) -> String {
+    if let Some(s) = model.as_str() {
+        return s.to_string();
+    }
+    model
+        .get("id")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string()
+}
+
+/// The model provider, or None. A bare-string shorthand carries no provider.
+fn model_provider(model: &serde_json::Value) -> Option<String> {
+    model
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .filter(|p| !p.is_empty())
+        .map(|s| s.to_string())
+}
+
+/// The model apiType, defaulting to "chat".
+fn model_api_type(model: &serde_json::Value) -> String {
+    model
+        .get("apiType")
+        .and_then(|v| v.as_str())
+        .unwrap_or("chat")
+        .to_string()
+}
+
+/// Whether the model options request streaming. Streaming is carried in the
+/// options' `additionalProperties.stream` (where the generated `ModelOptions`
+/// loader parks unmodeled keys); a direct `options.stream` is honored as a
+/// fallback for raw-authored shorthand.
+fn model_stream(model: &serde_json::Value) -> bool {
+    let options = match model.get("options") {
+        Some(o) => o,
+        None => return false,
+    };
+    options
+        .get("additionalProperties")
+        .and_then(|a| a.get("stream"))
+        .or_else(|| options.get("stream"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false)
+}
+
+/// The kind discriminator of a FormatConfig/ParserConfig coerce value, honoring
+/// the `format: mustache` / `parser: prompty` bare-string shorthand.
+fn config_kind(value: &serde_json::Value) -> Option<String> {
+    if let Some(s) = value.as_str() {
+        return (!s.is_empty()).then(|| s.to_string());
+    }
+    value
+        .get("kind")
+        .and_then(|v| v.as_str())
+        .filter(|k| !k.is_empty())
+        .map(|s| s.to_string())
+}
+
 fn resolve_format_kind(agent: &Agent) -> String {
     agent
         .template
         .as_ref()
-        .and_then(|t| {
-            if t.format.kind.is_empty() {
-                None
-            } else {
-                Some(t.format.kind.clone())
-            }
-        })
+        .and_then(|t| config_kind(&t.format))
         .unwrap_or_else(|| DEFAULT_FORMAT.to_string())
 }
 
@@ -82,37 +142,17 @@ fn resolve_parser_kind(agent: &Agent) -> String {
     agent
         .template
         .as_ref()
-        .and_then(|t| {
-            if t.parser.kind.is_empty() {
-                None
-            } else {
-                Some(t.parser.kind.clone())
-            }
-        })
+        .and_then(|t| config_kind(&t.parser))
         .unwrap_or_else(|| DEFAULT_PARSER.to_string())
 }
 
 fn resolve_provider(agent: &Agent) -> String {
-    agent
-        .model
-        .as_ref()
-        .and_then(|model| model.provider.as_deref().filter(|p| !p.is_empty()))
-        .unwrap_or(DEFAULT_PROVIDER)
-        .to_string()
+    model_provider(&agent.model).unwrap_or_else(|| DEFAULT_PROVIDER.to_string())
 }
 
 /// Check if the agent's model options request streaming.
 fn is_streaming(agent: &Agent) -> bool {
-    agent
-        .model
-        .as_ref()
-        .and_then(|model| model.options.as_ref())
-        .and_then(|opts| {
-            opts.additional_properties
-                .get("stream")
-                .and_then(|v| v.as_bool())
-        })
-        .unwrap_or(false)
+    model_stream(&agent.model)
 }
 
 // ---------------------------------------------------------------------------
@@ -179,15 +219,11 @@ fn serialize_agent(agent: &Agent) -> Value {
             "name": agent.name,
             "description": agent.description,
             "metadata": metadata,
-            "model": agent.model.as_ref().map(|model| json!({
-                "id": model.id,
-                "apiType": model.api_type.as_ref().map(|t| t.as_str()).unwrap_or("chat"),
-                "provider": model.provider.as_deref().unwrap_or(""),
-            })).unwrap_or_else(|| json!({
-                "id": "",
-                "apiType": "chat",
-                "provider": "",
-            })),
+            "model": json!({
+                "id": model_id(&agent.model),
+                "apiType": model_api_type(&agent.model),
+                "provider": model_provider(&agent.model).unwrap_or_default(),
+            }),
             "inputs": inputs,
             "outputs": outputs,
             "tools": tools,
@@ -374,7 +410,7 @@ fn is_strict_mode(agent: &Agent) -> bool {
     agent
         .template
         .as_ref()
-        .and_then(|t| t.format.strict)
+        .and_then(|t| t.format.get("strict").and_then(|v| v.as_bool()))
         .unwrap_or(true)
 }
 

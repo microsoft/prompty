@@ -149,7 +149,7 @@ public class SpecVectorWireTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai") continue;
             if (apiType != "chat") continue;
@@ -213,7 +213,7 @@ public class SpecVectorWireTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai") continue;
             if (apiType != "embedding") continue;
@@ -257,7 +257,7 @@ public class SpecVectorWireTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai") continue;
             if (apiType != "image") continue;
@@ -344,7 +344,7 @@ public class SpecVectorWireTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai") continue;
             if (apiType != "responses") continue;
@@ -406,7 +406,7 @@ public class SpecVectorWireTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             if (provider != "anthropic") continue;
 
             yield return [
@@ -427,7 +427,7 @@ public class SpecVectorWireTests
     private static Core.Agent BuildAgentFromVector(JsonElement input)
     {
         var modelId = input.GetProperty("model_id").GetString()!;
-        var provider = input.GetProperty("provider").GetString()!;
+        var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString()!;
         var apiType = input.GetProperty("apiType").GetString()!;
 
         var modelDict = new Dictionary<string, object?>

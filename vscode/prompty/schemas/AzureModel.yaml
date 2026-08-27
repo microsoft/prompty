@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: AzureModel.yaml
+type: object
+properties:
+  provider:
+    type: string
+    const: azure
+    description: The Azure provider discriminator
+required:
+  - provider
+allOf:
+  - $ref: Model.yaml
+description: Azure OpenAI-hosted model. Pin-only subtype.

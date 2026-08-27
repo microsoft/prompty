@@ -112,8 +112,7 @@ export class SessionRef {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionRef {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionRef.load(data as Record<string, unknown>, context);
   }
 

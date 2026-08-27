@@ -62,7 +62,7 @@ public class SpecVectorStreamTests
     [MemberData(nameof(StreamVectors))]
     public void ProcessStream_Vectors(string name, JsonElement input, JsonElement expected)
     {
-        var provider = input.GetProperty("provider").GetString();
+        var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
         Assert.Equal("openai", provider);
 
         var chunks = OpenAIProcessor.ClassifyStreamEvents(input.GetProperty("events"));

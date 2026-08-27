@@ -27,7 +27,7 @@ final class ProcessStreamVectorTests: XCTestCase {
       let input = vector["input"] as? [String: Any] ?? [:]
       let expected = vector["expected"] as? [String: Any] ?? [:]
 
-      guard (input["provider"] as? String ?? "openai") == "openai" else {
+      guard (((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai") == "openai" else {
         run.skip()
         continue
       }
@@ -36,7 +36,10 @@ final class ProcessStreamVectorTests: XCTestCase {
         let events = input["events"] as? [[String: Any]] ?? []
         let raw = Self.rawStream(from: events)
 
-        let decoded = try await OpenAIProcessor().processStream(stream: raw)
+        let agent = try Agent.load(
+          input["agent"] as? [String: Any]
+            ?? ["kind": "prompt", "model": ["id": "gpt-4", "provider": "openai"], "instructions": ""])
+        let decoded = try await OpenAIProcessor().processStream(agent: agent, stream: raw)
         guard let chunkStream = decoded as? ChunkStream else {
           throw VectorFailure("processStream did not return a ChunkStream")
         }

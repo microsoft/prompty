@@ -21,16 +21,65 @@ public struct ApiType: RawRepresentable, Equatable, Hashable, Codable {
   }
 }
 
-/// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements.
-public struct Model: TypraModel {
-  public static let shorthandProperty: String? = "id"
+public enum Model: TypraModel {
+  case openAIModel(OpenAIModel)
+  case azureModel(AzureModel)
+  case customModel(CustomModel, [String: Any])
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Model {
+    var normalizedData: Any = data
+    if let scalar = normalizedData as? String {
+      normalizedData = ["id": scalar]
+    }
+    let object = try TypraRuntime.object(normalizedData, typeName: "Model")
+    let discriminator = object["provider"] as? String ?? ""
+    switch discriminator {
+    case "openai": return .openAIModel(try OpenAIModel.load(normalizedData, context: context))
+    case "azure": return .azureModel(try AzureModel.load(normalizedData, context: context))
+    default: return .customModel(try CustomModel.load(normalizedData, context: context), object)
+    }
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    switch self {
+    case .openAIModel(let value): return try value.save(context)
+    case .azureModel(let value): return try value.save(context)
+    case .customModel(let value, let raw):
+      var result = raw
+      for (key, item) in try value.save(context) {
+        result[key] = item
+      }
+      return result
+    }
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Model {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "Model"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Model {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Model"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and inherits every base field.
+public struct OpenAIModel: TypraModel {
+  public static let shorthandProperty: String? = nil
   public var id: String = ""
-  public var provider: String? = nil
+  public var provider: String = "openai"
   public var apiType: ApiType? = nil
   public var connection: Connection? = nil
   public var options: ModelOptions? = nil
 
-  public init(id: String = "", provider: String? = nil, apiType: ApiType? = nil, connection: Connection? = nil, options: ModelOptions? = nil) {
+  public init(id: String = "", provider: String = "openai", apiType: ApiType? = nil, connection: Connection? = nil, options: ModelOptions? = nil) {
     self.id = id
     self.provider = provider
     self.apiType = apiType
@@ -38,14 +87,9 @@ public struct Model: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Model {
-    if let scalar = data as? String {
-      var instance = Model()
-      instance.id = try TypraRuntime.string(scalar, field: "id")
-      return instance
-    }
-    let object = try TypraRuntime.object(data, typeName: "Model")
-    var instance = Model()
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> OpenAIModel {
+    let object = try TypraRuntime.object(data, typeName: "OpenAIModel")
+    var instance = OpenAIModel()
     if let value = object["id"] {
       instance.id = try TypraRuntime.string(value, field: "id")
     }
@@ -54,6 +98,9 @@ public struct Model: TypraModel {
     }
     if let value = object["provider"] {
       instance.provider = try TypraRuntime.string(value, field: "provider")
+    }
+    else {
+      instance.provider = "openai"
     }
     if let value = object["apiType"] {
       instance.apiType = try ApiType.parse(try TypraRuntime.string(value, field: "apiType"))
@@ -70,9 +117,7 @@ public struct Model: TypraModel {
   public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
     var result: [String: Any] = [:]
     result["id"] = self.id
-    if let value = self.provider {
-      result["provider"] = value
-    }
+    result["provider"] = self.provider
     if let value = self.apiType {
       result["apiType"] = value.rawValue
     }
@@ -85,16 +130,170 @@ public struct Model: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Model {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "Model"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> OpenAIModel {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "OpenAIModel"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Model {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Model"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> OpenAIModel {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "OpenAIModel"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Azure OpenAI-hosted model. Pin-only subtype.
+public struct AzureModel: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var id: String = ""
+  public var provider: String = "azure"
+  public var apiType: ApiType? = nil
+  public var connection: Connection? = nil
+  public var options: ModelOptions? = nil
+
+  public init(id: String = "", provider: String = "azure", apiType: ApiType? = nil, connection: Connection? = nil, options: ModelOptions? = nil) {
+    self.id = id
+    self.provider = provider
+    self.apiType = apiType
+    self.connection = connection
+    self.options = options
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AzureModel {
+    let object = try TypraRuntime.object(data, typeName: "AzureModel")
+    var instance = AzureModel()
+    if let value = object["id"] {
+      instance.id = try TypraRuntime.string(value, field: "id")
+    }
+    else {
+      instance.id = ""
+    }
+    if let value = object["provider"] {
+      instance.provider = try TypraRuntime.string(value, field: "provider")
+    }
+    else {
+      instance.provider = "azure"
+    }
+    if let value = object["apiType"] {
+      instance.apiType = try ApiType.parse(try TypraRuntime.string(value, field: "apiType"))
+    }
+    if let value = object["connection"] {
+      instance.connection = try Connection.load(value, context: context.at("connection"))
+    }
+    if let value = object["options"] {
+      instance.options = try ModelOptions.load(value, context: context.at("options"))
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["id"] = self.id
+    result["provider"] = self.provider
+    if let value = self.apiType {
+      result["apiType"] = value.rawValue
+    }
+    if let value = self.connection {
+      result["connection"] = try value.save(context)
+    }
+    if let value = self.options {
+      result["options"] = try value.save(context)
+    }
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AzureModel {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "AzureModel"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AzureModel {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AzureModel"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Wildcard catch-all model for downstream/unregistered providers. The `"*"` discriminator lowers to the dispatch decl's `defaultVariant` (the fallback seam) while the known providers stay enumerated `variants`. A runtime provider value that is none of the known literals routes here — the downstream-registry delegation hook.
+public struct CustomModel: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var id: String = ""
+  public var provider: String = "*"
+  public var apiType: ApiType? = nil
+  public var connection: Connection? = nil
+  public var options: ModelOptions? = nil
+
+  public init(id: String = "", provider: String = "*", apiType: ApiType? = nil, connection: Connection? = nil, options: ModelOptions? = nil) {
+    self.id = id
+    self.provider = provider
+    self.apiType = apiType
+    self.connection = connection
+    self.options = options
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CustomModel {
+    let object = try TypraRuntime.object(data, typeName: "CustomModel")
+    var instance = CustomModel()
+    if let value = object["id"] {
+      instance.id = try TypraRuntime.string(value, field: "id")
+    }
+    else {
+      instance.id = ""
+    }
+    if let value = object["provider"] {
+      instance.provider = try TypraRuntime.string(value, field: "provider")
+    }
+    else {
+      instance.provider = "*"
+    }
+    if let value = object["apiType"] {
+      instance.apiType = try ApiType.parse(try TypraRuntime.string(value, field: "apiType"))
+    }
+    if let value = object["connection"] {
+      instance.connection = try Connection.load(value, context: context.at("connection"))
+    }
+    if let value = object["options"] {
+      instance.options = try ModelOptions.load(value, context: context.at("options"))
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["id"] = self.id
+    result["provider"] = self.provider
+    if let value = self.apiType {
+      result["apiType"] = value.rawValue
+    }
+    if let value = self.connection {
+      result["connection"] = try value.save(context)
+    }
+    if let value = self.options {
+      result["options"] = try value.save(context)
+    }
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CustomModel {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "CustomModel"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CustomModel {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CustomModel"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

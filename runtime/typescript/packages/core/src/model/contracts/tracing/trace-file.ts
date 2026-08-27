@@ -96,8 +96,7 @@ export class TraceFile {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TraceFile {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TraceFile.load(data as Record<string, unknown>, context);
   }
 

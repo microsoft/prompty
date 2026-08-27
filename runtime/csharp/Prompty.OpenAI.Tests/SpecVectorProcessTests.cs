@@ -78,7 +78,7 @@ public class SpecVectorProcessTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai" && provider != "azure" && provider != "foundry") continue;
             if (apiType != "chat") continue;
@@ -116,7 +116,7 @@ public class SpecVectorProcessTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai" && provider != "azure" && provider != "foundry") continue;
             if (apiType != "embedding") continue;
@@ -157,7 +157,7 @@ public class SpecVectorProcessTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai" && provider != "azure" && provider != "foundry") continue;
             if (apiType != "image") continue;
@@ -200,7 +200,7 @@ public class SpecVectorProcessTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             var apiType = input.GetProperty("apiType").GetString();
             if (provider != "openai" && provider != "azure" && provider != "foundry") continue;
             if (apiType != "responses") continue;
@@ -236,7 +236,7 @@ public class SpecVectorProcessTests
         foreach (var vec in Vectors)
         {
             var input = vec.GetProperty("input");
-            var provider = input.GetProperty("provider").GetString();
+            var provider = input.GetProperty("agent").GetProperty("model").GetProperty("provider").GetString();
             if (provider != "anthropic") continue;
 
             var name = vec.GetProperty("name").GetString()!;

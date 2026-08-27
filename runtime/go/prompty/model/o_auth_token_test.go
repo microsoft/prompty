@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -252,5 +253,48 @@ func TestOAuthTokenToWire(t *testing.T) {
 	}
 	if _, ok := foundryWire["scope"]; !ok {
 		t.Errorf("Expected foundry wire output to include scope")
+	}
+	foundryRestored, foundryErr := prompty.OAuthTokenFromWire("foundry", foundryWire, ctx)
+	if foundryErr != nil {
+		t.Fatalf("Expected foundry FromWire to succeed, got %v", foundryErr)
+	}
+	if foundryRoundTrip := foundryRestored.ToWire("foundry"); !reflect.DeepEqual(foundryRoundTrip, foundryWire) {
+		t.Errorf("Expected foundry FromWire round-trip to preserve the wire payload, got %v want %v", foundryRoundTrip, foundryWire)
+	}
+}
+
+func assertOAuthTokenStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

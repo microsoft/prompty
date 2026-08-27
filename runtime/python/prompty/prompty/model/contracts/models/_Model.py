@@ -21,6 +21,11 @@ class Model:
     This model includes properties for specifying the model's provider, connection details, and various options.
     It allows for flexible configuration of AI models to suit different use cases and requirements.
 
+    `provider` is the `@dispatch` discriminator for the Executor / Processor seams.
+    The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries
+    no provider — so `provider` stays optional and absent/unknown providers are
+    resolved by the runtime registry (global defaults) out of band.
+
     Attributes
     ----------
     id : str
@@ -69,8 +74,8 @@ class Model:
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for Model: {data}")
 
-        # create new instance
-        instance = Model()
+        # load polymorphic Model instance
+        instance = Model.load_provider(data, context)
 
         if data is not None and "id" in data:
             instance.id = data["id"]
@@ -85,6 +90,22 @@ class Model:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+    @staticmethod
+    def load_provider(data: dict, context: LoadContext | None) -> "Model":
+        # load polymorphic Model instance
+        discriminator_raw = data.get("provider") if data is not None else None
+        discriminator_value = ""
+        if isinstance(discriminator_raw, str):
+            discriminator_value = discriminator_raw
+        if discriminator_value == "openai":
+            return OpenAIModel.load(data, context)
+        elif discriminator_value == "azure":
+            return AzureModel.load(data, context)
+
+        else:
+            # load default instance
+            return CustomModel.load(data, context)
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the Model instance to a dictionary.
@@ -129,6 +150,269 @@ class Model:
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the Model instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class OpenAIModel(Model):
+    """OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and
+    inherits every base field.
+
+    Attributes
+    ----------
+    provider : str
+        The OpenAI provider discriminator
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    provider: str = field(default="openai")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "OpenAIModel":
+        """Load a OpenAIModel instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            OpenAIModel: The loaded OpenAIModel instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for OpenAIModel: {data}")
+
+        # create new instance
+        instance = OpenAIModel()
+
+        if data is not None and "provider" in data:
+            instance.provider = data["provider"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the OpenAIModel instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.provider is not None:
+            result["provider"] = obj.provider
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the OpenAIModel instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the OpenAIModel instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class AzureModel(Model):
+    """Azure OpenAI-hosted model. Pin-only subtype.
+
+    Attributes
+    ----------
+    provider : str
+        The Azure provider discriminator
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    provider: str = field(default="azure")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "AzureModel":
+        """Load a AzureModel instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            AzureModel: The loaded AzureModel instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for AzureModel: {data}")
+
+        # create new instance
+        instance = AzureModel()
+
+        if data is not None and "provider" in data:
+            instance.provider = data["provider"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the AzureModel instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.provider is not None:
+            result["provider"] = obj.provider
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the AzureModel instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the AzureModel instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class CustomModel(Model):
+    """Wildcard catch-all model for downstream/unregistered providers. The `"*"`
+    discriminator lowers to the dispatch decl's `defaultVariant` (the fallback
+    seam) while the known providers stay enumerated `variants`. A runtime provider
+    value that is none of the known literals routes here — the downstream-registry
+    delegation hook.
+
+    Attributes
+    ----------
+    provider : str
+        The wildcard provider discriminator for any provider not explicitly modeled
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    provider: str = field(default="*")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "CustomModel":
+        """Load a CustomModel instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            CustomModel: The loaded CustomModel instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for CustomModel: {data}")
+
+        # create new instance
+        instance = CustomModel()
+
+        if data is not None and "provider" in data:
+            instance.provider = data["provider"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the CustomModel instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.provider is not None:
+            result["provider"] = obj.provider
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the CustomModel instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the CustomModel instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

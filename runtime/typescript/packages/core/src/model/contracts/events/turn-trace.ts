@@ -164,8 +164,7 @@ export class TurnTrace {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnTrace {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnTrace.load(data as Record<string, unknown>, context);
   }
 

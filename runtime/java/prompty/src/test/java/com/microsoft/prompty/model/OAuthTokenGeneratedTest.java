@@ -53,6 +53,8 @@ final class OAuthTokenGeneratedTest {
     assertTrue(foundryWire.containsKey("refresh_token"), "Expected foundry wire output to include refresh_token");
     assertTrue(!foundryWire.containsKey("refreshToken"), "Expected foundry wire output to omit refreshToken");
     assertTrue(foundryWire.containsKey("scope"), "Expected foundry wire output to include scope");
+    OAuthToken foundryRestored = OAuthToken.fromWire("foundry", foundryWire);
+    assertEquals(foundryWire.keySet(), foundryRestored.toWire("foundry").keySet(), "Expected foundry FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

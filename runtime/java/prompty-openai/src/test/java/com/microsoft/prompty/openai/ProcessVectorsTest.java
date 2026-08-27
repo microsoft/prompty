@@ -19,7 +19,7 @@ class ProcessVectorsTest {
       String name = SpecVectors.string(vector, "name");
       Map<String, Object> input = SpecVectors.map(vector, "input");
 
-      if (!"openai".equals(input.get("provider"))) {
+      if (!"openai".equals(VectorAgents.seamProvider(input, ""))) {
         continue;
       }
 

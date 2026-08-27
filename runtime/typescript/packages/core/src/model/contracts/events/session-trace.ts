@@ -486,8 +486,7 @@ export class SessionTrace {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionTrace {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionTrace.load(data as Record<string, unknown>, context);
   }
 

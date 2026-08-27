@@ -82,8 +82,7 @@ export class ThreadMarker {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ThreadMarker {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ThreadMarker.load(data as Record<string, unknown>, context);
   }
 

@@ -21,7 +21,7 @@ class ProcessVectorsTest {
       String name = SpecVectors.string(vector, "name");
       Map<String, Object> input = SpecVectors.map(vector, "input");
 
-      if (!"anthropic".equals(input.get("provider"))) {
+      if (!"anthropic".equals(VectorAgents.seamProvider(input, ""))) {
         continue;
       }
 

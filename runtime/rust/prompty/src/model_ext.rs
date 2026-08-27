@@ -4,10 +4,7 @@
 //! adds convenience accessors, trait impls (PartialEq, Serialize, Deserialize),
 //! and helper methods used by the pipeline and other hand-written code.
 
-use crate::model::{
-    Agent, ContentPart, ContentPartKind, Message, MessageHelpers, Property, Role, Tool, ToolResult,
-    ToolResultHelpers,
-};
+use crate::model::{Agent, ContentPart, ContentPartKind, Message, Property, Role, Tool};
 
 // ---------------------------------------------------------------------------
 // Prompty helpers
@@ -40,11 +37,13 @@ impl Agent {
 }
 
 // ---------------------------------------------------------------------------
-// MessageHelpers — concatenate TextPart values
+// Message text folds — concatenate TextPart values
 // ---------------------------------------------------------------------------
 
-impl MessageHelpers for Message {
-    fn to_text_content(&self) -> serde_json::Value {
+impl Message {
+    /// Return plain string if all parts are text, else a JSON array of content
+    /// part objects for wire serialization.
+    pub fn to_text_content(&self) -> serde_json::Value {
         // If all parts are text, return a single joined string.
         // Otherwise return an array of content part dicts for wire serialization.
         let all_text = self
@@ -69,24 +68,8 @@ impl MessageHelpers for Message {
         }
     }
 
-    fn text(&self) -> String {
-        self.parts
-            .iter()
-            .filter_map(|p| match &p.kind {
-                ContentPartKind::TextPart { value } => Some(value.as_str()),
-                _ => None,
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-}
-
-// ---------------------------------------------------------------------------
-// ToolResultHelpers — concatenate TextPart values
-// ---------------------------------------------------------------------------
-
-impl ToolResultHelpers for ToolResult {
-    fn text(&self) -> String {
+    /// Concatenate all TextPart values joined by newline.
+    pub fn text(&self) -> String {
         self.parts
             .iter()
             .filter_map(|p| match &p.kind {

@@ -163,10 +163,7 @@ public abstract partial class Tool
     /// </summary>
     private static Tool LoadKind(Dictionary<string, object?> data, LoadContext? context)
     {
-        if (!data.TryGetValue("kind", out var discriminatorValue) || discriminatorValue is not string discriminator || discriminator == "")
-        {
-            throw new ArgumentException("Invalid Tool discriminator field 'kind': expected non-blank string");
-        }
+        var discriminator = data.TryGetValue("kind", out var discriminatorValue) && discriminatorValue is string discriminatorString ? discriminatorString : "";
 
         return discriminator switch
         {

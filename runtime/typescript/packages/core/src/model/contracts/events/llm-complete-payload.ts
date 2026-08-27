@@ -113,8 +113,7 @@ export class LlmCompletePayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): LlmCompletePayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return LlmCompletePayload.load(data as Record<string, unknown>, context);
   }
 

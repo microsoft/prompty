@@ -113,6 +113,32 @@ export class OAuthToken {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OAuthToken {
+    const wireMap: Record<string, Record<string, string>> = {
+      accessToken: { foundry: "access_token" },
+      tokenType: { foundry: "token_type" },
+      expiresIn: { foundry: "expires_in" },
+      refreshToken: { foundry: "refresh_token" },
+      scope: { foundry: "scope" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return OAuthToken.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -129,8 +155,7 @@ export class OAuthToken {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): OAuthToken {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return OAuthToken.load(data as Record<string, unknown>, context);
   }
 

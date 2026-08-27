@@ -26,7 +26,7 @@ final class WireVectorTests: XCTestCase {
 
       // This harness covers the OpenAI provider; Anthropic vectors belong to
       // that provider's own package.
-      guard (input["provider"] as? String ?? "openai") == "openai" else { continue }
+      guard (((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai") == "openai" else { continue }
 
       do {
         let agent = try Self.agent(from: input)
@@ -65,7 +65,7 @@ final class WireVectorTests: XCTestCase {
 
   private static func agent(from input: [String: Any]) throws -> Agent {
     var model: [String: Any] = [
-      "provider": input["provider"] as? String ?? "openai"
+      "provider": ((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai"
     ]
     if let id = input["model_id"] as? String { model["id"] = id }
     if let apiType = input["apiType"] as? String { model["apiType"] = apiType }

@@ -251,16 +251,8 @@ impl Tool {
         }
         let discriminator = value
             .get("kind")
-            .ok_or_else(|| "Missing Tool discriminator property: 'kind'".to_string())?;
-        let discriminator = match discriminator {
-            serde_json::Value::String(value) if !value.is_empty() => value.as_str(),
-            _ => {
-                return Err(
-                    "Invalid Tool discriminator field 'kind': expected non-blank string"
-                        .to_string(),
-                );
-            }
-        };
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("");
         match discriminator {
             "function" => {
                 if let Some(collection) = value.get("parameters") {

@@ -94,8 +94,7 @@ export class GuardrailResult {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): GuardrailResult {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return GuardrailResult.load(data as Record<string, unknown>, context);
   }
 

@@ -24,6 +24,7 @@ pub trait Processor: Send + Sync {
     /// Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support.
     async fn process_stream(
         &self,
+        agent: &Agent,
         stream: &serde_json::Value,
     ) -> Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> {
         Err("not supported".into())

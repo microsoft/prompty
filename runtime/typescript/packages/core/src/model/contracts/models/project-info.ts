@@ -91,6 +91,30 @@ export class ProjectInfo {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ProjectInfo {
+    const wireMap: Record<string, Record<string, string>> = {
+      name: { foundry: "name" },
+      displayName: { foundry: "display_name" },
+      endpoint: { foundry: "endpoint" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return ProjectInfo.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -107,8 +131,7 @@ export class ProjectInfo {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ProjectInfo {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ProjectInfo.load(data as Record<string, unknown>, context);
   }
 

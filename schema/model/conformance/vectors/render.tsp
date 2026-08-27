@@ -15,7 +15,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "Hello {{name}}!",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "World"
         }
@@ -30,7 +30,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{first}} {{last}} is {{age}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "first": "Jane",
           "last": "Doe",
@@ -47,7 +47,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "premium": true
         }
@@ -62,7 +62,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{% if premium %}Welcome VIP!{% else %}Hello!{% endif %}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "premium": false
         }
@@ -77,7 +77,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "Items: {% for item in items %}{{item}} {% endfor %}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "items": [
             "a",
@@ -96,7 +96,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{user.name}} ({{user.email}})",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "user": {
             "name": "Jane",
@@ -114,7 +114,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "Hello {{name}}!",
-        "engine": "mustache",
+        "agent": { "template": { "format": { "kind": "mustache" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "World"
         }
@@ -129,7 +129,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{#show}}Visible{{/show}}",
-        "engine": "mustache",
+        "agent": { "template": { "format": { "kind": "mustache" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "show": true
         }
@@ -144,7 +144,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{^show}}Hidden{{/show}}",
-        "engine": "mustache",
+        "agent": { "template": { "format": { "kind": "mustache" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "show": false
         }
@@ -159,7 +159,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "system:\\nYou are helpful.\\n\\n{{conversation}}\\n\\nuser:\\n{{question}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "question": "Hi",
           "conversation": {
@@ -187,7 +187,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "Hello {{name}}!",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {}
       },
       "expected": {
@@ -200,7 +200,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{content}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "content": "<b>bold</b>"
         }
@@ -215,7 +215,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "line1\\n  line2\\n    line3",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {}
       },
       "expected": {
@@ -228,7 +228,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "system:\\nYou are helpful.\\n\\nuser:\\n{{question}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "question": "Hello"
         }
@@ -243,7 +243,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{name|upper}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "hello"
         }
@@ -258,7 +258,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{name|default(\\"stranger\\")}}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {}
       },
       "expected": {
@@ -271,7 +271,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "Hello{# this is a comment #} World",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {}
       },
       "expected": {
@@ -284,7 +284,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{ name | upper }}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "hello"
         }
@@ -299,7 +299,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{ name | lower }}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "HELLO"
         }
@@ -314,7 +314,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{ name | trim }}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "name": "  hello  "
         }
@@ -329,7 +329,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{ items | join(', ') }}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "items": [
             "a",
@@ -348,7 +348,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{ items | length }}",
-        "engine": "jinja2",
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "items": [
             1,
@@ -369,7 +369,7 @@ const RenderVectors = """
       "stage": "render",
       "input": {
         "template": "{{#items}}{{.}} {{/items}}",
-        "engine": "mustache",
+        "agent": { "template": { "format": { "kind": "mustache" }, "parser": { "kind": "prompty" } } },
         "inputs": {
           "items": [
             "a",

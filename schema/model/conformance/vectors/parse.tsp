@@ -14,6 +14,7 @@ const ParseVectors = """
       "description": "A single system role marker produces one system message",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nYou are helpful."
       },
       "expected": {
@@ -35,6 +36,7 @@ const ParseVectors = """
       "description": "System and user role markers produce two messages in order",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nYou are helpful.\\n\\nuser:\\nHello"
       },
       "expected": {
@@ -65,6 +67,7 @@ const ParseVectors = """
       "description": "Three role markers (system, user, assistant) produce three messages in order",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nBe concise.\\n\\nuser:\\nHi\\n\\nassistant:\\nHello! How can I help?"
       },
       "expected": {
@@ -104,6 +107,7 @@ const ParseVectors = """
       "description": "Multiple lines within a single role block are preserved as multiline content",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nLine one.\\nLine two.\\nLine three.\\n\\nuser:\\nQuestion"
       },
       "expected": {
@@ -134,6 +138,7 @@ const ParseVectors = """
       "description": "Alternating user and assistant turns produce four messages in conversation order",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nHelper\\n\\nuser:\\nFirst question\\n\\nassistant:\\nFirst answer\\n\\nuser:\\nSecond question"
       },
       "expected": {
@@ -182,6 +187,7 @@ const ParseVectors = """
       "description": "Content with no role marker at all defaults to a single system message",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "Just a plain message with no role marker"
       },
       "expected": {
@@ -203,6 +209,7 @@ const ParseVectors = """
       "description": "Leading and trailing newlines are stripped from each message's content, but internal whitespace (spaces, indentation) is preserved",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\n  \\n  You are helpful.  \\n  \\n\\nuser:\\n  Hello  "
       },
       "expected": {
@@ -233,6 +240,7 @@ const ParseVectors = """
       "description": "A role marker followed immediately by another role marker produces a message with empty string content",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\n\\nuser:\\nHello"
       },
       "expected": {
@@ -263,6 +271,7 @@ const ParseVectors = """
       "description": "A role name followed by colon mid-line (e.g. 'The user: said') is NOT treated as a role boundary — only lines matching the boundary regex (role name at line start, colon at end) split messages",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nThe user: said hello\\n\\nuser:\\nHi"
       },
       "expected": {
@@ -293,6 +302,7 @@ const ParseVectors = """
       "description": "Thread nonce markers emitted by the renderer are expanded into actual conversation messages by the prepare pipeline. The nonce placeholder is replaced by the thread's message list, interleaved at the correct position.",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nYou are helpful.\\n\\n__PROMPTY_THREAD_abcd1234_conversation__\\n\\nuser:\\nHi",
         "thread_inputs": {
           "conversation": [
@@ -363,6 +373,7 @@ const ParseVectors = """
       "description": "Markdown formatting (headers, bold, lists) within a role block is preserved verbatim as text content",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\n# Title\\n\\nSome **bold** text\\n\\n- item 1\\n- item 2\\n\\nuser:\\nHello"
       },
       "expected": {
@@ -393,6 +404,7 @@ const ParseVectors = """
       "description": "Extra blank lines between role markers are part of the preceding message's content but are stripped by trailing-newline trimming, resulting in clean content",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nHelper\\n\\n\\n\\nuser:\\nHi"
       },
       "expected": {
@@ -423,6 +435,7 @@ const ParseVectors = """
       "description": "Code blocks with triple backticks inside a role block are preserved as literal text content",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "assistant:\\nHere is code:\\n```python\\nprint('hello')\\n```\\n\\nuser:\\nThanks"
       },
       "expected": {
@@ -453,6 +466,7 @@ const ParseVectors = """
       "description": "Multiple assistant messages in a conversation",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nYou are helpful.\\n\\nuser:\\nHi\\n\\nassistant:\\nHello!\\n\\nuser:\\nThanks\\n\\nassistant:\\nYou're welcome!"
       },
       "expected": {
@@ -510,6 +524,7 @@ const ParseVectors = """
       "description": "Colons in content (not at line start) are not treated as role markers",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "system:\\nHere is a tip: always be kind.\\n\\nuser:\\nTime is 3:30pm"
       },
       "expected": {
@@ -540,6 +555,7 @@ const ParseVectors = """
       "description": "The developer role marker is recognized and produces a developer message",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "developer:\\nInternal instructions."
       },
       "expected": {
@@ -561,6 +577,7 @@ const ParseVectors = """
       "description": "A role marker with a quoted attribute (user[name=\\"Alice\\"]) attaches the attribute as message metadata",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "user[name=\\"Alice\\"]:\\nHello!"
       },
       "expected": {
@@ -585,6 +602,7 @@ const ParseVectors = """
       "description": "Multiple unquoted attributes (user[name=Bob, id=7]) are parsed into metadata with numeric type coercion",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "user[name=Bob, id=7]:\\nHi"
       },
       "expected": {
@@ -610,6 +628,7 @@ const ParseVectors = """
       "description": "Inline markdown image syntax is preserved verbatim as literal text content (images are passed via kind:image inputs, not inline markdown)",
       "stage": "parse",
       "input": {
+        "agent": { "template": { "format": { "kind": "jinja2" }, "parser": { "kind": "prompty" } } },
         "rendered": "user:\\nLook at this ![photo](https://example.com/img.png)"
       },
       "expected": {

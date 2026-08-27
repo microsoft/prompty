@@ -153,8 +153,7 @@ export class InvocationContextState {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): InvocationContextState {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return InvocationContextState.load(
       data as Record<string, unknown>,
       context,
