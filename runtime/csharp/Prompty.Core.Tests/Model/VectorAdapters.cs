@@ -29,7 +29,7 @@ public sealed class VectorContext
 
     public string? TargetApi { get; init; }
 
-    public IDictionary<string, object?> Doubles { get; init; } = new Dictionary<string, object?>();
+    public JsonNode? Doubles { get; init; }
 
     public string BaseDir { get; init; } = string.Empty;
 }
@@ -54,7 +54,7 @@ public static partial class VectorAdapters
 {
     private static readonly string SpecFixtures = FindSpecFixtures();
 
-    public static IDictionary<string, VectorAdapter> Adapters() => new Dictionary<string, VectorAdapter>
+    public static IReadOnlyDictionary<string, VectorAdapter> Adapters() => new Dictionary<string, VectorAdapter>
     {
         ["DiscoveryConformance.enrich"] = new((input, ctx) =>
         {
@@ -79,9 +79,29 @@ public static partial class VectorAdapters
         ["Processor.process"] = new(ProcessInvoke, AlignNormalize),
     };
 
-    public static IDictionary<string, string> Waivers() => new Dictionary<string, string>();
+    public static IReadOnlyDictionary<string, string> Waivers() => new Dictionary<string, string>();
 
-    public static IDictionary<string, object?> Doubles() => new Dictionary<string, object?>();
+    public static JsonNode? Doubles() => null;
+
+    private static string SeamDiscriminator(JsonObject input, params string[] path)
+    {
+        JsonNode? node = input["agent"];
+        foreach (var key in path)
+        {
+            if (node is not JsonObject obj || !obj.TryGetPropertyValue(key, out node))
+            {
+                node = null;
+                break;
+            }
+        }
+
+        if (node is JsonValue value && value.TryGetValue<string>(out var text) && !string.IsNullOrEmpty(text))
+            return text;
+
+        var dotted = string.Join(".", new[] { "agent" }.Concat(path));
+        throw new InvalidOperationException(
+            $"vector input missing @dispatch discriminator at '{dotted}'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback).");
+    }
 
     // -----------------------------------------------------------------------
     // Paths
@@ -410,7 +430,7 @@ public static partial class VectorAdapters
     {
         var input = inputNode as JsonObject ?? new JsonObject();
         var template = (input["template"] as JsonValue)?.GetValue<string>() ?? string.Empty;
-        var engine = (input["engine"] as JsonValue)?.GetValue<string>() ?? "jinja2";
+        var engine = SeamDiscriminator(input, "template", "format", "kind");
         var expected = ctx.Vector["expected"];
 
         var inputs = ToObjectDictionary(input["inputs"] as JsonObject ?? new JsonObject());
@@ -904,6 +924,10 @@ public static partial class VectorAdapters
     {
         _ = ctx;
         var input = inputNode as JsonObject ?? new JsonObject();
+        var provider = SeamDiscriminator(input, "model", "provider");
+        if (provider != "openai")
+            throw new InvalidOperationException($"Unsupported stream provider: '{provider}'");
+
         var chunks = ClassifyStreamEvents(input["events"] as JsonArray ?? new JsonArray());
         var reconciliation = StreamReconciliation.Reconcile(chunks);
 

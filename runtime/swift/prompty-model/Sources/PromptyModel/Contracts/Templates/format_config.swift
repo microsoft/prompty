@@ -3,9 +3,178 @@
 
 import Foundation
 
-/// Template format definition
-public struct FormatConfig: TypraModel {
-  public static let shorthandProperty: String? = "kind"
+public enum FormatConfig: TypraModel {
+  case jinja2Format(Jinja2Format)
+  case mustacheFormat(MustacheFormat)
+  case customFormat(CustomFormat, [String: Any])
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FormatConfig {
+    var normalizedData: Any = data
+    if let scalar = normalizedData as? String {
+      normalizedData = ["kind": scalar]
+    }
+    let object = try TypraRuntime.object(normalizedData, typeName: "FormatConfig")
+    let discriminator = object["kind"] as? String ?? ""
+    switch discriminator {
+    case "jinja2": return .jinja2Format(try Jinja2Format.load(normalizedData, context: context))
+    case "mustache": return .mustacheFormat(try MustacheFormat.load(normalizedData, context: context))
+    default: return .customFormat(try CustomFormat.load(normalizedData, context: context), object)
+    }
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    switch self {
+    case .jinja2Format(let value): return try value.save(context)
+    case .mustacheFormat(let value): return try value.save(context)
+    case .customFormat(let value, let raw):
+      var result = raw
+      for (key, item) in try value.save(context) {
+        result[key] = item
+      }
+      return result
+    }
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "FormatConfig"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FormatConfig"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Jinja2 template dialect. Pin-only subtype.
+public struct Jinja2Format: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var kind: String = "jinja2"
+  public var strict: Bool? = nil
+  public var options: [String: Any]? = nil
+
+  public init(kind: String = "jinja2", strict: Bool? = nil, options: [String: Any]? = nil) {
+    self.kind = kind
+    self.strict = strict
+    self.options = options
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> Jinja2Format {
+    let object = try TypraRuntime.object(data, typeName: "Jinja2Format")
+    var instance = Jinja2Format()
+    if let value = object["kind"] {
+      instance.kind = try TypraRuntime.string(value, field: "kind")
+    }
+    else {
+      instance.kind = "jinja2"
+    }
+    if let value = object["strict"] {
+      instance.strict = try TypraRuntime.bool(value, field: "strict")
+    }
+    if let value = object["options"] {
+      instance.options = try TypraRuntime.dictionary(value, field: "options")
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["kind"] = self.kind
+    if let value = self.strict {
+      result["strict"] = value
+    }
+    if let value = self.options {
+      result["options"] = value
+    }
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> Jinja2Format {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "Jinja2Format"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> Jinja2Format {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "Jinja2Format"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Mustache template dialect. Pin-only subtype.
+public struct MustacheFormat: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var kind: String = "mustache"
+  public var strict: Bool? = nil
+  public var options: [String: Any]? = nil
+
+  public init(kind: String = "mustache", strict: Bool? = nil, options: [String: Any]? = nil) {
+    self.kind = kind
+    self.strict = strict
+    self.options = options
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> MustacheFormat {
+    let object = try TypraRuntime.object(data, typeName: "MustacheFormat")
+    var instance = MustacheFormat()
+    if let value = object["kind"] {
+      instance.kind = try TypraRuntime.string(value, field: "kind")
+    }
+    else {
+      instance.kind = "mustache"
+    }
+    if let value = object["strict"] {
+      instance.strict = try TypraRuntime.bool(value, field: "strict")
+    }
+    if let value = object["options"] {
+      instance.options = try TypraRuntime.dictionary(value, field: "options")
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["kind"] = self.kind
+    if let value = self.strict {
+      result["strict"] = value
+    }
+    if let value = self.options {
+      result["options"] = value
+    }
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> MustacheFormat {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "MustacheFormat"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> MustacheFormat {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "MustacheFormat"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Wildcard catch-all format for downstream/unregistered template dialects. The `"*"` discriminator lowers to the Renderer dispatch decl's `defaultVariant`.
+public struct CustomFormat: TypraModel {
+  public static let shorthandProperty: String? = nil
   public var kind: String = "*"
   public var strict: Bool? = nil
   public var options: [String: Any]? = nil
@@ -16,14 +185,9 @@ public struct FormatConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> FormatConfig {
-    if let scalar = data as? String {
-      var instance = FormatConfig()
-      instance.kind = try TypraRuntime.string(scalar, field: "kind")
-      return instance
-    }
-    let object = try TypraRuntime.object(data, typeName: "FormatConfig")
-    var instance = FormatConfig()
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CustomFormat {
+    let object = try TypraRuntime.object(data, typeName: "CustomFormat")
+    var instance = CustomFormat()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     }
@@ -51,16 +215,16 @@ public struct FormatConfig: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "FormatConfig"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CustomFormat {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "CustomFormat"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> FormatConfig {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "FormatConfig"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CustomFormat {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CustomFormat"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

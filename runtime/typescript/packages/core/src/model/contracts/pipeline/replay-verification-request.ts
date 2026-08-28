@@ -202,8 +202,7 @@ export class ReplayVerificationRequest {
     yaml: string,
     context?: LoadContext,
   ): ReplayVerificationRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ReplayVerificationRequest.load(
       data as Record<string, unknown>,
       context,

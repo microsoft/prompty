@@ -10,7 +10,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// FormatConfig represents Template format definition
+// FormatConfig represents Template format definition. `kind` is the `@dispatch` discriminator for the
+// Renderer seam, reached from a seam param as `agent.template.format.kind`.
 
 type FormatConfig struct {
 	Kind    string                 `json:"kind" yaml:"kind"`
@@ -19,7 +20,8 @@ type FormatConfig struct {
 }
 
 // LoadFormatConfig creates a FormatConfig from a map[string]interface{}
-func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func LoadFormatConfig(data interface{}, ctx *LoadContext) (interface{}, error) {
 	if ctx == nil {
 		ctx = NewLoadContext()
 	}
@@ -31,6 +33,26 @@ func LoadFormatConfig(data interface{}, ctx *LoadContext) (FormatConfig, error) 
 		// Shorthand: string -> FormatConfig
 		expansion := map[string]interface{}{"kind": v}
 		return LoadFormatConfig(expansion, ctx)
+	}
+	// Handle polymorphic types based on discriminator
+	if m, ok := data.(map[string]interface{}); ok {
+		if discriminator, ok := m["kind"]; ok {
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "jinja2":
+					return LoadJinja2Format(data, ctx)
+				case "mustache":
+					return LoadMustacheFormat(data, ctx)
+				default:
+					return LoadCustomFormat(data, ctx)
+				}
+			default:
+				return LoadCustomFormat(data, ctx)
+			}
+		} else {
+			return LoadCustomFormat(data, ctx)
+		}
 	}
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -84,21 +106,273 @@ func (obj *FormatConfig) ToYAML() (string, error) {
 }
 
 // FromJSON creates FormatConfig from JSON string
-func FormatConfigFromJSON(jsonStr string) (FormatConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func FormatConfigFromJSON(jsonStr string) (interface{}, error) {
 	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return FormatConfig{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadFormatConfig(data, ctx)
 }
 
 // FromYAML creates FormatConfig from YAML string
-func FormatConfigFromYAML(yamlStr string) (FormatConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func FormatConfigFromYAML(yamlStr string) (interface{}, error) {
 	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return FormatConfig{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadFormatConfig(data, ctx)
+}
+
+// Jinja2Format represents Jinja2 template dialect. Pin-only subtype.
+
+type Jinja2Format struct {
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Strict  *bool                  `json:"strict" yaml:"strict"`
+	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadJinja2Format creates a Jinja2Format from a map[string]interface{}
+func LoadJinja2Format(data interface{}, ctx *LoadContext) (Jinja2Format, error) {
+	result := Jinja2Format{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["strict"]; ok && val != nil {
+			v := val.(bool)
+			result.Strict = &v
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Options = m
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes Jinja2Format to map[string]interface{}
+func (obj Jinja2Format) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.Strict != nil {
+		result["strict"] = *obj.Strict
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options
+	}
+
+	return result
+}
+
+// ToJSON serializes Jinja2Format to JSON string
+func (obj *Jinja2Format) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes Jinja2Format to YAML string
+func (obj *Jinja2Format) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates Jinja2Format from JSON string
+func Jinja2FormatFromJSON(jsonStr string) (Jinja2Format, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return Jinja2Format{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadJinja2Format(data, ctx)
+}
+
+// FromYAML creates Jinja2Format from YAML string
+func Jinja2FormatFromYAML(yamlStr string) (Jinja2Format, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return Jinja2Format{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadJinja2Format(data, ctx)
+}
+
+// MustacheFormat represents Mustache template dialect. Pin-only subtype.
+
+type MustacheFormat struct {
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Strict  *bool                  `json:"strict" yaml:"strict"`
+	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadMustacheFormat creates a MustacheFormat from a map[string]interface{}
+func LoadMustacheFormat(data interface{}, ctx *LoadContext) (MustacheFormat, error) {
+	result := MustacheFormat{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["strict"]; ok && val != nil {
+			v := val.(bool)
+			result.Strict = &v
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Options = m
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes MustacheFormat to map[string]interface{}
+func (obj MustacheFormat) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.Strict != nil {
+		result["strict"] = *obj.Strict
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options
+	}
+
+	return result
+}
+
+// ToJSON serializes MustacheFormat to JSON string
+func (obj *MustacheFormat) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes MustacheFormat to YAML string
+func (obj *MustacheFormat) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates MustacheFormat from JSON string
+func MustacheFormatFromJSON(jsonStr string) (MustacheFormat, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return MustacheFormat{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadMustacheFormat(data, ctx)
+}
+
+// FromYAML creates MustacheFormat from YAML string
+func MustacheFormatFromYAML(yamlStr string) (MustacheFormat, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return MustacheFormat{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadMustacheFormat(data, ctx)
+}
+
+// CustomFormat represents Wildcard catch-all format for downstream/unregistered template dialects. The
+// `"*"` discriminator lowers to the Renderer dispatch decl's `defaultVariant`.
+
+type CustomFormat struct {
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Strict  *bool                  `json:"strict" yaml:"strict"`
+	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadCustomFormat creates a CustomFormat from a map[string]interface{}
+func LoadCustomFormat(data interface{}, ctx *LoadContext) (CustomFormat, error) {
+	result := CustomFormat{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["strict"]; ok && val != nil {
+			v := val.(bool)
+			result.Strict = &v
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Options = m
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes CustomFormat to map[string]interface{}
+func (obj CustomFormat) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.Strict != nil {
+		result["strict"] = *obj.Strict
+	}
+	if obj.Options != nil {
+		result["options"] = obj.Options
+	}
+
+	return result
+}
+
+// ToJSON serializes CustomFormat to JSON string
+func (obj *CustomFormat) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes CustomFormat to YAML string
+func (obj *CustomFormat) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates CustomFormat from JSON string
+func CustomFormatFromJSON(jsonStr string) (CustomFormat, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return CustomFormat{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomFormat(data, ctx)
+}
+
+// FromYAML creates CustomFormat from YAML string
+func CustomFormatFromYAML(yamlStr string) (CustomFormat, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return CustomFormat{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomFormat(data, ctx)
 }

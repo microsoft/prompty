@@ -86,8 +86,7 @@ export class ModelInvocationRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ModelInvocationRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelInvocationRequest.load(
       data as Record<string, unknown>,
       context,

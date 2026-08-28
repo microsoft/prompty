@@ -16,7 +16,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -66,7 +66,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -122,7 +122,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -159,7 +159,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -211,7 +211,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -257,7 +257,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -303,7 +303,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -373,7 +373,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -446,7 +446,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -526,7 +526,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -563,7 +563,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -634,7 +634,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4o-mini",
         "messages": [
@@ -724,7 +724,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -831,7 +831,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "embedding",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "embedding",
         "model_id": "text-embedding-3-small",
         "messages": [
@@ -863,7 +863,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "image",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "image",
         "model_id": "dall-e-3",
         "messages": [
@@ -895,7 +895,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -935,7 +935,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -981,7 +981,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4",
         "messages": [
@@ -1023,7 +1023,7 @@ const WireVectors = """
       "provider": "anthropic",
       "targetApi": "chat",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "model_id": "claude-3",
         "messages": [
@@ -1078,7 +1078,7 @@ const WireVectors = """
       "provider": "anthropic",
       "targetApi": "chat",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "model_id": "claude-3",
         "messages": [
@@ -1121,7 +1121,7 @@ const WireVectors = """
       "provider": "anthropic",
       "targetApi": "chat",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "model_id": "claude-3",
         "messages": [
@@ -1179,7 +1179,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4o",
         "messages": [
@@ -1231,7 +1231,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "chat",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "chat",
         "model_id": "gpt-4o",
         "messages": [
@@ -1283,7 +1283,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "responses",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "model_id": "gpt-4o",
         "messages": [
@@ -1330,7 +1330,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "responses",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "model_id": "gpt-4o",
         "messages": [
@@ -1398,7 +1398,7 @@ const WireVectors = """
       "provider": "anthropic",
       "targetApi": "chat",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "model_id": "claude-sonnet-4-20250514",
         "messages": [
@@ -1471,7 +1471,7 @@ const WireVectors = """
       "provider": "anthropic",
       "targetApi": "chat",
       "input": {
-        "provider": "anthropic",
+        "agent": { "model": { "provider": "anthropic" } },
         "apiType": "chat",
         "model_id": "claude-sonnet-4-20250514",
         "messages": [
@@ -1528,7 +1528,7 @@ const WireVectors = """
       "provider": "openai",
       "targetApi": "responses",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
         "apiType": "responses",
         "model_id": "gpt-4o",
         "messages": [

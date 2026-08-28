@@ -93,9 +93,11 @@ import {
   buildEmbeddingArgs as openaiBuildEmbeddingArgs,
   buildImageArgs as openaiBuildImageArgs,
   buildResponsesArgs as openaiBuildResponsesArgs,
+  OpenAIProcessor,
   processResponse as openaiProcessResponse,
 } from "@prompty/openai";
 import {
+  AnthropicProcessor,
   buildChatArgs as anthropicBuildChatArgs,
   processResponse as anthropicProcessResponse,
 } from "@prompty/anthropic";
@@ -107,6 +109,63 @@ registerRenderer("jinja2", new NunjucksRenderer());
 registerRenderer("mustache", new MustacheRenderer());
 registerParser("prompty", new PromptyChatParser());
 
+export const rendererProvider = {
+  jinja2: {
+    async render(
+      agent: Agent,
+      template: string,
+      inputs: Record<string, unknown>,
+    ): Promise<string> {
+      attachThreadInputs(agent, inputs);
+      return new NunjucksRenderer().render(agent, template, inputs);
+    },
+    async renderSegments(
+      _agent: Agent,
+      template: string,
+      inputs: Record<string, unknown>,
+    ): Promise<ReturnType<typeof renderSegments>> {
+      return renderSegments(template, inputs, []);
+    },
+  },
+  mustache: {
+    async render(
+      agent: Agent,
+      template: string,
+      inputs: Record<string, unknown>,
+    ): Promise<string> {
+      attachThreadInputs(agent, inputs);
+      return new MustacheRenderer().render(agent, template, inputs);
+    },
+    async renderSegments(
+      _agent: Agent,
+      template: string,
+      inputs: Record<string, unknown>,
+    ): Promise<ReturnType<typeof renderSegments>> {
+      return renderSegments(template, inputs, []);
+    },
+  },
+};
+
+export const parserProvider = {
+  prompty: new PromptyChatParser(),
+};
+
+export const processorProvider = {
+  openai: {
+    process: (agent: Agent, response: unknown) =>
+      new OpenAIProcessor().process(agent, response),
+    processStream: (agent: Agent, stream: unknown) =>
+      Promise.resolve(openaiProcessResponse(agent, stream)),
+  },
+  azure: {
+    process: (agent: Agent, response: unknown) =>
+      new OpenAIProcessor().process(agent, response),
+    processStream: (agent: Agent, stream: unknown) =>
+      Promise.resolve(openaiProcessResponse(agent, stream)),
+  },
+  custom: new AnthropicProcessor(),
+};
+
 type AdapterContext = {
   contract: string;
   operation: string;
@@ -117,6 +176,23 @@ type AdapterContext = {
   baseDir: string;
   resolveInput: (value: unknown) => unknown;
 };
+
+function attachThreadInputs(
+  agent: Agent,
+  inputs: Record<string, unknown>,
+): void {
+  const threadProps = Object.entries(inputs)
+    .filter(
+      ([, value]) =>
+        value !== null &&
+        typeof value === "object" &&
+        (value as Record<string, unknown>)._kind === "thread",
+    )
+    .map(([name]) => new Property({ name, kind: "thread" }));
+  if (threadProps.length > 0) {
+    agent.inputs = threadProps;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -342,6 +418,24 @@ function loadNormalize(observed: unknown, context: AdapterContext): unknown {
   return project(observed, expected);
 }
 
+function seamDiscriminator(input: any, ...path: string[]): string {
+  let node = input && typeof input === "object" ? input.agent : undefined;
+  for (const key of path) {
+    if (!node || typeof node !== "object") {
+      node = undefined;
+      break;
+    }
+    node = node[key];
+  }
+  if (typeof node === "string" && node.length > 0) {
+    return node;
+  }
+  const dotted = ["agent", ...path].join(".");
+  throw new Error(
+    `vector input missing @dispatch discriminator at '${dotted}'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback).`,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // RENDER
 // ---------------------------------------------------------------------------
@@ -351,7 +445,7 @@ async function renderInvoke(
   context: AdapterContext,
 ): Promise<unknown> {
   const template: string = input.template;
-  const engine: string = input.engine ?? "jinja2";
+  const engine = seamDiscriminator(input, "template", "format", "kind");
   let inputs: Record<string, any> = { ...(input.inputs ?? {}) };
   const expected = context.vector.expected;
 
@@ -473,9 +567,10 @@ async function parseInvoke(
 // ---------------------------------------------------------------------------
 
 function makeAgentForWire(input: any): Agent {
+  const provider = seamDiscriminator(input, "model", "provider");
   const model = new Model({
     id: input.model_id,
-    provider: input.provider,
+    provider,
     apiType: input.apiType,
   });
   const opts = input.options ?? {};
@@ -537,7 +632,7 @@ function vecMessagesToRuntime(messages: any[]): Message[] {
 }
 
 function wireInvoke(input: any, _context: AdapterContext): unknown {
-  const provider = input.provider ?? "openai";
+  const provider = seamDiscriminator(input, "model", "provider");
   const apiType = input.apiType ?? "chat";
   const messages = vecMessagesToRuntime(input.messages);
   const agent = makeAgentForWire(input);
@@ -587,7 +682,7 @@ function processResultToCanonical(result: any): unknown {
 }
 
 function processInvoke(input: any, _context: AdapterContext): unknown {
-  const provider = input.provider ?? "openai";
+  const provider = seamDiscriminator(input, "model", "provider");
   const responseData = input.response;
   const hasOutputs = input.has_outputs ?? false;
 
@@ -802,9 +897,9 @@ function discoveryMapInvoke(
  */
 async function processStreamInvoke(
   input: any,
-  context: AdapterContext,
+  _context: AdapterContext,
 ): Promise<Record<string, unknown>> {
-  const provider = input.provider ?? context.provider ?? "openai";
+  const provider = seamDiscriminator(input, "model", "provider");
   if (provider !== "openai") {
     throw new Error(`Unsupported stream provider: ${JSON.stringify(provider)}`);
   }

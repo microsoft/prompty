@@ -87,12 +87,4 @@ public struct Message: TypraModel {
   public static func user(text: String) -> Message {
     return Message(role: .user, parts: [.textPart(TextPart(kind: "text", value: text))])
   }
-
-  public func toTextContent() async throws -> Any {
-    throw TypraRuntimeError.unsupported("toTextContent must be implemented by hand-authored code.")
-  }
-
-  public func text() async throws -> String {
-    throw TypraRuntimeError.unsupported("text must be implemented by hand-authored code.")
-  }
 }

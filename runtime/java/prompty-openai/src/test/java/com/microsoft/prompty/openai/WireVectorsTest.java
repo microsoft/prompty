@@ -26,7 +26,7 @@ class WireVectorsTest {
       Map<String, Object> input = SpecVectors.map(vector, "input");
 
       // Vectors for other providers are graded by those providers' suites.
-      if (!"openai".equals(input.getOrDefault("provider", "openai"))) {
+      if (!"openai".equals(VectorAgents.seamProvider(input, "openai"))) {
         continue;
       }
 

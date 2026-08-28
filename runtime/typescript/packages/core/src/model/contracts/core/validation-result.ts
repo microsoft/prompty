@@ -135,8 +135,7 @@ export class ValidationResult {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ValidationResult {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ValidationResult.load(data as Record<string, unknown>, context);
   }
 

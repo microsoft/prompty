@@ -112,8 +112,7 @@ export class RetryPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RetryPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RetryPayload.load(data as Record<string, unknown>, context);
   }
 

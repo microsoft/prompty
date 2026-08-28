@@ -524,8 +524,7 @@ export class EngineCheckpoint {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): EngineCheckpoint {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return EngineCheckpoint.load(data as Record<string, unknown>, context);
   }
 

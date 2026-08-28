@@ -45,10 +45,23 @@ public func prepareRenderInputs(agent: Agent?, inputs: [String: Any]) -> ([Strin
   return (renderInputs, nonces)
 }
 
+/// Extract the format discriminator from the generated FormatConfig coerce-union
+/// enum by projecting it back to its wire dictionary and reading `kind`.
+func formatEngine(_ agent: Agent?) -> String {
+  guard let format = agent?.template?.format,
+    let dict = try? format.save(),
+    let kind = dict["kind"] as? String,
+    !kind.isEmpty
+  else {
+    return "jinja2"
+  }
+  return kind
+}
+
 public func render(agent: Agent?, inputs: [String: Any]) throws -> (String, [String: String]) {
   let (renderInputs, nonces) = prepareRenderInputs(agent: agent, inputs: inputs)
   let template = agent?.instructions ?? ""
-  let engine = agent?.template?.format.kind.isEmpty == false ? agent!.template!.format.kind : "jinja2"
+  let engine = formatEngine(agent)
   switch engine {
   case "jinja2":
     return (try render(template: template, inputs: renderInputs), nonces)

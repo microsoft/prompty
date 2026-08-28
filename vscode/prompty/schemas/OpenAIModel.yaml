@@ -1,0 +1,15 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: OpenAIModel.yaml
+type: object
+properties:
+  provider:
+    type: string
+    const: openai
+    description: The OpenAI provider discriminator
+required:
+  - provider
+allOf:
+  - $ref: Model.yaml
+description: |-
+  OpenAI-hosted model. Pin-only subtype: pins the `provider` discriminator and
+  inherits every base field.

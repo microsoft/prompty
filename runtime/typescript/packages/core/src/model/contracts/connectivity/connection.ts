@@ -159,8 +159,7 @@ export abstract class Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Connection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Connection.load(data as Record<string, unknown>, context);
   }
 
@@ -274,8 +273,7 @@ export class ReferenceConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ReferenceConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ReferenceConnection.load(data as Record<string, unknown>, context);
   }
 
@@ -366,8 +364,7 @@ export class RemoteConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RemoteConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RemoteConnection.load(data as Record<string, unknown>, context);
   }
 
@@ -458,8 +455,7 @@ export class ApiKeyConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ApiKeyConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ApiKeyConnection.load(data as Record<string, unknown>, context);
   }
 
@@ -542,8 +538,7 @@ export class AnonymousConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnonymousConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnonymousConnection.load(data as Record<string, unknown>, context);
   }
 
@@ -660,8 +655,7 @@ export class OAuthConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): OAuthConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return OAuthConnection.load(data as Record<string, unknown>, context);
   }
 
@@ -767,8 +761,7 @@ export class FoundryConnection extends Connection {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FoundryConnection {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FoundryConnection.load(data as Record<string, unknown>, context);
   }
 

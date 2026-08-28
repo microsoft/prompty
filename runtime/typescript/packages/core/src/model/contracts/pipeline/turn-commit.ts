@@ -214,8 +214,7 @@ export class TurnCommit {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnCommit {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnCommit.load(data as Record<string, unknown>, context);
   }
 

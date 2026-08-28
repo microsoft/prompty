@@ -33,8 +33,6 @@ classDiagram
         +string role
         +ContentPart[] parts
         +dictionary metadata
-        +toTextContent() unknown [async-capable]
-        +text() string [async-capable]
     }
     ContextRequest *-- Message
     class InvocationContextState {

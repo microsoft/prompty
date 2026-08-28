@@ -128,9 +128,9 @@ class Tool(ABC):
     def load_kind(data: dict, context: LoadContext | None) -> "Tool":
         # load polymorphic Tool instance
         discriminator_raw = data.get("kind") if data is not None else None
-        if not isinstance(discriminator_raw, str) or discriminator_raw == "":
-            raise ValueError("Invalid Tool discriminator field 'kind': expected non-blank string")
-        discriminator_value = discriminator_raw
+        discriminator_value = ""
+        if isinstance(discriminator_raw, str):
+            discriminator_value = discriminator_raw
         if discriminator_value == "function":
             return FunctionTool.load(data, context)
         elif discriminator_value == "mcp":

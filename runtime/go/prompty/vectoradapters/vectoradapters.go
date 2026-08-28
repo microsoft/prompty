@@ -226,7 +226,10 @@ func buildRenderAgent(template, engine string, inputs map[string]any) *prompty.A
 func renderInvoke(input any, _ Context) (any, error) {
 	typed, _ := input.(map[string]any)
 	template, _ := typed["template"].(string)
-	engine, _ := typed["engine"].(string)
+	engine, err := seamDiscriminator(typed, "template", "format", "kind")
+	if err != nil {
+		return nil, err
+	}
 	inputs, _ := typed["inputs"].(map[string]any)
 	agent := buildRenderAgent(template, engine, inputs)
 	rendered, _, err := prompty.Render(agent, inputs)
@@ -336,7 +339,10 @@ func partToConformance(p any) any {
 
 func processInvoke(input any, _ Context) (any, error) {
 	typed, _ := input.(map[string]any)
-	provider, _ := typed["provider"].(string)
+	provider, err := seamDiscriminator(typed, "model", "provider")
+	if err != nil {
+		return nil, err
+	}
 	apiType, _ := typed["apiType"].(string)
 	hasOutputs, _ := typed["has_outputs"].(bool)
 	result, err := prompty.ProcessResponse(provider, apiType, typed["response"], hasOutputs)
@@ -352,6 +358,11 @@ func processInvoke(input any, _ Context) (any, error) {
 
 func wireInvoke(input any, _ Context) (any, error) {
 	typed, _ := input.(map[string]any)
+	provider, err := seamDiscriminator(typed, "model", "provider")
+	if err != nil {
+		return nil, err
+	}
+	typed["provider"] = provider
 	body, err := prompty.BuildWireRequest(typed)
 	if err != nil {
 		return nil, err
@@ -750,18 +761,38 @@ func strOr(value any, fallback string) string {
 	return fallback
 }
 
+func seamDiscriminator(input map[string]any, path ...string) (string, error) {
+	var node any
+	if input != nil {
+		node = input["agent"]
+	}
+	for _, key := range path {
+		next, ok := node.(map[string]any)
+		if !ok {
+			node = nil
+			break
+		}
+		node = next[key]
+	}
+	if value, ok := node.(string); ok && value != "" {
+		return value, nil
+	}
+	dotted := "agent"
+	for _, key := range path {
+		dotted += "." + key
+	}
+	return "", fmt.Errorf("vector input missing @dispatch discriminator at '%s'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback)", dotted)
+}
+
 // ---------------------------------------------------------------------------
 // Processor.processStream
 // ---------------------------------------------------------------------------
 
-func processStreamInvoke(input any, ctx Context) (any, error) {
+func processStreamInvoke(input any, _ Context) (any, error) {
 	typed, _ := input.(map[string]any)
-	provider := strOr(typed["provider"], "")
-	if provider == "" {
-		provider = ctx.Provider
-	}
-	if provider == "" {
-		provider = "openai"
+	provider, err := seamDiscriminator(typed, "model", "provider")
+	if err != nil {
+		return nil, err
 	}
 	if provider != "openai" {
 		return nil, fmt.Errorf("unsupported stream provider: %q", provider)

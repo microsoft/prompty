@@ -3,7 +3,7 @@
 //! Converts Prompty `Message`s, tools, options, and output schemas into the
 //! JSON bodies expected by the OpenAI API.
 
-use prompty::model::{Agent, MessageHelpers, ModelOptions, Property, PropertyKind, Tool, ToolKind};
+use prompty::model::{Agent, ModelOptions, Property, PropertyKind, Tool, ToolKind};
 use prompty::types::{ContentPart, ContentPartKind, Message};
 use serde_json::{Map, Value, json};
 
@@ -130,13 +130,7 @@ pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, Sch
     // Model ID
     args.insert(
         "model".to_string(),
-        Value::String(
-            agent
-                .model
-                .as_ref()
-                .map(|model| model.id.clone())
-                .unwrap_or_default(),
-        ),
+        Value::String(prompty::model_access::model_id(&agent.model)),
     );
 
     // Messages
@@ -146,7 +140,7 @@ pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, Sch
     // Options
     apply_options(
         &mut args,
-        &agent.model.as_ref().and_then(|model| model.options.clone()),
+        &prompty::model_access::model_options(&agent.model),
     );
 
     // Tools
@@ -184,11 +178,7 @@ pub fn enable_streaming(body: &mut Value, api_type: &str) {
 
 /// Build the request body for an embedding call.
 pub fn build_embedding_args(agent: &Agent, messages: &[Message]) -> Value {
-    let model_id = agent
-        .model
-        .as_ref()
-        .map(|model| model.id.as_str())
-        .unwrap_or("");
+    let model_id = prompty::model_access::model_id(&agent.model);
     let model = if model_id.is_empty() {
         "text-embedding-ada-002".to_string()
     } else {
@@ -203,7 +193,7 @@ pub fn build_embedding_args(agent: &Agent, messages: &[Message]) -> Value {
     });
 
     // Only additionalProperties from options
-    if let Some(ref opts) = agent.model.as_ref().and_then(|model| model.options.clone()) {
+    if let Some(ref opts) = prompty::model_access::model_options(&agent.model) {
         if let Some(map) = opts.additional_properties.as_object() {
             for (k, v) in map {
                 args[k.clone()] = v.clone();
@@ -216,11 +206,7 @@ pub fn build_embedding_args(agent: &Agent, messages: &[Message]) -> Value {
 
 /// Build the request body for an image generation call.
 pub fn build_image_args(agent: &Agent, messages: &[Message]) -> Value {
-    let model_id = agent
-        .model
-        .as_ref()
-        .map(|model| model.id.as_str())
-        .unwrap_or("");
+    let model_id = prompty::model_access::model_id(&agent.model);
     let model = if model_id.is_empty() {
         "dall-e-3".to_string()
     } else {
@@ -244,7 +230,7 @@ pub fn build_image_args(agent: &Agent, messages: &[Message]) -> Value {
     });
 
     // Only additionalProperties from options
-    if let Some(ref opts) = agent.model.as_ref().and_then(|model| model.options.clone()) {
+    if let Some(ref opts) = prompty::model_access::model_options(&agent.model) {
         if let Some(map) = opts.additional_properties.as_object() {
             for (k, v) in map {
                 args[k.clone()] = v.clone();
@@ -580,11 +566,7 @@ fn output_schema_to_wire(agent: &Agent) -> Result<Option<Value>, SchemaError> {
 ///
 /// System/developer messages become `instructions`; other messages become `input` items.
 pub fn build_responses_args(agent: &Agent, messages: &[Message]) -> Result<Value, SchemaError> {
-    let model_id = agent
-        .model
-        .as_ref()
-        .map(|model| model.id.as_str())
-        .unwrap_or("");
+    let model_id = prompty::model_access::model_id(&agent.model);
     let model = if model_id.is_empty() {
         "gpt-4o".to_string()
     } else {
@@ -617,7 +599,7 @@ pub fn build_responses_args(agent: &Agent, messages: &[Message]) -> Result<Value
     // Options
     apply_responses_options(
         &mut args,
-        &agent.model.as_ref().and_then(|model| model.options.clone()),
+        &prompty::model_access::model_options(&agent.model),
     );
 
     // Tools (flat format — no nested "function" key)

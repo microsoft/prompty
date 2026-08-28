@@ -1,0 +1,18 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: CustomModel.yaml
+type: object
+properties:
+  provider:
+    type: string
+    const: "*"
+    description: The wildcard provider discriminator for any provider not explicitly modeled
+required:
+  - provider
+allOf:
+  - $ref: Model.yaml
+description: |-
+  Wildcard catch-all model for downstream/unregistered providers. The `"*"`
+  discriminator lowers to the dispatch decl's `defaultVariant` (the fallback
+  seam) while the known providers stay enumerated `variants`. A runtime provider
+  value that is none of the known literals routes here — the downstream-registry
+  delegation hook.

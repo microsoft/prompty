@@ -277,6 +277,78 @@ impl ModelOptions {
         }
         serde_json::Value::Object(result)
     }
+
+    /// Load from a provider-specific wire-format payload.
+    pub fn from_wire(provider: &str, data: &serde_json::Value, ctx: &LoadContext) -> Self {
+        let wire_map: std::collections::HashMap<&str, std::collections::HashMap<&str, &str>> =
+            std::collections::HashMap::from([
+                (
+                    "frequencyPenalty",
+                    std::collections::HashMap::from([("openai", "frequency_penalty")]),
+                ),
+                (
+                    "maxOutputTokens",
+                    std::collections::HashMap::from([
+                        ("openai", "max_completion_tokens"),
+                        ("responses", "max_output_tokens"),
+                        ("anthropic", "max_tokens"),
+                    ]),
+                ),
+                (
+                    "presencePenalty",
+                    std::collections::HashMap::from([("openai", "presence_penalty")]),
+                ),
+                (
+                    "seed",
+                    std::collections::HashMap::from([("openai", "seed")]),
+                ),
+                (
+                    "temperature",
+                    std::collections::HashMap::from([
+                        ("openai", "temperature"),
+                        ("responses", "temperature"),
+                        ("anthropic", "temperature"),
+                    ]),
+                ),
+                (
+                    "topK",
+                    std::collections::HashMap::from([("openai", "top_k"), ("anthropic", "top_k")]),
+                ),
+                (
+                    "topP",
+                    std::collections::HashMap::from([
+                        ("openai", "top_p"),
+                        ("responses", "top_p"),
+                        ("anthropic", "top_p"),
+                    ]),
+                ),
+                (
+                    "stopSequences",
+                    std::collections::HashMap::from([
+                        ("openai", "stop"),
+                        ("anthropic", "stop_sequences"),
+                    ]),
+                ),
+                (
+                    "allowMultipleToolCalls",
+                    std::collections::HashMap::from([("openai", "parallel_tool_calls")]),
+                ),
+            ]);
+        let mut inverse: std::collections::HashMap<&str, &str> = std::collections::HashMap::new();
+        for (field, mapping) in &wire_map {
+            if let Some(wire_name) = mapping.get(provider) {
+                inverse.insert(*wire_name, *field);
+            }
+        }
+        let mut canonical = serde_json::Map::new();
+        if let serde_json::Value::Object(map) = data {
+            for (key, value) in map {
+                let field = inverse.get(key.as_str()).copied().unwrap_or(key.as_str());
+                canonical.insert(field.to_string(), value.clone());
+            }
+        }
+        Self::load_from_value(&serde_json::Value::Object(canonical), ctx)
+    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_additional_properties_dict(

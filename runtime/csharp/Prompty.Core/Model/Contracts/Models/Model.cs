@@ -17,6 +17,14 @@ namespace Prompty.Core;
     /// This model includes properties for specifying the model's provider, connection details, and various options.
     ///
     /// It allows for flexible configuration of AI models to suit different use cases and requirements.
+    ///
+    /// `provider` is the `@dispatch` discriminator for the Executor / Processor seams.
+    ///
+    /// The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries
+    ///
+    /// no provider — so `provider` stays optional and absent/unknown providers are
+    ///
+    /// resolved by the runtime registry (global defaults) out of band.
     /// </summary>
 public partial class Model
 {
@@ -42,7 +50,7 @@ public partial class Model
     /// <summary>
     /// The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
     /// </summary>
-    public string? Provider { get; set; }
+    public virtual string? Provider { get; set; }
 
     /// <summary>
     /// The type of API to use for the model (e.g., 'chat', 'response', etc.)
@@ -79,8 +87,8 @@ public partial class Model
 
         // Note: Alternate (shorthand) representations are handled by the converter
 
-        // Create new instance
-        var instance = new Model();
+        // Load polymorphic Model instance
+        var instance = LoadKind(data, context);
 
 
         if (data.TryGetValue("id", out var idValue) && idValue is not null)
@@ -116,6 +124,23 @@ public partial class Model
     }
 
 
+    /// <summary>
+    /// Load polymorphic Model based on discriminator.
+    /// </summary>
+    private static Model LoadKind(Dictionary<string, object?> data, LoadContext? context)
+    {
+        var discriminator = data.TryGetValue("provider", out var discriminatorValue) && discriminatorValue is string discriminatorString ? discriminatorString : "";
+
+        return discriminator switch
+        {
+            "openai" => OpenAIModel.Load(data, context),
+            "azure" => AzureModel.Load(data, context),
+            _ => CustomModel.Load(data, context),
+        };
+
+    }
+
+
     #endregion
 
     #region Save Methods
@@ -125,7 +150,7 @@ public partial class Model
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
-    public Dictionary<string, object?> Save(SaveContext? context = null)
+    public virtual Dictionary<string, object?> Save(SaveContext? context = null)
     {
         var obj = this;
         if (context is not null)

@@ -32,6 +32,25 @@ public class OpenAIProcessor : IProcessor
         return Task.FromResult(result);
     }
 
+    /// <summary>
+    /// Process a streaming response. The stringly rail hands a raw event array
+    /// (deserialized as a <see cref="JsonElement"/>), which is classified into
+    /// canonical <see cref="StreamChunk"/> items; a live <see cref="PromptyStream"/>
+    /// (agent-loop path) is drained through <see cref="ProcessStream"/>.
+    /// </summary>
+    public Task<object> ProcessStreamAsync(Core.Agent agent, object stream)
+    {
+        var result = stream switch
+        {
+            JsonElement element when element.ValueKind == JsonValueKind.Array
+                => (object)ClassifyStreamEvents(element),
+            PromptyStream live => ProcessStream(live, agent),
+            _ => stream,
+        };
+
+        return Task.FromResult(result);
+    }
+
     private static object ProcessChat(ChatCompletion completion, Core.Agent agent)
     {
         // Check for tool calls

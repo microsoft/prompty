@@ -107,6 +107,33 @@ func (obj *DeviceAuthorization) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// DeviceAuthorizationFromWire loads a DeviceAuthorization from a provider-specific wire payload.
+func DeviceAuthorizationFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (DeviceAuthorization, error) {
+	wireMap := map[string]map[string]string{
+		"deviceCode":      {"foundry": "device_code"},
+		"userCode":        {"foundry": "user_code"},
+		"verificationUri": {"foundry": "verification_uri"},
+		"expiresIn":       {"foundry": "expires_in"},
+		"interval":        {"foundry": "interval"},
+		"message":         {"foundry": "message"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadDeviceAuthorization(canonical, ctx)
+}
+
 // ToJSON serializes DeviceAuthorization to JSON string
 func (obj *DeviceAuthorization) ToJSON() (string, error) {
 	ctx := NewSaveContext()

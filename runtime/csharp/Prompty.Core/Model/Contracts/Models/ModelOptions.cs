@@ -279,6 +279,39 @@ public partial class ModelOptions
         return result;
     }
 
+    /// <summary>
+    /// Load an instance from a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <param name="data">A dictionary with provider-specific field names.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded ModelOptions instance.</returns>
+    public static ModelOptions FromWire(string provider, Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
+            ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["responses"] = "max_output_tokens", ["anthropic"] = "max_tokens" },
+            ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["seed"] = new Dictionary<string, string> { ["openai"] = "seed" },
+            ["temperature"] = new Dictionary<string, string> { ["openai"] = "temperature", ["responses"] = "temperature", ["anthropic"] = "temperature" },
+            ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },
+            ["topP"] = new Dictionary<string, string> { ["openai"] = "top_p", ["responses"] = "top_p", ["anthropic"] = "top_p" },
+            ["stopSequences"] = new Dictionary<string, string> { ["openai"] = "stop", ["anthropic"] = "stop_sequences" },
+            ["allowMultipleToolCalls"] = new Dictionary<string, string> { ["openai"] = "parallel_tool_calls" },
+        };
+        var inverse = new Dictionary<string, string>();
+        foreach (var (field, mapping) in wireMap)
+        {
+            if (mapping.TryGetValue(provider, out var wireName))
+                inverse[wireName] = field;
+        }
+        var canonical = new Dictionary<string, object?>();
+        foreach (var (key, value) in data)
+            canonical[inverse.TryGetValue(key, out var field) ? field : key] = value;
+        return Load(canonical, context);
+    }
+
 
     /// <summary>
     /// Convert the ModelOptions instance to a YAML string.

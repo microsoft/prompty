@@ -13,5 +13,8 @@
 mod agent_test;
 mod contracts;
 mod operations;
+mod parser_conformance_test;
+mod processor_conformance_test;
+mod renderer_conformance_test;
 mod vector_conformance_test;
 mod wire;

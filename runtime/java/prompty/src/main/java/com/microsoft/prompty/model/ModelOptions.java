@@ -156,6 +156,77 @@ public class ModelOptions {
     return result;
   }
 
+  public static ModelOptions fromWire(String provider, Map<String, Object> data) {
+    return fromWire(provider, data, new LoadContext());
+  }
+
+  public static ModelOptions fromWire(String provider, Map<String, Object> data, LoadContext context) {
+    Map<String, Map<String, String>> wireMap = new LinkedHashMap<>();
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "frequency_penalty");
+      wireMap.put("frequencyPenalty", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "max_completion_tokens");
+      m.put("responses", "max_output_tokens");
+      m.put("anthropic", "max_tokens");
+      wireMap.put("maxOutputTokens", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "presence_penalty");
+      wireMap.put("presencePenalty", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "seed");
+      wireMap.put("seed", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "temperature");
+      m.put("responses", "temperature");
+      m.put("anthropic", "temperature");
+      wireMap.put("temperature", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "top_k");
+      m.put("anthropic", "top_k");
+      wireMap.put("topK", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "top_p");
+      m.put("responses", "top_p");
+      m.put("anthropic", "top_p");
+      wireMap.put("topP", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "stop");
+      m.put("anthropic", "stop_sequences");
+      wireMap.put("stopSequences", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "parallel_tool_calls");
+      wireMap.put("allowMultipleToolCalls", m);
+    }
+    Map<String, String> inverse = new LinkedHashMap<>();
+    for (Map.Entry<String, Map<String, String>> e : wireMap.entrySet()) {
+      String w = e.getValue().get(provider);
+      if (w != null) inverse.put(w, e.getKey());
+    }
+    Map<String, Object> canonical = new LinkedHashMap<>();
+    for (Map.Entry<String, Object> e : data.entrySet()) {
+      canonical.put(inverse.getOrDefault(e.getKey(), e.getKey()), e.getValue());
+    }
+    return load(canonical, context);
+  }
+
   public String toYaml() {
     return TypraYaml.stringify(save(new SaveContext()));
   }

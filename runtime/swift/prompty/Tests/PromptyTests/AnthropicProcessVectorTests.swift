@@ -22,7 +22,7 @@ final class AnthropicProcessVectorTests: XCTestCase {
       let input = vector["input"] as? [String: Any] ?? [:]
       let expected = vector["expected"] as? [String: Any] ?? [:]
 
-      guard (input["provider"] as? String ?? "openai") == "anthropic" else { continue }
+      guard (((input["agent"] as? [String: Any])?["model"] as? [String: Any])?["provider"] as? String ?? "openai") == "anthropic" else { continue }
       run.started()
 
       do {

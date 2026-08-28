@@ -82,8 +82,7 @@ export class AnthropicWireMessage {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicWireMessage {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicWireMessage.load(data as Record<string, unknown>, context);
   }
 

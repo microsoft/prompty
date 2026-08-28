@@ -144,6 +144,35 @@ class ModelInfo:
                 result[mapping[provider]] = value
         return result
 
+    @staticmethod
+    def from_wire(provider: str, data: dict[str, Any], context: LoadContext | None = None) -> "ModelInfo":
+        """Load a ModelInfo instance from a provider-specific wire payload.
+        Args:
+            provider (str): The provider the payload came from (e.g., "openai", "anthropic").
+            data (dict[str, Any]): The wire-format dictionary with provider-specific field names.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            ModelInfo: The loaded ModelInfo instance.
+
+        """
+        wire_map: dict[str, dict[str, str]] = {
+            "id": {"openai": "id", "anthropic": "id"},
+            "displayName": {"anthropic": "display_name"},
+            "ownedBy": {"openai": "owned_by"},
+            "contextWindow": {"anthropic": "context_length"},
+            "inputModalities": {"anthropic": "input_modalities"},
+            "outputModalities": {"anthropic": "output_modalities"},
+        }
+        inverse: dict[str, str] = {}
+        for field_name, m in wire_map.items():
+            w = m.get(provider)
+            if w:
+                inverse[w] = field_name
+        canonical: dict[str, Any] = {}
+        for k, v in data.items():
+            canonical[inverse.get(k, k)] = v
+        return ModelInfo.load(canonical, context)
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the ModelInfo instance to a YAML string.
         Args:

@@ -6,7 +6,7 @@
 ##########################################
 
 from dataclasses import dataclass, field
-from typing import Any, ClassVar, Literal, Protocol, runtime_checkable
+from typing import Any, ClassVar, Literal
 
 from ..._context import LoadContext, SaveContext
 from ._ContentPart import ContentPart, TextPart
@@ -157,23 +157,3 @@ class Message:
     def user(cls, text: str) -> "Message":
         """Create a Message with preset field values."""
         return Message(role="user", parts=[TextPart(value=text)])
-
-
-@runtime_checkable
-class MessageHelpers(Protocol):
-    """Helper contract for Message.
-
-    Runtime implementations must provide these methods on every Message
-    instance (either by attaching them to the generated class or by wrapping it).
-    The type checker can verify conformance by annotating against this Protocol
-    or by calling isinstance(instance, MessageHelpers) at runtime.
-    """
-
-    def to_text_content(self) -> Any:
-        """Return plain string if all parts are text, else a list of content part dicts for wire serialization"""
-        raise NotImplementedError
-
-    @property
-    def text(self) -> str:
-        """Concatenate all TextPart values joined by newline"""
-        raise NotImplementedError

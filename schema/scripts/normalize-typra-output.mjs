@@ -12,6 +12,18 @@ if (existsSync(manifestPath)) {
 
 trimEmptyPythonGeneratedTests(join("..", "runtime", "python", "prompty", "tests", "model"));
 trimTrailingWhitespace(join("..", "runtime", "go", "prompty", "model"));
+stripUnusedFmtImport(join("..", "runtime", "go", "prompty"));
+fixSwiftProcessorProviderCollision(
+  join(
+    "..",
+    "runtime",
+    "swift",
+    "prompty-model",
+    "Tests",
+    "PromptyModelTests",
+    "ProcessorConformanceTests.swift",
+  ),
+);
 restoreSwiftPackageResources(join("..", "runtime", "swift", "prompty-model", "Package.swift"));
 
 // Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
@@ -97,5 +109,75 @@ function restoreSwiftPackageResources(packagePath) {
   );
   if (patched !== content) {
     writeFileSync(packagePath, patched);
+  }
+}
+
+// WORKAROUND (typra 2.0.2 emitter regression): the value-backed coerce-union
+// Go loaders (model.go, format_config.go, parser_config.go) are emitted with a
+// dead `"fmt"` import — the import is present but `fmt` is never referenced.
+// `goimports -w` strips it, so a developer with goimports on PATH never sees it,
+// but the schema-repro-check CI job installs only gofmt (which keeps unused
+// imports), so the committed goimports-clean tree diverges from CI's regen AND
+// an unused import is a hard `go build` error. Strip the dead import here — in
+// the generate pipeline that runs identically local and CI — so the output is
+// reproducible without depending on goimports being installed. Only removes a
+// standalone `"fmt"` import line when the file has no `fmt.` reference, so it is
+// a no-op on every file that legitimately uses fmt. Remove once the emitter no
+// longer emits the unused import (tracked on sethjuarez/typra).
+function stripUnusedFmtImport(root) {
+  if (!existsSync(root)) {
+    return;
+  }
+  for (const entry of readdirSync(root)) {
+    const path = join(root, entry);
+    if (statSync(path).isDirectory()) {
+      stripUnusedFmtImport(path);
+      continue;
+    }
+    if (!path.endsWith(".go")) {
+      continue;
+    }
+    const content = readFileSync(path, "utf8");
+    if (/\bfmt\./u.test(content)) {
+      continue;
+    }
+    const stripped = content.replace(/^\t"fmt"\n/mu, "");
+    if (stripped !== content) {
+      writeFileSync(path, stripped);
+    }
+  }
+}
+
+// WORKAROUND (typra 2.0.2 emitter regression): the value-backed refactor made
+// the Swift processor conformance tests read the discriminator into a local
+// named after the discriminator field — `let provider = ...` — while the same
+// generated call passes the seam registry via `provider()`. For the processor
+// seam the discriminator field is literally `provider`, so the String local
+// shadows the `provider()` registry function and the generated call
+// `ProcessorResolver.resolve(provider: provider, registry: provider())` fails to
+// compile ("cannot call value of non-function type 'String'"). The renderer and
+// parser seams are unaffected because their discriminator is `kind`. Rename the
+// local to `providerKind` (mirroring the renderer/parser `kind` local) so it no
+// longer shadows the registry accessor. Deterministic exact-substring rewrites;
+// the `provider:` argument label, the `["provider"]` lookup, and the `provider()`
+// call are all left untouched. Remove once the emitter names the discriminator
+// local distinctly from the registry accessor (tracked on sethjuarez/typra).
+function fixSwiftProcessorProviderCollision(path) {
+  if (!existsSync(path)) {
+    return;
+  }
+  const content = readFileSync(path, "utf8");
+  const patched = content
+    .replaceAll(
+      'let provider = try (agent.model!.save())["provider"] as! String',
+      'let providerKind = try (agent.model!.save())["provider"] as! String',
+    )
+    .replaceAll(
+      "ProcessorResolver.resolve(provider: provider, registry: provider())",
+      "ProcessorResolver.resolve(provider: providerKind, registry: provider())",
+    )
+    .replaceAll('" + provider)', '" + providerKind)');
+  if (patched !== content) {
+    writeFileSync(path, patched);
   }
 }

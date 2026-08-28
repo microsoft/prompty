@@ -7,6 +7,100 @@ import Foundation
 
 import PromptyModel
 
+// Coerce-union accessors.
+//
+// Typra 2.0.0 lowered `Model`, `FormatConfig`, and `ParserConfig` to
+// discriminated-union enums: each carries a `*` wildcard catch-all, so the
+// generated type is an enum of concrete variants rather than a single struct.
+// The fields every variant shares are reached here once, so the rest of the
+// runtime keeps reading `model.provider`, `format.kind`, etc. unchanged.
+
+extension Model {
+  /// The configured model id, shared by every provider variant.
+  public var id: String {
+    switch self {
+    case .openAIModel(let model): return model.id
+    case .azureModel(let model): return model.id
+    case .customModel(let model, _): return model.id
+    }
+  }
+
+  /// The provider discriminator (`openai`, `azure`, or a custom value).
+  public var provider: String {
+    switch self {
+    case .openAIModel(let model): return model.provider
+    case .azureModel(let model): return model.provider
+    case .customModel(let model, _): return model.provider
+    }
+  }
+
+  /// The API surface to call, when declared.
+  public var apiType: ApiType? {
+    switch self {
+    case .openAIModel(let model): return model.apiType
+    case .azureModel(let model): return model.apiType
+    case .customModel(let model, _): return model.apiType
+    }
+  }
+
+  /// The connection block, when declared.
+  public var connection: Connection? {
+    switch self {
+    case .openAIModel(let model): return model.connection
+    case .azureModel(let model): return model.connection
+    case .customModel(let model, _): return model.connection
+    }
+  }
+
+  /// The model options block, when declared.
+  public var options: ModelOptions? {
+    switch self {
+    case .openAIModel(let model): return model.options
+    case .azureModel(let model): return model.options
+    case .customModel(let model, _): return model.options
+    }
+  }
+}
+
+extension FormatConfig {
+  /// The format discriminator (`jinja2`, `mustache`, or a custom value).
+  public var kind: String {
+    switch self {
+    case .jinja2Format(let format): return format.kind
+    case .mustacheFormat(let format): return format.kind
+    case .customFormat(let format, _): return format.kind
+    }
+  }
+
+  /// Whether the format opts into strict schema adherence.
+  public var strict: Bool? {
+    switch self {
+    case .jinja2Format(let format): return format.strict
+    case .mustacheFormat(let format): return format.strict
+    case .customFormat(let format, _): return format.strict
+    }
+  }
+
+  /// Format-specific options, when declared.
+  public var options: [String: Any]? {
+    switch self {
+    case .jinja2Format(let format): return format.options
+    case .mustacheFormat(let format): return format.options
+    case .customFormat(let format, _): return format.options
+    }
+  }
+}
+
+extension ParserConfig {
+  /// The parser discriminator (`prompty` or a custom value).
+  public var kind: String {
+    switch self {
+    case .promptyParser(let parser): return parser.kind
+    case .customParser(let parser, _): return parser.kind
+    }
+  }
+}
+
 extension Property {
   /// The property's raw frontmatter dictionary.
   ///

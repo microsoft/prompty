@@ -181,8 +181,7 @@ export class Checkpoint {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Checkpoint {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Checkpoint.load(data as Record<string, unknown>, context);
   }
 

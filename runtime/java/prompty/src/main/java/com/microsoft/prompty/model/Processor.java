@@ -9,5 +9,5 @@ import java.util.Map;
 
 public interface Processor {
   Object process(Agent agent, Object response);
-  Object processStream(Object stream);
+  Object processStream(Agent agent, Object stream);
 }

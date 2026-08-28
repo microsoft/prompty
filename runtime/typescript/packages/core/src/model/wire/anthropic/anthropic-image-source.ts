@@ -90,8 +90,7 @@ export class AnthropicImageSource {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicImageSource {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicImageSource.load(data as Record<string, unknown>, context);
   }
 

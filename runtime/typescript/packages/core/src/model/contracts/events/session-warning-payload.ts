@@ -92,8 +92,7 @@ export class SessionWarningPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionWarningPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionWarningPayload.load(data as Record<string, unknown>, context);
   }
 

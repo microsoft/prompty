@@ -22,12 +22,7 @@ pub struct AnthropicExecutor;
 #[async_trait]
 impl Executor for AnthropicExecutor {
     async fn execute(&self, agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -94,12 +89,7 @@ impl Executor for AnthropicExecutor {
         agent: &Agent,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -146,12 +136,7 @@ impl Executor for AnthropicExecutor {
 impl AnthropicExecutor {
     /// Build the request args without sending — useful for testing wire format.
     pub fn build_args(agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Anthropic only supports apiType 'chat', got: {api_type}").into(),
@@ -171,10 +156,10 @@ impl AnthropicExecutor {
 fn resolve_connection(
     agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let Some(model) = agent.model.as_ref() else {
-        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    let conn = match agent.model.get("connection") {
+        Some(conn) => conn,
+        None => return Ok(std::borrow::Cow::Owned(serde_json::Value::Null)),
     };
-    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {

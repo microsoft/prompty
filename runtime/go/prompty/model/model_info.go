@@ -138,6 +138,33 @@ func (obj *ModelInfo) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// ModelInfoFromWire loads a ModelInfo from a provider-specific wire payload.
+func ModelInfoFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (ModelInfo, error) {
+	wireMap := map[string]map[string]string{
+		"id":               {"openai": "id", "anthropic": "id"},
+		"displayName":      {"anthropic": "display_name"},
+		"ownedBy":          {"openai": "owned_by"},
+		"contextWindow":    {"anthropic": "context_length"},
+		"inputModalities":  {"anthropic": "input_modalities"},
+		"outputModalities": {"anthropic": "output_modalities"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadModelInfo(canonical, ctx)
+}
+
 // ToJSON serializes ModelInfo to JSON string
 func (obj *ModelInfo) ToJSON() (string, error) {
 	ctx := NewSaveContext()

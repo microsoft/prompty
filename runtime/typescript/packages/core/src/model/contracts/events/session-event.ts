@@ -161,8 +161,7 @@ export class SessionEvent {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SessionEvent {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SessionEvent.load(data as Record<string, unknown>, context);
   }
 

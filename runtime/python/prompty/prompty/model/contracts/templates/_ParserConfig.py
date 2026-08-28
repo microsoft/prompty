@@ -13,7 +13,8 @@ from ..._context import LoadContext, SaveContext
 
 @dataclass
 class ParserConfig:
-    """Template parser definition
+    """Template parser definition. `kind` is the `@dispatch` discriminator for the
+    Parser seam, reached from a seam param as `agent.template.parser.kind`.
 
     Attributes
     ----------
@@ -45,17 +46,13 @@ class ParserConfig:
 
         # handle alternate representations
         if isinstance(data, str):
-            instance = ParserConfig()
-            instance.kind = data
-            if context is not None:
-                instance = context.process_output(instance)
-            return instance
+            return ParserConfig.load_kind({"kind": data}, context)
 
         if not isinstance(data, dict):
             raise ValueError(f"Invalid data for ParserConfig: {data}")
 
-        # create new instance
-        instance = ParserConfig()
+        # load polymorphic ParserConfig instance
+        instance = ParserConfig.load_kind(data, context)
 
         if data is not None and "kind" in data:
             instance.kind = data["kind"]
@@ -64,6 +61,20 @@ class ParserConfig:
         if context is not None:
             instance = context.process_output(instance)
         return instance
+
+    @staticmethod
+    def load_kind(data: dict, context: LoadContext | None) -> "ParserConfig":
+        # load polymorphic ParserConfig instance
+        discriminator_raw = data.get("kind") if data is not None else None
+        discriminator_value = ""
+        if isinstance(discriminator_raw, str):
+            discriminator_value = discriminator_raw
+        if discriminator_value == "prompty":
+            return PromptyParser.load(data, context)
+
+        else:
+            # load default instance
+            return CustomParser.load(data, context)
 
     def save(self, context: SaveContext | None = None) -> dict[str, Any]:
         """Save the ParserConfig instance to a dictionary.
@@ -102,6 +113,179 @@ class ParserConfig:
 
     def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
         """Convert the ParserConfig instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class PromptyParser(ParserConfig):
+    """The default Prompty chat parser. Pin-only subtype.
+
+    Attributes
+    ----------
+    kind : str
+        The Prompty parser discriminator
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="prompty")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "PromptyParser":
+        """Load a PromptyParser instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            PromptyParser: The loaded PromptyParser instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for PromptyParser: {data}")
+
+        # create new instance
+        instance = PromptyParser()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the PromptyParser instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the PromptyParser instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the PromptyParser instance to a JSON string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+            indent (int): Number of spaces for indentation. Defaults to 2.
+        Returns:
+            str: The JSON string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_json(self.save(context), indent)
+
+
+@dataclass
+class CustomParser(ParserConfig):
+    """Wildcard catch-all parser for downstream/unregistered parser kinds. The `"*"`
+    discriminator lowers to the Parser dispatch decl's `defaultVariant`.
+
+    Attributes
+    ----------
+    kind : str
+        The wildcard parser discriminator for any kind not explicitly modeled
+    """
+
+    _shorthand_property: ClassVar[str | None] = None
+
+    kind: str = field(default="*")
+
+    @staticmethod
+    def load(data: Any, context: LoadContext | None = None) -> "CustomParser":
+        """Load a CustomParser instance.
+        Args:
+            data (Any): The data to load the instance from.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            CustomParser: The loaded CustomParser instance.
+
+        """
+
+        if context is None:
+            context = LoadContext()
+        data = context.process_input(data)
+
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid data for CustomParser: {data}")
+
+        # create new instance
+        instance = CustomParser()
+
+        if data is not None and "kind" in data:
+            instance.kind = data["kind"]
+        if context is not None:
+            instance = context.process_output(instance)
+        return instance
+
+    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
+        """Save the CustomParser instance to a dictionary.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            dict[str, Any]: The dictionary representation of this instance.
+
+        """
+        obj = self
+        if context is not None:
+            obj = context.process_object(obj)
+
+        # Start with parent class properties
+        result = super().save(context)
+
+        if obj.kind is not None:
+            result["kind"] = obj.kind
+        return result
+
+    def to_yaml(self, context: SaveContext | None = None) -> str:
+        """Convert the CustomParser instance to a YAML string.
+        Args:
+            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            str: The YAML string representation of this instance.
+
+        """
+        if context is None:
+            context = SaveContext()
+        return context.to_yaml(self.save(context))
+
+    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
+        """Convert the CustomParser instance to a JSON string.
         Args:
             context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
             indent (int): Number of spaces for indentation. Defaults to 2.

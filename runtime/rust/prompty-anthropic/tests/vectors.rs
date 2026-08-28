@@ -106,7 +106,9 @@ fn build_agent(input: &Value) -> Agent {
         .and_then(|v| v.as_str())
         .unwrap_or("chat");
     let provider = input
-        .get("provider")
+        .get("agent")
+        .and_then(|a| a.get("model"))
+        .and_then(|m| m.get("provider"))
         .and_then(|v| v.as_str())
         .unwrap_or("anthropic");
 
@@ -148,7 +150,9 @@ fn build_agent_for_process(input: &Value) -> Agent {
         .and_then(|v| v.as_bool())
         .unwrap_or(false);
     let provider = input
-        .get("provider")
+        .get("agent")
+        .and_then(|a| a.get("model"))
+        .and_then(|m| m.get("provider"))
         .and_then(|v| v.as_str())
         .unwrap_or("anthropic");
 
@@ -201,7 +205,12 @@ macro_rules! wire_test {
                 .unwrap_or_else(|| panic!("Vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
+            let provider = input
+                .get("agent")
+                .and_then(|a| a.get("model"))
+                .and_then(|m| m.get("provider"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
             // Skip non-Anthropic vectors
             if provider != "anthropic" {
@@ -246,7 +255,12 @@ macro_rules! process_test {
                 .unwrap_or_else(|| panic!("Process vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
+            let provider = input
+                .get("agent")
+                .and_then(|a| a.get("model"))
+                .and_then(|m| m.get("provider"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
             // Skip non-Anthropic vectors
             if provider != "anthropic" {

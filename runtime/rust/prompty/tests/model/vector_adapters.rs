@@ -60,7 +60,7 @@ pub struct Context {
     pub vector: Value,
     pub provider: Option<String>,
     pub target_api: Option<String>,
-    pub doubles: HashMap<String, Value>,
+    pub doubles: Value,
     pub base_dir: String,
 }
 
@@ -128,25 +128,38 @@ impl VectorError {
     }
 }
 
-pub fn adapters() -> HashMap<String, Adapter> {
-    HashMap::from([
-        (
-            "DiscoveryConformance.enrich".to_string(),
-            Adapter::sync(enrich_adapter),
+fn seam_discriminator(input: &Value, path: &[&str]) -> String {
+    let dotted = format!("agent.{}", path.join("."));
+    let mut node = input.get("agent");
+    for key in path {
+        node = node
+            .and_then(Value::as_object)
+            .and_then(|object| object.get(*key));
+    }
+    match node {
+        Some(Value::String(value)) if !value.is_empty() => value.clone(),
+        _ => panic!(
+            "vector input missing @dispatch discriminator at '{dotted}'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback)."
         ),
+    }
+}
+
+pub fn adapters() -> HashMap<&'static str, Adapter> {
+    HashMap::from([
+        ("DiscoveryConformance.enrich", Adapter::sync(enrich_adapter)),
         (
-            "DiscoveryConformance.mapModel".to_string(),
+            "DiscoveryConformance.mapModel",
             Adapter::sync(map_model_adapter),
         ),
         (
-            "LoadConformance.load".to_string(),
+            "LoadConformance.load",
             Adapter {
                 invoke: Invoke::Sync(load_adapter),
                 normalize: Some(load_normalize),
             },
         ),
         (
-            "Renderer.render".to_string(),
+            "Renderer.render",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, ctx| {
                     let input = input.clone();
@@ -157,18 +170,18 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
-            "Renderer.renderSegments".to_string(),
+            "Renderer.renderSegments",
             Adapter::sync(render_segments_adapter),
         ),
         (
-            "Parser.parse".to_string(),
+            "Parser.parse",
             Adapter {
                 invoke: Invoke::Sync(parse_adapter),
                 normalize: None,
             },
         ),
         (
-            "TurnConformance.runTurn".to_string(),
+            "TurnConformance.runTurn",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, _ctx| {
                     let input = input.clone();
@@ -178,7 +191,7 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
-            "TurnConformance.run".to_string(),
+            "TurnConformance.run",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, ctx| {
                     let input = input.clone();
@@ -189,7 +202,7 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
-            "Processor.processStream".to_string(),
+            "Processor.processStream",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, _ctx| {
                     let input = input.clone();
@@ -199,21 +212,21 @@ pub fn adapters() -> HashMap<String, Adapter> {
             },
         ),
         (
-            "WireConformance.toRequest".to_string(),
+            "WireConformance.toRequest",
             Adapter {
                 invoke: Invoke::Sync(wire_to_request_adapter),
                 normalize: Some(project_normalize),
             },
         ),
         (
-            "Processor.process".to_string(),
+            "Processor.process",
             Adapter {
                 invoke: Invoke::Sync(process_adapter),
                 normalize: Some(project_normalize),
             },
         ),
         (
-            "TurnConformance.replay".to_string(),
+            "TurnConformance.replay",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, ctx| {
                     let input = input.clone();
@@ -226,12 +239,12 @@ pub fn adapters() -> HashMap<String, Adapter> {
     ])
 }
 
-pub fn waivers() -> HashMap<String, String> {
+pub fn waivers() -> HashMap<&'static str, &'static str> {
     HashMap::new()
 }
 
-pub fn doubles() -> HashMap<String, Value> {
-    HashMap::new()
+pub fn doubles() -> Value {
+    Value::Object(serde_json::Map::new())
 }
 
 fn enrich_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
@@ -620,11 +633,7 @@ async fn render_impl(input: Value, expected: Value) -> Result<Value, VectorError
         .and_then(|v| v.as_str())
         .unwrap_or("")
         .to_string();
-    let engine = input
-        .get("engine")
-        .and_then(|v| v.as_str())
-        .unwrap_or("jinja2")
-        .to_string();
+    let engine = seam_discriminator(&input, &["template", "format", "kind"]);
     let inputs_map = input
         .get("inputs")
         .and_then(|v| v.as_object())
@@ -826,10 +835,7 @@ fn build_wire_messages(input: &Value) -> Vec<Message> {
 /// `items` injected for unspecified array properties before load (and cleared
 /// afterwards); Anthropic does not.
 fn build_wire_agent(input: &Value) -> Agent {
-    let provider = input
-        .get("provider")
-        .and_then(|v| v.as_str())
-        .unwrap_or("openai");
+    let provider = seam_discriminator(input, &["model", "provider"]);
     let model_id =
         input
             .get("model_id")
@@ -847,7 +853,7 @@ fn build_wire_agent(input: &Value) -> Agent {
     let mut data = json!({
         "name": "test",
         "kind": "prompt",
-        "model": { "id": model_id, "apiType": api_type, "provider": provider },
+        "model": { "id": model_id, "apiType": api_type, "provider": provider.clone() },
         "instructions": "test",
     });
 
@@ -885,10 +891,7 @@ fn build_wire_agent(input: &Value) -> Agent {
 /// Build a canonical `Agent` for a process vector. Process vectors carry only
 /// `provider` and `has_outputs`; the response drives everything else.
 fn build_process_agent(input: &Value) -> Agent {
-    let provider = input
-        .get("provider")
-        .and_then(|v| v.as_str())
-        .unwrap_or("openai");
+    let provider = seam_discriminator(input, &["model", "provider"]);
     let has_outputs = input
         .get("has_outputs")
         .and_then(|v| v.as_bool())
@@ -982,10 +985,7 @@ fn normalize_loaded_property_value(value: &mut Value) {
 /// WireConformance.toRequest -- build a provider request body from a canonical
 /// agent + messages through the real provider wire layer.
 fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
-    let provider = input
-        .get("provider")
-        .and_then(|v| v.as_str())
-        .unwrap_or("openai");
+    let provider = seam_discriminator(input, &["model", "provider"]);
     let api_type = input
         .get("apiType")
         .and_then(|v| v.as_str())
@@ -993,7 +993,7 @@ fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, Vecto
     let agent = build_wire_agent(input);
     let messages = build_wire_messages(input);
 
-    let request_body = match provider {
+    let request_body = match provider.as_str() {
         "anthropic" => prompty_anthropic::wire::build_chat_args(&agent, &messages)
             .map_err(|e| VectorError::new(e.to_string()))?,
         "openai" => match api_type {
@@ -1018,14 +1018,11 @@ fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, Vecto
 /// Processor.process -- extract the canonical result from a raw provider
 /// response through the real provider process layer.
 fn process_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
-    let provider = input
-        .get("provider")
-        .and_then(|v| v.as_str())
-        .unwrap_or("openai");
+    let provider = seam_discriminator(input, &["model", "provider"]);
     let agent = build_process_agent(input);
     let response = input.get("response").cloned().unwrap_or(Value::Null);
 
-    let result = match provider {
+    let result = match provider.as_str() {
         "anthropic" => prompty_anthropic::process_response(&agent, &response)
             .map_err(|e| VectorError::new(e.to_string()))?,
         "openai" => prompty_openai::process_response(&agent, &response)
@@ -1947,11 +1944,18 @@ fn run_normalize(observed: &Value, ctx: &Context) -> Value {
 // reconciler for partialText/requiresReconciliation/completionCommitted.
 
 async fn process_stream_impl(input: Value) -> Result<Value, VectorError> {
+    let provider = seam_discriminator(&input, &["model", "provider"]);
     let events = input
         .get("events")
         .and_then(Value::as_array)
         .cloned()
         .unwrap_or_default();
+
+    if provider != "openai" {
+        return Err(VectorError::new(format!(
+            "Unsupported stream provider: {provider:?}"
+        )));
+    }
 
     let mut provider_chunks = Vec::with_capacity(events.len());
     for event in &events {
@@ -2004,5 +2008,264 @@ fn stream_chunk_to_value(chunk: &StreamChunk) -> Value {
             }
         }),
         other => json!({"kind": "unexpected", "debug": format!("{other:?}")}),
+    }
+}
+
+// ===========================================================================
+// Typra 2.0.x typed seam provider doubles.
+//
+// The generated `tests/model/{renderer,parser,processor}_conformance_test.rs`
+// smoke tests call `vector_adapters::{renderer,parser,processor}_provider()`
+// and route the discriminator through `{...}_resolver::resolve`. Those tests
+// only assert the seam call returns `Ok` (value/error correctness stays in the
+// `vector_conformance_test` adapters path above). These doubles implement the
+// SEAM traits (`prompty::model::{renderer,parser,processor}`) by delegating to
+// the real `interfaces` renderers/parser and the provider wire/process layer.
+//
+// Self-contained module: its own `use` block avoids collisions with this
+// file's adapter imports; the three constructors are re-exported at top level
+// to match the `vector_adapters::*_provider()` path the generated tests call.
+// ===========================================================================
+pub use seam_providers::{parser_provider, processor_provider, renderer_provider};
+
+mod seam_providers {
+    use async_trait::async_trait;
+    use futures::StreamExt;
+    use serde_json::{Value, json};
+
+    use prompty::model::operations::pipeline::render_segment::{RenderSegment, RenderSegmentKind};
+    use prompty::model::parser::Parser as SeamParser;
+    use prompty::model::parser_resolver::ParserProvider;
+    use prompty::model::processor::Processor as SeamProcessor;
+    use prompty::model::processor_resolver::ProcessorProvider;
+    use prompty::model::renderer::Renderer as SeamRenderer;
+    use prompty::model::renderer_resolver::RendererProvider;
+    use prompty::model::{Agent, Message};
+
+    use prompty::interfaces::{Parser as IParser, Renderer as IRenderer};
+    use prompty::parsers::PromptyChatParser;
+    use prompty::renderers::{MustacheRenderer, NunjucksRenderer};
+    use prompty::types::StreamChunk;
+
+    type BoxErr = Box<dyn std::error::Error + Send + Sync>;
+
+    fn boxed<E: std::fmt::Display>(e: E) -> BoxErr {
+        e.to_string().into()
+    }
+
+    /// Map the flat jinja-subset `Segment` onto the typed `RenderSegment`.
+    fn segment_to_render_segment(s: &prompty::jinja_subset::Segment) -> RenderSegment {
+        RenderSegment {
+            kind: match s.kind.as_str() {
+                "interp" => RenderSegmentKind::Interp,
+                _ => RenderSegmentKind::Literal,
+            },
+            text: s.text.clone(),
+            source: s.source.clone(),
+            strict: Some(s.strict),
+        }
+    }
+
+    struct SeamJinja2Renderer;
+    struct SeamMustacheRenderer;
+
+    async fn render_via<R: IRenderer>(
+        inner: &R,
+        agent: &Agent,
+        template: &String,
+        inputs: &Value,
+    ) -> Result<String, BoxErr> {
+        inner
+            .render(agent, template.as_str(), inputs)
+            .await
+            .map_err(boxed)
+    }
+
+    fn render_segments_local(
+        template: &String,
+        inputs: &Value,
+    ) -> Result<Vec<RenderSegment>, BoxErr> {
+        let map = inputs.as_object().cloned().unwrap_or_default();
+        // The generated seam smoke tests use non-strict inputs, so an empty
+        // strict set never fires a StrictViolation.
+        let strict_props: Vec<String> = Vec::new();
+        match prompty::jinja_subset::render_segments(template.as_str(), &map, &strict_props) {
+            Ok(segments) => Ok(segments.iter().map(segment_to_render_segment).collect()),
+            Err(e) => Err(boxed(e)),
+        }
+    }
+
+    #[async_trait]
+    impl SeamRenderer for SeamJinja2Renderer {
+        async fn render(
+            &self,
+            agent: &Agent,
+            template: &String,
+            inputs: &Value,
+        ) -> Result<String, BoxErr> {
+            render_via(&NunjucksRenderer, agent, template, inputs).await
+        }
+        async fn render_segments(
+            &self,
+            _agent: &Agent,
+            template: &String,
+            inputs: &Value,
+        ) -> Result<Vec<RenderSegment>, BoxErr> {
+            render_segments_local(template, inputs)
+        }
+    }
+
+    #[async_trait]
+    impl SeamRenderer for SeamMustacheRenderer {
+        async fn render(
+            &self,
+            agent: &Agent,
+            template: &String,
+            inputs: &Value,
+        ) -> Result<String, BoxErr> {
+            render_via(&MustacheRenderer, agent, template, inputs).await
+        }
+        async fn render_segments(
+            &self,
+            _agent: &Agent,
+            template: &String,
+            inputs: &Value,
+        ) -> Result<Vec<RenderSegment>, BoxErr> {
+            // Mustache has no provenance segmenter; the subset segmenter is the
+            // shared provenance source (matches the old adapter path).
+            render_segments_local(template, inputs)
+        }
+    }
+
+    struct SeamPromptyParser;
+
+    #[async_trait]
+    impl SeamParser for SeamPromptyParser {
+        async fn parse(
+            &self,
+            agent: &Agent,
+            rendered: &String,
+            context: &Option<Value>,
+        ) -> Result<Vec<Message>, BoxErr> {
+            IParser::parse(
+                &PromptyChatParser,
+                agent,
+                rendered.as_str(),
+                context.as_ref(),
+            )
+            .await
+            .map_err(boxed)
+        }
+    }
+
+    struct SeamOpenAiProcessor;
+    struct SeamNoopProcessor;
+
+    #[async_trait]
+    impl SeamProcessor for SeamOpenAiProcessor {
+        async fn process(&self, agent: &Agent, response: &Value) -> Result<Value, BoxErr> {
+            prompty_openai::process_response(agent, response).map_err(boxed)
+        }
+
+        async fn process_stream(&self, _agent: &Agent, stream: &Value) -> Result<Value, BoxErr> {
+            let events = stream.as_array().cloned().unwrap_or_default();
+            let mut provider_chunks: Vec<Value> = Vec::with_capacity(events.len());
+            for event in &events {
+                match event.get("kind").and_then(Value::as_str) {
+                    Some("provider") => {
+                        provider_chunks.push(event.get("value").cloned().unwrap_or(Value::Null))
+                    }
+                    Some("transportError") => provider_chunks.push(json!({
+                        "error": {
+                            "type": "sse_transport_error",
+                            "message": event.get("message").cloned().unwrap_or(Value::Null),
+                        }
+                    })),
+                    other => {
+                        return Err(boxed(format!("unsupported stream event kind: {other:?}")));
+                    }
+                }
+            }
+            let classified: Vec<StreamChunk> =
+                prompty_openai::processor::process_stream(futures::stream::iter(provider_chunks))
+                    .collect()
+                    .await;
+            Ok(json!({ "chunks": classified.len() }))
+        }
+    }
+
+    #[async_trait]
+    impl SeamProcessor for SeamNoopProcessor {
+        async fn process(&self, _agent: &Agent, response: &Value) -> Result<Value, BoxErr> {
+            Ok(response.clone())
+        }
+    }
+
+    pub struct SeamRendererProvider {
+        jinja2: SeamJinja2Renderer,
+        mustache: SeamMustacheRenderer,
+    }
+
+    impl RendererProvider for SeamRendererProvider {
+        fn jinja2(&self) -> Option<&dyn SeamRenderer> {
+            Some(&self.jinja2)
+        }
+        fn mustache(&self) -> Option<&dyn SeamRenderer> {
+            Some(&self.mustache)
+        }
+        fn custom(&self) -> Option<&dyn SeamRenderer> {
+            None
+        }
+    }
+
+    pub struct SeamParserProvider {
+        prompty: SeamPromptyParser,
+    }
+
+    impl ParserProvider for SeamParserProvider {
+        fn prompty(&self) -> Option<&dyn SeamParser> {
+            Some(&self.prompty)
+        }
+        fn custom(&self) -> Option<&dyn SeamParser> {
+            None
+        }
+    }
+
+    pub struct SeamProcessorProvider {
+        openai: SeamOpenAiProcessor,
+        noop: SeamNoopProcessor,
+    }
+
+    impl ProcessorProvider for SeamProcessorProvider {
+        fn openai(&self) -> Option<&dyn SeamProcessor> {
+            Some(&self.openai)
+        }
+        fn azure(&self) -> Option<&dyn SeamProcessor> {
+            // Azure OpenAI shares the OpenAI wire/process layer.
+            Some(&self.openai)
+        }
+        fn custom(&self) -> Option<&dyn SeamProcessor> {
+            Some(&self.noop)
+        }
+    }
+
+    pub fn renderer_provider() -> SeamRendererProvider {
+        SeamRendererProvider {
+            jinja2: SeamJinja2Renderer,
+            mustache: SeamMustacheRenderer,
+        }
+    }
+
+    pub fn parser_provider() -> SeamParserProvider {
+        SeamParserProvider {
+            prompty: SeamPromptyParser,
+        }
+    }
+
+    pub fn processor_provider() -> SeamProcessorProvider {
+        SeamProcessorProvider {
+            openai: SeamOpenAiProcessor,
+            noop: SeamNoopProcessor,
+        }
     }
 }

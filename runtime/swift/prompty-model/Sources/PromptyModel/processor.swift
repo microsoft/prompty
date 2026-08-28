@@ -5,5 +5,5 @@ import Foundation
 
 public protocol Processor: Sendable {
   func process(agent: Agent, response: Any) async throws -> Any
-  func processStream(stream: Any) async throws -> Any
+  func processStream(agent: Agent, stream: Any) async throws -> Any
 }

@@ -117,15 +117,10 @@ impl OpenAIExecutor {
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
 
         let body = Self::build_request_args(agent, messages, request)?;
-        let url = match api_type {
+        let url = match api_type.as_str() {
             "chat" | "agent" => build_url(agent, "/v1/chat/completions")?,
             "responses" => build_url(agent, "/v1/responses")?,
             "embedding" => build_url(agent, "/v1/embeddings")?,
@@ -174,15 +169,10 @@ impl OpenAIExecutor {
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
 
         let mut body = Self::build_request_args(agent, messages, request)?;
-        let url = match api_type {
+        let url = match api_type.as_str() {
             "chat" | "agent" => build_url(agent, "/v1/chat/completions")?,
             "responses" => build_url(agent, "/v1/responses")?,
             other => {
@@ -193,7 +183,7 @@ impl OpenAIExecutor {
         };
 
         // Force stream: true
-        wire::enable_streaming(&mut body, api_type);
+        wire::enable_streaming(&mut body, &api_type);
 
         let api_key = get_api_key(agent)?;
         let client = &*HTTP_CLIENT;
@@ -231,13 +221,8 @@ impl OpenAIExecutor {
         messages: &[Message],
         request: Option<&ModelInvocationRequest>,
     ) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
-        Ok(match api_type {
+        let api_type = prompty::model_access::model_api_type(&agent.model);
+        Ok(match api_type.as_str() {
             "chat" | "agent" => wire::build_chat_args(agent, messages)
                 .map_err(|error| InvokerError::Validation(error.to_string()))?,
             "responses" => {
@@ -349,10 +334,10 @@ fn responses_continuation(
 fn resolve_connection(
     agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let Some(model) = agent.model.as_ref() else {
-        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    let conn = match agent.model.get("connection") {
+        Some(conn) => conn,
+        None => return Ok(std::borrow::Cow::Owned(serde_json::Value::Null)),
     };
-    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {

@@ -158,7 +158,13 @@ impl Property {
             "array" => PropertyKind::Array {
                 items: value
                     .get("items")
-                    .cloned()
+                    .map(|v| {
+                        if let Some(s) = v.as_str() {
+                            serde_json::json!({ "kind": "string", "example": s })
+                        } else {
+                            v.clone()
+                        }
+                    })
                     .unwrap_or(serde_json::Value::Null),
             },
             "object" => PropertyKind::Object {

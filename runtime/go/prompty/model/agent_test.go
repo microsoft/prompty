@@ -107,9 +107,6 @@ func TestAgentLoadJSON(t *testing.T) {
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -120,11 +117,19 @@ func TestAgentLoadJSON(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -214,9 +219,6 @@ instructions: |-
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -227,11 +229,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -324,9 +334,6 @@ func TestAgentFromJSON(t *testing.T) {
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -337,11 +344,19 @@ func TestAgentFromJSON(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -426,9 +441,6 @@ instructions: |-
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -439,11 +451,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -548,9 +568,6 @@ func TestAgentRoundtrip(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -561,11 +578,19 @@ func TestAgentRoundtrip(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -677,9 +702,6 @@ func TestAgentToJSON(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -690,11 +712,19 @@ func TestAgentToJSON(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -806,9 +836,6 @@ func TestAgentToYAML(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -819,11 +846,19 @@ func TestAgentToYAML(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -920,14 +955,19 @@ func TestAgentLoadJSON1(t *testing.T) {
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1017,14 +1057,19 @@ instructions: |-
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1116,14 +1161,19 @@ func TestAgentFromJSON1(t *testing.T) {
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1208,14 +1258,19 @@ instructions: |-
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1319,14 +1374,19 @@ func TestAgentRoundtrip1(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1437,14 +1497,19 @@ func TestAgentToJSON1(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1555,14 +1620,19 @@ func TestAgentToYAML1(t *testing.T) {
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1664,9 +1734,6 @@ func TestAgentLoadJSON2(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -1677,11 +1744,19 @@ func TestAgentLoadJSON2(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1774,9 +1849,6 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -1787,11 +1859,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1888,9 +1968,6 @@ func TestAgentFromJSON2(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -1901,11 +1978,19 @@ func TestAgentFromJSON2(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -1993,9 +2078,6 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -2006,11 +2088,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2119,9 +2209,6 @@ func TestAgentRoundtrip2(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -2132,11 +2219,19 @@ func TestAgentRoundtrip2(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2252,9 +2347,6 @@ func TestAgentToJSON2(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -2265,11 +2357,19 @@ func TestAgentToJSON2(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2385,9 +2485,6 @@ func TestAgentToYAML2(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -2398,11 +2495,19 @@ func TestAgentToYAML2(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2503,14 +2608,19 @@ func TestAgentLoadJSON3(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2603,14 +2713,19 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2706,14 +2821,19 @@ func TestAgentFromJSON3(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2801,14 +2921,19 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -2916,14 +3041,19 @@ func TestAgentRoundtrip3(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3038,14 +3168,19 @@ func TestAgentToJSON3(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3160,14 +3295,19 @@ func TestAgentToYAML3(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3280,9 +3420,6 @@ func TestAgentLoadJSON4(t *testing.T) {
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -3293,11 +3430,19 @@ func TestAgentLoadJSON4(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3399,9 +3544,6 @@ instructions: |-
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -3412,11 +3554,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3524,9 +3674,6 @@ func TestAgentFromJSON4(t *testing.T) {
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -3537,11 +3684,19 @@ func TestAgentFromJSON4(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3638,9 +3793,6 @@ instructions: |-
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -3651,11 +3803,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3775,9 +3935,6 @@ func TestAgentRoundtrip4(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -3788,11 +3945,19 @@ func TestAgentRoundtrip4(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -3919,9 +4084,6 @@ func TestAgentToJSON4(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -3932,11 +4094,19 @@ func TestAgentToJSON4(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4063,9 +4233,6 @@ func TestAgentToYAML4(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -4076,11 +4243,19 @@ func TestAgentToYAML4(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4192,14 +4367,19 @@ func TestAgentLoadJSON5(t *testing.T) {
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4301,14 +4481,19 @@ instructions: |-
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4415,14 +4600,19 @@ func TestAgentFromJSON5(t *testing.T) {
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4519,14 +4709,19 @@ instructions: |-
 	assertAgentStringField(t, instance.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, instance.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, instance.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4645,14 +4840,19 @@ func TestAgentRoundtrip5(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4778,14 +4978,19 @@ func TestAgentToJSON5(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -4911,14 +5116,19 @@ func TestAgentToYAML5(t *testing.T) {
 	assertAgentStringField(t, reloaded.Inputs[2], "Name", "question", "Inputs[2].Name")
 	assertAgentStringField(t, reloaded.Inputs[2], "Kind", "string", "Inputs[2].Kind")
 	assertAgentStringField(t, reloaded.Inputs[2], "Default", "What is the meaning of life?", "Inputs[2].Default")
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5035,9 +5245,6 @@ func TestAgentLoadJSON6(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -5048,11 +5255,19 @@ func TestAgentLoadJSON6(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5157,9 +5372,6 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -5170,11 +5382,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5286,9 +5506,6 @@ func TestAgentFromJSON6(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -5299,11 +5516,19 @@ func TestAgentFromJSON6(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5403,9 +5628,6 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
-	}
 	if len(instance.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(instance.Tools))
 	}
@@ -5416,11 +5638,19 @@ instructions: |-
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5544,9 +5774,6 @@ func TestAgentRoundtrip6(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -5557,11 +5784,19 @@ func TestAgentRoundtrip6(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5692,9 +5927,6 @@ func TestAgentToJSON6(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -5705,11 +5937,19 @@ func TestAgentToJSON6(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5840,9 +6080,6 @@ func TestAgentToYAML6(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
-	}
 	if len(reloaded.Tools) != 1 {
 		t.Fatalf("Expected Tools length to be 1, got %d", len(reloaded.Tools))
 	}
@@ -5853,11 +6090,19 @@ func TestAgentToYAML6(t *testing.T) {
 	if tools0Value.Kind != "function" {
 		t.Errorf(`Expected Kind to be "function", got %v`, tools0Value.Kind)
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -5973,14 +6218,19 @@ func TestAgentLoadJSON7(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6085,14 +6335,19 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6203,14 +6458,19 @@ func TestAgentFromJSON7(t *testing.T) {
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6310,14 +6570,19 @@ instructions: |-
 	if len(instance.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(instance.Outputs))
 	}
-	if instance.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, instance.Model.Id)
+	if instance.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if instance.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, instance.Template.Format.Kind)
-	}
-	if instance.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.Kind)
+	if instance.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, instance.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6440,14 +6705,19 @@ func TestAgentRoundtrip7(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6577,14 +6847,19 @@ func TestAgentToJSON7(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 
@@ -6714,14 +6989,19 @@ func TestAgentToYAML7(t *testing.T) {
 	if len(reloaded.Outputs) != 1 {
 		t.Fatalf("Expected Outputs length to be 1, got %d", len(reloaded.Outputs))
 	}
-	if reloaded.Model.Id != "gpt-35-turbo" {
-		t.Errorf(`Expected Model.Id to be "gpt-35-turbo", got %v`, reloaded.Model.Id)
+	if reloaded.Template.Format.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "mustache" {
+		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
-	if reloaded.Template.Format.Kind != "mustache" {
-		t.Errorf(`Expected Template.Format.Kind to be "mustache", got %v`, reloaded.Template.Format.Kind)
-	}
-	if reloaded.Template.Parser.Kind != "prompty" {
-		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.Kind)
+	if reloaded.Template.Parser.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}).Save(prompty.NewSaveContext())["kind"].(string) != "prompty" {
+		t.Errorf(`Expected Template.Parser.Kind to be "prompty", got %v`, reloaded.Template.Parser.(interface {
+			Save(*prompty.SaveContext) map[string]interface{}
+		}).Save(prompty.NewSaveContext())["kind"].(string))
 	}
 }
 

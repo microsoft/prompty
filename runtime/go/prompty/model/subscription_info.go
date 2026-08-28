@@ -67,6 +67,30 @@ func (obj *SubscriptionInfo) ToWire(provider string) map[string]interface{} {
 	return result
 }
 
+// SubscriptionInfoFromWire loads a SubscriptionInfo from a provider-specific wire payload.
+func SubscriptionInfoFromWire(provider string, data map[string]interface{}, ctx *LoadContext) (SubscriptionInfo, error) {
+	wireMap := map[string]map[string]string{
+		"subscriptionId": {"foundry": "subscription_id"},
+		"displayName":    {"foundry": "display_name"},
+		"state":          {"foundry": "state"},
+	}
+	inverse := make(map[string]string)
+	for field, m := range wireMap {
+		if wireName, ok := m[provider]; ok {
+			inverse[wireName] = field
+		}
+	}
+	canonical := make(map[string]interface{})
+	for key, value := range data {
+		if field, ok := inverse[key]; ok {
+			canonical[field] = value
+		} else {
+			canonical[key] = value
+		}
+	}
+	return LoadSubscriptionInfo(canonical, ctx)
+}
+
 // ToJSON serializes SubscriptionInfo to JSON string
 func (obj *SubscriptionInfo) ToJSON() (string, error) {
 	ctx := NewSaveContext()

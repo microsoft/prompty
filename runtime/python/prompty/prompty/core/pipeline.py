@@ -40,11 +40,14 @@ from .agent_events import EventCallback, emit_event
 from .cancellation import CancellationToken, CancelledError
 from .context import trim_to_context_window
 from .discovery import (
-    InvokerError,
+    EXECUTORS,
+    PROCESSORS,
+    default_provider,
     get_executor,
     get_parser,
     get_processor,
     get_renderer,
+    resolve_provider_key,
 )
 from .errors import PromptyLoadError
 from .guardrails import GuardrailError, Guardrails
@@ -610,9 +613,7 @@ def _invoke_executor(
     It is called by :func:`run` and traced via the executor implementation's
     own ``@trace`` decorator.
     """
-    provider = agent.model.provider or ""
-    if not provider:
-        raise InvokerError("prompty.executors", "(no provider set)")
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.execute(agent, messages)
 
@@ -622,9 +623,7 @@ async def _invoke_executor_async(
     messages: list[Message],
 ) -> Any:
     """Async variant of :func:`_invoke_executor`."""
-    provider = agent.model.provider or ""
-    if not provider:
-        raise InvokerError("prompty.executors", "(no provider set)")
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return await executor.execute_async(agent, messages)
 
@@ -741,9 +740,7 @@ def process(
     Any
         Clean result (``str``, tool calls, parsed JSON, etc.).
     """
-    provider = agent.model.provider or ""
-    if not provider:
-        raise InvokerError("prompty.processors", "(no provider set)")
+    provider = resolve_provider_key(agent.model.provider, PROCESSORS)
     processor = get_processor(provider)
     return processor.process(agent, response)
 
@@ -754,9 +751,7 @@ async def process_async(
     response: Any,
 ) -> Any:
     """Async variant of :func:`process`."""
-    provider = agent.model.provider or ""
-    if not provider:
-        raise InvokerError("prompty.processors", "(no provider set)")
+    provider = resolve_provider_key(agent.model.provider, PROCESSORS)
     processor = get_processor(provider)
     return await processor.process_async(agent, response)
 
@@ -1016,7 +1011,12 @@ def turn(
         emit_event(
             on_event,
             "llm_start",
-            {"provider": agent.model.provider, "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+            {
+                "provider": agent.model.provider or default_provider(),
+                "modelId": agent.model.id,
+                "messageCount": len(messages),
+                "attempt": 0,
+            },
         )
         try:
             response = _invoke_executor(agent, messages)
@@ -1088,7 +1088,7 @@ def turn(
                 on_event,
                 "llm_start",
                 {
-                    "provider": agent.model.provider,
+                    "provider": agent.model.provider or default_provider(),
                     "modelId": agent.model.id,
                     "messageCount": len(messages),
                     "attempt": 0,
@@ -1308,7 +1308,12 @@ async def turn_async(
         emit_event(
             on_event,
             "llm_start",
-            {"provider": agent.model.provider, "modelId": agent.model.id, "messageCount": len(messages), "attempt": 0},
+            {
+                "provider": agent.model.provider or default_provider(),
+                "modelId": agent.model.id,
+                "messageCount": len(messages),
+                "attempt": 0,
+            },
         )
         try:
             response = await _invoke_executor_async(agent, messages)
@@ -1380,7 +1385,7 @@ async def turn_async(
                 on_event,
                 "llm_start",
                 {
-                    "provider": agent.model.provider,
+                    "provider": agent.model.provider or default_provider(),
                     "modelId": agent.model.id,
                     "messageCount": len(messages),
                     "attempt": 0,
@@ -1792,7 +1797,7 @@ def _build_tool_result_messages(
         tool_results.append(result)
 
     # Delegate message formatting to executor
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     messages = executor.format_tool_messages(response, tool_calls, tool_results, text_content)
 
@@ -1817,7 +1822,7 @@ async def _build_tool_result_messages_async(
         tool_results.append(result)
 
     # Delegate message formatting to executor
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(response, tool_calls, tool_results, text_content)
 
@@ -1918,7 +1923,7 @@ def _build_tool_messages_from_calls(
         tool_results.append(result)
 
     # Delegate message formatting to executor
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
@@ -1940,7 +1945,7 @@ async def _build_tool_messages_from_calls_async(
         tool_results.append(result)
 
     # Delegate message formatting to executor
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
@@ -1977,7 +1982,7 @@ def _build_tool_result_messages_with_extensions(
         parallel=parallel,
     )
 
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     messages = executor.format_tool_messages(response, tool_calls, tool_results, text_content)
     return messages, False
@@ -2010,7 +2015,7 @@ async def _build_tool_result_messages_with_extensions_async(
         parallel=parallel,
     )
 
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(response, tool_calls, tool_results, text_content)
 
@@ -2041,7 +2046,7 @@ def _build_tool_messages_from_calls_with_extensions(
         parallel=parallel,
     )
 
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 
@@ -2072,7 +2077,7 @@ async def _build_tool_messages_from_calls_with_extensions_async(
         parallel=parallel,
     )
 
-    provider = agent.model.provider or ""
+    provider = resolve_provider_key(agent.model.provider, EXECUTORS)
     executor = get_executor(provider)
     return executor.format_tool_messages(None, tool_calls, tool_results, text_content)
 

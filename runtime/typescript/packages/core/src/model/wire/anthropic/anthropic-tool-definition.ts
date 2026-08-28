@@ -101,8 +101,7 @@ export class AnthropicToolDefinition {
     yaml: string,
     context?: LoadContext,
   ): AnthropicToolDefinition {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicToolDefinition.load(
       data as Record<string, unknown>,
       context,

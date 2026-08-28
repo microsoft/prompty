@@ -298,6 +298,37 @@ def _load_invoke(input: dict, context: dict) -> Any:
 
 
 # ---------------------------------------------------------------------------
+# DISPATCH DISCRIMINATOR
+# ---------------------------------------------------------------------------
+
+
+def _seam_discriminator(input: dict, *path: str) -> str:
+    """Read a @dispatch discriminator from the nested seam-param path.
+
+    Vectors nest the discriminator under the same field-access path the typed
+    rail's resolver walks (``agent.model.provider``,
+    ``agent.template.format.kind``), so the stringly rail reads the SAME single
+    source of truth. Mirrors the runner's ``_resolve_dispatch_key``: a missing,
+    empty, or non-string value is a hard error, never a silent default -- a
+    malformed vector must fail loudly rather than exercise the wrong impl.
+    """
+    node: Any = input.get("agent") if isinstance(input, dict) else None
+    for key in path:
+        if not isinstance(node, dict):
+            node = None
+            break
+        node = node.get(key)
+    if isinstance(node, str) and node:
+        return node
+    dotted = ".".join(("agent", *path))
+    raise ValueError(
+        f"vector input missing @dispatch discriminator at '{dotted}'; every "
+        "conformance vector must nest the discriminator under the seam-param "
+        "path (no flat-sibling fallback)."
+    )
+
+
+# ---------------------------------------------------------------------------
 # RENDER
 # ---------------------------------------------------------------------------
 
@@ -306,7 +337,7 @@ def _render_invoke(input: dict, context: dict) -> Any:
     import re
 
     template = input["template"]
-    engine = input.get("engine", "jinja2")
+    engine = _seam_discriminator(input, "template", "format", "kind")
     inputs = dict(input.get("inputs", {}))
     expected = context["vector"]["expected"]
 
@@ -413,7 +444,11 @@ def _parse_invoke(input: dict, context: dict) -> Any:
 def _make_agent_for_wire(vec_input: dict) -> Agent:
     data: dict[str, Any] = {
         "name": "wire_test",
-        "model": {"id": vec_input.get("model_id", "gpt-4"), "apiType": vec_input.get("apiType", "chat")},
+        "model": {
+            "id": vec_input.get("model_id", "gpt-4"),
+            "apiType": vec_input.get("apiType", "chat"),
+            "provider": _seam_discriminator(vec_input, "model", "provider"),
+        },
     }
     if vec_input.get("options"):
         data["model"]["options"] = vec_input["options"]
@@ -441,7 +476,7 @@ def _vec_messages_to_runtime(messages: list[dict]) -> list[Message]:
 
 
 def _wire_invoke(input: dict, context: dict) -> Any:
-    provider = input.get("provider", "openai")
+    provider = _seam_discriminator(input, "model", "provider")
     api_type = input.get("apiType", "chat")
     messages = _vec_messages_to_runtime(input.get("messages", []))
     agent = _make_agent_for_wire(input)
@@ -615,7 +650,7 @@ def _make_responses_api_mock(data: dict) -> MagicMock:
 
 
 def _process_invoke(input: dict, context: dict) -> Any:
-    provider = input.get("provider", "openai")
+    provider = _seam_discriminator(input, "model", "provider")
     api_type = input.get("apiType", "chat")
     response_data = input["response"]
     has_outputs = input.get("has_outputs", False)
@@ -794,7 +829,7 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
 
 def _process_stream_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
     """Classify a raw provider stream and reconcile the streaming-failure contract."""
-    provider = resolved_input.get("provider") or context.get("provider") or "openai"
+    provider = _seam_discriminator(resolved_input, "model", "provider")
     events = resolved_input.get("events") or []
     if provider == "openai":
         chunks = process_stream_events(events)

@@ -56,8 +56,8 @@ parser:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| format | [FormatConfig](../formatconfig/) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2) |
-| parser | [ParserConfig](../parserconfig/) | Parser used to process the rendered template into API-compatible format |
+| format | [FormatConfig](../formatconfig/) | Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)(Related Types: [Jinja2Format](../jinja2format/), [MustacheFormat](../mustacheformat/), [CustomFormat](../customformat/)) |
+| parser | [ParserConfig](../parserconfig/) | Parser used to process the rendered template into API-compatible format(Related Types: [PromptyParser](../promptyparser/), [CustomParser](../customparser/)) |
 
 ## Composed Types
 

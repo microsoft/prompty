@@ -101,8 +101,7 @@ export class RetryPolicyRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RetryPolicyRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RetryPolicyRequest.load(data as Record<string, unknown>, context);
   }
 

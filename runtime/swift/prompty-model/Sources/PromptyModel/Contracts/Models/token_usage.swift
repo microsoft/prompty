@@ -70,6 +70,23 @@ public struct TokenUsage: TypraModel {
     return result
   }
 
+  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> TokenUsage {
+    let wireMap: [String: [String: String]] = [
+      "promptTokens": ["openai": "prompt_tokens", "anthropic": "input_tokens"],
+      "completionTokens": ["openai": "completion_tokens", "anthropic": "output_tokens"],
+      "totalTokens": ["openai": "total_tokens"],
+    ]
+    var inverse: [String: String] = [:]
+    for (field, mapping) in wireMap {
+      if let wireName = mapping[provider] { inverse[wireName] = field }
+    }
+    var canonical: [String: Any] = [:]
+    for (key, value) in data {
+      canonical[inverse[key] ?? key] = value
+    }
+    return try load(canonical, context: context)
+  }
+
   public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TokenUsage {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "TokenUsage"), context: context)
   }

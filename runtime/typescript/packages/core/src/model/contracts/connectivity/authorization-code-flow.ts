@@ -82,6 +82,29 @@ export class AuthorizationCodeFlow {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AuthorizationCodeFlow {
+    const wireMap: Record<string, Record<string, string>> = {
+      authUrl: { foundry: "auth_url" },
+      codeVerifier: { foundry: "code_verifier" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return AuthorizationCodeFlow.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -98,8 +121,7 @@ export class AuthorizationCodeFlow {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AuthorizationCodeFlow {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AuthorizationCodeFlow.load(data as Record<string, unknown>, context);
   }
 

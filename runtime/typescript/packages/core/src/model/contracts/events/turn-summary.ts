@@ -144,8 +144,7 @@ export class TurnSummary {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnSummary {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnSummary.load(data as Record<string, unknown>, context);
   }
 

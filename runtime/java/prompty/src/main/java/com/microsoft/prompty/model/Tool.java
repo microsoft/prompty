@@ -23,9 +23,7 @@ public abstract class Tool {
     Object data = ctx.processInput(input);
     if (data instanceof Map<?, ?> dispatchMap) {
       Object discriminator = dispatchMap.get("kind");
-      if (!(discriminator instanceof String discriminatorString) || discriminatorString.isEmpty()) {
-        throw new IllegalArgumentException("Invalid Tool discriminator field 'kind': expected non-blank string");
-      }
+      String discriminatorString = discriminator instanceof String discriminatorRaw ? discriminatorRaw : "";
       switch (discriminatorString) {
         case "function":
           return FunctionTool.load(data, ctx);

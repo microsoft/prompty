@@ -86,7 +86,12 @@ macro_rules! process_test {
                 .unwrap_or_else(|| panic!("Process vector '{test_name}' not found"));
 
             let input = &vector["input"];
-            let provider = input.get("provider").and_then(|v| v.as_str()).unwrap_or("");
+            let provider = input
+                .get("agent")
+                .and_then(|a| a.get("model"))
+                .and_then(|m| m.get("provider"))
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
             // Skip non-OpenAI vectors
             if provider != "openai" {

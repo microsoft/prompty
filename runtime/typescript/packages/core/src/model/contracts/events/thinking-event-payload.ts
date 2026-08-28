@@ -74,8 +74,7 @@ export class ThinkingEventPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ThinkingEventPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ThinkingEventPayload.load(data as Record<string, unknown>, context);
   }
 

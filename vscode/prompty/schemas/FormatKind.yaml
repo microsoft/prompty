@@ -1,0 +1,12 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: FormatKind.yaml
+anyOf:
+  - type: string
+    const: jinja2
+  - type: string
+    const: mustache
+  - type: string
+description: |-
+  Open discriminator union naming the template dialects Prompty ships renderers
+  for, plus a bare `string` escape hatch for downstream renderers. The bare
+  `string` member keeps the set OPEN; unknown dialects route to `CustomFormat`.

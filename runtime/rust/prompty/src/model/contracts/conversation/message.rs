@@ -292,10 +292,3 @@ impl<'de> serde::Deserialize<'de> for Message {
         Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }
-/// Helpers for [`Message`]. Implement in a separate file.
-pub trait MessageHelpers {
-    /// Return plain string if all parts are text, else a list of content part dicts for wire serialization
-    fn to_text_content(&self) -> serde_json::Value;
-    /// Concatenate all TextPart values joined by newline
-    fn text(&self) -> String;
-}

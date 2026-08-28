@@ -76,8 +76,7 @@ export class StreamOptions {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): StreamOptions {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return StreamOptions.load(data as Record<string, unknown>, context);
   }
 

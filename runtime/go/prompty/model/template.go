@@ -21,8 +21,8 @@ import (
 // and processed to generate prompts for AI models.
 
 type Template struct {
-	Format FormatConfig `json:"format" yaml:"format"`
-	Parser ParserConfig `json:"parser" yaml:"parser"`
+	Format interface{} `json:"format" yaml:"format"`
+	Parser interface{} `json:"parser" yaml:"parser"`
 }
 
 // LoadTemplate creates a Template from a map[string]interface{}
@@ -46,6 +46,7 @@ func LoadTemplate(data interface{}, ctx *LoadContext) (Template, error) {
 				if err != nil {
 					return result, err
 				}
+				// Polymorphic type - keep as interface{}
 				result.Format = loaded
 			} else {
 				loaded, err := LoadFormatConfig(val, ctx.At("format"))
@@ -61,6 +62,7 @@ func LoadTemplate(data interface{}, ctx *LoadContext) (Template, error) {
 				if err != nil {
 					return result, err
 				}
+				// Polymorphic type - keep as interface{}
 				result.Parser = loaded
 			} else {
 				loaded, err := LoadParserConfig(val, ctx.At("parser"))
@@ -79,9 +81,25 @@ func LoadTemplate(data interface{}, ctx *LoadContext) (Template, error) {
 func (obj Template) Save(ctx *SaveContext) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	result["format"] = obj.Format.Save(ctx)
+	// Handle polymorphic type via type switch
+	switch v := obj.Format.(type) {
+	case interface {
+		Save(*SaveContext) map[string]interface{}
+	}:
+		result["format"] = v.Save(ctx)
+	default:
+		result["format"] = obj.Format
+	}
 
-	result["parser"] = obj.Parser.Save(ctx)
+	// Handle polymorphic type via type switch
+	switch v := obj.Parser.(type) {
+	case interface {
+		Save(*SaveContext) map[string]interface{}
+	}:
+		result["parser"] = v.Save(ctx)
+	default:
+		result["parser"] = obj.Parser
+	}
 
 	return result
 }

@@ -34,14 +34,9 @@ pub struct FoundryExecutor;
 #[async_trait]
 impl Executor for FoundryExecutor {
     async fn execute(&self, agent: &Agent, messages: &[Message]) -> Result<Value, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
 
-        let body = match api_type {
+        let body = match api_type.as_str() {
             "chat" | "agent" => wire::build_chat_args(agent, messages)
                 .map_err(|error| InvokerError::Validation(error.to_string()))?,
             "embedding" => wire::build_embedding_args(agent, messages),
@@ -53,7 +48,7 @@ impl Executor for FoundryExecutor {
             }
         };
 
-        let (url, auth_header) = build_azure_request(agent, api_type).await?;
+        let (url, auth_header) = build_azure_request(agent, &api_type).await?;
 
         let client = &*HTTP_CLIENT;
         let response = client
@@ -99,12 +94,7 @@ impl Executor for FoundryExecutor {
         agent: &Agent,
         messages: &[Message],
     ) -> Result<std::pin::Pin<Box<dyn futures::Stream<Item = Value> + Send>>, InvokerError> {
-        let api_type = agent
-            .model
-            .as_ref()
-            .and_then(|model| model.api_type.as_ref())
-            .map(|t| t.as_str())
-            .unwrap_or("chat");
+        let api_type = prompty::model_access::model_api_type(&agent.model);
         if api_type != "chat" && api_type != "agent" {
             return Err(InvokerError::Execute(
                 format!("Foundry streaming only supports apiType 'chat', got: {api_type}").into(),
@@ -115,9 +105,9 @@ impl Executor for FoundryExecutor {
             .map_err(|error| InvokerError::Validation(error.to_string()))?;
         // Force stream: true and request terminal usage so the done event
         // reports token counts (Azure omits usage from the stream otherwise).
-        wire::enable_streaming(&mut body, api_type);
+        wire::enable_streaming(&mut body, &api_type);
 
-        let (url, auth_header) = build_azure_request(agent, api_type).await?;
+        let (url, auth_header) = build_azure_request(agent, &api_type).await?;
 
         let client = &*HTTP_CLIENT;
         let response = client
@@ -155,10 +145,10 @@ impl Executor for FoundryExecutor {
 fn resolve_connection(
     agent: &Agent,
 ) -> Result<std::borrow::Cow<'_, serde_json::Value>, InvokerError> {
-    let Some(model) = agent.model.as_ref() else {
-        return Ok(std::borrow::Cow::Owned(serde_json::Value::Null));
+    let conn = match agent.model.get("connection") {
+        Some(conn) => conn,
+        None => return Ok(std::borrow::Cow::Owned(serde_json::Value::Null)),
     };
-    let conn = &model.connection;
     let kind = conn.get("kind").and_then(|k| k.as_str()).unwrap_or("");
 
     if kind == "reference" {
@@ -281,8 +271,9 @@ fn strip_project_path(endpoint: &str) -> String {
 /// Extract the deployment name from the agent's model configuration.
 fn get_deployment(agent: &Agent) -> Result<String, InvokerError> {
     // model.id is the deployment name for Azure
-    if let Some(model) = agent.model.as_ref().filter(|model| !model.id.is_empty()) {
-        return Ok(model.id.clone());
+    let model_id = prompty::model_access::model_id(&agent.model);
+    if !model_id.is_empty() {
+        return Ok(model_id);
     }
 
     // Fall back to environment variable
@@ -302,7 +293,7 @@ fn get_deployment(agent: &Agent) -> Result<String, InvokerError> {
 /// Get the API version, defaulting to the latest preview.
 fn get_api_version(agent: &Agent) -> String {
     // Check model options for custom api version
-    if let Some(opts) = &agent.model.as_ref().and_then(|model| model.options.clone()) {
+    if let Some(opts) = &prompty::model_access::model_options(&agent.model) {
         if let Some(version) = opts
             .additional_properties
             .get("apiVersion")

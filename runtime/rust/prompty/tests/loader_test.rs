@@ -81,43 +81,38 @@ fn test_basic_load() {
         agent.description.as_deref(),
         Some("A basic prompt for testing")
     );
-    assert_eq!(agent.model.as_ref().unwrap().id, "gpt-4");
+    assert_eq!(prompty::model_access::model_id(&agent.model), "gpt-4");
     assert_eq!(
-        agent.model.as_ref().unwrap().provider.as_deref(),
+        prompty::model_access::model_provider(&agent.model).as_deref(),
         Some("openai")
     );
     assert_eq!(
-        agent
-            .model
-            .as_ref()
-            .unwrap()
-            .api_type
-            .as_ref()
-            .map(|t| t.as_str()),
+        Some(prompty::model_access::model_api_type(&agent.model).as_str()),
         Some("chat")
     );
 
     // Connection
-    let conn = agent
-        .model
-        .as_ref()
-        .unwrap()
-        .connection
-        .as_object()
-        .unwrap();
+    let model_conn = prompty::model_access::model_connection(&agent.model);
+    let conn = model_conn.as_object().unwrap();
     assert_eq!(conn["kind"], "key");
     assert_eq!(conn["endpoint"], "https://test.openai.com");
     assert_eq!(conn["apiKey"], "sk-test123");
 
     // Options
-    let opts = agent.model.as_ref().unwrap().options.as_ref().unwrap();
+    let opts = prompty::model_access::model_options(&agent.model).unwrap();
     assert!((opts.temperature.unwrap() - 0.7_f32).abs() < f32::EPSILON);
     assert_eq!(opts.max_output_tokens.unwrap(), 1000);
 
     // Template
     let tmpl = agent.template.as_ref().unwrap();
-    assert_eq!(tmpl.format.kind, "jinja2");
-    assert_eq!(tmpl.parser.kind, "prompty");
+    assert_eq!(
+        tmpl.format.get("kind").and_then(|v| v.as_str()),
+        Some("jinja2")
+    );
+    assert_eq!(
+        tmpl.parser.get("kind").and_then(|v| v.as_str()),
+        Some("prompty")
+    );
 
     // Instructions (body)
     let instructions = agent.instructions.as_ref().unwrap();
@@ -140,7 +135,7 @@ fn test_minimal_load() {
     let agent = load_fixture("minimal.prompty", &[]).unwrap();
 
     assert_eq!(agent.name, "minimal");
-    assert_eq!(agent.model.as_ref().unwrap().id, "gpt-4");
+    assert_eq!(prompty::model_access::model_id(&agent.model), "gpt-4");
     assert_eq!(agent.instructions.as_deref(), Some("system:\nHello world."));
     assert!(agent.as_inputs().is_none());
     assert!(agent.as_outputs().is_none());
@@ -155,7 +150,7 @@ fn test_model_shorthand() {
         "model": "gpt-4o"
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    assert_eq!(agent.model.as_ref().unwrap().id, "gpt-4o");
+    assert_eq!(prompty::model_access::model_id(&agent.model), "gpt-4o");
 }
 
 #[test]
@@ -172,13 +167,8 @@ fn test_env_resolution() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[("MY_VAR", "hello")]).unwrap();
-    let conn = agent
-        .model
-        .as_ref()
-        .unwrap()
-        .connection
-        .as_object()
-        .unwrap();
+    let model_conn = prompty::model_access::model_connection(&agent.model);
+    let conn = model_conn.as_object().unwrap();
     assert_eq!(conn["endpoint"], "hello");
 }
 
@@ -196,13 +186,8 @@ fn test_env_default() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent
-        .model
-        .as_ref()
-        .unwrap()
-        .connection
-        .as_object()
-        .unwrap();
+    let model_conn = prompty::model_access::model_connection(&agent.model);
+    let conn = model_conn.as_object().unwrap();
     assert_eq!(conn["endpoint"], "fallback_value");
 }
 
@@ -279,13 +264,7 @@ fn test_tools_function_load() {
 
     assert_eq!(agent.name, "function-tools");
     assert_eq!(
-        agent
-            .model
-            .as_ref()
-            .unwrap()
-            .api_type
-            .as_ref()
-            .map(|t| t.as_str()),
+        Some(prompty::model_access::model_api_type(&agent.model).as_str()),
         Some("chat")
     );
 
@@ -308,15 +287,12 @@ fn test_embedding_load() {
     .unwrap();
 
     assert_eq!(agent.name, "embedding");
-    assert_eq!(agent.model.as_ref().unwrap().id, "text-embedding-3-small");
     assert_eq!(
-        agent
-            .model
-            .as_ref()
-            .unwrap()
-            .api_type
-            .as_ref()
-            .map(|t| t.as_str()),
+        prompty::model_access::model_id(&agent.model),
+        "text-embedding-3-small"
+    );
+    assert_eq!(
+        Some(prompty::model_access::model_api_type(&agent.model).as_str()),
         Some("embedding")
     );
 }
@@ -347,13 +323,8 @@ fn test_connection_types_load() {
         }
     });
     let agent = load_from_frontmatter(&fm, &[]).unwrap();
-    let conn = agent
-        .model
-        .as_ref()
-        .unwrap()
-        .connection
-        .as_object()
-        .unwrap();
+    let model_conn = prompty::model_access::model_connection(&agent.model);
+    let conn = model_conn.as_object().unwrap();
     assert_eq!(conn["kind"], "anonymous");
     assert_eq!(conn["endpoint"], "https://localhost:8080");
 }

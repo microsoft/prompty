@@ -210,8 +210,7 @@ export class MessagesUpdatedPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): MessagesUpdatedPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return MessagesUpdatedPayload.load(
       data as Record<string, unknown>,
       context,

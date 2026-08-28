@@ -19,6 +19,9 @@ public final class TypraGeneratedTests {
     FoundryConnectionGeneratedTest.run();
     ModelOptionsGeneratedTest.run();
     ModelGeneratedTest.run();
+    OpenAIModelGeneratedTest.run();
+    AzureModelGeneratedTest.run();
+    CustomModelGeneratedTest.run();
     BindingGeneratedTest.run();
     ToolGeneratedTest.run();
     FunctionToolGeneratedTest.run();
@@ -27,7 +30,12 @@ public final class TypraGeneratedTests {
     McpToolGeneratedTest.run();
     OpenApiToolGeneratedTest.run();
     FormatConfigGeneratedTest.run();
+    Jinja2FormatGeneratedTest.run();
+    MustacheFormatGeneratedTest.run();
+    CustomFormatGeneratedTest.run();
     ParserConfigGeneratedTest.run();
+    PromptyParserGeneratedTest.run();
+    CustomParserGeneratedTest.run();
     TemplateGeneratedTest.run();
     AgentGeneratedTest.run();
     InvokerErrorGeneratedTest.run();
@@ -156,5 +164,8 @@ public final class TypraGeneratedTests {
     AnthropicUsageGeneratedTest.run();
     AnthropicMessagesResponseGeneratedTest.run();
     VectorConformanceTests.run();
+    ParserConformanceTests.run();
+    ProcessorConformanceTests.run();
+    RendererConformanceTests.run();
   }
 }

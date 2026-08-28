@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -652,6 +653,13 @@ func TestModelOptionsToWire(t *testing.T) {
 	if _, ok := openaiWire["allowMultipleToolCalls"]; ok {
 		t.Errorf("Expected openai wire output to omit source field allowMultipleToolCalls")
 	}
+	openaiRestored, openaiErr := prompty.ModelOptionsFromWire("openai", openaiWire, ctx)
+	if openaiErr != nil {
+		t.Fatalf("Expected openai FromWire to succeed, got %v", openaiErr)
+	}
+	if openaiRoundTrip := openaiRestored.ToWire("openai"); !reflect.DeepEqual(openaiRoundTrip, openaiWire) {
+		t.Errorf("Expected openai FromWire round-trip to preserve the wire payload, got %v want %v", openaiRoundTrip, openaiWire)
+	}
 
 	responsesWire := instance.ToWire("responses")
 	if _, ok := responsesWire["max_output_tokens"]; !ok {
@@ -668,6 +676,13 @@ func TestModelOptionsToWire(t *testing.T) {
 	}
 	if _, ok := responsesWire["topP"]; ok {
 		t.Errorf("Expected responses wire output to omit source field topP")
+	}
+	responsesRestored, responsesErr := prompty.ModelOptionsFromWire("responses", responsesWire, ctx)
+	if responsesErr != nil {
+		t.Fatalf("Expected responses FromWire to succeed, got %v", responsesErr)
+	}
+	if responsesRoundTrip := responsesRestored.ToWire("responses"); !reflect.DeepEqual(responsesRoundTrip, responsesWire) {
+		t.Errorf("Expected responses FromWire round-trip to preserve the wire payload, got %v want %v", responsesRoundTrip, responsesWire)
 	}
 
 	anthropicWire := instance.ToWire("anthropic")
@@ -697,5 +712,48 @@ func TestModelOptionsToWire(t *testing.T) {
 	}
 	if _, ok := anthropicWire["stopSequences"]; ok {
 		t.Errorf("Expected anthropic wire output to omit source field stopSequences")
+	}
+	anthropicRestored, anthropicErr := prompty.ModelOptionsFromWire("anthropic", anthropicWire, ctx)
+	if anthropicErr != nil {
+		t.Fatalf("Expected anthropic FromWire to succeed, got %v", anthropicErr)
+	}
+	if anthropicRoundTrip := anthropicRestored.ToWire("anthropic"); !reflect.DeepEqual(anthropicRoundTrip, anthropicWire) {
+		t.Errorf("Expected anthropic FromWire round-trip to preserve the wire payload, got %v want %v", anthropicRoundTrip, anthropicWire)
+	}
+}
+
+func assertModelOptionsStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

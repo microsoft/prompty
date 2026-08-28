@@ -98,19 +98,43 @@ impl<'de> serde::Deserialize<'de> for apiType {
     }
 }
 
-/// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements.
+/// Variant-specific data for [`Model`], discriminated by `provider`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ModelKind {
+    /// `provider` = `"openai"`
+    OpenAI,
+    /// `provider` = `"azure"`
+    Azure,
+    /// Wildcard / catch-all variant for unrecognized `provider` values.
+    Custom {
+        /// The raw `provider` string for this unknown variant.
+        provider_name: String,
+        /// Unmodeled fields preserved for forward-compatible round trips.
+        raw: serde_json::Map<String, serde_json::Value>,
+    },
+}
+
+impl Default for ModelKind {
+    fn default() -> Self {
+        ModelKind::Custom {
+            provider_name: String::new(),
+            raw: serde_json::Map::new(),
+        }
+    }
+}
+/// Model for defining the structure and behavior of AI agents. This model includes properties for specifying the model's provider, connection details, and various options. It allows for flexible configuration of AI models to suit different use cases and requirements. `provider` is the `@dispatch` discriminator for the Executor / Processor seams. The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries no provider — so `provider` stays optional and absent/unknown providers are resolved by the runtime registry (global defaults) out of band.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Model {
     /// The unique identifier of the model - can be used as the single property shorthand
     pub id: String,
-    /// The provider of the model (e.g., 'openai', 'foundry', 'anthropic')
-    pub provider: Option<String>,
     /// The type of API to use for the model (e.g., 'chat', 'response', etc.)
     pub api_type: Option<apiType>,
     /// The connection configuration for the model
     pub connection: serde_json::Value,
     /// Additional options for the model
     pub options: Option<ModelOptions>,
+    /// Variant-specific data, discriminated by `provider`.
+    pub provider: ModelKind,
 }
 
 impl Model {
@@ -162,16 +186,29 @@ impl Model {
                 ..Default::default()
             };
         }
+        let provider_str = value.get("provider").and_then(|v| v.as_str()).unwrap_or("");
+        let provider = match provider_str {
+            "openai" => ModelKind::OpenAI,
+            "azure" => ModelKind::Azure,
+            _ => ModelKind::Custom {
+                provider_name: provider_str.to_string(),
+                raw: {
+                    let mut raw = value.as_object().cloned().unwrap_or_default();
+                    raw.remove("id");
+                    raw.remove("provider");
+                    raw.remove("apiType");
+                    raw.remove("connection");
+                    raw.remove("options");
+                    raw
+                },
+            },
+        };
         Self {
             id: value
                 .get("id")
                 .and_then(|v| v.as_str())
                 .unwrap_or_default()
                 .to_string(),
-            provider: value
-                .get("provider")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
             api_type: value
                 .get("apiType")
                 .and_then(|v| v.as_str())
@@ -184,6 +221,7 @@ impl Model {
                 .get("options")
                 .filter(|v| v.is_object() || v.is_array() || v.is_string())
                 .map(|v| ModelOptions::load_from_value(v, ctx)),
+            provider: provider,
         }
     }
 
@@ -207,7 +245,25 @@ impl Model {
         if let Some(child) = value.get("options") {
             ModelOptions::validate_input_at(child, &child_path)?;
         }
+        let discriminator = value
+            .get("provider")
+            .and_then(|candidate| candidate.as_str())
+            .unwrap_or("");
+        match discriminator {
+            "openai" => {}
+            "azure" => {}
+            _ => {}
+        }
         Ok(())
+    }
+
+    /// Returns the `provider` discriminator string for this instance.
+    pub fn provider_str(&self) -> &str {
+        match &self.provider {
+            ModelKind::OpenAI => "openai",
+            ModelKind::Azure => "azure",
+            ModelKind::Custom { provider_name, .. } => provider_name.as_str(),
+        }
     }
 
     /// Serialize Model to a `serde_json::Value`.
@@ -215,14 +271,13 @@ impl Model {
     /// Calls `ctx.process_dict` after serialization.
     pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
         let mut result = serde_json::Map::new();
+        // Write the discriminator
+        result.insert(
+            "provider".to_string(),
+            serde_json::Value::String(self.provider_str().to_string()),
+        );
         // Write base fields
         result.insert("id".to_string(), serde_json::Value::String(self.id.clone()));
-        if let Some(val) = self.provider.as_ref() {
-            result.insert(
-                "provider".to_string(),
-                serde_json::Value::String(val.clone()),
-            );
-        }
         if let Some(val) = self.api_type.as_ref() {
             result.insert(
                 "apiType".to_string(),
@@ -236,6 +291,22 @@ impl Model {
             let nested = val.to_value(ctx);
             if !nested.is_null() {
                 result.insert("options".to_string(), nested);
+            }
+        }
+        // Write variant-specific fields
+        match &self.provider {
+            ModelKind::OpenAI => {}
+            ModelKind::Azure => {}
+            ModelKind::Custom { raw, .. } => {
+                for (key, value) in raw {
+                    if matches!(
+                        key.as_str(),
+                        "id" | "provider" | "apiType" | "connection" | "options"
+                    ) {
+                        continue;
+                    }
+                    result.insert(key.clone(), value.clone());
+                }
             }
         }
         ctx.process_dict(serde_json::Value::Object(result))
@@ -253,7 +324,7 @@ impl Model {
 }
 
 // Serde for `Model` delegates to the canonical to_value/load_from_value
-// logic so its scalar-coercion shorthand round-trips through the canonical semantics. Uses a default (no-op) context — no ${env:}/${file:}
+// logic so the `provider` discriminator round-trips to its exact wire value. Uses a default (no-op) context — no ${env:}/${file:}
 // resolution here — leaving the context-aware LoadContext/SaveContext API intact.
 #[cfg(feature = "serde")]
 impl serde::Serialize for Model {
@@ -268,5 +339,29 @@ impl<'de> serde::Deserialize<'de> for Model {
         let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
         Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
         Ok(Self::load_from_value(&value, &LoadContext::default()))
+    }
+}
+
+// Serde for `ModelKind` wraps the variant into its parent `Model` and delegates
+// to the canonical to_value/load_from_value logic, so a bare `ModelKind`
+// serializes to internally-tagged `{"provider": "<value>", ...}` — the same wire
+// form as its parent — instead of serde's externally-tagged `{"<Variant>": {...}}`.
+#[cfg(feature = "serde")]
+impl serde::Serialize for ModelKind {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let parent = Model {
+            provider: self.clone(),
+            ..Default::default()
+        };
+        serde::Serialize::serialize(&parent.to_value(&SaveContext::default()), serializer)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for ModelKind {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
+        Model::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
+        Ok(Model::load_from_value(&value, &LoadContext::default()).provider)
     }
 }

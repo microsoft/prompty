@@ -1,15 +1,12 @@
 /**
  * Runtime extensions for the canonical {@link Message} type.
  *
- * The generated model at ``../model/message`` defines the canonical data shape
- * and a {@link MessageHelpers} contract that declares ``text`` (getter) and
- * ``toTextContent()``. This module provides the same named-argument constructor
- * as the generated class and adds the ``text`` / ``toTextContent()`` helpers.
+ * The generated model at ``../model/message`` defines the canonical data shape.
+ * This module provides the same named-argument constructor as the generated
+ * class and adds the hand-written ``text`` / ``toTextContent()`` folds.
  *
  * @module
  */
-
-import type { MessageHelpers } from "../model/contracts/conversation/message";
 
 // ---------------------------------------------------------------------------
 // Content Parts (discriminated union by `kind`)
@@ -64,12 +61,9 @@ export type Role = "system" | "user" | "assistant" | "developer" | "tool";
  * Executors convert this to provider-specific wire format.
  * Parsers produce this from rendered template text.
  *
- * Implements {@link MessageHelpers} — the contract generated from the
- * TypeSpec ``@method`` stubs on ``Message``. The TypeScript compiler verifies
- * that ``text`` and ``toTextContent`` stay in sync with the generated
- * interface.
+ * Provides the hand-written ``text`` fold and ``toTextContent()`` collapse.
  */
-export class Message implements MessageHelpers {
+export class Message {
   role: Role;
   parts: ContentPart[];
   metadata: Record<string, unknown>;

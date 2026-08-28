@@ -56,34 +56,34 @@ import org.yaml.snakeyaml.Yaml;
 public final class VectorAdapters {
   private VectorAdapters() {}
 
-  public static Map<String, VectorConformanceTests.VectorAdapter> adapters() {
-    Map<String, VectorConformanceTests.VectorAdapter> adapters = new LinkedHashMap<>();
+  public static Map<String, VectorRunner.VectorAdapter> adapters() {
+    Map<String, VectorRunner.VectorAdapter> adapters = new LinkedHashMap<>();
     adapters.put(
-        "Renderer.renderSegments", new VectorConformanceTests.VectorAdapter(VectorAdapters::renderSegments));
+        "Renderer.renderSegments", new VectorRunner.VectorAdapter(VectorAdapters::renderSegments));
     adapters.put(
         "Processor.processStream",
-        new VectorConformanceTests.VectorAdapter(
+        new VectorRunner.VectorAdapter(
             VectorAdapters::processStreamInvoke, VectorAdapters::projectNormalize));
     adapters.put(
         "TurnConformance.run",
-        new VectorConformanceTests.VectorAdapter(VectorAdapters::runInvoke, VectorAdapters::runNormalize));
+        new VectorRunner.VectorAdapter(VectorAdapters::runInvoke, VectorAdapters::runNormalize));
     adapters.put(
         "TurnConformance.runTurn",
-        new VectorConformanceTests.VectorAdapter(
+        new VectorRunner.VectorAdapter(
             VectorAdapters::runTurnInvoke, VectorAdapters::projectNormalize));
     adapters.put(
-        "TurnConformance.replay", new VectorConformanceTests.VectorAdapter(VectorAdapters::replayInvoke));
-    adapters.put("Renderer.render", new VectorConformanceTests.VectorAdapter(VectorAdapters::renderInvoke));
-    adapters.put("Parser.parse", new VectorConformanceTests.VectorAdapter(VectorAdapters::parseInvoke));
-    adapters.put("LoadConformance.load", new VectorConformanceTests.VectorAdapter(VectorAdapters::loadInvoke));
+        "TurnConformance.replay", new VectorRunner.VectorAdapter(VectorAdapters::replayInvoke));
+    adapters.put("Renderer.render", new VectorRunner.VectorAdapter(VectorAdapters::renderInvoke));
+    adapters.put("Parser.parse", new VectorRunner.VectorAdapter(VectorAdapters::parseInvoke));
+    adapters.put("LoadConformance.load", new VectorRunner.VectorAdapter(VectorAdapters::loadInvoke));
     adapters.put(
-        "WireConformance.toRequest", new VectorConformanceTests.VectorAdapter(VectorAdapters::wireInvoke));
-    adapters.put("Processor.process", new VectorConformanceTests.VectorAdapter(VectorAdapters::processInvoke));
+        "WireConformance.toRequest", new VectorRunner.VectorAdapter(VectorAdapters::wireInvoke));
+    adapters.put("Processor.process", new VectorRunner.VectorAdapter(VectorAdapters::processInvoke));
     adapters.put(
-        "DiscoveryConformance.enrich", new VectorConformanceTests.VectorAdapter(VectorAdapters::enrichInvoke));
+        "DiscoveryConformance.enrich", new VectorRunner.VectorAdapter(VectorAdapters::enrichInvoke));
     adapters.put(
         "DiscoveryConformance.mapModel",
-        new VectorConformanceTests.VectorAdapter(VectorAdapters::mapModelInvoke));
+        new VectorRunner.VectorAdapter(VectorAdapters::mapModelInvoke));
     return adapters;
   }
 
@@ -111,28 +111,43 @@ public final class VectorAdapters {
   private static final Pattern ENV_REFERENCE =
       Pattern.compile("\\$\\{env:([A-Za-z_][A-Za-z0-9_]*)");
 
-  private static Object expectedNode(VectorConformanceTests.VectorContext ctx) {
+  private static Object expectedNode(VectorRunner.VectorContext ctx) {
     return asMap(ctx.vector).get("expected");
   }
 
-  private static String vectorName(VectorConformanceTests.VectorContext ctx) {
+  private static String vectorName(VectorRunner.VectorContext ctx) {
     return string(asMap(ctx.vector).get("name"));
   }
 
-  private static String providerOf(Map<String, Object> input, VectorConformanceTests.VectorContext ctx) {
-    String provider = string(input.get("provider"));
-    if (!provider.isEmpty()) {
-      return provider;
+  private static String seamDiscriminator(Map<String, Object> input, String... path) {
+    Object node = input.get("agent");
+    for (String key : path) {
+      if (!(node instanceof Map<?, ?> map)) {
+        node = null;
+        break;
+      }
+      node = map.get(key);
     }
-    return ctx.provider == null ? "" : ctx.provider;
+    if (node instanceof String value && !value.isEmpty()) {
+      return value;
+    }
+    throw new IllegalStateException(
+        "vector input missing @dispatch discriminator at 'agent."
+            + String.join(".", path)
+            + "'; every conformance vector must nest the discriminator under the seam-param path "
+            + "(no flat-sibling fallback).");
   }
 
   // ------------------------------------------------------------- Renderer.render
-  private static Object renderInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object renderInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Registry.bootstrap();
     Map<String, Object> input = asMap(rawInput);
     Map<String, Object> inputs = asMap(input.get("inputs"));
-    Agent agent = buildRenderAgent(string(input.get("template")), string(input.get("engine")), inputs);
+    Agent agent =
+        buildRenderAgent(
+            string(input.get("template")),
+            seamDiscriminator(input, "template", "format", "kind"),
+            inputs);
     String rendered = Pipeline.render(agent, stripKindMarkers(inputs));
 
     Map<String, Object> expected = asMap(expectedNode(ctx));
@@ -191,7 +206,7 @@ public final class VectorAdapters {
   }
 
   // --------------------------------------------------------------- Parser.parse
-  private static Object parseInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object parseInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Registry.bootstrap();
     Map<String, Object> input = asMap(rawInput);
     String rendered = string(input.get("rendered"));
@@ -247,11 +262,11 @@ public final class VectorAdapters {
   // ------------------------------------------------------- LoadConformance.load
   //
   // Error vectors carry a native {@code expectedError} block: the harness invokes this adapter and
-  // requires it to signal the failure by throwing {@link VectorConformanceTests.VectorException}
+  // requires it to signal the failure by throwing {@link VectorRunner.VectorException}
   // with a canonical {@code {kind, [field]}} payload. The kind is derived from the exception's
   // TYPE ({@link LoadException.Kind}, {@link InvokerException.Kind#VALIDATION}) — never from its
   // message text — so a runtime cannot pass by coincidental wording.
-  private static Object loadInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object loadInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
     Map<String, Object> env = asMap(input.get("env"));
     String name = vectorName(ctx);
@@ -273,7 +288,7 @@ public final class VectorAdapters {
           if (field != null) {
             payload.put("field", field);
           }
-          throw new VectorConformanceTests.VectorException(e.getMessage(), payload);
+          throw new VectorRunner.VectorException(e.getMessage(), payload);
         }
         Map<String, Object> expected = asMap(expectedNode(ctx));
         Object want = expected.get("validated_inputs");
@@ -287,7 +302,7 @@ public final class VectorAdapters {
       try {
         runLoadFieldCase(name, input, asMap(expectedNode(ctx)));
       } catch (LoadException e) {
-        throw new VectorConformanceTests.VectorException(e.getMessage(), loadKindPayload(e));
+        throw new VectorRunner.VectorException(e.getMessage(), loadKindPayload(e));
       }
       return expectedNode(ctx);
     } finally {
@@ -438,15 +453,14 @@ public final class VectorAdapters {
   }
 
   // --------------------------------------------------- WireConformance.toRequest
-  private static Object wireInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object wireInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
-    String provider = providerOf(input, ctx);
-    if (provider.isEmpty()) {
-      provider = "openai";
-    }
+    String provider = seamDiscriminator(input, "model", "provider");
     String apiType = input.get("apiType") instanceof String a ? a : "chat";
+    Map<String, Object> agentInput = new LinkedHashMap<>(input);
+    agentInput.put("provider", provider);
     Agent agent =
-        VectorAgents.buildAgent(input, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
+        VectorAgents.buildAgent(agentInput, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
     List<Message> messages = VectorAgents.buildMessages(input);
 
     Map<String, Object> actual;
@@ -471,12 +485,9 @@ public final class VectorAdapters {
   }
 
   // -------------------------------------------------------------- Processor.process
-  private static Object processInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object processInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
-    String provider = providerOf(input, ctx);
-    if (provider.isEmpty()) {
-      provider = "openai";
-    }
+    String provider = seamDiscriminator(input, "model", "provider");
     Agent agent =
         VectorAgents.buildProcessAgent(input, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
     Object actual =
@@ -495,7 +506,7 @@ public final class VectorAdapters {
   }
 
   // ------------------------------------------------- DiscoveryConformance.enrich
-  private static Object enrichInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object enrichInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
     String provider = ctx.provider == null ? "" : ctx.provider;
     ModelInfo info = ModelInfo.load(input, null);
@@ -505,7 +516,7 @@ public final class VectorAdapters {
   }
 
   // ----------------------------------------------- DiscoveryConformance.mapModel
-  private static Object mapModelInvoke(Object rawInput, VectorConformanceTests.VectorContext ctx) {
+  private static Object mapModelInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
     String provider = ctx.provider == null ? "" : ctx.provider;
     String shape = string(asMap(ctx.vector).get("shape"));
@@ -530,7 +541,7 @@ public final class VectorAdapters {
   // ---------------------------------------------------------------------------
 
   @SuppressWarnings("unchecked")
-  private static Object renderSegments(Object input, VectorConformanceTests.VectorContext ctx) {
+  private static Object renderSegments(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> map = input instanceof Map<?, ?> m ? copyMap(m) : new LinkedHashMap<>();
     String template = string(map.get("template"));
     Map<String, Object> inputs = map.get("inputs") instanceof Map<?, ?> m ? copyMap(m) : new LinkedHashMap<>();
@@ -561,12 +572,9 @@ public final class VectorAdapters {
   // Processor.processStream -- provider-agnostic classification + reconciliation
   // ---------------------------------------------------------------------------
 
-  private static Object processStreamInvoke(Object input, VectorConformanceTests.VectorContext ctx) {
+  private static Object processStreamInvoke(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> map = asMap(input);
-    String provider = string(map.get("provider"));
-    if (provider.isEmpty()) {
-      provider = ctx.provider == null ? "openai" : ctx.provider;
-    }
+    String provider = seamDiscriminator(map, "model", "provider");
     if (!"openai".equals(provider)) {
       throw new IllegalStateException("unsupported stream provider: " + provider);
     }
@@ -726,7 +734,7 @@ public final class VectorAdapters {
     }
   }
 
-  private static Object runInvoke(Object input, VectorConformanceTests.VectorContext ctx) {
+  private static Object runInvoke(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> flags = asMap(input);
     Map<String, Object> vector = asMap(ctx.vector);
     Map<String, Object> expected = asMap(vector.get("expected"));
@@ -1074,7 +1082,7 @@ public final class VectorAdapters {
     return null;
   }
 
-  private static Object runNormalize(Object observed, VectorConformanceTests.VectorContext ctx) {
+  private static Object runNormalize(Object observed, VectorRunner.VectorContext ctx) {
     Map<String, Object> expected = asMap(asMap(ctx.vector).get("expected"));
     if (expected.isEmpty() || !(observed instanceof Map<?, ?>)) {
       return observed;
@@ -1123,7 +1131,7 @@ public final class VectorAdapters {
   // TurnConformance.runTurn -- drive the real snapshot/portability turn engine
   // ---------------------------------------------------------------------------
 
-  private static Object runTurnInvoke(Object input, VectorConformanceTests.VectorContext ctx) {
+  private static Object runTurnInvoke(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> flags = asMap(input);
     String name = string(asMap(ctx.vector).get("name"));
 
@@ -1335,7 +1343,7 @@ public final class VectorAdapters {
   // TurnConformance.replay -- drive the reference turn runner + journal normalize
   // ---------------------------------------------------------------------------
 
-  private static Object replayInvoke(Object input, VectorConformanceTests.VectorContext ctx) {
+  private static Object replayInvoke(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> flags = asMap(input);
     String name = string(asMap(ctx.vector).get("name"));
     String clock = string(flags.get("clock"));
@@ -1523,7 +1531,7 @@ public final class VectorAdapters {
   // Shared projection + coercion helpers
   // ---------------------------------------------------------------------------
 
-  private static Object projectNormalize(Object observed, VectorConformanceTests.VectorContext ctx) {
+  private static Object projectNormalize(Object observed, VectorRunner.VectorContext ctx) {
     return project(observed, asMap(ctx.vector).get("expected"));
   }
 

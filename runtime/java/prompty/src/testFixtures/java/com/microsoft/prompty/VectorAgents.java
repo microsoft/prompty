@@ -30,7 +30,7 @@ public final class VectorAgents {
     Map<String, Object> model = new LinkedHashMap<>();
     model.put("id", input.getOrDefault("model_id", defaultModelId));
     model.put("apiType", input.getOrDefault("apiType", "chat"));
-    model.put("provider", input.getOrDefault("provider", defaultProvider));
+    model.put("provider", seamProvider(input, defaultProvider));
     // Empty collections are omitted rather than passed through, because an empty `options` object
     // and an absent one mean the same thing to a prompt but not to every loader.
     if (input.get("options") instanceof Map<?, ?> options && !options.isEmpty()) {
@@ -104,6 +104,21 @@ public final class VectorAgents {
       data.put("outputs", List.of(Map.of("name", "result", "kind", "string")));
     }
     return Agent.load(data, new LoadContext());
+  }
+
+  /**
+   * Read the {@code @dispatch} provider discriminator from a vector input.
+   *
+   * <p>The discriminator now lives at {@code input.agent.model.provider}; vectors no longer carry a
+   * flat top-level {@code provider}. Returns {@code fallback} when that path is absent.
+   */
+  public static String seamProvider(Map<String, Object> input, String fallback) {
+    if (input.get("agent") instanceof Map<?, ?> agent
+        && agent.get("model") instanceof Map<?, ?> model
+        && model.get("provider") instanceof String provider) {
+      return provider;
+    }
+    return fallback;
   }
 
   private static Map<String, Object> normalizePart(Map<?, ?> part) {

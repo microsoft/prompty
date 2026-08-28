@@ -32,7 +32,7 @@ type Agent struct {
 	Metadata     map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	Inputs       []interface{}          `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	Outputs      []interface{}          `json:"outputs,omitempty" yaml:"outputs,omitempty"`
-	Model        *Model                 `json:"model,omitempty" yaml:"model,omitempty"`
+	Model        interface{}            `json:"model,omitempty" yaml:"model,omitempty"`
 	Tools        []interface{}          `json:"tools,omitempty" yaml:"tools,omitempty"`
 	Template     *Template              `json:"template,omitempty" yaml:"template,omitempty"`
 	Instructions *string                `json:"instructions" yaml:"instructions"`
@@ -159,13 +159,14 @@ func LoadAgent(data interface{}, ctx *LoadContext) (Agent, error) {
 				if err != nil {
 					return result, err
 				}
-				result.Model = &loaded
+				// Polymorphic type - keep as interface{} (no pointer needed, interface{} can be nil)
+				result.Model = loaded
 			} else {
 				loaded, err := LoadModel(val, ctx.At("model"))
 				if err != nil {
 					return result, err
 				}
-				result.Model = &loaded
+				result.Model = loaded
 			}
 		}
 		if val, ok := m["tools"]; ok && val != nil {
@@ -357,7 +358,17 @@ func (obj Agent) Save(ctx *SaveContext) map[string]interface{} {
 		}
 	}
 	if obj.Model != nil {
-		result["model"] = obj.Model.Save(ctx)
+		// Handle polymorphic type (stored as interface{} without pointer)
+		if obj.Model != nil {
+			switch v := obj.Model.(type) {
+			case interface {
+				Save(*SaveContext) map[string]interface{}
+			}:
+				result["model"] = v.Save(ctx)
+			default:
+				result["model"] = obj.Model
+			}
+		}
 	}
 	if obj.Tools != nil {
 		arr := make([]interface{}, len(obj.Tools))

@@ -299,11 +299,7 @@ async fn public_streaming_turn_cancels_after_open_and_persists_terminal_event() 
     };
     let durability = Arc::new(RecordingDurability::default());
     let mut streaming_agent = agent(provider);
-    streaming_agent.model.as_mut().unwrap().options =
-        Some(prompty::model::ModelOptions::load_from_value(
-            &json!({"additionalProperties": {"stream": true}}),
-            &LoadContext::default(),
-        ));
+    streaming_agent.model["options"] = json!({"additionalProperties": {"stream": true}});
 
     let result = tokio::time::timeout(
         Duration::from_millis(500),

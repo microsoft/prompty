@@ -12,7 +12,9 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// Template parser definition
+    /// Template parser definition. `kind` is the `@dispatch` discriminator for the
+    ///
+    /// Parser seam, reached from a seam param as `agent.template.parser.kind`.
     /// </summary>
 public partial class ParserConfig
 {
@@ -33,7 +35,7 @@ public partial class ParserConfig
     /// <summary>
     /// Parser used to process the rendered template into API-compatible format
     /// </summary>
-    public string Kind { get; set; } = string.Empty;
+    public virtual string Kind { get; set; } = string.Empty;
 
     /// <summary>
     /// Options for the parser
@@ -60,8 +62,8 @@ public partial class ParserConfig
 
         // Note: Alternate (shorthand) representations are handled by the converter
 
-        // Create new instance
-        var instance = new ParserConfig();
+        // Load polymorphic ParserConfig instance
+        var instance = LoadKind(data, context);
 
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
@@ -82,6 +84,22 @@ public partial class ParserConfig
     }
 
 
+    /// <summary>
+    /// Load polymorphic ParserConfig based on discriminator.
+    /// </summary>
+    private static ParserConfig LoadKind(Dictionary<string, object?> data, LoadContext? context)
+    {
+        var discriminator = data.TryGetValue("kind", out var discriminatorValue) && discriminatorValue is string discriminatorString ? discriminatorString : "";
+
+        return discriminator switch
+        {
+            "prompty" => PromptyParser.Load(data, context),
+            _ => CustomParser.Load(data, context),
+        };
+
+    }
+
+
     #endregion
 
     #region Save Methods
@@ -91,7 +109,7 @@ public partial class ParserConfig
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
-    public Dictionary<string, object?> Save(SaveContext? context = null)
+    public virtual Dictionary<string, object?> Save(SaveContext? context = null)
     {
         var obj = this;
         if (context is not null)

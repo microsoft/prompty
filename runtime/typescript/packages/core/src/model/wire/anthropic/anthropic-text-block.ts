@@ -82,8 +82,7 @@ export class AnthropicTextBlock {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicTextBlock {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicTextBlock.load(data as Record<string, unknown>, context);
   }
 

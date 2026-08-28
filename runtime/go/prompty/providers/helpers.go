@@ -32,8 +32,7 @@ func BuildInput(agent prompty.Agent, messages []prompty.Message, wireProvider st
 		"provider": wireProvider,
 		"messages": messagesToWire(messages),
 	}
-	if agent.Model != nil {
-		saved := agent.Model.Save(prompty.NewSaveContext())
+	if saved := modelToMap(agent.Model); saved != nil {
 		if v, ok := saved["id"]; ok {
 			input["model_id"] = v
 		}
@@ -55,8 +54,10 @@ func BuildInput(agent prompty.Agent, messages []prompty.Message, wireProvider st
 
 // APIType returns the agent's declared API type, defaulting to "chat".
 func APIType(agent prompty.Agent) string {
-	if agent.Model != nil && agent.Model.ApiType != nil {
-		return string(*agent.Model.ApiType)
+	if saved := modelToMap(agent.Model); saved != nil {
+		if v, ok := saved["apiType"].(string); ok && v != "" {
+			return v
+		}
 	}
 	return "chat"
 }
@@ -64,6 +65,18 @@ func APIType(agent prompty.Agent) string {
 // HasOutputs reports whether the agent declared structured outputs.
 func HasOutputs(agent prompty.Agent) bool {
 	return len(agent.Outputs) > 0
+}
+
+// ModelID returns the coerce-union model's id (e.g. the deployment name),
+// or "" when absent. Read through the saved map since Model|string lowers to
+// interface{}.
+func ModelID(agent prompty.Agent) string {
+	if saved := modelToMap(agent.Model); saved != nil {
+		if v, ok := saved["id"].(string); ok {
+			return v
+		}
+	}
+	return ""
 }
 
 // messagesToWire converts rendered messages into the canonical wire shape:
@@ -160,10 +173,11 @@ type ConnectionInfo struct {
 // returned info is best-effort; providers validate the fields they require.
 func ResolveConnection(agent prompty.Agent) ConnectionInfo {
 	info := ConnectionInfo{}
-	if agent.Model == nil || agent.Model.Connection == nil {
+	saved := modelToMap(agent.Model)
+	if saved == nil {
 		return info
 	}
-	m := connectionToMap(agent.Model.Connection)
+	m := connectionToMap(saved["connection"])
 	if m == nil {
 		return info
 	}
@@ -182,6 +196,33 @@ func connectionToMap(conn interface{}) map[string]interface{} {
 		return m
 	}
 	if s, ok := conn.(interface {
+		Save(*prompty.SaveContext) map[string]interface{}
+	}); ok {
+		return s.Save(prompty.NewSaveContext())
+	}
+	return nil
+}
+
+// modelToMap returns the coerce-union Model value as its canonical Save() map,
+// or nil when absent. The Model|string coerce union lowers to interface{}, so
+// model fields (id, apiType, options, connection) are read through the saved map
+// rather than as struct fields.
+func modelToMap(model interface{}) map[string]interface{} {
+	if model == nil {
+		return nil
+	}
+	if m, ok := model.(map[string]interface{}); ok {
+		return m
+	}
+	// Coerce shorthand: `model: gpt-4o` lowers the Model|string union to a bare
+	// string that IS the model id.
+	if s, ok := model.(string); ok {
+		if s == "" {
+			return nil
+		}
+		return map[string]interface{}{"id": s}
+	}
+	if s, ok := model.(interface {
 		Save(*prompty.SaveContext) map[string]interface{}
 	}); ok {
 		return s.Save(prompty.NewSaveContext())

@@ -231,8 +231,7 @@ export class TurnEngineResult {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnEngineResult {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnEngineResult.load(data as Record<string, unknown>, context);
   }
 

@@ -22,7 +22,21 @@ const StreamFailureVectors = """
       "description": "A model refusal is a determinate terminal failure and never commits a completion",
       "stage": "processStream",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
+        "stream": [
+          {
+            "kind": "provider",
+            "value": {
+              "choices": [
+                {
+                  "delta": {
+                    "refusal": "I cannot help with that"
+                  }
+                }
+              ]
+            }
+          }
+        ],
         "events": [
           {
             "kind": "provider",
@@ -58,7 +72,25 @@ const StreamFailureVectors = """
       "description": "A post-open transport failure preserves partial text, requires reconciliation, and never commits a completion",
       "stage": "processStream",
       "input": {
-        "provider": "openai",
+        "agent": { "model": { "provider": "openai" } },
+        "stream": [
+          {
+            "kind": "provider",
+            "value": {
+              "choices": [
+                {
+                  "delta": {
+                    "content": "partial"
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "kind": "transportError",
+            "message": "SSE stream error: connection reset"
+          }
+        ],
         "events": [
           {
             "kind": "provider",

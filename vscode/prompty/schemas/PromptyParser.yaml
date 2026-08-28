@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: PromptyParser.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: prompty
+    description: The Prompty parser discriminator
+required:
+  - kind
+allOf:
+  - $ref: ParserConfig.yaml
+description: The default Prompty chat parser. Pin-only subtype.

@@ -108,8 +108,7 @@ export class TurnEndPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): TurnEndPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return TurnEndPayload.load(data as Record<string, unknown>, context);
   }
 

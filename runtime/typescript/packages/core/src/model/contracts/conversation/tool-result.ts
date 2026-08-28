@@ -164,8 +164,7 @@ export class ToolResult {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ToolResult {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ToolResult.load(data as Record<string, unknown>, context);
   }
 
@@ -174,17 +173,4 @@ export class ToolResult {
   static text(value: string): ToolResult {
     return new ToolResult({ parts: [new TextPart({ value: value })] });
   }
-}
-
-/**
- * Helper contract for `ToolResult`.
- *
- * Runtime implementations must provide these methods on every ToolResult
- * instance (either on the generated class or on a wrapper type). The
- * TypeScript compiler enforces conformance wherever a value is typed as
- * `ToolResultHelpers`.
- */
-export interface ToolResultHelpers {
-  /** Concatenate all TextPart values joined by newline */
-  readonly text: string;
 }

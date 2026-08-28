@@ -98,14 +98,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance1Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", instance1Outputs0Entry.kind, "Expected instance1Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", instance1Outputs0Entry.description, "Expected instance1Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", instance1.model.id, "Expected instance1.model.id");
     assertEquals(1, instance1.tools.size(), "Expected tools size");
     assertTrue(instance1.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool instance1Tools0Value = (FunctionTool) instance1.tools.get(0);
     assertEquals("function", instance1Tools0Value.kind, "Expected kind");
     assertEquals(2, instance1Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance1.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance1.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip1 = instance1.toYaml();
     Agent fromYaml1 = Agent.fromYaml(yamlRoundtrip1);
     assertEquals("basic-prompt", fromYaml1.name, "Expected name");
@@ -130,14 +127,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml1Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", fromYaml1Outputs0Entry.kind, "Expected fromYaml1Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", fromYaml1Outputs0Entry.description, "Expected fromYaml1Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", fromYaml1.model.id, "Expected fromYaml1.model.id");
     assertEquals(1, fromYaml1.tools.size(), "Expected tools size");
     assertTrue(fromYaml1.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool fromYaml1Tools0Value = (FunctionTool) fromYaml1.tools.get(0);
     assertEquals("function", fromYaml1Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml1Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml1.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml1.template.parser.kind, "Expected parser.kind");
     Agent reloaded1 = Agent.load(instance1.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded1.name, "Expected name");
     assertEquals("Basic Prompt", reloaded1.displayName, "Expected displayName");
@@ -161,14 +155,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded1Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", reloaded1Outputs0Entry.kind, "Expected reloaded1Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", reloaded1Outputs0Entry.description, "Expected reloaded1Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", reloaded1.model.id, "Expected reloaded1.model.id");
     assertEquals(1, reloaded1.tools.size(), "Expected tools size");
     assertTrue(reloaded1.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool reloaded1Tools0Value = (FunctionTool) reloaded1.tools.get(0);
     assertEquals("function", reloaded1Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded1Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded1.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded1.template.parser.kind, "Expected parser.kind");
 
     // Agent example 2: fromJson, fromYaml, save, and reload
     String jsonData2 = """
@@ -260,7 +251,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance2Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", instance2Outputs0Entry.kind, "Expected instance2Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", instance2Outputs0Entry.description, "Expected instance2Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", instance2.model.id, "Expected instance2.model.id");
     assertEquals(1, instance2.tools.size(), "Expected tools size");
     Tool instance2Tools0Entry = instance2.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", instance2Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -268,8 +258,6 @@ final class AgentGeneratedTest {
     FunctionTool instance2Tools0Value = (FunctionTool) instance2Tools0Entry;
     assertEquals("function", instance2Tools0Value.kind, "Expected kind");
     assertEquals(2, instance2Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance2.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance2.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip2 = instance2.toYaml();
     Agent fromYaml2 = Agent.fromYaml(yamlRoundtrip2);
     assertEquals("basic-prompt", fromYaml2.name, "Expected name");
@@ -294,7 +282,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml2Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", fromYaml2Outputs0Entry.kind, "Expected fromYaml2Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", fromYaml2Outputs0Entry.description, "Expected fromYaml2Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", fromYaml2.model.id, "Expected fromYaml2.model.id");
     assertEquals(1, fromYaml2.tools.size(), "Expected tools size");
     Tool fromYaml2Tools0Entry = fromYaml2.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", fromYaml2Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -302,8 +289,6 @@ final class AgentGeneratedTest {
     FunctionTool fromYaml2Tools0Value = (FunctionTool) fromYaml2Tools0Entry;
     assertEquals("function", fromYaml2Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml2Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml2.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml2.template.parser.kind, "Expected parser.kind");
     Agent reloaded2 = Agent.load(instance2.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded2.name, "Expected name");
     assertEquals("Basic Prompt", reloaded2.displayName, "Expected displayName");
@@ -327,7 +312,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded2Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", reloaded2Outputs0Entry.kind, "Expected reloaded2Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", reloaded2Outputs0Entry.description, "Expected reloaded2Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", reloaded2.model.id, "Expected reloaded2.model.id");
     assertEquals(1, reloaded2.tools.size(), "Expected tools size");
     Tool reloaded2Tools0Entry = reloaded2.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", reloaded2Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -335,8 +319,6 @@ final class AgentGeneratedTest {
     FunctionTool reloaded2Tools0Value = (FunctionTool) reloaded2Tools0Entry;
     assertEquals("function", reloaded2Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded2Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded2.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded2.template.parser.kind, "Expected parser.kind");
 
     // Agent example 3: fromJson, fromYaml, save, and reload
     String jsonData3 = """
@@ -429,14 +411,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance3.outputs.get(0).name, "Expected instance3.outputs.get(0).name");
     assertEquals("string", instance3.outputs.get(0).kind, "Expected instance3.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", instance3.outputs.get(0).description, "Expected instance3.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", instance3.model.id, "Expected instance3.model.id");
     assertEquals(1, instance3.tools.size(), "Expected tools size");
     assertTrue(instance3.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool instance3Tools0Value = (FunctionTool) instance3.tools.get(0);
     assertEquals("function", instance3Tools0Value.kind, "Expected kind");
     assertEquals(2, instance3Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance3.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance3.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip3 = instance3.toYaml();
     Agent fromYaml3 = Agent.fromYaml(yamlRoundtrip3);
     assertEquals("basic-prompt", fromYaml3.name, "Expected name");
@@ -460,14 +439,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml3.outputs.get(0).name, "Expected fromYaml3.outputs.get(0).name");
     assertEquals("string", fromYaml3.outputs.get(0).kind, "Expected fromYaml3.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", fromYaml3.outputs.get(0).description, "Expected fromYaml3.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", fromYaml3.model.id, "Expected fromYaml3.model.id");
     assertEquals(1, fromYaml3.tools.size(), "Expected tools size");
     assertTrue(fromYaml3.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool fromYaml3Tools0Value = (FunctionTool) fromYaml3.tools.get(0);
     assertEquals("function", fromYaml3Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml3Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml3.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml3.template.parser.kind, "Expected parser.kind");
     Agent reloaded3 = Agent.load(instance3.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded3.name, "Expected name");
     assertEquals("Basic Prompt", reloaded3.displayName, "Expected displayName");
@@ -490,14 +466,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded3.outputs.get(0).name, "Expected reloaded3.outputs.get(0).name");
     assertEquals("string", reloaded3.outputs.get(0).kind, "Expected reloaded3.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", reloaded3.outputs.get(0).description, "Expected reloaded3.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", reloaded3.model.id, "Expected reloaded3.model.id");
     assertEquals(1, reloaded3.tools.size(), "Expected tools size");
     assertTrue(reloaded3.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool reloaded3Tools0Value = (FunctionTool) reloaded3.tools.get(0);
     assertEquals("function", reloaded3Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded3Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded3.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded3.template.parser.kind, "Expected parser.kind");
 
     // Agent example 4: fromJson, fromYaml, save, and reload
     String jsonData4 = """
@@ -589,7 +562,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance4.outputs.get(0).name, "Expected instance4.outputs.get(0).name");
     assertEquals("string", instance4.outputs.get(0).kind, "Expected instance4.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", instance4.outputs.get(0).description, "Expected instance4.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", instance4.model.id, "Expected instance4.model.id");
     assertEquals(1, instance4.tools.size(), "Expected tools size");
     Tool instance4Tools0Entry = instance4.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", instance4Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -597,8 +569,6 @@ final class AgentGeneratedTest {
     FunctionTool instance4Tools0Value = (FunctionTool) instance4Tools0Entry;
     assertEquals("function", instance4Tools0Value.kind, "Expected kind");
     assertEquals(2, instance4Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance4.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance4.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip4 = instance4.toYaml();
     Agent fromYaml4 = Agent.fromYaml(yamlRoundtrip4);
     assertEquals("basic-prompt", fromYaml4.name, "Expected name");
@@ -622,7 +592,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml4.outputs.get(0).name, "Expected fromYaml4.outputs.get(0).name");
     assertEquals("string", fromYaml4.outputs.get(0).kind, "Expected fromYaml4.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", fromYaml4.outputs.get(0).description, "Expected fromYaml4.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", fromYaml4.model.id, "Expected fromYaml4.model.id");
     assertEquals(1, fromYaml4.tools.size(), "Expected tools size");
     Tool fromYaml4Tools0Entry = fromYaml4.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", fromYaml4Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -630,8 +599,6 @@ final class AgentGeneratedTest {
     FunctionTool fromYaml4Tools0Value = (FunctionTool) fromYaml4Tools0Entry;
     assertEquals("function", fromYaml4Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml4Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml4.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml4.template.parser.kind, "Expected parser.kind");
     Agent reloaded4 = Agent.load(instance4.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded4.name, "Expected name");
     assertEquals("Basic Prompt", reloaded4.displayName, "Expected displayName");
@@ -654,7 +621,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded4.outputs.get(0).name, "Expected reloaded4.outputs.get(0).name");
     assertEquals("string", reloaded4.outputs.get(0).kind, "Expected reloaded4.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", reloaded4.outputs.get(0).description, "Expected reloaded4.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", reloaded4.model.id, "Expected reloaded4.model.id");
     assertEquals(1, reloaded4.tools.size(), "Expected tools size");
     Tool reloaded4Tools0Entry = reloaded4.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", reloaded4Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -662,8 +628,6 @@ final class AgentGeneratedTest {
     FunctionTool reloaded4Tools0Value = (FunctionTool) reloaded4Tools0Entry;
     assertEquals("function", reloaded4Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded4Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded4.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded4.template.parser.kind, "Expected parser.kind");
 
     // Agent example 5: fromJson, fromYaml, save, and reload
     String jsonData5 = """
@@ -756,14 +720,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance5Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", instance5Outputs0Entry.kind, "Expected instance5Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", instance5Outputs0Entry.description, "Expected instance5Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", instance5.model.id, "Expected instance5.model.id");
     assertEquals(1, instance5.tools.size(), "Expected tools size");
     assertTrue(instance5.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool instance5Tools0Value = (FunctionTool) instance5.tools.get(0);
     assertEquals("function", instance5Tools0Value.kind, "Expected kind");
     assertEquals(2, instance5Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance5.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance5.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip5 = instance5.toYaml();
     Agent fromYaml5 = Agent.fromYaml(yamlRoundtrip5);
     assertEquals("basic-prompt", fromYaml5.name, "Expected name");
@@ -785,14 +746,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml5Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", fromYaml5Outputs0Entry.kind, "Expected fromYaml5Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", fromYaml5Outputs0Entry.description, "Expected fromYaml5Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", fromYaml5.model.id, "Expected fromYaml5.model.id");
     assertEquals(1, fromYaml5.tools.size(), "Expected tools size");
     assertTrue(fromYaml5.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool fromYaml5Tools0Value = (FunctionTool) fromYaml5.tools.get(0);
     assertEquals("function", fromYaml5Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml5Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml5.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml5.template.parser.kind, "Expected parser.kind");
     Agent reloaded5 = Agent.load(instance5.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded5.name, "Expected name");
     assertEquals("Basic Prompt", reloaded5.displayName, "Expected displayName");
@@ -813,14 +771,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded5Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", reloaded5Outputs0Entry.kind, "Expected reloaded5Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", reloaded5Outputs0Entry.description, "Expected reloaded5Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", reloaded5.model.id, "Expected reloaded5.model.id");
     assertEquals(1, reloaded5.tools.size(), "Expected tools size");
     assertTrue(reloaded5.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool reloaded5Tools0Value = (FunctionTool) reloaded5.tools.get(0);
     assertEquals("function", reloaded5Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded5Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded5.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded5.template.parser.kind, "Expected parser.kind");
 
     // Agent example 6: fromJson, fromYaml, save, and reload
     String jsonData6 = """
@@ -912,7 +867,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance6Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", instance6Outputs0Entry.kind, "Expected instance6Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", instance6Outputs0Entry.description, "Expected instance6Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", instance6.model.id, "Expected instance6.model.id");
     assertEquals(1, instance6.tools.size(), "Expected tools size");
     Tool instance6Tools0Entry = instance6.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", instance6Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -920,8 +874,6 @@ final class AgentGeneratedTest {
     FunctionTool instance6Tools0Value = (FunctionTool) instance6Tools0Entry;
     assertEquals("function", instance6Tools0Value.kind, "Expected kind");
     assertEquals(2, instance6Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance6.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance6.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip6 = instance6.toYaml();
     Agent fromYaml6 = Agent.fromYaml(yamlRoundtrip6);
     assertEquals("basic-prompt", fromYaml6.name, "Expected name");
@@ -943,7 +895,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml6Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", fromYaml6Outputs0Entry.kind, "Expected fromYaml6Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", fromYaml6Outputs0Entry.description, "Expected fromYaml6Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", fromYaml6.model.id, "Expected fromYaml6.model.id");
     assertEquals(1, fromYaml6.tools.size(), "Expected tools size");
     Tool fromYaml6Tools0Entry = fromYaml6.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", fromYaml6Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -951,8 +902,6 @@ final class AgentGeneratedTest {
     FunctionTool fromYaml6Tools0Value = (FunctionTool) fromYaml6Tools0Entry;
     assertEquals("function", fromYaml6Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml6Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml6.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml6.template.parser.kind, "Expected parser.kind");
     Agent reloaded6 = Agent.load(instance6.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded6.name, "Expected name");
     assertEquals("Basic Prompt", reloaded6.displayName, "Expected displayName");
@@ -973,7 +922,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded6Outputs0Entry.name, "Expected outputs.answer name");
     assertEquals("string", reloaded6Outputs0Entry.kind, "Expected reloaded6Outputs0Entry.kind");
     assertEquals("The answer to the user's question.", reloaded6Outputs0Entry.description, "Expected reloaded6Outputs0Entry.description");
-    assertEquals("gpt-35-turbo", reloaded6.model.id, "Expected reloaded6.model.id");
     assertEquals(1, reloaded6.tools.size(), "Expected tools size");
     Tool reloaded6Tools0Entry = reloaded6.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", reloaded6Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -981,8 +929,6 @@ final class AgentGeneratedTest {
     FunctionTool reloaded6Tools0Value = (FunctionTool) reloaded6Tools0Entry;
     assertEquals("function", reloaded6Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded6Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded6.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded6.template.parser.kind, "Expected parser.kind");
 
     // Agent example 7: fromJson, fromYaml, save, and reload
     String jsonData7 = """
@@ -1075,14 +1021,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance7.outputs.get(0).name, "Expected instance7.outputs.get(0).name");
     assertEquals("string", instance7.outputs.get(0).kind, "Expected instance7.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", instance7.outputs.get(0).description, "Expected instance7.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", instance7.model.id, "Expected instance7.model.id");
     assertEquals(1, instance7.tools.size(), "Expected tools size");
     assertTrue(instance7.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool instance7Tools0Value = (FunctionTool) instance7.tools.get(0);
     assertEquals("function", instance7Tools0Value.kind, "Expected kind");
     assertEquals(2, instance7Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance7.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance7.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip7 = instance7.toYaml();
     Agent fromYaml7 = Agent.fromYaml(yamlRoundtrip7);
     assertEquals("basic-prompt", fromYaml7.name, "Expected name");
@@ -1103,14 +1046,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml7.outputs.get(0).name, "Expected fromYaml7.outputs.get(0).name");
     assertEquals("string", fromYaml7.outputs.get(0).kind, "Expected fromYaml7.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", fromYaml7.outputs.get(0).description, "Expected fromYaml7.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", fromYaml7.model.id, "Expected fromYaml7.model.id");
     assertEquals(1, fromYaml7.tools.size(), "Expected tools size");
     assertTrue(fromYaml7.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool fromYaml7Tools0Value = (FunctionTool) fromYaml7.tools.get(0);
     assertEquals("function", fromYaml7Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml7Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml7.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml7.template.parser.kind, "Expected parser.kind");
     Agent reloaded7 = Agent.load(instance7.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded7.name, "Expected name");
     assertEquals("Basic Prompt", reloaded7.displayName, "Expected displayName");
@@ -1130,14 +1070,11 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded7.outputs.get(0).name, "Expected reloaded7.outputs.get(0).name");
     assertEquals("string", reloaded7.outputs.get(0).kind, "Expected reloaded7.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", reloaded7.outputs.get(0).description, "Expected reloaded7.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", reloaded7.model.id, "Expected reloaded7.model.id");
     assertEquals(1, reloaded7.tools.size(), "Expected tools size");
     assertTrue(reloaded7.tools.get(0) instanceof FunctionTool, "Expected tools[0] to be FunctionTool");
     FunctionTool reloaded7Tools0Value = (FunctionTool) reloaded7.tools.get(0);
     assertEquals("function", reloaded7Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded7Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded7.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded7.template.parser.kind, "Expected parser.kind");
 
     // Agent example 8: fromJson, fromYaml, save, and reload
     String jsonData8 = """
@@ -1229,7 +1166,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", instance8.outputs.get(0).name, "Expected instance8.outputs.get(0).name");
     assertEquals("string", instance8.outputs.get(0).kind, "Expected instance8.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", instance8.outputs.get(0).description, "Expected instance8.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", instance8.model.id, "Expected instance8.model.id");
     assertEquals(1, instance8.tools.size(), "Expected tools size");
     Tool instance8Tools0Entry = instance8.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", instance8Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -1237,8 +1173,6 @@ final class AgentGeneratedTest {
     FunctionTool instance8Tools0Value = (FunctionTool) instance8Tools0Entry;
     assertEquals("function", instance8Tools0Value.kind, "Expected kind");
     assertEquals(2, instance8Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", instance8.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", instance8.template.parser.kind, "Expected parser.kind");
     String yamlRoundtrip8 = instance8.toYaml();
     Agent fromYaml8 = Agent.fromYaml(yamlRoundtrip8);
     assertEquals("basic-prompt", fromYaml8.name, "Expected name");
@@ -1259,7 +1193,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", fromYaml8.outputs.get(0).name, "Expected fromYaml8.outputs.get(0).name");
     assertEquals("string", fromYaml8.outputs.get(0).kind, "Expected fromYaml8.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", fromYaml8.outputs.get(0).description, "Expected fromYaml8.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", fromYaml8.model.id, "Expected fromYaml8.model.id");
     assertEquals(1, fromYaml8.tools.size(), "Expected tools size");
     Tool fromYaml8Tools0Entry = fromYaml8.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", fromYaml8Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -1267,8 +1200,6 @@ final class AgentGeneratedTest {
     FunctionTool fromYaml8Tools0Value = (FunctionTool) fromYaml8Tools0Entry;
     assertEquals("function", fromYaml8Tools0Value.kind, "Expected kind");
     assertEquals(2, fromYaml8Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", fromYaml8.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", fromYaml8.template.parser.kind, "Expected parser.kind");
     Agent reloaded8 = Agent.load(instance8.save(new SaveContext()), new LoadContext());
     assertEquals("basic-prompt", reloaded8.name, "Expected name");
     assertEquals("Basic Prompt", reloaded8.displayName, "Expected displayName");
@@ -1288,7 +1219,6 @@ final class AgentGeneratedTest {
     assertEquals("answer", reloaded8.outputs.get(0).name, "Expected reloaded8.outputs.get(0).name");
     assertEquals("string", reloaded8.outputs.get(0).kind, "Expected reloaded8.outputs.get(0).kind");
     assertEquals("The answer to the user's question.", reloaded8.outputs.get(0).description, "Expected reloaded8.outputs.get(0).description");
-    assertEquals("gpt-35-turbo", reloaded8.model.id, "Expected reloaded8.model.id");
     assertEquals(1, reloaded8.tools.size(), "Expected tools size");
     Tool reloaded8Tools0Entry = reloaded8.tools.stream().filter(item -> "getCurrentWeather".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected tools.getCurrentWeather entry"));
     assertEquals("getCurrentWeather", reloaded8Tools0Entry.name, "Expected tools.getCurrentWeather name");
@@ -1296,8 +1226,6 @@ final class AgentGeneratedTest {
     FunctionTool reloaded8Tools0Value = (FunctionTool) reloaded8Tools0Entry;
     assertEquals("function", reloaded8Tools0Value.kind, "Expected kind");
     assertEquals(2, reloaded8Tools0Value.parameters.size(), "Expected parameters size");
-    assertEquals("mustache", reloaded8.template.format.kind, "Expected format.kind");
-    assertEquals("prompty", reloaded8.template.parser.kind, "Expected parser.kind");
 
     assertThrows(() -> Agent.fromJson("{"), "Agent.fromJson should reject malformed JSON");
 

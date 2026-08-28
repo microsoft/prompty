@@ -102,8 +102,7 @@ export class ModelToolRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ModelToolRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelToolRequest.load(data as Record<string, unknown>, context);
   }
 

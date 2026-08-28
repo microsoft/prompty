@@ -5,6 +5,7 @@ package prompty_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -291,6 +292,13 @@ func TestTokenUsageToWire(t *testing.T) {
 	if _, ok := openaiWire["totalTokens"]; ok {
 		t.Errorf("Expected openai wire output to omit source field totalTokens")
 	}
+	openaiRestored, openaiErr := prompty.TokenUsageFromWire("openai", openaiWire, ctx)
+	if openaiErr != nil {
+		t.Fatalf("Expected openai FromWire to succeed, got %v", openaiErr)
+	}
+	if openaiRoundTrip := openaiRestored.ToWire("openai"); !reflect.DeepEqual(openaiRoundTrip, openaiWire) {
+		t.Errorf("Expected openai FromWire round-trip to preserve the wire payload, got %v want %v", openaiRoundTrip, openaiWire)
+	}
 
 	anthropicWire := instance.ToWire("anthropic")
 	if _, ok := anthropicWire["input_tokens"]; !ok {
@@ -304,5 +312,48 @@ func TestTokenUsageToWire(t *testing.T) {
 	}
 	if _, ok := anthropicWire["completionTokens"]; ok {
 		t.Errorf("Expected anthropic wire output to omit source field completionTokens")
+	}
+	anthropicRestored, anthropicErr := prompty.TokenUsageFromWire("anthropic", anthropicWire, ctx)
+	if anthropicErr != nil {
+		t.Fatalf("Expected anthropic FromWire to succeed, got %v", anthropicErr)
+	}
+	if anthropicRoundTrip := anthropicRestored.ToWire("anthropic"); !reflect.DeepEqual(anthropicRoundTrip, anthropicWire) {
+		t.Errorf("Expected anthropic FromWire round-trip to preserve the wire payload, got %v want %v", anthropicRoundTrip, anthropicWire)
+	}
+}
+
+func assertTokenUsageStringField(t *testing.T, value interface{}, fieldName string, expected string, displayName string) {
+	t.Helper()
+	field := reflect.ValueOf(value)
+	if field.Kind() == reflect.Pointer {
+		if field.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		field = field.Elem()
+	}
+	if field.Kind() != reflect.Struct {
+		t.Fatalf("Expected %s receiver to be a struct, got %T", displayName, value)
+	}
+	member := field.FieldByName(fieldName)
+	if !member.IsValid() {
+		t.Fatalf("Expected %s to have field %s, got %T", displayName, fieldName, value)
+	}
+	if member.Kind() == reflect.Pointer {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() == reflect.Interface {
+		if member.IsNil() {
+			t.Fatalf("Expected %s to be populated", displayName)
+		}
+		member = member.Elem()
+	}
+	if member.Kind() != reflect.String {
+		t.Fatalf("Expected %s to be a string field, got %s", displayName, member.Kind())
+	}
+	if got := member.String(); got != expected {
+		t.Errorf("Expected %s to be %q, got %q", displayName, expected, got)
 	}
 }

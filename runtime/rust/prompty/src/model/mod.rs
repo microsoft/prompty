@@ -79,4 +79,10 @@ pub use operations::*;
 pub mod wire;
 pub use wire::*;
 
+pub mod parser_resolver;
+
+pub mod processor_resolver;
+
+pub mod renderer_resolver;
+
 pub use contracts::pipeline;

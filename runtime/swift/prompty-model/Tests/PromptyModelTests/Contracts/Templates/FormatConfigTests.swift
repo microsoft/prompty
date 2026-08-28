@@ -17,13 +17,17 @@ final class FormatConfigTests: XCTestCase {
 }
 """
     let instance = try FormatConfig.fromJSON(json)
-    XCTAssertEqual(instance.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.strict)), true)
-    XCTAssertNotNil(instance.options)
+    if case .mustacheFormat(let concrete) = instance {
+      XCTAssertEqual((try XCTUnwrap(concrete.strict)), true)
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
     let reloaded = try FormatConfig.fromJSON(try instance.toJSON())
-    XCTAssertEqual(reloaded.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.strict)), true)
-    XCTAssertNotNil(reloaded.options)
+    if case .mustacheFormat(let concrete) = reloaded {
+      XCTAssertEqual((try XCTUnwrap(concrete.strict)), true)
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
   }
 
   func testYAMLRoundTrip1() throws {
@@ -35,18 +39,25 @@ options:
 
 """
     let instance = try FormatConfig.fromYAML(yaml)
-    XCTAssertEqual(instance.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(instance.strict)), true)
-    XCTAssertNotNil(instance.options)
+    if case .mustacheFormat(let concrete) = instance {
+      XCTAssertEqual((try XCTUnwrap(concrete.strict)), true)
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
     let reloaded = try FormatConfig.fromYAML(try instance.toYAML())
-    XCTAssertEqual(reloaded.kind, "mustache")
-    XCTAssertEqual((try XCTUnwrap(reloaded.strict)), true)
-    XCTAssertNotNil(reloaded.options)
+    if case .mustacheFormat(let concrete) = reloaded {
+      XCTAssertEqual((try XCTUnwrap(concrete.strict)), true)
+    } else {
+      XCTFail("Expected MustacheFormat")
+    }
   }
 
   func testScalarCoercion1() throws {
     let instance = try FormatConfig.load("example")
-    XCTAssertEqual(instance.kind, "example")
+    if case .customFormat = instance {
+    } else {
+      XCTFail("Expected CustomFormat")
+    }
   }
 
 }

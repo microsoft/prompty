@@ -122,8 +122,7 @@ export class McpApprovalMode {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): McpApprovalMode {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return McpApprovalMode.load(data as Record<string, unknown>, context);
   }
 

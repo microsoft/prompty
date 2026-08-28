@@ -17,8 +17,8 @@
       },
       {
         "name": "@typra/emitter",
-        "version": "1.0.1",
-        "supportedRange": "1.0.1",
+        "version": "2.0.2",
+        "supportedRange": "2.0.2",
         "supported": true
       }
     ]
@@ -51,6 +51,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -62,6 +63,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -101,6 +105,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -120,9 +125,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -133,6 +140,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -379,6 +387,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/Model.cs",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -446,6 +461,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts/ContextRequest.cs",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/FormatConfig.cs",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/Model.cs",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/ParserConfig.cs",
           "protocol": false
         },
         {
@@ -659,6 +695,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/FormatConfig.cs",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -778,6 +821,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/FormatConfig.cs",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -796,6 +846,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts/Property.cs",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/Model.cs",
           "protocol": false
         },
         {
@@ -845,6 +902,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts/ProjectInfo.cs",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts/ParserConfig.cs",
           "protocol": false
         },
         {
@@ -1383,6 +1447,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -1393,6 +1458,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -1423,6 +1491,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -1440,9 +1509,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -1450,6 +1521,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -1964,7 +2036,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -2058,7 +2165,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -2103,6 +2238,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -2111,7 +2247,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -2147,7 +2318,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -2384,6 +2590,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -2395,6 +2602,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -2434,6 +2644,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -2453,9 +2664,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -2466,6 +2679,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -2712,6 +2926,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "model.go",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -2779,6 +3000,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "context_request.go",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "format_config.go",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "model.go",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "parser_config.go",
           "protocol": false
         },
         {
@@ -2992,6 +3234,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "format_config.go",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -3111,6 +3360,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "format_config.go",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -3129,6 +3385,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "property.go",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "model.go",
           "protocol": false
         },
         {
@@ -3178,6 +3441,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "project_info.go",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "parser_config.go",
           "protocol": false
         },
         {
@@ -3716,6 +3986,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -3726,6 +3997,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -3756,6 +4030,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -3773,9 +4048,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -3783,6 +4060,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -4297,7 +4575,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -4391,7 +4704,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -4436,6 +4777,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -4444,7 +4786,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -4480,7 +4857,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -4717,6 +5129,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -4728,6 +5141,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -4767,6 +5183,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -4786,9 +5203,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -4799,6 +5218,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -5045,6 +5465,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model.java",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -5112,6 +5539,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "ContextRequest.java",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig.java",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model.java",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "ParserConfig.java",
           "protocol": false
         },
         {
@@ -5325,6 +5773,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig.java",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -5444,6 +5899,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig.java",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -5462,6 +5924,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Property.java",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model.java",
           "protocol": false
         },
         {
@@ -5511,6 +5980,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "ProjectInfo.java",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "ParserConfig.java",
           "protocol": false
         },
         {
@@ -6049,6 +6525,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -6059,6 +6536,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -6089,6 +6569,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -6106,9 +6587,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -6116,6 +6599,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -6630,7 +7114,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -6724,7 +7243,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -6769,6 +7316,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -6777,7 +7325,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -6813,7 +7396,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -7049,6 +7667,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -7060,6 +7679,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -7099,6 +7721,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -7118,9 +7741,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -7131,6 +7756,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -7377,6 +8003,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -7444,6 +8077,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "ContextRequest",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "ParserConfig",
           "protocol": false
         },
         {
@@ -7657,6 +8311,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -7776,6 +8437,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "FormatConfig",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -7794,6 +8462,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Property",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Model",
           "protocol": false
         },
         {
@@ -7843,6 +8518,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "ProjectInfo",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "ParserConfig",
           "protocol": false
         },
         {
@@ -8381,6 +9063,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -8391,6 +9074,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -8421,6 +9107,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -8438,9 +9125,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -8448,6 +9137,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -8962,7 +9652,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -9056,7 +9781,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -9101,6 +9854,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -9109,7 +9863,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -9145,7 +9934,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -9382,6 +10206,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -9393,6 +10218,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -9432,6 +10260,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -9451,9 +10280,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -9464,6 +10295,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -9710,6 +10542,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -9774,6 +10613,27 @@
         },
         {
           "name": "ContextRequest",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
           "kind": "value",
           "group": "contracts",
           "source": ".contracts",
@@ -9990,6 +10850,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -10109,6 +10976,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -10124,6 +10998,13 @@
         },
         {
           "name": "ObjectProperty",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
           "kind": "value",
           "group": "contracts",
           "source": ".contracts",
@@ -10173,6 +11054,13 @@
         },
         {
           "name": "ProjectInfo",
+          "kind": "value",
+          "group": "contracts",
+          "source": ".contracts",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
           "kind": "value",
           "group": "contracts",
           "source": ".contracts",
@@ -10714,6 +11602,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -10724,6 +11613,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -10754,6 +11646,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -10771,9 +11664,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -10781,6 +11676,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -11295,7 +12191,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -11389,7 +12320,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -11434,6 +12393,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -11442,7 +12402,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -11478,7 +12473,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -11592,6 +12622,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -11603,6 +12634,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -11642,6 +12676,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -11661,9 +12696,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -11674,6 +12711,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -11920,6 +12958,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::model",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -11987,6 +13032,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts::context_request",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::format_config",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::model",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::parser_config",
           "protocol": false
         },
         {
@@ -12200,6 +13266,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::format_config",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -12319,6 +13392,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::format_config",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -12337,6 +13417,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts::property",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::model",
           "protocol": false
         },
         {
@@ -12386,6 +13473,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "contracts::project_info",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "contracts::parser_config",
           "protocol": false
         },
         {
@@ -12924,6 +14018,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -12934,6 +14029,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -12964,6 +14062,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -12981,9 +14080,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -12991,6 +14092,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -13505,7 +14607,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -13599,7 +14736,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -13644,6 +14809,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -13652,7 +14818,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -13688,7 +14889,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -13804,6 +15040,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -13815,6 +15052,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -13854,6 +15094,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -13873,9 +15114,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -13886,6 +15129,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -14132,6 +15376,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model.swift",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -14199,6 +15450,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "Sources/PromptyModel/contracts/context_request.swift",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/format_config.swift",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model.swift",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/parser_config.swift",
           "protocol": false
         },
         {
@@ -14412,6 +15684,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/format_config.swift",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -14531,6 +15810,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/format_config.swift",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -14549,6 +15835,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Sources/PromptyModel/contracts/property.swift",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/model.swift",
           "protocol": false
         },
         {
@@ -14598,6 +15891,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "Sources/PromptyModel/contracts/project_info.swift",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "Sources/PromptyModel/contracts/parser_config.swift",
           "protocol": false
         },
         {
@@ -15136,6 +16436,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -15146,6 +16447,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -15176,6 +16480,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -15193,9 +16498,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -15203,6 +16510,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -15717,7 +17025,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -15811,7 +17154,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -15856,6 +17227,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -15864,7 +17236,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -15900,7 +17307,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",
@@ -16137,6 +17579,7 @@
         "ArrayProperty",
         "AudioPart",
         "AuthorizationCodeFlow",
+        "AzureModel",
         "Binding",
         "Checkpoint",
         "CheckpointStore",
@@ -16148,6 +17591,9 @@
         "ContentPart",
         "ContextCandidate",
         "ContextRequest",
+        "CustomFormat",
+        "CustomModel",
+        "CustomParser",
         "CustomTool",
         "DelegatedStateReference",
         "DeviceAuthorization",
@@ -16187,6 +17633,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "Jinja2Format",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -16206,9 +17653,11 @@
         "ModelReconciliationState",
         "ModelToolRequest",
         "ModelToolResult",
+        "MustacheFormat",
         "OAuthConnection",
         "OAuthToken",
         "ObjectProperty",
+        "OpenAIModel",
         "OpenApiTool",
         "Parser",
         "ParserConfig",
@@ -16219,6 +17668,7 @@
         "PermissionResolver",
         "Processor",
         "ProjectInfo",
+        "PromptyParser",
         "Property",
         "RedactedField",
         "RedactionMetadata",
@@ -16465,6 +17915,13 @@
           "protocol": false
         },
         {
+          "name": "AzureModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/model",
+          "protocol": false
+        },
+        {
           "name": "Binding",
           "kind": "value",
           "group": "contracts",
@@ -16532,6 +17989,27 @@
           "kind": "value",
           "group": "contracts",
           "source": "./contracts/context-request",
+          "protocol": false
+        },
+        {
+          "name": "CustomFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/format-config",
+          "protocol": false
+        },
+        {
+          "name": "CustomModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/model",
+          "protocol": false
+        },
+        {
+          "name": "CustomParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/parser-config",
           "protocol": false
         },
         {
@@ -16745,6 +18223,13 @@
           "protocol": false
         },
         {
+          "name": "Jinja2Format",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/format-config",
+          "protocol": false
+        },
+        {
           "name": "LlmCompletePayload",
           "kind": "value",
           "group": "contracts",
@@ -16864,6 +18349,13 @@
           "protocol": false
         },
         {
+          "name": "MustacheFormat",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/format-config",
+          "protocol": false
+        },
+        {
           "name": "OAuthConnection",
           "kind": "value",
           "group": "contracts",
@@ -16882,6 +18374,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "./contracts/property",
+          "protocol": false
+        },
+        {
+          "name": "OpenAIModel",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/model",
           "protocol": false
         },
         {
@@ -16931,6 +18430,13 @@
           "kind": "value",
           "group": "contracts",
           "source": "./contracts/project-info",
+          "protocol": false
+        },
+        {
+          "name": "PromptyParser",
+          "kind": "value",
+          "group": "contracts",
+          "source": "./contracts/parser-config",
           "protocol": false
         },
         {
@@ -17469,6 +18975,7 @@
             "ArrayProperty",
             "AudioPart",
             "AuthorizationCodeFlow",
+            "AzureModel",
             "Binding",
             "Checkpoint",
             "CompactionCompletePayload",
@@ -17479,6 +18986,9 @@
             "ContentPart",
             "ContextCandidate",
             "ContextRequest",
+            "CustomFormat",
+            "CustomModel",
+            "CustomParser",
             "CustomTool",
             "DelegatedStateReference",
             "DeviceAuthorization",
@@ -17509,6 +19019,7 @@
             "InvocationContextState",
             "InvocationUsage",
             "InvokerError",
+            "Jinja2Format",
             "LlmCompletePayload",
             "LlmStartPayload",
             "McpApprovalMode",
@@ -17526,9 +19037,11 @@
             "ModelReconciliationState",
             "ModelToolRequest",
             "ModelToolResult",
+            "MustacheFormat",
             "OAuthConnection",
             "OAuthToken",
             "ObjectProperty",
+            "OpenAIModel",
             "OpenApiTool",
             "ParserConfig",
             "PermissionCompletedPayload",
@@ -17536,6 +19049,7 @@
             "PermissionRequest",
             "PermissionRequestedPayload",
             "ProjectInfo",
+            "PromptyParser",
             "Property",
             "RedactedField",
             "RedactionMetadata",
@@ -18050,7 +19564,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "HostToolExecutor",
@@ -18144,7 +19693,35 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "ParserConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.parser.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "prompty",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "PromptyParser"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomParser"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "PermissionResolver",
@@ -18189,6 +19766,7 @@
               "name": "processStream",
               "returns": "unknown",
               "params": {
+                "agent": "Agent",
                 "stream": "unknown"
               },
               "optional": true,
@@ -18197,7 +19775,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "Model",
+              "field": "provider"
+            },
+            "path": "agent.model.provider",
+            "decl": {
+              "discriminatorField": "provider",
+              "variants": [
+                {
+                  "value": "openai",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "OpenAIModel"
+                  }
+                },
+                {
+                  "value": "azure",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Models",
+                    "name": "AzureModel"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Models",
+                  "name": "CustomModel"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "Renderer",
@@ -18233,7 +19846,42 @@
               "atomic": false,
               "nonFatal": false
             }
-          ]
+          ],
+          "dispatch": {
+            "discriminator": {
+              "model": "FormatConfig",
+              "field": "kind"
+            },
+            "path": "agent.template.format.kind",
+            "decl": {
+              "discriminatorField": "kind",
+              "variants": [
+                {
+                  "value": "jinja2",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "Jinja2Format"
+                  }
+                },
+                {
+                  "value": "mustache",
+                  "typeName": {
+                    "namespace": "Prompty.Contracts.Templates",
+                    "name": "MustacheFormat"
+                  }
+                }
+              ],
+              "defaultVariant": {
+                "typeName": {
+                  "namespace": "Prompty.Contracts.Templates",
+                  "name": "CustomFormat"
+                },
+                "isSelfReference": false
+              },
+              "isAbstract": false,
+              "isClosed": false
+            }
+          }
         },
         {
           "name": "TurnConformance",

@@ -48,6 +48,8 @@ final class AiResourceInfoGeneratedTest {
     assertTrue(!foundryWire.containsKey("resourceGroup"), "Expected foundry wire output to omit resourceGroup");
     assertTrue(foundryWire.containsKey("foundry_url"), "Expected foundry wire output to include foundry_url");
     assertTrue(!foundryWire.containsKey("serviceUrl"), "Expected foundry wire output to omit serviceUrl");
+    AiResourceInfo foundryRestored = AiResourceInfo.fromWire("foundry", foundryWire);
+    assertEquals(foundryWire.keySet(), foundryRestored.toWire("foundry").keySet(), "Expected foundry FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

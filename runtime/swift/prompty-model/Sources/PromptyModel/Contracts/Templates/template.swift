@@ -6,10 +6,10 @@ import Foundation
 /// Template model for defining prompt templates.  This model specifies the rendering engine used for slot filling prompts, the parser used to process the rendered template into API-compatible format, and additional options for the template engine.  It allows for the creation of reusable templates that can be filled with dynamic data and processed to generate prompts for AI models.
 public struct Template: TypraModel {
   public static let shorthandProperty: String? = nil
-  public var format: FormatConfig = FormatConfig()
-  public var parser: ParserConfig = ParserConfig()
+  public var format: FormatConfig = .customFormat(CustomFormat(), [:])
+  public var parser: ParserConfig = .customParser(CustomParser(), [:])
 
-  public init(format: FormatConfig = FormatConfig(), parser: ParserConfig = ParserConfig()) {
+  public init(format: FormatConfig = .customFormat(CustomFormat(), [:]), parser: ParserConfig = .customParser(CustomParser(), [:])) {
     self.format = format
     self.parser = parser
   }

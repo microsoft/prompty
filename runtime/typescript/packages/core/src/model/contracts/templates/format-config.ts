@@ -34,15 +34,14 @@ export class FormatConfig {
 
     // Handle alternate representations
     if (typeof data === "string") {
-      const instance = new FormatConfig();
-      instance.kind = data as string;
-      if (context) {
-        return context.processOutput(instance) as FormatConfig;
-      }
-      return instance;
+      return FormatConfig.loadKind(
+        { kind: data } as Record<string, unknown>,
+        context,
+      );
     }
 
-    const instance = new FormatConfig();
+    // Load polymorphic FormatConfig instance
+    const instance = FormatConfig.loadKind(data, context);
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
@@ -58,6 +57,23 @@ export class FormatConfig {
       return context.processOutput(instance) as FormatConfig;
     }
     return instance;
+  }
+
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): FormatConfig {
+    const discriminatorValue = data["kind"];
+    const discriminator =
+      typeof discriminatorValue === "string" ? discriminatorValue : "";
+    switch (discriminator) {
+      case "jinja2":
+        return Jinja2Format.load(data, context);
+      case "mustache":
+        return MustacheFormat.load(data, context);
+      default:
+        return CustomFormat.load(data, context);
+    }
   }
 
   //#endregion
@@ -104,9 +120,233 @@ export class FormatConfig {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FormatConfig {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FormatConfig.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class Jinja2Format extends FormatConfig {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "jinja2";
+
+  constructor(init?: Partial<Jinja2Format>) {
+    super(init);
+    this.kind = init?.kind ?? "jinja2";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Jinja2Format {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new Jinja2Format();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as Jinja2Format;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): Jinja2Format {
+    const data = JSON.parse(json);
+    return Jinja2Format.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): Jinja2Format {
+    const data = LoadContext.parseYaml(yaml);
+    return Jinja2Format.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class MustacheFormat extends FormatConfig {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "mustache";
+
+  constructor(init?: Partial<MustacheFormat>) {
+    super(init);
+    this.kind = init?.kind ?? "mustache";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): MustacheFormat {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new MustacheFormat();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as MustacheFormat;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): MustacheFormat {
+    const data = JSON.parse(json);
+    return MustacheFormat.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): MustacheFormat {
+    const data = LoadContext.parseYaml(yaml);
+    return MustacheFormat.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class CustomFormat extends FormatConfig {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "*";
+
+  constructor(init?: Partial<CustomFormat>) {
+    super(init);
+    this.kind = init?.kind ?? "*";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CustomFormat {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new CustomFormat();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as CustomFormat;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): CustomFormat {
+    const data = JSON.parse(json);
+    return CustomFormat.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): CustomFormat {
+    const data = LoadContext.parseYaml(yaml);
+    return CustomFormat.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

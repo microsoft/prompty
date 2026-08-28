@@ -84,8 +84,7 @@ export class StreamFailure {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): StreamFailure {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return StreamFailure.load(data as Record<string, unknown>, context);
   }
 

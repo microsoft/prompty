@@ -9,5 +9,5 @@ export interface Processor {
   /** Extract a clean result from a raw LLM response */
   process(agent: Agent, response: unknown): Promise<unknown>;
   /** Process a streaming response into a stream of StreamChunk items. Takes raw chunks from the executor and yields processed text, thinking, tool, or error chunks. Not all providers support streaming; the default implementation should signal lack of support. */
-  processStream?(stream: unknown): Promise<unknown>;
+  processStream?(agent: Agent, stream: unknown): Promise<unknown>;
 }

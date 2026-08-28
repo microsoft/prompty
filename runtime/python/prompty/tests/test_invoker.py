@@ -38,6 +38,7 @@ from prompty.core.types import (
 from prompty.invoker import (
     InvokerError,
     clear_cache,
+    clear_registry,
     get_executor,
     get_parser,
     get_processor,
@@ -154,10 +155,10 @@ class MockProcessor:
 
 @pytest.fixture(autouse=True)
 def _clear_cache():
-    """Clear the invoker cache before each test."""
-    clear_cache()
+    """Fully reset the registry (cache + overrides + defaults) around each test."""
+    clear_registry()
     yield
-    clear_cache()
+    clear_registry()
 
 
 def _make_entry_point(name: str, obj: Any):
@@ -728,6 +729,17 @@ class TestInvokeExecutor:
 
         with pytest.raises(InvokerError):
             _invoke_executor(agent, messages)
+
+    def test_no_provider_uses_registered_default(self):
+        """A model with no provider dispatches via the global default provider."""
+        from prompty.core.discovery import register_default_provider
+
+        agent = _make_agent(provider="")
+        messages = [Message(role="user", parts=[TextPart(value="Hi")])]
+        register_default_provider("openai")
+        with _patch_entry_points(executors=[("openai", MockExecutor)]):
+            result = _invoke_executor(agent, messages)
+        assert "Response to:" in result["choices"][0]["message"]["content"]
 
     def test_unknown_provider_raises(self):
         agent = _make_agent(provider="unknown")

@@ -69,7 +69,7 @@ func (Processor) Process(agent prompty.Agent, response interface{}) (interface{}
 }
 
 // ProcessStream is not supported by the raw-HTTP Foundry processor.
-func (Processor) ProcessStream(stream interface{}) (interface{}, error) {
+func (Processor) ProcessStream(_ prompty.Agent, stream interface{}) (interface{}, error) {
 	return nil, providers.ErrStreamingUnsupported
 }
 
@@ -87,10 +87,7 @@ func requestTarget(agent prompty.Agent) (url string, headers map[string]string, 
 		return "", nil, fmt.Errorf("foundry: endpoint is required (set model.connection.endpoint or AZURE_OPENAI_ENDPOINT)")
 	}
 
-	deployment := ""
-	if agent.Model != nil {
-		deployment = agent.Model.Id
-	}
+	deployment := providers.ModelID(agent)
 	if deployment == "" {
 		return "", nil, fmt.Errorf("foundry: model id (deployment name) is required")
 	}

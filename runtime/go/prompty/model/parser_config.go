@@ -10,7 +10,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ParserConfig represents Template parser definition
+// ParserConfig represents Template parser definition. `kind` is the `@dispatch` discriminator for the
+// Parser seam, reached from a seam param as `agent.template.parser.kind`.
 
 type ParserConfig struct {
 	Kind    string                 `json:"kind" yaml:"kind"`
@@ -18,7 +19,8 @@ type ParserConfig struct {
 }
 
 // LoadParserConfig creates a ParserConfig from a map[string]interface{}
-func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func LoadParserConfig(data interface{}, ctx *LoadContext) (interface{}, error) {
 	if ctx == nil {
 		ctx = NewLoadContext()
 	}
@@ -30,6 +32,24 @@ func LoadParserConfig(data interface{}, ctx *LoadContext) (ParserConfig, error) 
 		// Shorthand: string -> ParserConfig
 		expansion := map[string]interface{}{"kind": v}
 		return LoadParserConfig(expansion, ctx)
+	}
+	// Handle polymorphic types based on discriminator
+	if m, ok := data.(map[string]interface{}); ok {
+		if discriminator, ok := m["kind"]; ok {
+			switch discriminator := discriminator.(type) {
+			case string:
+				switch discriminator {
+				case "prompty":
+					return LoadPromptyParser(data, ctx)
+				default:
+					return LoadCustomParser(data, ctx)
+				}
+			default:
+				return LoadCustomParser(data, ctx)
+			}
+		} else {
+			return LoadCustomParser(data, ctx)
+		}
 	}
 	// Load from map
 	if m, ok := data.(map[string]interface{}); ok {
@@ -76,21 +96,174 @@ func (obj *ParserConfig) ToYAML() (string, error) {
 }
 
 // FromJSON creates ParserConfig from JSON string
-func ParserConfigFromJSON(jsonStr string) (ParserConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func ParserConfigFromJSON(jsonStr string) (interface{}, error) {
 	var data interface{}
 	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ParserConfig{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadParserConfig(data, ctx)
 }
 
 // FromYAML creates ParserConfig from YAML string
-func ParserConfigFromYAML(yamlStr string) (ParserConfig, error) {
+// Returns interface{} because this is a polymorphic base type that can resolve to different child types
+func ParserConfigFromYAML(yamlStr string) (interface{}, error) {
 	var data interface{}
 	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ParserConfig{}, err
+		return nil, err
 	}
 	ctx := NewLoadContext()
 	return LoadParserConfig(data, ctx)
+}
+
+// PromptyParser represents The default Prompty chat parser. Pin-only subtype.
+
+type PromptyParser struct {
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadPromptyParser creates a PromptyParser from a map[string]interface{}
+func LoadPromptyParser(data interface{}, ctx *LoadContext) (PromptyParser, error) {
+	result := PromptyParser{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Options = m
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes PromptyParser to map[string]interface{}
+func (obj PromptyParser) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.Options != nil {
+		result["options"] = obj.Options
+	}
+
+	return result
+}
+
+// ToJSON serializes PromptyParser to JSON string
+func (obj *PromptyParser) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes PromptyParser to YAML string
+func (obj *PromptyParser) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates PromptyParser from JSON string
+func PromptyParserFromJSON(jsonStr string) (PromptyParser, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return PromptyParser{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadPromptyParser(data, ctx)
+}
+
+// FromYAML creates PromptyParser from YAML string
+func PromptyParserFromYAML(yamlStr string) (PromptyParser, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return PromptyParser{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadPromptyParser(data, ctx)
+}
+
+// CustomParser represents Wildcard catch-all parser for downstream/unregistered parser kinds. The `"*"`
+// discriminator lowers to the Parser dispatch decl's `defaultVariant`.
+
+type CustomParser struct {
+	Kind    string                 `json:"kind" yaml:"kind"`
+	Options map[string]interface{} `json:"options,omitempty" yaml:"options,omitempty"`
+}
+
+// LoadCustomParser creates a CustomParser from a map[string]interface{}
+func LoadCustomParser(data interface{}, ctx *LoadContext) (CustomParser, error) {
+	result := CustomParser{}
+
+	// Load from map
+	if m, ok := data.(map[string]interface{}); ok {
+		if val, ok := m["kind"]; ok && val != nil {
+			result.Kind = string(val.(string))
+		}
+		if val, ok := m["options"]; ok && val != nil {
+			if m, ok := val.(map[string]interface{}); ok {
+				result.Options = m
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// Save serializes CustomParser to map[string]interface{}
+func (obj CustomParser) Save(ctx *SaveContext) map[string]interface{} {
+	result := make(map[string]interface{})
+	result["kind"] = obj.Kind
+	if obj.Options != nil {
+		result["options"] = obj.Options
+	}
+
+	return result
+}
+
+// ToJSON serializes CustomParser to JSON string
+func (obj *CustomParser) ToJSON() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(bytes), nil
+}
+
+// ToYAML serializes CustomParser to YAML string
+func (obj *CustomParser) ToYAML() (string, error) {
+	ctx := NewSaveContext()
+	data := obj.Save(ctx)
+	return marshalYAMLDocument(data)
+}
+
+// FromJSON creates CustomParser from JSON string
+func CustomParserFromJSON(jsonStr string) (CustomParser, error) {
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return CustomParser{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomParser(data, ctx)
+}
+
+// FromYAML creates CustomParser from YAML string
+func CustomParserFromYAML(yamlStr string) (CustomParser, error) {
+	var data map[string]interface{}
+	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
+		return CustomParser{}, err
+	}
+	ctx := NewLoadContext()
+	return LoadCustomParser(data, ctx)
 }

@@ -148,8 +148,7 @@ export class ContextCandidate {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ContextCandidate {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ContextCandidate.load(data as Record<string, unknown>, context);
   }
 

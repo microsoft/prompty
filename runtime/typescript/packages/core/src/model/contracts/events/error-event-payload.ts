@@ -94,8 +94,7 @@ export class ErrorEventPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ErrorEventPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ErrorEventPayload.load(data as Record<string, unknown>, context);
   }
 

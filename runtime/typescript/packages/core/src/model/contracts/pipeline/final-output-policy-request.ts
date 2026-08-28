@@ -178,8 +178,7 @@ export class FinalOutputPolicyRequest {
     yaml: string,
     context?: LoadContext,
   ): FinalOutputPolicyRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FinalOutputPolicyRequest.load(
       data as Record<string, unknown>,
       context,

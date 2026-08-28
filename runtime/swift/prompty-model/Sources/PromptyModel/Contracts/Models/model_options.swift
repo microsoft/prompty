@@ -168,6 +168,29 @@ public struct ModelOptions: TypraModel {
     return result
   }
 
+  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> ModelOptions {
+    let wireMap: [String: [String: String]] = [
+      "frequencyPenalty": ["openai": "frequency_penalty"],
+      "maxOutputTokens": ["openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"],
+      "presencePenalty": ["openai": "presence_penalty"],
+      "seed": ["openai": "seed"],
+      "temperature": ["openai": "temperature", "responses": "temperature", "anthropic": "temperature"],
+      "topK": ["openai": "top_k", "anthropic": "top_k"],
+      "topP": ["openai": "top_p", "responses": "top_p", "anthropic": "top_p"],
+      "stopSequences": ["openai": "stop", "anthropic": "stop_sequences"],
+      "allowMultipleToolCalls": ["openai": "parallel_tool_calls"],
+    ]
+    var inverse: [String: String] = [:]
+    for (field, mapping) in wireMap {
+      if let wireName = mapping[provider] { inverse[wireName] = field }
+    }
+    var canonical: [String: Any] = [:]
+    for (key, value) in data {
+      canonical[inverse[key] ?? key] = value
+    }
+    return try load(canonical, context: context)
+  }
+
   public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ModelOptions {
     return try load(TypraRuntime.jsonObject(from: json, typeName: "ModelOptions"), context: context)
   }

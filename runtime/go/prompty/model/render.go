@@ -84,6 +84,32 @@ func PrepareRenderInputs(agent *Agent, inputs map[string]interface{}) (map[strin
 	return renderInputs, nonces
 }
 
+// formatEngine extracts the template engine discriminator from the coerce-union
+// Template.Format value, which may hold any FormatConfig child type. It reads the
+// discriminator via the canonical Save() form (mirroring the seam adapter) and
+// defaults to "jinja2".
+func formatEngine(agent *Agent) string {
+	if agent == nil || agent.Template == nil || agent.Template.Format == nil {
+		return "jinja2"
+	}
+	// Coerce shorthand: `format: mustache` lowers the FormatConfig|string union
+	// to a bare string that IS the kind.
+	if kind, ok := agent.Template.Format.(string); ok {
+		if kind != "" {
+			return kind
+		}
+		return "jinja2"
+	}
+	if s, ok := agent.Template.Format.(interface {
+		Save(*SaveContext) map[string]interface{}
+	}); ok {
+		if kind, ok := s.Save(NewSaveContext())["kind"].(string); ok && kind != "" {
+			return kind
+		}
+	}
+	return "jinja2"
+}
+
 // Render renders the agent's instructions with the supplied inputs. It returns
 // the rendered text and the nonce → property-name mapping produced by rich-kind
 // substitution.
@@ -95,10 +121,7 @@ func Render(agent *Agent, inputs map[string]interface{}) (string, map[string]str
 		template = *agent.Instructions
 	}
 
-	engine := "jinja2"
-	if agent != nil && agent.Template != nil && agent.Template.Format.Kind != "" {
-		engine = agent.Template.Format.Kind
-	}
+	engine := formatEngine(agent)
 
 	switch engine {
 	case "jinja2":

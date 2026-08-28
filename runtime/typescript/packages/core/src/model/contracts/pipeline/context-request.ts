@@ -197,8 +197,7 @@ export class ContextRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ContextRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ContextRequest.load(data as Record<string, unknown>, context);
   }
 

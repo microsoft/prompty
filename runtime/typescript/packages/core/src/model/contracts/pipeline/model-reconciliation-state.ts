@@ -126,8 +126,7 @@ export class ModelReconciliationState {
     yaml: string,
     context?: LoadContext,
   ): ModelReconciliationState {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ModelReconciliationState.load(
       data as Record<string, unknown>,
       context,

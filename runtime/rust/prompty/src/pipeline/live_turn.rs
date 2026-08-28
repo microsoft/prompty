@@ -1274,10 +1274,10 @@ pub(super) async fn turn_with_engine_request(
         events: events.clone(),
         agent_name: Some(agent.name.clone()),
         provider: provider.clone(),
-        model_id: agent
-            .model
-            .as_ref()
-            .and_then(|model| (!model.id.is_empty()).then(|| model.id.clone())),
+        model_id: {
+            let id = crate::pipeline::model_id(&agent.model);
+            (!id.is_empty()).then_some(id)
+        },
         configured_max_iterations: max_iterations,
         agent_mode,
         persistence,

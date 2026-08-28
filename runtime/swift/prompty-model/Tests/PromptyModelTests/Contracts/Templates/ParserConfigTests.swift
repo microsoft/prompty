@@ -16,11 +16,15 @@ final class ParserConfigTests: XCTestCase {
 }
 """
     let instance = try ParserConfig.fromJSON(json)
-    XCTAssertEqual(instance.kind, "prompty")
-    XCTAssertNotNil(instance.options)
+    if case .promptyParser = instance {
+    } else {
+      XCTFail("Expected PromptyParser")
+    }
     let reloaded = try ParserConfig.fromJSON(try instance.toJSON())
-    XCTAssertEqual(reloaded.kind, "prompty")
-    XCTAssertNotNil(reloaded.options)
+    if case .promptyParser = reloaded {
+    } else {
+      XCTFail("Expected PromptyParser")
+    }
   }
 
   func testYAMLRoundTrip1() throws {
@@ -31,16 +35,23 @@ options:
 
 """
     let instance = try ParserConfig.fromYAML(yaml)
-    XCTAssertEqual(instance.kind, "prompty")
-    XCTAssertNotNil(instance.options)
+    if case .promptyParser = instance {
+    } else {
+      XCTFail("Expected PromptyParser")
+    }
     let reloaded = try ParserConfig.fromYAML(try instance.toYAML())
-    XCTAssertEqual(reloaded.kind, "prompty")
-    XCTAssertNotNil(reloaded.options)
+    if case .promptyParser = reloaded {
+    } else {
+      XCTFail("Expected PromptyParser")
+    }
   }
 
   func testScalarCoercion1() throws {
     let instance = try ParserConfig.load("example")
-    XCTAssertEqual(instance.kind, "example")
+    if case .customParser = instance {
+    } else {
+      XCTFail("Expected CustomParser")
+    }
   }
 
 }

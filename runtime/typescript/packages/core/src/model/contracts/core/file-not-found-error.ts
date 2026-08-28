@@ -82,8 +82,7 @@ export class FileNotFoundError {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FileNotFoundError {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FileNotFoundError.load(data as Record<string, unknown>, context);
   }
 

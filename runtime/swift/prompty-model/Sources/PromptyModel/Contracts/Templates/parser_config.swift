@@ -3,9 +3,107 @@
 
 import Foundation
 
-/// Template parser definition
-public struct ParserConfig: TypraModel {
-  public static let shorthandProperty: String? = "kind"
+public enum ParserConfig: TypraModel {
+  case promptyParser(PromptyParser)
+  case customParser(CustomParser, [String: Any])
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ParserConfig {
+    var normalizedData: Any = data
+    if let scalar = normalizedData as? String {
+      normalizedData = ["kind": scalar]
+    }
+    let object = try TypraRuntime.object(normalizedData, typeName: "ParserConfig")
+    let discriminator = object["kind"] as? String ?? ""
+    switch discriminator {
+    case "prompty": return .promptyParser(try PromptyParser.load(normalizedData, context: context))
+    default: return .customParser(try CustomParser.load(normalizedData, context: context), object)
+    }
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    switch self {
+    case .promptyParser(let value): return try value.save(context)
+    case .customParser(let value, let raw):
+      var result = raw
+      for (key, item) in try value.save(context) {
+        result[key] = item
+      }
+      return result
+    }
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "ParserConfig"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ParserConfig"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// The default Prompty chat parser. Pin-only subtype.
+public struct PromptyParser: TypraModel {
+  public static let shorthandProperty: String? = nil
+  public var kind: String = "prompty"
+  public var options: [String: Any]? = nil
+
+  public init(kind: String = "prompty", options: [String: Any]? = nil) {
+    self.kind = kind
+    self.options = options
+  }
+
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> PromptyParser {
+    let object = try TypraRuntime.object(data, typeName: "PromptyParser")
+    var instance = PromptyParser()
+    if let value = object["kind"] {
+      instance.kind = try TypraRuntime.string(value, field: "kind")
+    }
+    else {
+      instance.kind = "prompty"
+    }
+    if let value = object["options"] {
+      instance.options = try TypraRuntime.dictionary(value, field: "options")
+    }
+    return instance
+  }
+
+  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
+    var result: [String: Any] = [:]
+    result["kind"] = self.kind
+    if let value = self.options {
+      result["options"] = value
+    }
+    return result
+  }
+
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PromptyParser {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "PromptyParser"), context: context)
+  }
+
+  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.jsonString(from: save(context))
+  }
+
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PromptyParser {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PromptyParser"), context: context)
+  }
+
+  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
+    return try TypraRuntime.yamlString(from: save(context))
+  }
+}
+
+/// Wildcard catch-all parser for downstream/unregistered parser kinds. The `"*"` discriminator lowers to the Parser dispatch decl's `defaultVariant`.
+public struct CustomParser: TypraModel {
+  public static let shorthandProperty: String? = nil
   public var kind: String = "*"
   public var options: [String: Any]? = nil
 
@@ -14,14 +112,9 @@ public struct ParserConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ParserConfig {
-    if let scalar = data as? String {
-      var instance = ParserConfig()
-      instance.kind = try TypraRuntime.string(scalar, field: "kind")
-      return instance
-    }
-    let object = try TypraRuntime.object(data, typeName: "ParserConfig")
-    var instance = ParserConfig()
+  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CustomParser {
+    let object = try TypraRuntime.object(data, typeName: "CustomParser")
+    var instance = CustomParser()
     if let value = object["kind"] {
       instance.kind = try TypraRuntime.string(value, field: "kind")
     }
@@ -43,16 +136,16 @@ public struct ParserConfig: TypraModel {
     return result
   }
 
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ParserConfig"), context: context)
+  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CustomParser {
+    return try load(TypraRuntime.jsonObject(from: json, typeName: "CustomParser"), context: context)
   }
 
   public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
     return try TypraRuntime.jsonString(from: save(context))
   }
 
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ParserConfig {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ParserConfig"), context: context)
+  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CustomParser {
+    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CustomParser"), context: context)
   }
 
   public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {

@@ -52,7 +52,8 @@ export class Model {
       return instance;
     }
 
-    const instance = new Model();
+    // Load polymorphic Model instance
+    const instance = Model.loadKind(data, context);
 
     if (data["id"] !== undefined && data["id"] !== null) {
       instance.id = String(data["id"]);
@@ -80,6 +81,23 @@ export class Model {
       return context.processOutput(instance) as Model;
     }
     return instance;
+  }
+
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): Model {
+    const discriminatorValue = data["provider"];
+    const discriminator =
+      typeof discriminatorValue === "string" ? discriminatorValue : "";
+    switch (discriminator) {
+      case "openai":
+        return OpenAIModel.load(data, context);
+      case "azure":
+        return AzureModel.load(data, context);
+      default:
+        return CustomModel.load(data, context);
+    }
   }
 
   //#endregion
@@ -132,9 +150,233 @@ export class Model {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Model {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Model.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class OpenAIModel extends Model {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  provider: string = "openai";
+
+  constructor(init?: Partial<OpenAIModel>) {
+    super(init);
+    this.provider = init?.provider ?? "openai";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): OpenAIModel {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new OpenAIModel();
+
+    if (data["provider"] !== undefined && data["provider"] !== null) {
+      instance.provider = String(data["provider"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as OpenAIModel;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.provider !== undefined && obj.provider !== null) {
+      result["provider"] = obj.provider;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): OpenAIModel {
+    const data = JSON.parse(json);
+    return OpenAIModel.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): OpenAIModel {
+    const data = LoadContext.parseYaml(yaml);
+    return OpenAIModel.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class AzureModel extends Model {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  provider: string = "azure";
+
+  constructor(init?: Partial<AzureModel>) {
+    super(init);
+    this.provider = init?.provider ?? "azure";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AzureModel {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new AzureModel();
+
+    if (data["provider"] !== undefined && data["provider"] !== null) {
+      instance.provider = String(data["provider"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as AzureModel;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.provider !== undefined && obj.provider !== null) {
+      result["provider"] = obj.provider;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): AzureModel {
+    const data = JSON.parse(json);
+    return AzureModel.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): AzureModel {
+    const data = LoadContext.parseYaml(yaml);
+    return AzureModel.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class CustomModel extends Model {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  provider: string = "*";
+
+  constructor(init?: Partial<CustomModel>) {
+    super(init);
+    this.provider = init?.provider ?? "*";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CustomModel {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new CustomModel();
+
+    if (data["provider"] !== undefined && data["provider"] !== null) {
+      instance.provider = String(data["provider"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as CustomModel;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.provider !== undefined && obj.provider !== null) {
+      result["provider"] = obj.provider;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): CustomModel {
+    const data = JSON.parse(json);
+    return CustomModel.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): CustomModel {
+    const data = LoadContext.parseYaml(yaml);
+    return CustomModel.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

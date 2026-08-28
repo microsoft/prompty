@@ -120,6 +120,33 @@ export class AiResourceInfo {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): AiResourceInfo {
+    const wireMap: Record<string, Record<string, string>> = {
+      name: { foundry: "name" },
+      kind: { foundry: "kind" },
+      endpoint: { foundry: "endpoint" },
+      location: { foundry: "location" },
+      resourceGroup: { foundry: "resource_group" },
+      serviceUrl: { foundry: "foundry_url" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return AiResourceInfo.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -136,8 +163,7 @@ export class AiResourceInfo {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AiResourceInfo {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AiResourceInfo.load(data as Record<string, unknown>, context);
   }
 

@@ -149,8 +149,7 @@ export class HookEndPayload {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): HookEndPayload {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return HookEndPayload.load(data as Record<string, unknown>, context);
   }
 

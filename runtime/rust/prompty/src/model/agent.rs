@@ -36,7 +36,7 @@ pub struct Agent {
     /// Expected output format and structure
     pub outputs: Option<Vec<Property>>,
     /// AI model configuration
-    pub model: Option<Model>,
+    pub model: serde_json::Value,
     /// Tools available for extended functionality
     pub tools: Option<Vec<Tool>>,
     /// Template configuration for prompt rendering
@@ -109,8 +109,14 @@ impl Agent {
             outputs: value.get("outputs").map(|v| Self::load_outputs(v, ctx)),
             model: value
                 .get("model")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| Model::load_from_value(v, ctx)),
+                .map(|v| {
+                    if let Some(s) = v.as_str() {
+                        serde_json::json!({ "id": s })
+                    } else {
+                        v.clone()
+                    }
+                })
+                .unwrap_or(serde_json::Value::Null),
             tools: value.get("tools").map(|v| Self::load_tools(v, ctx)),
             template: value
                 .get("template")
@@ -282,11 +288,8 @@ impl Agent {
         if let Some(items) = self.outputs.as_ref() {
             result.insert("outputs".to_string(), Self::save_outputs(items, ctx));
         }
-        if let Some(val) = self.model.as_ref() {
-            let nested = val.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("model".to_string(), nested);
-            }
+        if !self.model.is_null() {
+            result.insert("model".to_string(), self.model.clone());
         }
         if let Some(items) = self.tools.as_ref() {
             result.insert("tools".to_string(), Self::save_tools(items, ctx));

@@ -3,7 +3,7 @@ $id: FormatConfig.yaml
 type: object
 properties:
   kind:
-    type: string
+    $ref: FormatKind.yaml
     default: "*"
     description: Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
   strict:
@@ -15,4 +15,6 @@ properties:
     description: Options for the template engine
 required:
   - kind
-description: Template format definition
+description: |-
+  Template format definition. `kind` is the `@dispatch` discriminator for the
+  Renderer seam, reached from a seam param as `agent.template.format.kind`.

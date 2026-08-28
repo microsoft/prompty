@@ -1,0 +1,16 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: ModelProvider.yaml
+anyOf:
+  - type: string
+    const: openai
+  - type: string
+    const: azure
+  - type: string
+description: |-
+  Open discriminator union naming the providers Prompty ships typed conformance
+  seams for, plus a bare `string` escape hatch for downstream/unregistered
+  providers. The bare `string` member keeps the discriminated set OPEN
+  (`isClosed=false`), so an unknown provider value routes to the `CustomModel`
+  fallback rather than hard-erroring at the decl level. The runtime registry is
+  fully open and resolves any provider key (e.g. `foundry`, `anthropic`) via
+  entry points / LIFO overrides / defaults, independent of this typed set.

@@ -19,10 +19,20 @@ from .core.connections import clear_connections, get_connection, register_connec
 from .core.discovery import (
     InvokerError,
     clear_cache,
+    clear_registry,
+    default_provider,
     get_executor,
     get_parser,
     get_processor,
     get_renderer,
+    register_default,
+    register_default_provider,
+    register_executor,
+    register_parser,
+    register_processor,
+    register_provider,
+    register_renderer,
+    resolve_provider_key,
 )
 
 # --- Pipeline ---
@@ -71,7 +81,17 @@ __all__ = [
     "get_parser",
     "get_executor",
     "get_processor",
+    "register_renderer",
+    "register_parser",
+    "register_executor",
+    "register_processor",
+    "register_provider",
+    "register_default",
+    "register_default_provider",
+    "default_provider",
+    "resolve_provider_key",
     "clear_cache",
+    "clear_registry",
     # Leaf steps
     "render",
     "render_async",

@@ -87,7 +87,9 @@ fn build_agent(input: &Value) -> Agent {
         .and_then(|v| v.as_str())
         .unwrap_or("chat");
     let provider = input
-        .get("provider")
+        .get("agent")
+        .and_then(|a| a.get("model"))
+        .and_then(|m| m.get("provider"))
         .and_then(|v| v.as_str())
         .unwrap_or("openai");
 
@@ -228,7 +230,9 @@ macro_rules! wire_test {
 
             let input = &vector["input"];
             let provider = input
-                .get("provider")
+                .get("agent")
+                .and_then(|a| a.get("model"))
+                .and_then(|m| m.get("provider"))
                 .and_then(|v| v.as_str())
                 .unwrap_or("openai");
 

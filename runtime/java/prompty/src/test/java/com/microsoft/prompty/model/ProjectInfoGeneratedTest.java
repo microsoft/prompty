@@ -52,6 +52,8 @@ final class ProjectInfoGeneratedTest {
     assertTrue(foundryWire.containsKey("display_name"), "Expected foundry wire output to include display_name");
     assertTrue(!foundryWire.containsKey("displayName"), "Expected foundry wire output to omit displayName");
     assertTrue(foundryWire.containsKey("endpoint"), "Expected foundry wire output to include endpoint");
+    ProjectInfo foundryRestored = ProjectInfo.fromWire("foundry", foundryWire);
+    assertEquals(foundryWire.keySet(), foundryRestored.toWire("foundry").keySet(), "Expected foundry FromWire round-trip to reproduce the wire keys");
   }
 
   private static void assertEquals(Object expected, Object actual, String message) {

@@ -23,7 +23,11 @@ final class RenderVectorTests: XCTestCase {
       let expected = vector["expected"] as? [String: Any] ?? [:]
 
       let template = input["template"] as? String ?? ""
-      let engine = input["engine"] as? String ?? Defaults.templateFormat
+      // Typra 2.0.0 moved the engine off the flat `input.engine` field into the
+      // vector's agent at `input.agent.template.format.kind`.
+      let vectorTemplate = (input["agent"] as? [String: Any])?["template"] as? [String: Any] ?? [:]
+      let engine =
+        (vectorTemplate["format"] as? [String: Any])?["kind"] as? String ?? Defaults.templateFormat
       let inputs = input["inputs"] as? [String: Any] ?? [:]
 
       do {

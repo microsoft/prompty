@@ -187,8 +187,7 @@ export class ReplayJournalRecord {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ReplayJournalRecord {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ReplayJournalRecord.load(data as Record<string, unknown>, context);
   }
 

@@ -95,8 +95,7 @@ export class RedactedField {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RedactedField {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RedactedField.load(data as Record<string, unknown>, context);
   }
 

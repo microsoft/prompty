@@ -63,7 +63,7 @@ fn chunk_to_value(chunk: StreamChunk) -> Value {
 async fn openai_stream_processor_matches_classified_failure_vectors() {
     for vector in load_vectors() {
         let input = &vector["input"];
-        assert_eq!(input["provider"], "openai");
+        assert_eq!(input["agent"]["model"]["provider"], "openai");
         let events = input["events"]
             .as_array()
             .expect("stream vector events must be an array");

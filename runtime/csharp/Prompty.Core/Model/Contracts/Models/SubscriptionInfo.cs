@@ -152,6 +152,33 @@ public partial class SubscriptionInfo
         return result;
     }
 
+    /// <summary>
+    /// Load an instance from a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <param name="data">A dictionary with provider-specific field names.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded SubscriptionInfo instance.</returns>
+    public static SubscriptionInfo FromWire(string provider, Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["subscriptionId"] = new Dictionary<string, string> { ["foundry"] = "subscription_id" },
+            ["displayName"] = new Dictionary<string, string> { ["foundry"] = "display_name" },
+            ["state"] = new Dictionary<string, string> { ["foundry"] = "state" },
+        };
+        var inverse = new Dictionary<string, string>();
+        foreach (var (field, mapping) in wireMap)
+        {
+            if (mapping.TryGetValue(provider, out var wireName))
+                inverse[wireName] = field;
+        }
+        var canonical = new Dictionary<string, object?>();
+        foreach (var (key, value) in data)
+            canonical[inverse.TryGetValue(key, out var field) ? field : key] = value;
+        return Load(canonical, context);
+    }
+
 
     /// <summary>
     /// Convert the SubscriptionInfo instance to a YAML string.

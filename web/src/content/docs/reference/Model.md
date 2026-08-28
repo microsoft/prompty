@@ -9,6 +9,11 @@ Model for defining the structure and behavior of AI agents.
 This model includes properties for specifying the model's provider, connection details, and various options.
 It allows for flexible configuration of AI models to suit different use cases and requirements.
 
+`provider` is the `@dispatch` discriminator for the Executor / Processor seams.
+The string shorthand (`model: "gpt-4"`) coerces to `#{ id }` only — it carries
+no provider — so `provider` stays optional and absent/unknown providers are
+resolved by the runtime registry (global defaults) out of band.
+
 ## Class Diagram
 
 ```mermaid
@@ -28,6 +33,18 @@ classDiagram
         +Connection connection
         +ModelOptions options
     }
+    class OpenAIModel {
+        +string provider
+    }
+    Model <|-- OpenAIModel
+    class AzureModel {
+        +string provider
+    }
+    Model <|-- AzureModel
+    class CustomModel {
+        +string provider
+    }
+    Model <|-- CustomModel
     class Connection {
       <<abstract>>
         +string kind
@@ -75,6 +92,14 @@ options:
 | apiType | string | The type of API to use for the model (e.g., 'chat', 'response', etc.) |
 | connection | [Connection](../connection/) | The connection configuration for the model(Related Types: [ReferenceConnection](../referenceconnection/), [RemoteConnection](../remoteconnection/), [ApiKeyConnection](../apikeyconnection/), [AnonymousConnection](../anonymousconnection/), [OAuthConnection](../oauthconnection/), [FoundryConnection](../foundryconnection/)) |
 | options | [ModelOptions](../modeloptions/) | Additional options for the model |
+
+## Child Types
+
+The following types extend `Model`:
+
+- [OpenAIModel](../openaimodel/)
+- [AzureModel](../azuremodel/)
+- [CustomModel](../custommodel/)
 
 ## Composed Types
 

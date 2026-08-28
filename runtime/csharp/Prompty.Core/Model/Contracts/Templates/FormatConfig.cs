@@ -12,7 +12,9 @@ namespace Prompty.Core;
 #pragma warning restore IDE0130
 
     /// <summary>
-    /// Template format definition
+    /// Template format definition. `kind` is the `@dispatch` discriminator for the
+    ///
+    /// Renderer seam, reached from a seam param as `agent.template.format.kind`.
     /// </summary>
 public partial class FormatConfig
 {
@@ -33,7 +35,7 @@ public partial class FormatConfig
     /// <summary>
     /// Template rendering engine used for slot filling prompts (e.g., mustache, jinja2)
     /// </summary>
-    public string Kind { get; set; } = string.Empty;
+    public virtual string Kind { get; set; } = string.Empty;
 
     /// <summary>
     /// Whether the template can emit structural text for parsing output
@@ -65,8 +67,8 @@ public partial class FormatConfig
 
         // Note: Alternate (shorthand) representations are handled by the converter
 
-        // Create new instance
-        var instance = new FormatConfig();
+        // Load polymorphic FormatConfig instance
+        var instance = LoadKind(data, context);
 
 
         if (data.TryGetValue("kind", out var kindValue) && kindValue is not null)
@@ -92,6 +94,23 @@ public partial class FormatConfig
     }
 
 
+    /// <summary>
+    /// Load polymorphic FormatConfig based on discriminator.
+    /// </summary>
+    private static FormatConfig LoadKind(Dictionary<string, object?> data, LoadContext? context)
+    {
+        var discriminator = data.TryGetValue("kind", out var discriminatorValue) && discriminatorValue is string discriminatorString ? discriminatorString : "";
+
+        return discriminator switch
+        {
+            "jinja2" => Jinja2Format.Load(data, context),
+            "mustache" => MustacheFormat.Load(data, context),
+            _ => CustomFormat.Load(data, context),
+        };
+
+    }
+
+
     #endregion
 
     #region Save Methods
@@ -101,7 +120,7 @@ public partial class FormatConfig
     /// </summary>
     /// <param name="context">Optional context with pre/post processing callbacks.</param>
     /// <returns>The dictionary representation of this instance.</returns>
-    public Dictionary<string, object?> Save(SaveContext? context = null)
+    public virtual Dictionary<string, object?> Save(SaveContext? context = null)
     {
         var obj = this;
         if (context is not null)

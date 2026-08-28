@@ -30,15 +30,14 @@ export class ParserConfig {
 
     // Handle alternate representations
     if (typeof data === "string") {
-      const instance = new ParserConfig();
-      instance.kind = data as string;
-      if (context) {
-        return context.processOutput(instance) as ParserConfig;
-      }
-      return instance;
+      return ParserConfig.loadKind(
+        { kind: data } as Record<string, unknown>,
+        context,
+      );
     }
 
-    const instance = new ParserConfig();
+    // Load polymorphic ParserConfig instance
+    const instance = ParserConfig.loadKind(data, context);
 
     if (data["kind"] !== undefined && data["kind"] !== null) {
       instance.kind = String(data["kind"]);
@@ -51,6 +50,21 @@ export class ParserConfig {
       return context.processOutput(instance) as ParserConfig;
     }
     return instance;
+  }
+
+  private static loadKind(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): ParserConfig {
+    const discriminatorValue = data["kind"];
+    const discriminator =
+      typeof discriminatorValue === "string" ? discriminatorValue : "";
+    switch (discriminator) {
+      case "prompty":
+        return PromptyParser.load(data, context);
+      default:
+        return CustomParser.load(data, context);
+    }
   }
 
   //#endregion
@@ -94,9 +108,158 @@ export class ParserConfig {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ParserConfig {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ParserConfig.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class PromptyParser extends ParserConfig {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "prompty";
+
+  constructor(init?: Partial<PromptyParser>) {
+    super(init);
+    this.kind = init?.kind ?? "prompty";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): PromptyParser {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new PromptyParser();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as PromptyParser;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): PromptyParser {
+    const data = JSON.parse(json);
+    return PromptyParser.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): PromptyParser {
+    const data = LoadContext.parseYaml(yaml);
+    return PromptyParser.load(data as Record<string, unknown>, context);
+  }
+
+  //#endregion
+}
+
+export class CustomParser extends ParserConfig {
+  static readonly shorthandProperty: string | undefined = undefined;
+
+  kind: string = "*";
+
+  constructor(init?: Partial<CustomParser>) {
+    super(init);
+    this.kind = init?.kind ?? "*";
+  }
+
+  //#region Load Methods
+
+  static load(
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): CustomParser {
+    context ??= new LoadContext();
+    if (context) {
+      data = context.processInput(data) as Record<string, unknown>;
+    }
+
+    const instance = new CustomParser();
+
+    if (data["kind"] !== undefined && data["kind"] !== null) {
+      instance.kind = String(data["kind"]);
+    }
+
+    if (context) {
+      return context.processOutput(instance) as CustomParser;
+    }
+    return instance;
+  }
+
+  //#endregion
+
+  //#region Save Methods
+
+  save(context?: SaveContext): Record<string, unknown> {
+    let obj: this = this;
+    if (context) {
+      obj = context.processObject(obj) as this;
+    }
+
+    // Start with parent class properties
+    const result = super.save(context);
+
+    if (obj.kind !== undefined && obj.kind !== null) {
+      result["kind"] = obj.kind;
+    }
+    return result;
+  }
+
+  toYaml(context?: SaveContext): string {
+    context = context ?? new SaveContext();
+    return context.toYaml(this.save(context));
+  }
+
+  toJson(context?: SaveContext, indent: number = 2): string {
+    context = context ?? new SaveContext();
+    return context.toJson(this.save(context), indent);
+  }
+
+  static fromJson(json: string, context?: LoadContext): CustomParser {
+    const data = JSON.parse(json);
+    return CustomParser.load(data as Record<string, unknown>, context);
+  }
+
+  static fromYaml(yaml: string, context?: LoadContext): CustomParser {
+    const data = LoadContext.parseYaml(yaml);
+    return CustomParser.load(data as Record<string, unknown>, context);
   }
 
   //#endregion

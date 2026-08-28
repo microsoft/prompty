@@ -109,8 +109,7 @@ export class ReplayMismatch {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): ReplayMismatch {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return ReplayMismatch.load(data as Record<string, unknown>, context);
   }
 

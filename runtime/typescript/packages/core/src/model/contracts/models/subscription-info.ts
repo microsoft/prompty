@@ -94,6 +94,30 @@ export class SubscriptionInfo {
     return result;
   }
 
+  static fromWire(
+    provider: string,
+    data: Record<string, unknown>,
+    context?: LoadContext,
+  ): SubscriptionInfo {
+    const wireMap: Record<string, Record<string, string>> = {
+      subscriptionId: { foundry: "subscription_id" },
+      displayName: { foundry: "display_name" },
+      state: { foundry: "state" },
+    };
+    const inverse: Record<string, string> = {};
+    for (const [field, m] of Object.entries(wireMap)) {
+      const w = m[provider];
+      if (w) {
+        inverse[w] = field;
+      }
+    }
+    const canonical: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(data)) {
+      canonical[inverse[k] ?? k] = v;
+    }
+    return SubscriptionInfo.load(canonical, context);
+  }
+
   toYaml(context?: SaveContext): string {
     context = context ?? new SaveContext();
     return context.toYaml(this.save(context));
@@ -110,8 +134,7 @@ export class SubscriptionInfo {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): SubscriptionInfo {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return SubscriptionInfo.load(data as Record<string, unknown>, context);
   }
 

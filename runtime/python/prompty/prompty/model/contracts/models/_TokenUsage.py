@@ -113,6 +113,35 @@ class TokenUsage:
                 result[mapping[provider]] = value
         return result
 
+    @staticmethod
+    def from_wire(provider: str, data: dict[str, Any], context: LoadContext | None = None) -> "TokenUsage":
+        """Load a TokenUsage instance from a provider-specific wire payload.
+        Args:
+            provider (str): The provider the payload came from (e.g., "openai", "anthropic").
+            data (dict[str, Any]): The wire-format dictionary with provider-specific field names.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            TokenUsage: The loaded TokenUsage instance.
+
+        """
+        wire_map: dict[str, dict[str, str]] = {
+            "promptTokens": {"openai": "prompt_tokens", "anthropic": "input_tokens"},
+            "completionTokens": {
+                "openai": "completion_tokens",
+                "anthropic": "output_tokens",
+            },
+            "totalTokens": {"openai": "total_tokens"},
+        }
+        inverse: dict[str, str] = {}
+        for field_name, m in wire_map.items():
+            w = m.get(provider)
+            if w:
+                inverse[w] = field_name
+        canonical: dict[str, Any] = {}
+        for k, v in data.items():
+            canonical[inverse.get(k, k)] = v
+        return TokenUsage.load(canonical, context)
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the TokenUsage instance to a YAML string.
         Args:

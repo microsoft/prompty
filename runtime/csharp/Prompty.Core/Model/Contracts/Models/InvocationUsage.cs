@@ -158,6 +158,33 @@ public partial class InvocationUsage
         return result;
     }
 
+    /// <summary>
+    /// Load an instance from a provider-specific wire-format dictionary.
+    /// </summary>
+    /// <param name="provider">The provider name (e.g., "openai", "anthropic").</param>
+    /// <param name="data">A dictionary with provider-specific field names.</param>
+    /// <param name="context">Optional context with pre/post processing callbacks.</param>
+    /// <returns>The loaded InvocationUsage instance.</returns>
+    public static InvocationUsage FromWire(string provider, Dictionary<string, object?> data, LoadContext? context = null)
+    {
+        var wireMap = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["inputTokens"] = new Dictionary<string, string> { ["openai"] = "prompt_tokens", ["anthropic"] = "input_tokens" },
+            ["outputTokens"] = new Dictionary<string, string> { ["openai"] = "completion_tokens", ["anthropic"] = "output_tokens" },
+            ["totalTokens"] = new Dictionary<string, string> { ["openai"] = "total_tokens" },
+        };
+        var inverse = new Dictionary<string, string>();
+        foreach (var (field, mapping) in wireMap)
+        {
+            if (mapping.TryGetValue(provider, out var wireName))
+                inverse[wireName] = field;
+        }
+        var canonical = new Dictionary<string, object?>();
+        foreach (var (key, value) in data)
+            canonical[inverse.TryGetValue(key, out var field) ? field : key] = value;
+        return Load(canonical, context);
+    }
+
 
     /// <summary>
     /// Convert the InvocationUsage instance to a YAML string.

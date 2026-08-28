@@ -132,6 +132,35 @@ class AiResourceInfo:
                 result[mapping[provider]] = value
         return result
 
+    @staticmethod
+    def from_wire(provider: str, data: dict[str, Any], context: LoadContext | None = None) -> "AiResourceInfo":
+        """Load a AiResourceInfo instance from a provider-specific wire payload.
+        Args:
+            provider (str): The provider the payload came from (e.g., "openai", "anthropic").
+            data (dict[str, Any]): The wire-format dictionary with provider-specific field names.
+            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
+        Returns:
+            AiResourceInfo: The loaded AiResourceInfo instance.
+
+        """
+        wire_map: dict[str, dict[str, str]] = {
+            "name": {"foundry": "name"},
+            "kind": {"foundry": "kind"},
+            "endpoint": {"foundry": "endpoint"},
+            "location": {"foundry": "location"},
+            "resourceGroup": {"foundry": "resource_group"},
+            "serviceUrl": {"foundry": "foundry_url"},
+        }
+        inverse: dict[str, str] = {}
+        for field_name, m in wire_map.items():
+            w = m.get(provider)
+            if w:
+                inverse[w] = field_name
+        canonical: dict[str, Any] = {}
+        for k, v in data.items():
+            canonical[inverse.get(k, k)] = v
+        return AiResourceInfo.load(canonical, context)
+
     def to_yaml(self, context: SaveContext | None = None) -> str:
         """Convert the AiResourceInfo instance to a YAML string.
         Args:

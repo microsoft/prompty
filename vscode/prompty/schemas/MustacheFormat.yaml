@@ -1,0 +1,13 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: MustacheFormat.yaml
+type: object
+properties:
+  kind:
+    type: string
+    const: mustache
+    description: The Mustache format discriminator
+required:
+  - kind
+allOf:
+  - $ref: FormatConfig.yaml
+description: Mustache template dialect. Pin-only subtype.

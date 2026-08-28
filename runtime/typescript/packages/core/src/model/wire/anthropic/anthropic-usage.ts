@@ -82,8 +82,7 @@ export class AnthropicUsage {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): AnthropicUsage {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return AnthropicUsage.load(data as Record<string, unknown>, context);
   }
 

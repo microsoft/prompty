@@ -420,6 +420,16 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/AzureModelConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/CustomModelConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/InvocationUsageConversionTests.cs",
       "marker": true
     },
@@ -436,6 +446,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/ModelOptionsConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/OpenAIModelConversionTests.cs",
       "marker": true
     },
     {
@@ -620,12 +635,37 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/CustomFormatConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/CustomParserConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/FormatConfigConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/Jinja2FormatConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/MustacheFormatConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/ParserConfigConversionTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Templates/PromptyParserConversionTests.cs",
       "marker": true
     },
     {
@@ -700,7 +740,27 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/ParserConformanceTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/ProcessorConformanceTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/RendererConformanceTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/VectorConformanceTests.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
+      "path": "../runtime/csharp/Prompty.Core.Tests/Model/VectorRunner.cs",
       "marker": true
     },
     {
@@ -1245,6 +1305,16 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Models/AzureModel.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Models/CustomModel.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Models/InvocationUsage.cs",
       "marker": true
     },
@@ -1261,6 +1331,11 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Models/ModelOptions.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Models/OpenAIModel.cs",
       "marker": true
     },
     {
@@ -1490,12 +1565,37 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/CustomFormat.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/CustomParser.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/FormatConfig.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/Jinja2Format.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/MustacheFormat.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/ParserConfig.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/Contracts/Templates/PromptyParser.cs",
       "marker": true
     },
     {
@@ -1640,6 +1740,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/ParserResolver.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/PermissionResolver.cs",
       "marker": true
     },
@@ -1650,7 +1755,17 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/ProcessorResolver.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Renderer.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/RendererResolver.cs",
       "marker": true
     },
     {
@@ -1870,6 +1985,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/azure_model_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/binding_test.go",
       "marker": true
     },
@@ -1976,6 +2096,21 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/context.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/custom_format_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/custom_model_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/custom_parser_test.go",
       "marker": true
     },
     {
@@ -2290,6 +2425,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/jinja2format_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/llm_complete_payload_test.go",
       "marker": true
     },
@@ -2465,6 +2605,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/mustache_format_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/o_auth_connection_test.go",
       "marker": true
     },
@@ -2485,6 +2630,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/open_ai_model_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/open_api_tool_test.go",
       "marker": true
     },
@@ -2496,6 +2646,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/parser_config.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/parser_conformance_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/parser_resolver.go",
       "marker": true
     },
     {
@@ -2550,6 +2710,16 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/processor_conformance_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/processor_resolver.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/processor.go",
       "marker": true
     },
@@ -2561,6 +2731,11 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/project_info.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/prompty_parser_test.go",
       "marker": true
     },
     {
@@ -2611,6 +2786,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/render_segment.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/renderer_conformance_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/renderer_resolver.go",
       "marker": true
     },
     {
@@ -3190,6 +3375,11 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/vectorrunner/vector_runner.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/wire_conformance.go",
       "marker": true
     },
@@ -3285,6 +3475,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/AzureModel.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Binding.java",
       "marker": true
     },
@@ -3336,6 +3531,21 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ContextRequest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CustomFormat.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CustomModel.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/CustomParser.java",
       "marker": true
     },
     {
@@ -3565,6 +3775,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Jinja2Format.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/LlmCompletePayload.java",
       "marker": true
     },
@@ -3680,6 +3895,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/MustacheFormat.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OAuthConnection.java",
       "marker": true
     },
@@ -3695,6 +3915,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OpenAIModel.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/OpenApiTool.java",
       "marker": true
     },
@@ -3706,6 +3931,16 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ParserConfig.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ParserProvider.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ParserResolver.java",
       "marker": true
     },
     {
@@ -3740,7 +3975,22 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ProcessorProvider.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ProcessorResolver.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/ProjectInfo.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/PromptyParser.java",
       "marker": true
     },
     {
@@ -3776,6 +4026,16 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Renderer.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RendererProvider.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/RendererResolver.java",
       "marker": true
     },
     {
@@ -4265,6 +4525,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AzureModelGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/BindingGeneratedTest.java",
       "marker": true
     },
@@ -4311,6 +4576,21 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContextRequestGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CustomFormatGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CustomModelGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CustomParserGeneratedTest.java",
       "marker": true
     },
     {
@@ -4465,6 +4745,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/Jinja2FormatGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/LlmCompletePayloadGeneratedTest.java",
       "marker": true
     },
@@ -4550,6 +4835,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MustacheFormatGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OAuthConnectionGeneratedTest.java",
       "marker": true
     },
@@ -4565,12 +4855,22 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OpenAIModelGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/OpenApiToolGeneratedTest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ParserConfigGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ParserConformanceTests.java",
       "marker": true
     },
     {
@@ -4595,7 +4895,17 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProcessorConformanceTests.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProjectInfoGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PromptyParserGeneratedTest.java",
       "marker": true
     },
     {
@@ -4621,6 +4931,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RemoteConnectionGeneratedTest.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RendererConformanceTests.java",
       "marker": true
     },
     {
@@ -4934,6 +5249,11 @@
       "marker": true
     },
     {
+      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/VectorRunner.java",
+      "marker": true
+    },
+    {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/__init__.py",
       "marker": true
@@ -5010,6 +5330,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_parser_resolver.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_Parser.py",
       "marker": true
     },
@@ -5020,7 +5345,17 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_processor_resolver.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_Processor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_renderer_resolver.py",
       "marker": true
     },
     {
@@ -6165,6 +6500,16 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/models/test_azure_model.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/models/test_custom_model.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/models/test_invocation_usage.py",
       "marker": true
     },
@@ -6181,6 +6526,11 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/models/test_model.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/models/test_open_ai_model.py",
       "marker": true
     },
     {
@@ -6365,12 +6715,37 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/templates/test_custom_format.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/templates/test_custom_parser.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/templates/test_format_config.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/templates/test_jinja2format.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/templates/test_mustache_format.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/templates/test_parser_config.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/contracts/templates/test_prompty_parser.py",
       "marker": true
     },
     {
@@ -6455,7 +6830,27 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/test_parser_conformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/test_processor_conformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/test_renderer_conformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/test_vector_conformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/tests/model",
+      "path": "../runtime/python/prompty/tests/model/vector_runner.py",
       "marker": true
     },
     {
@@ -7235,6 +7630,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/parser_resolver.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/parser.rs",
       "marker": true
     },
@@ -7245,7 +7645,17 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/processor_resolver.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/processor.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/renderer_resolver.rs",
       "marker": true
     },
     {
@@ -7985,7 +8395,27 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/parser_conformance_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/processor_conformance_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/renderer_conformance_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/vector_conformance_test.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/tests/model",
+      "path": "../runtime/rust/prompty/tests/model/vector_runner/mod.rs",
       "marker": true
     },
     {
@@ -8695,6 +9125,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/parser_resolver.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/parser.swift",
       "marker": true
     },
@@ -8705,7 +9140,17 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/processor_resolver.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/processor.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/renderer_resolver.swift",
       "marker": true
     },
     {
@@ -9365,7 +9810,27 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/ParserConformanceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/ProcessorConformanceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/RendererConformanceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/VectorConformanceTests.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/VectorRunner.swift",
       "marker": true
     },
     {
@@ -10140,6 +10605,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/parser-resolver.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/parser.ts",
       "marker": true
     },
@@ -10150,7 +10620,17 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/processor-resolver.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/processor.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/renderer-resolver.ts",
       "marker": true
     },
     {
@@ -10640,6 +11120,16 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/azure-model.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/custom-model.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/models/invocation-usage.test.ts",
       "marker": true
     },
@@ -10656,6 +11146,11 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/models/model.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/open-ai-model.test.ts",
       "marker": true
     },
     {
@@ -10840,12 +11335,37 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/custom-format.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/custom-parser.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/format-config.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/jinja2format.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/mustache-format.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/parser-config.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/contracts/templates/prompty-parser.test.ts",
       "marker": true
     },
     {
@@ -10920,7 +11440,27 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/parser.conformance.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/processor.conformance.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/renderer.conformance.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/vector-conformance.test.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/tests/model",
+      "path": "../runtime/typescript/packages/core/tests/model/vector-runner.ts",
       "marker": true
     },
     {
@@ -11060,6 +11600,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/AzureModel.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/Binding.md",
       "marker": true
     },
@@ -11111,6 +11656,21 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ContextRequest.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/CustomFormat.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/CustomModel.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/CustomParser.md",
       "marker": true
     },
     {
@@ -11315,6 +11875,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/Jinja2Format.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/LlmCompletePayload.md",
       "marker": true
     },
@@ -11410,6 +11975,11 @@
     },
     {
       "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/MustacheFormat.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/OAuthConnection.md",
       "marker": true
     },
@@ -11421,6 +11991,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ObjectProperty.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/OpenAIModel.md",
       "marker": true
     },
     {
@@ -11471,6 +12046,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/ProjectInfo.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/PromptyParser.md",
       "marker": true
     },
     {

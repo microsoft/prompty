@@ -104,8 +104,7 @@ export class RenderSegment {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): RenderSegment {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return RenderSegment.load(data as Record<string, unknown>, context);
   }
 

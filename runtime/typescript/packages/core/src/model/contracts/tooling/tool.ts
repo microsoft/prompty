@@ -65,17 +65,8 @@ export abstract class Tool {
     context?: LoadContext,
   ): Tool {
     const discriminatorValue = data["kind"];
-    if (typeof discriminatorValue !== "string") {
-      throw new Error(
-        "Invalid Tool discriminator field 'kind': expected non-blank string",
-      );
-    }
-    if (discriminatorValue === "") {
-      throw new Error(
-        "Invalid Tool discriminator field 'kind': expected non-blank string",
-      );
-    }
-    const discriminator = discriminatorValue;
+    const discriminator =
+      typeof discriminatorValue === "string" ? discriminatorValue : "";
     switch (discriminator) {
       case "function":
         return FunctionTool.load(data, context);
@@ -217,8 +208,7 @@ export abstract class Tool {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): Tool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return Tool.load(data as Record<string, unknown>, context);
   }
 
@@ -399,8 +389,7 @@ export class FunctionTool extends Tool {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): FunctionTool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return FunctionTool.load(data as Record<string, unknown>, context);
   }
 
@@ -501,8 +490,7 @@ export class CustomTool extends Tool {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): CustomTool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return CustomTool.load(data as Record<string, unknown>, context);
   }
 
@@ -638,8 +626,7 @@ export class McpTool extends Tool {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): McpTool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return McpTool.load(data as Record<string, unknown>, context);
   }
 
@@ -740,8 +727,7 @@ export class OpenApiTool extends Tool {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): OpenApiTool {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return OpenApiTool.load(data as Record<string, unknown>, context);
   }
 

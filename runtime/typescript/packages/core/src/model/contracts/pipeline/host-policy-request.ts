@@ -173,8 +173,7 @@ export class HostPolicyRequest {
   }
 
   static fromYaml(yaml: string, context?: LoadContext): HostPolicyRequest {
-    const { parse } = require("yaml");
-    const data = parse(yaml);
+    const data = LoadContext.parseYaml(yaml);
     return HostPolicyRequest.load(data as Record<string, unknown>, context);
   }
 
