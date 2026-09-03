@@ -64,6 +64,7 @@ model MemoryEntry {
  * deterministic recall, formatting, tiered injection, eviction, and
  * entry-mutation logic on top of it.
  */
+@serializable
 model MemoryStore {
   @doc("The memories held in the store, in insertion order")
   @sample(MemoryStoreEntriesSample)

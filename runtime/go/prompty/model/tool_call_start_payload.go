@@ -4,87 +4,10 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ToolCallStartPayload represents Payload for "tool_call_start" events — the LLM has requested a tool call.
 
 type ToolCallStartPayload struct {
 	Id        *string `json:"id,omitempty" yaml:"id,omitempty"`
 	Name      string  `json:"name" yaml:"name"`
 	Arguments string  `json:"arguments" yaml:"arguments"`
-}
-
-// LoadToolCallStartPayload creates a ToolCallStartPayload from a map[string]interface{}
-func LoadToolCallStartPayload(data interface{}, ctx *LoadContext) (ToolCallStartPayload, error) {
-	result := ToolCallStartPayload{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["id"]; ok && val != nil {
-			v := string(val.(string))
-			result.Id = &v
-		}
-		if val, ok := m["name"]; ok && val != nil {
-			result.Name = string(val.(string))
-		}
-		if val, ok := m["arguments"]; ok && val != nil {
-			result.Arguments = string(val.(string))
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ToolCallStartPayload to map[string]interface{}
-func (obj ToolCallStartPayload) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	if obj.Id != nil {
-		result["id"] = *obj.Id
-	}
-	result["name"] = obj.Name
-	result["arguments"] = obj.Arguments
-
-	return result
-}
-
-// ToJSON serializes ToolCallStartPayload to JSON string
-func (obj *ToolCallStartPayload) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ToolCallStartPayload to YAML string
-func (obj *ToolCallStartPayload) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ToolCallStartPayload from JSON string
-func ToolCallStartPayloadFromJSON(jsonStr string) (ToolCallStartPayload, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ToolCallStartPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolCallStartPayload(data, ctx)
-}
-
-// FromYAML creates ToolCallStartPayload from YAML string
-func ToolCallStartPayloadFromYAML(yamlStr string) (ToolCallStartPayload, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ToolCallStartPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolCallStartPayload(data, ctx)
 }

@@ -14,61 +14,6 @@ public class CompactionFailedPayload {
 
   public CompactionFailedPayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static CompactionFailedPayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new CompactionFailedPayload());
-    }
-    CompactionFailedPayload result = new CompactionFailedPayload();
-    CompactionFailedPayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(CompactionFailedPayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("message") && map.get("message") != null) {
-      result.message = String.valueOf(map.get("message"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    CompactionFailedPayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    CompactionFailedPayload obj = this;
-    if (obj.message != null) result.put("message", serializeScalar(obj.message));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static CompactionFailedPayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static CompactionFailedPayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static CompactionFailedPayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static CompactionFailedPayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

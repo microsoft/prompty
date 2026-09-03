@@ -4,7 +4,7 @@
 import Foundation
 
 /// Configuration for context window compaction. When the message history exceeds the context budget, the compaction strategy is applied to reduce the message list while preserving essential information.
-public struct CompactionConfig: TypraModel {
+public struct CompactionConfig {
   public static let shorthandProperty: String? = nil
   public var strategy: String? = nil
   public var budget: Int32? = nil
@@ -16,48 +16,4 @@ public struct CompactionConfig: TypraModel {
     self.options = options
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CompactionConfig {
-    let object = try TypraRuntime.object(data, typeName: "CompactionConfig")
-    var instance = CompactionConfig()
-    if let value = object["strategy"] {
-      instance.strategy = try TypraRuntime.string(value, field: "strategy")
-    }
-    if let value = object["budget"] {
-      instance.budget = try TypraRuntime.int32(value, field: "budget")
-    }
-    if let value = object["options"] {
-      instance.options = try TypraRuntime.dictionary(value, field: "options")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.strategy {
-      result["strategy"] = value
-    }
-    if let value = self.budget {
-      result["budget"] = value
-    }
-    if let value = self.options {
-      result["options"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CompactionConfig {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "CompactionConfig"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CompactionConfig {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CompactionConfig"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

@@ -30,8 +30,11 @@ import org.junit.jupiter.api.TestFactory;
  */
 final class GeneratedExamplesTest {
 
-  /** The emitter currently produces ~147 example classes; guard against silent discovery of none. */
-  private static final int MINIMUM_EXPECTED = 100;
+  /**
+   * With opt-in {@code @serializable}, the emitter produces one example class per type in the
+   * serialization closure (~76); guard against silent discovery of none or a layout break.
+   */
+  private static final int MINIMUM_EXPECTED = 60;
 
   private static final String RUNNER = "com.microsoft.prompty.model.TypraGeneratedTests";
 

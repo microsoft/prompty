@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "session_start" events.
-public struct SessionStartPayload: TypraModel {
+public struct SessionStartPayload {
   public static let shorthandProperty: String? = nil
   public var sessionId: String = ""
   public var schemaVersion: String? = nil
@@ -28,82 +28,4 @@ public struct SessionStartPayload: TypraModel {
     self.context = context
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
-    let object = try TypraRuntime.object(data, typeName: "SessionStartPayload")
-    var instance = SessionStartPayload()
-    if let value = object["sessionId"] {
-      instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
-    }
-    if let value = object["schemaVersion"] {
-      instance.schemaVersion = try TypraRuntime.string(value, field: "schemaVersion")
-    }
-    if let value = object["producer"] {
-      instance.producer = try TypraRuntime.string(value, field: "producer")
-    }
-    if let value = object["runtime"] {
-      instance.runtime = try TypraRuntime.string(value, field: "runtime")
-    }
-    if let value = object["promptyVersion"] {
-      instance.promptyVersion = try TypraRuntime.string(value, field: "promptyVersion")
-    }
-    if let value = object["startTime"] {
-      instance.startTime = try TypraRuntime.string(value, field: "startTime")
-    }
-    if let value = object["selectedModel"] {
-      instance.selectedModel = try TypraRuntime.string(value, field: "selectedModel")
-    }
-    if let value = object["reasoningEffort"] {
-      instance.reasoningEffort = try TypraRuntime.string(value, field: "reasoningEffort")
-    }
-    if let value = object["context"] {
-      instance.context = try HarnessContext.load(value, context: context.at("context"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["sessionId"] = self.sessionId
-    if let value = self.schemaVersion {
-      result["schemaVersion"] = value
-    }
-    if let value = self.producer {
-      result["producer"] = value
-    }
-    if let value = self.runtime {
-      result["runtime"] = value
-    }
-    if let value = self.promptyVersion {
-      result["promptyVersion"] = value
-    }
-    if let value = self.startTime {
-      result["startTime"] = value
-    }
-    if let value = self.selectedModel {
-      result["selectedModel"] = value
-    }
-    if let value = self.reasoningEffort {
-      result["reasoningEffort"] = value
-    }
-    if let value = self.context {
-      result["context"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionStartPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionStartPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionStartPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

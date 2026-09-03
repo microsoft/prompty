@@ -159,28 +159,6 @@ pub fn adapters() -> HashMap<&'static str, Adapter> {
             },
         ),
         (
-            "Renderer.render",
-            Adapter {
-                invoke: Invoke::Async(Box::new(|input, ctx| {
-                    let input = input.clone();
-                    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
-                    Box::pin(render_impl(input, expected))
-                })),
-                normalize: None,
-            },
-        ),
-        (
-            "Renderer.renderSegments",
-            Adapter::sync(render_segments_adapter),
-        ),
-        (
-            "Parser.parse",
-            Adapter {
-                invoke: Invoke::Sync(parse_adapter),
-                normalize: None,
-            },
-        ),
-        (
             "TurnConformance.runTurn",
             Adapter {
                 invoke: Invoke::Async(Box::new(|input, _ctx| {
@@ -202,26 +180,9 @@ pub fn adapters() -> HashMap<&'static str, Adapter> {
             },
         ),
         (
-            "Processor.processStream",
-            Adapter {
-                invoke: Invoke::Async(Box::new(|input, _ctx| {
-                    let input = input.clone();
-                    Box::pin(process_stream_impl(input))
-                })),
-                normalize: Some(project_normalize),
-            },
-        ),
-        (
             "WireConformance.toRequest",
             Adapter {
                 invoke: Invoke::Sync(wire_to_request_adapter),
-                normalize: Some(project_normalize),
-            },
-        ),
-        (
-            "Processor.process",
-            Adapter {
-                invoke: Invoke::Sync(process_adapter),
                 normalize: Some(project_normalize),
             },
         ),
@@ -617,175 +578,16 @@ fn load_agent_from_input(
 }
 
 // ---------------------------------------------------------------------------
-// RENDER
-// ---------------------------------------------------------------------------
-
-/// Render a template through the real Rust pipeline. Thread-kind inputs are
-/// declared as `Property { kind: "thread" }` so `prepare_render_inputs` injects
-/// the nonce marker; when the vector asserts a `nonce_pattern`, the observed
-/// render is regex-matched (DOTALL) and the canonical `expected` returned on a
-/// hit — mirroring the Python reference's `re.match(..., re.DOTALL)` semantics.
-async fn render_impl(input: Value, expected: Value) -> Result<Value, VectorError> {
-    prompty::register_defaults();
-
-    let template = input
-        .get("template")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let engine = seam_discriminator(&input, &["template", "format", "kind"]);
-    let inputs_map = input
-        .get("inputs")
-        .and_then(|v| v.as_object())
-        .cloned()
-        .unwrap_or_default();
-
-    // Split thread-kind inputs (declared as Properties so the renderer injects a
-    // nonce) from plain inputs (passed straight through to the template engine).
-    let mut props: Vec<Value> = Vec::new();
-    let mut render_inputs = serde_json::Map::new();
-    for (k, v) in &inputs_map {
-        if let Value::Object(o) = v {
-            if o.get("_kind").and_then(|x| x.as_str()) == Some("thread") {
-                props.push(serde_json::json!({ "name": k, "kind": "thread" }));
-                let msgs = o.get("messages").cloned().unwrap_or(Value::Array(vec![]));
-                render_inputs.insert(k.clone(), msgs);
-                continue;
-            }
-        }
-        render_inputs.insert(k.clone(), v.clone());
-    }
-
-    let agent_value = serde_json::json!({
-        "kind": "prompt",
-        "name": "render_test",
-        "instructions": template,
-        "template": { "format": { "kind": engine }, "parser": { "kind": "prompty" } },
-        "inputs": props,
-    });
-    let agent = Agent::load_from_value(&agent_value, &LoadContext::default());
-
-    let rendered = prompty::render(&agent, &Value::Object(render_inputs))
-        .await
-        .map_err(|e| VectorError::new(e.to_string()))?;
-
-    if let Some(pattern) = expected.get("nonce_pattern").and_then(|v| v.as_str()) {
-        let anchored = format!("(?s){pattern}");
-        if let Ok(re) = Regex::new(&anchored) {
-            if re.is_match(&rendered) {
-                return Ok(expected.clone());
-            }
-        }
-        return Ok(serde_json::json!({ "rendered": rendered }));
-    }
-    Ok(serde_json::json!({ "rendered": rendered }))
-}
-
-// ---------------------------------------------------------------------------
-// RENDER SEGMENTS
-// ---------------------------------------------------------------------------
-
-/// Render a template into a provenance-tagged segment tree via the owned Prompty
-/// Jinja Subset engine (`prompty::jinja_subset`). A strict property forging a
-/// role boundary raises `RenderError::Strict`, which the vectors assert as the
-/// plain value `{ "error": "StrictViolation" }` (an Ok result, not a thrown
-/// outcome), so this adapter catches it and returns that shape.
-fn render_segments_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
-    let template = input.get("template").and_then(|v| v.as_str()).unwrap_or("");
-    let inputs = input
-        .get("inputs")
-        .and_then(|v| v.as_object())
-        .cloned()
-        .unwrap_or_default();
-    let strict_props: Vec<String> = input
-        .get("strict_props")
-        .and_then(|v| v.as_array())
-        .map(|arr| {
-            arr.iter()
-                .filter_map(|v| v.as_str().map(|s| s.to_string()))
-                .collect()
-        })
-        .unwrap_or_default();
-
-    match prompty::jinja_subset::render_segments(template, &inputs, &strict_props) {
-        Ok(segments) => {
-            let segs: Vec<Value> = segments
-                .iter()
-                .map(|s| {
-                    serde_json::json!({
-                        "kind": s.kind,
-                        "text": s.text,
-                        "source": s.source,
-                        "strict": s.strict,
-                    })
-                })
-                .collect();
-            Ok(serde_json::json!({ "segments": segs }))
-        }
-        Err(prompty::jinja_subset::RenderError::Strict(_)) => {
-            Ok(serde_json::json!({ "error": "StrictViolation" }))
-        }
-        Err(prompty::jinja_subset::RenderError::Syntax(message)) => Err(VectorError::new(message)),
-    }
-}
-
-// ---------------------------------------------------------------------------
-// PARSE
-// ---------------------------------------------------------------------------
-
-/// Canonicalize a `Message` to `{ role, content: [<parts>], metadata? }`.
-/// `metadata` is emitted only when non-empty, matching the Python reference.
-fn message_to_canonical(m: &Message) -> Value {
-    let ctx = SaveContext::default();
-    let content: Vec<Value> = m.parts.iter().map(|p| p.to_value(&ctx)).collect();
-    let mut obj = serde_json::Map::new();
-    obj.insert("role".to_string(), Value::String(m.role.to_string()));
-    obj.insert("content".to_string(), Value::Array(content));
-    if let Value::Object(md) = &m.metadata {
-        if !md.is_empty() {
-            obj.insert("metadata".to_string(), m.metadata.clone());
-        }
-    }
-    Value::Object(obj)
-}
-
-/// Parse rendered text into messages via the real `parse_chat`, then (when the
-/// vector supplies `thread_inputs`) expand thread nonces through the real
-/// `expand_threads` pipeline function — reconstructing the nonce→name map by
-/// scanning the rendered text, exactly as `prepare` does internally.
-fn parse_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
-    let rendered = input.get("rendered").and_then(|v| v.as_str()).unwrap_or("");
-    let mut messages = parse_chat(rendered);
-
-    if let Some(Value::Object(thread_inputs)) = input.get("thread_inputs") {
-        let mut nonces: HashMap<String, String> = HashMap::new();
-        for name in thread_inputs.keys() {
-            let pattern = format!(r"__PROMPTY_THREAD_[0-9a-fA-F]+_{}__", regex::escape(name));
-            if let Ok(re) = Regex::new(&pattern) {
-                if let Some(found) = re.find(rendered) {
-                    nonces.insert(name.clone(), found.as_str().to_string());
-                }
-            }
-        }
-        let inputs_value = Value::Object(thread_inputs.clone());
-        messages = expand_threads(&messages, &nonces, &inputs_value);
-    }
-
-    let canonical: Vec<Value> = messages.iter().map(message_to_canonical).collect();
-    Ok(serde_json::json!({ "messages": canonical }))
-}
-
-// ---------------------------------------------------------------------------
-// WireConformance.toRequest / Processor.process -- drive the real provider
-// wire/process layers in `prompty-openai` and `prompty-anthropic`.
+// WireConformance.toRequest -- drive the real provider wire layer in
+// `prompty-openai` and `prompty-anthropic`.
 // ---------------------------------------------------------------------------
 //
-// The provider request-builders and response-processors are owned by the
-// `prompty-openai` and `prompty-anthropic` crates, each with its own passing
-// vector suite. These adapters only translate a vector `input` into the
-// canonical `Agent` + `Message` values those crates expect, dispatch to the
-// matching public function, and wrap the result in the shape the vectors
-// assert -- no provider request/response logic is reimplemented here.
+// The provider request-builders are owned by the `prompty-openai` and
+// `prompty-anthropic` crates, each with its own passing vector suite. These
+// adapters only translate a vector `input` into the canonical `Agent` +
+// `Message` values those crates expect, dispatch to the matching public
+// function, and wrap the result in the shape the vectors assert -- no provider
+// request logic is reimplemented here.
 
 /// Build a `Message` list from a wire vector's `messages` field.
 fn build_wire_messages(input: &Value) -> Vec<Message> {
@@ -1013,24 +815,6 @@ fn wire_to_request_adapter(input: &Value, _ctx: &Context) -> Result<Value, Vecto
     };
 
     Ok(json!({ "request_body": request_body }))
-}
-
-/// Processor.process -- extract the canonical result from a raw provider
-/// response through the real provider process layer.
-fn process_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
-    let provider = seam_discriminator(input, &["model", "provider"]);
-    let agent = build_process_agent(input);
-    let response = input.get("response").cloned().unwrap_or(Value::Null);
-
-    let result = match provider.as_str() {
-        "anthropic" => prompty_anthropic::process_response(&agent, &response)
-            .map_err(|e| VectorError::new(e.to_string()))?,
-        "openai" => prompty_openai::process_response(&agent, &response)
-            .map_err(|e| VectorError::new(e.to_string()))?,
-        other => return Err(VectorError::new(format!("unsupported provider: {other}"))),
-    };
-
-    Ok(json!({ "result": result }))
 }
 
 // ---------------------------------------------------------------------------
@@ -1929,86 +1713,6 @@ fn run_normalize(observed: &Value, ctx: &Context) -> Value {
         }
     }
     Value::Object(projected)
-}
-
-// ---------------------------------------------------------------------------
-// Processor.processStream -- classifies provider SSE chunks, then reconciles
-// ---------------------------------------------------------------------------
-//
-// Classification is owned by the real provider crate
-// (`prompty_openai::processor::process_stream`, a dev-dependency edge) and the
-// reconciliation is owned by the provider-agnostic `prompty::streaming::
-// reconcile_stream` engine (mirrors the verified Python `core/streaming.py`).
-// This adapter only converts the vector's `events` into provider wire chunks,
-// drives them through the classifier, shapes the classified chunks, and asks the
-// reconciler for partialText/requiresReconciliation/completionCommitted.
-
-async fn process_stream_impl(input: Value) -> Result<Value, VectorError> {
-    let provider = seam_discriminator(&input, &["model", "provider"]);
-    let events = input
-        .get("events")
-        .and_then(Value::as_array)
-        .cloned()
-        .unwrap_or_default();
-
-    if provider != "openai" {
-        return Err(VectorError::new(format!(
-            "Unsupported stream provider: {provider:?}"
-        )));
-    }
-
-    let mut provider_chunks = Vec::with_capacity(events.len());
-    for event in &events {
-        match event.get("kind").and_then(Value::as_str) {
-            Some("provider") => {
-                provider_chunks.push(event.get("value").cloned().unwrap_or(Value::Null))
-            }
-            Some("transportError") => provider_chunks.push(json!({
-                "error": {
-                    "type": "sse_transport_error",
-                    "message": event.get("message").cloned().unwrap_or(Value::Null),
-                }
-            })),
-            kind => {
-                return Err(VectorError::new(format!(
-                    "Unsupported stream vector event kind: {kind:?}"
-                )));
-            }
-        }
-    }
-
-    let classified: Vec<StreamChunk> =
-        prompty_openai::processor::process_stream(futures::stream::iter(provider_chunks))
-            .collect()
-            .await;
-
-    let chunks: Vec<Value> = classified.iter().map(stream_chunk_to_value).collect();
-    let reconciliation = reconcile_stream(classified.iter());
-
-    Ok(json!({
-        "chunks": chunks,
-        "partialText": reconciliation.partial_text,
-        "requiresReconciliation": reconciliation.requires_reconciliation,
-        "completionCommitted": reconciliation.completion_committed,
-    }))
-}
-
-fn stream_chunk_to_value(chunk: &StreamChunk) -> Value {
-    match chunk {
-        StreamChunk::Text(value) => json!({"kind": "text", "value": value}),
-        StreamChunk::Failure(failure) => json!({
-            "kind": "failure",
-            "failure": {
-                "outcome": if failure.outcome_unknown() {
-                    "indeterminate"
-                } else {
-                    "determinate"
-                },
-                "message": failure.message(),
-            }
-        }),
-        other => json!({"kind": "unexpected", "debug": format!("{other:?}")}),
-    }
 }
 
 // ===========================================================================

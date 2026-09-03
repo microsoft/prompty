@@ -4,12 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // AnthropicWireMessage represents A single message in the Anthropic Messages API wire format.
 // Anthropic always uses the array-of-blocks form for content,
 // even when there is only one text block (§7.5).
@@ -17,71 +11,4 @@ import (
 type AnthropicWireMessage struct {
 	Role    string        `json:"role" yaml:"role"`
 	Content []interface{} `json:"content" yaml:"content"`
-}
-
-// LoadAnthropicWireMessage creates a AnthropicWireMessage from a map[string]interface{}
-func LoadAnthropicWireMessage(data interface{}, ctx *LoadContext) (AnthropicWireMessage, error) {
-	result := AnthropicWireMessage{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["role"]; ok && val != nil {
-			result.Role = string(val.(string))
-		}
-		if val, ok := m["content"]; ok && val != nil {
-			switch arr := val.(type) {
-			case []interface{}:
-				result.Content = arr
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes AnthropicWireMessage to map[string]interface{}
-func (obj AnthropicWireMessage) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["role"] = obj.Role
-	result["content"] = obj.Content
-
-	return result
-}
-
-// ToJSON serializes AnthropicWireMessage to JSON string
-func (obj *AnthropicWireMessage) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes AnthropicWireMessage to YAML string
-func (obj *AnthropicWireMessage) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates AnthropicWireMessage from JSON string
-func AnthropicWireMessageFromJSON(jsonStr string) (AnthropicWireMessage, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return AnthropicWireMessage{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicWireMessage(data, ctx)
-}
-
-// FromYAML creates AnthropicWireMessage from YAML string
-func AnthropicWireMessageFromYAML(yamlStr string) (AnthropicWireMessage, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return AnthropicWireMessage{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicWireMessage(data, ctx)
 }

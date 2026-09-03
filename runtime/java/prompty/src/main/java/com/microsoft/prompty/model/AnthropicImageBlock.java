@@ -15,68 +15,6 @@ public class AnthropicImageBlock {
 
   public AnthropicImageBlock() { }
 
-  @SuppressWarnings("unchecked")
-  public static AnthropicImageBlock load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new AnthropicImageBlock());
-    }
-    AnthropicImageBlock result = new AnthropicImageBlock();
-    AnthropicImageBlock.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(AnthropicImageBlock result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("type") && map.get("type") != null) {
-      result.type = String.valueOf(map.get("type"));
-    }
-    if (!map.containsKey("source") || map.get("source") == null) {
-      throw new IllegalArgumentException(ctx.at("source").path + ": missing required field");
-    }
-    if (map.containsKey("source") && map.get("source") != null) {
-      result.source = AnthropicImageSource.load(map.get("source"), ctx.at("source"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    AnthropicImageBlock obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    AnthropicImageBlock obj = this;
-    if (obj.type != null) result.put("type", serializeScalar(obj.type));
-    if (obj.source != null) result.put("source", obj.source.save(ctx));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static AnthropicImageBlock fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static AnthropicImageBlock fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static AnthropicImageBlock fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static AnthropicImageBlock fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

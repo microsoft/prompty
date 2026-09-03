@@ -36,7 +36,6 @@ describe("ApiKeyConnection", () => {
       const reloaded = ApiKeyConnection.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-      expect(reloaded.apiKey).toEqual(instance.apiKey);
     });
   });
 
@@ -59,7 +58,6 @@ describe("ApiKeyConnection", () => {
       const reloaded = ApiKeyConnection.fromYaml(output);
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.endpoint).toEqual(instance.endpoint);
-      expect(reloaded.apiKey).toEqual(instance.apiKey);
     });
   });
 

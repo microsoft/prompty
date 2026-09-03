@@ -68,7 +68,6 @@ apiKey: your-api-key
         Assert.NotNull(reloaded);
         Assert.Equal("key", reloaded.Kind);
         Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", reloaded.Endpoint);
-        Assert.Equal("your-api-key", reloaded.ApiKey);
     }
 
     [Fact]
@@ -92,7 +91,6 @@ apiKey: your-api-key
         Assert.NotNull(reloaded);
         Assert.Equal("key", reloaded.Kind);
         Assert.Equal("https://{your-custom-endpoint}.openai.azure.com/", reloaded.Endpoint);
-        Assert.Equal("your-api-key", reloaded.ApiKey);
     }
 
     [Fact]

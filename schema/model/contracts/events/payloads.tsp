@@ -63,6 +63,7 @@ alias HookEndScope = "turn" | "session";
  * JSON-shaped so runtimes can load all events even when newer payload types are
  * added; event-specific typed payload models below define the canonical shapes.
  */
+@serializable
 model TurnEvent {
   @doc("Unique identifier for this event")
   @sample(fileIdSample)
@@ -265,6 +266,7 @@ model PermissionCompletedPayload {
  * Request passed to a permission resolver. This is the live protocol shape; the
  * event payloads above can include trace-only metadata such as redaction state.
  */
+@serializable
 model PermissionRequest {
   @doc("Stable permission request identifier")
   @sample(PermissionRequestRequestIdSample)
@@ -296,6 +298,7 @@ model PermissionRequest {
 /**
  * Decision returned by a permission resolver.
  */
+@serializable
 model PermissionDecision {
   @doc("Stable permission request identifier")
   @sample(PermissionDecisionRequestIdSample)

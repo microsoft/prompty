@@ -433,9 +433,6 @@ export class ApiKeyConnection extends Connection {
     if (obj.endpoint !== undefined && obj.endpoint !== null) {
       result["endpoint"] = obj.endpoint;
     }
-    if (obj.apiKey !== undefined && obj.apiKey !== null) {
-      result["apiKey"] = obj.apiKey;
-    }
     return result;
   }
 

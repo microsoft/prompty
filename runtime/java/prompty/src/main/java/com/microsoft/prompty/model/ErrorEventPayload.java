@@ -16,69 +16,6 @@ public class ErrorEventPayload {
 
   public ErrorEventPayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static ErrorEventPayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new ErrorEventPayload());
-    }
-    ErrorEventPayload result = new ErrorEventPayload();
-    ErrorEventPayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(ErrorEventPayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("message") && map.get("message") != null) {
-      result.message = String.valueOf(map.get("message"));
-    }
-    if (map.containsKey("errorKind") && map.get("errorKind") != null) {
-      result.errorKind = String.valueOf(map.get("errorKind"));
-    }
-    if (map.containsKey("phase") && map.get("phase") != null) {
-      result.phase = String.valueOf(map.get("phase"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    ErrorEventPayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    ErrorEventPayload obj = this;
-    if (obj.message != null) result.put("message", serializeScalar(obj.message));
-    if (obj.errorKind != null) result.put("errorKind", serializeScalar(obj.errorKind));
-    if (obj.phase != null) result.put("phase", serializeScalar(obj.phase));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static ErrorEventPayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static ErrorEventPayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static ErrorEventPayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static ErrorEventPayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

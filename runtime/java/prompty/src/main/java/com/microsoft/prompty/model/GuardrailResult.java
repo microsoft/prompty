@@ -16,69 +16,6 @@ public class GuardrailResult {
 
   public GuardrailResult() { }
 
-  @SuppressWarnings("unchecked")
-  public static GuardrailResult load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new GuardrailResult());
-    }
-    GuardrailResult result = new GuardrailResult();
-    GuardrailResult.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(GuardrailResult result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("allowed") && map.get("allowed") != null) {
-      result.allowed = (map.get("allowed") instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(map.get("allowed"))));
-    }
-    if (map.containsKey("reason") && map.get("reason") != null) {
-      result.reason = String.valueOf(map.get("reason"));
-    }
-    if (map.containsKey("rewrite") && map.get("rewrite") != null) {
-      result.rewrite = map.get("rewrite");
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    GuardrailResult obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    GuardrailResult obj = this;
-    if (obj.allowed != null) result.put("allowed", serializeScalar(obj.allowed));
-    if (obj.reason != null) result.put("reason", serializeScalar(obj.reason));
-    if (obj.rewrite != null) result.put("rewrite", serializeScalar(obj.rewrite));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static GuardrailResult fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static GuardrailResult fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static GuardrailResult fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static GuardrailResult fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   public static GuardrailResult rewrite(Object rewrite) {
     return new GuardrailResult() {{ this.allowed = true; this.rewrite = rewrite; }};
   }

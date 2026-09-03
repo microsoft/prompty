@@ -4,13 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
 // AnthropicMessagesResponse represents The response body from the Anthropic Messages API.
 
 type AnthropicMessagesResponse struct {
@@ -21,104 +14,4 @@ type AnthropicMessagesResponse struct {
 	Model      string         `json:"model" yaml:"model"`
 	StopReason string         `json:"stop_reason" yaml:"stop_reason"`
 	Usage      AnthropicUsage `json:"usage" yaml:"usage"`
-}
-
-// LoadAnthropicMessagesResponse creates a AnthropicMessagesResponse from a map[string]interface{}
-func LoadAnthropicMessagesResponse(data interface{}, ctx *LoadContext) (AnthropicMessagesResponse, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := AnthropicMessagesResponse{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["usage"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("usage").Path)
-		}
-		if val, ok := m["id"]; ok && val != nil {
-			result.Id = string(val.(string))
-		}
-		if val, ok := m["type"]; ok && val != nil {
-			result.Type = string(val.(string))
-		}
-		if val, ok := m["role"]; ok && val != nil {
-			result.Role = string(val.(string))
-		}
-		if val, ok := m["content"]; ok && val != nil {
-			switch arr := val.(type) {
-			case []interface{}:
-				result.Content = arr
-			}
-		}
-		if val, ok := m["model"]; ok && val != nil {
-			result.Model = string(val.(string))
-		}
-		if val, ok := m["stop_reason"]; ok && val != nil {
-			result.StopReason = string(val.(string))
-		}
-		if val, ok := m["usage"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadAnthropicUsage(m, ctx.At("usage"))
-				if err != nil {
-					return result, err
-				}
-				result.Usage = loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes AnthropicMessagesResponse to map[string]interface{}
-func (obj AnthropicMessagesResponse) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["id"] = obj.Id
-	result["type"] = obj.Type
-	result["role"] = obj.Role
-	result["content"] = obj.Content
-	result["model"] = obj.Model
-	result["stop_reason"] = obj.StopReason
-
-	result["usage"] = obj.Usage.Save(ctx)
-
-	return result
-}
-
-// ToJSON serializes AnthropicMessagesResponse to JSON string
-func (obj *AnthropicMessagesResponse) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes AnthropicMessagesResponse to YAML string
-func (obj *AnthropicMessagesResponse) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates AnthropicMessagesResponse from JSON string
-func AnthropicMessagesResponseFromJSON(jsonStr string) (AnthropicMessagesResponse, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return AnthropicMessagesResponse{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicMessagesResponse(data, ctx)
-}
-
-// FromYAML creates AnthropicMessagesResponse from YAML string
-func AnthropicMessagesResponseFromYAML(yamlStr string) (AnthropicMessagesResponse, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return AnthropicMessagesResponse{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicMessagesResponse(data, ctx)
 }

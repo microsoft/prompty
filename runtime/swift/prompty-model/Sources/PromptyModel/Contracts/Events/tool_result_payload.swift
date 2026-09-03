@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "tool_result" events — a tool has returned its result.
-public struct ToolResultPayload: TypraModel {
+public struct ToolResultPayload {
   public static let shorthandProperty: String? = nil
   public var name: String = ""
   public var result: ToolResult = ToolResult()
@@ -14,41 +14,4 @@ public struct ToolResultPayload: TypraModel {
     self.result = result
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolResultPayload {
-    let object = try TypraRuntime.object(data, typeName: "ToolResultPayload")
-    var instance = ToolResultPayload()
-    if let value = object["name"] {
-      instance.name = try TypraRuntime.string(value, field: "name")
-    }
-    if object["result"] == nil || object["result"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("result").path + ": missing required field")
-    }
-    if let value = object["result"] {
-      instance.result = try ToolResult.load(value, context: context.at("result"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["name"] = self.name
-    result["result"] = try self.result.save(context)
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolResultPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolResultPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolResultPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolResultPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

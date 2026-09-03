@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "status" events — informational messages about loop progress.
-public struct StatusEventPayload: TypraModel {
+public struct StatusEventPayload {
   public static let shorthandProperty: String? = nil
   public var message: String = ""
 
@@ -12,34 +12,4 @@ public struct StatusEventPayload: TypraModel {
     self.message = message
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> StatusEventPayload {
-    let object = try TypraRuntime.object(data, typeName: "StatusEventPayload")
-    var instance = StatusEventPayload()
-    if let value = object["message"] {
-      instance.message = try TypraRuntime.string(value, field: "message")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["message"] = self.message
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> StatusEventPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "StatusEventPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> StatusEventPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "StatusEventPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

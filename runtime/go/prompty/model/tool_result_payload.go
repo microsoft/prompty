@@ -4,93 +4,9 @@
 
 package prompty
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ToolResultPayload represents Payload for "tool_result" events — a tool has returned its result.
 
 type ToolResultPayload struct {
 	Name   string     `json:"name" yaml:"name"`
 	Result ToolResult `json:"result" yaml:"result"`
-}
-
-// LoadToolResultPayload creates a ToolResultPayload from a map[string]interface{}
-func LoadToolResultPayload(data interface{}, ctx *LoadContext) (ToolResultPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := ToolResultPayload{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["result"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("result").Path)
-		}
-		if val, ok := m["name"]; ok && val != nil {
-			result.Name = string(val.(string))
-		}
-		if val, ok := m["result"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadToolResult(m, ctx.At("result"))
-				if err != nil {
-					return result, err
-				}
-				result.Result = loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ToolResultPayload to map[string]interface{}
-func (obj ToolResultPayload) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["name"] = obj.Name
-
-	result["result"] = obj.Result.Save(ctx)
-
-	return result
-}
-
-// ToJSON serializes ToolResultPayload to JSON string
-func (obj *ToolResultPayload) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ToolResultPayload to YAML string
-func (obj *ToolResultPayload) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ToolResultPayload from JSON string
-func ToolResultPayloadFromJSON(jsonStr string) (ToolResultPayload, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ToolResultPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolResultPayload(data, ctx)
-}
-
-// FromYAML creates ToolResultPayload from YAML string
-func ToolResultPayloadFromYAML(yamlStr string) (ToolResultPayload, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ToolResultPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolResultPayload(data, ctx)
 }

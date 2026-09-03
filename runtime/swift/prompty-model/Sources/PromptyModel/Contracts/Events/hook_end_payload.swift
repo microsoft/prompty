@@ -16,7 +16,7 @@ public enum HookEndScope: String, Codable, CaseIterable {
 }
 
 /// Payload for "hook_end" events — a host lifecycle hook finished.
-public struct HookEndPayload: TypraModel {
+public struct HookEndPayload {
   public static let shorthandProperty: String? = nil
   public var hookInvocationId: String = ""
   public var hookType: String = ""
@@ -38,72 +38,4 @@ public struct HookEndPayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> HookEndPayload {
-    let object = try TypraRuntime.object(data, typeName: "HookEndPayload")
-    var instance = HookEndPayload()
-    if let value = object["hookInvocationId"] {
-      instance.hookInvocationId = try TypraRuntime.string(value, field: "hookInvocationId")
-    }
-    if let value = object["hookType"] {
-      instance.hookType = try TypraRuntime.string(value, field: "hookType")
-    }
-    if let value = object["scope"] {
-      instance.scope = try HookEndScope.parse(try TypraRuntime.string(value, field: "scope"))
-    }
-    if let value = object["success"] {
-      instance.success = try TypraRuntime.bool(value, field: "success")
-    }
-    if let value = object["output"] {
-      instance.output = try TypraRuntime.dictionary(value, field: "output")
-    }
-    if let value = object["durationMs"] {
-      instance.durationMs = try TypraRuntime.double(value, field: "durationMs")
-    }
-    if let value = object["error"] {
-      instance.error = try TypraRuntime.string(value, field: "error")
-    }
-    if let value = object["redaction"] {
-      instance.redaction = try RedactionMetadata.load(value, context: context.at("redaction"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["hookInvocationId"] = self.hookInvocationId
-    result["hookType"] = self.hookType
-    if let value = self.scope {
-      result["scope"] = value.rawValue
-    }
-    result["success"] = self.success
-    if let value = self.output {
-      result["output"] = value
-    }
-    if let value = self.durationMs {
-      result["durationMs"] = value
-    }
-    if let value = self.error {
-      result["error"] = value
-    }
-    if let value = self.redaction {
-      result["redaction"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> HookEndPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "HookEndPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> HookEndPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "HookEndPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

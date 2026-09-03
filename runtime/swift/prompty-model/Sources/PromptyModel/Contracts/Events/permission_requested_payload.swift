@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for permission request events — a host is asked to approve an action.
-public struct PermissionRequestedPayload: TypraModel {
+public struct PermissionRequestedPayload {
   public static let shorthandProperty: String? = nil
   public var requestId: String? = nil
   public var toolCallId: String? = nil
@@ -26,76 +26,4 @@ public struct PermissionRequestedPayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
-    let object = try TypraRuntime.object(data, typeName: "PermissionRequestedPayload")
-    var instance = PermissionRequestedPayload()
-    if let value = object["requestId"] {
-      instance.requestId = try TypraRuntime.string(value, field: "requestId")
-    }
-    if let value = object["toolCallId"] {
-      instance.toolCallId = try TypraRuntime.string(value, field: "toolCallId")
-    }
-    if let value = object["permission"] {
-      instance.permission = try TypraRuntime.string(value, field: "permission")
-    }
-    if let value = object["target"] {
-      instance.target = try TypraRuntime.string(value, field: "target")
-    }
-    if let value = object["details"] {
-      instance.details = try TypraRuntime.dictionary(value, field: "details")
-    }
-    if let value = object["promptRequest"] {
-      instance.promptRequest = try TypraRuntime.string(value, field: "promptRequest")
-    }
-    if let value = object["policy"] {
-      instance.policy = try TypraRuntime.dictionary(value, field: "policy")
-    }
-    if let value = object["redaction"] {
-      instance.redaction = try RedactionMetadata.load(value, context: context.at("redaction"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.requestId {
-      result["requestId"] = value
-    }
-    if let value = self.toolCallId {
-      result["toolCallId"] = value
-    }
-    result["permission"] = self.permission
-    if let value = self.target {
-      result["target"] = value
-    }
-    if let value = self.details {
-      result["details"] = value
-    }
-    if let value = self.promptRequest {
-      result["promptRequest"] = value
-    }
-    if let value = self.policy {
-      result["policy"] = value
-    }
-    if let value = self.redaction {
-      result["redaction"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "PermissionRequestedPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> PermissionRequestedPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "PermissionRequestedPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

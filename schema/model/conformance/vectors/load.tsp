@@ -35,8 +35,7 @@ const LoadVectors = """
           "apiType": "chat",
           "connection": {
             "kind": "key",
-            "endpoint": "https://test.openai.com",
-            "apiKey": "sk-test123"
+            "endpoint": "https://test.openai.com"
           },
           "options": {
             "temperature": 0.7,
@@ -210,8 +209,7 @@ const LoadVectors = """
         "model": {
           "connection": {
             "kind": "key",
-            "endpoint": "https://shared.example.com",
-            "apiKey": "shared-key"
+            "endpoint": "https://shared.example.com"
           }
         }
       }
@@ -241,8 +239,7 @@ const LoadVectors = """
         "model": {
           "connection": {
             "kind": "key",
-            "endpoint": "https://in-tree.example.com",
-            "apiKey": "ok"
+            "endpoint": "https://in-tree.example.com"
           }
         }
       }
@@ -350,8 +347,7 @@ const LoadVectors = """
           "apiType": "embedding",
           "connection": {
             "kind": "key",
-            "endpoint": "https://test.openai.com",
-            "apiKey": "sk-test123"
+            "endpoint": "https://test.openai.com"
           }
         },
         "inputs": [

@@ -603,8 +603,7 @@
             "apiType": "chat",
             "connection": {
               "kind": "key",
-              "endpoint": "https://test.openai.com",
-              "apiKey": "sk-test123"
+              "endpoint": "https://test.openai.com"
             },
             "options": {
               "temperature": 0.7,
@@ -709,8 +708,7 @@
             "apiType": "embedding",
             "connection": {
               "kind": "key",
-              "endpoint": "https://test.openai.com",
-              "apiKey": "sk-test123"
+              "endpoint": "https://test.openai.com"
             }
           },
           "inputs": [
@@ -900,8 +898,7 @@
           "model": {
             "connection": {
               "kind": "key",
-              "endpoint": "https://in-tree.example.com",
-              "apiKey": "ok"
+              "endpoint": "https://in-tree.example.com"
             }
           }
         },
@@ -982,8 +979,7 @@
           "model": {
             "connection": {
               "kind": "key",
-              "endpoint": "https://shared.example.com",
-              "apiKey": "shared-key"
+              "endpoint": "https://shared.example.com"
             }
           }
         },
@@ -5167,6 +5163,7 @@
       },
       "returns": "unknown",
       "sync": false,
+      "optional": true,
       "dispatch": {
         "discriminator": {
           "model": "Model",
@@ -5281,6 +5278,7 @@
       },
       "returns": "unknown",
       "sync": false,
+      "optional": true,
       "dispatch": {
         "discriminator": {
           "model": "Model",
@@ -14131,5 +14129,81 @@
         "operation": "toRequest"
       }
     }
+  ],
+  "serializedTypes": [
+    "Agent",
+    "AnonymousConnection",
+    "ApiKeyConnection",
+    "ArrayProperty",
+    "AudioPart",
+    "AzureModel",
+    "Binding",
+    "Checkpoint",
+    "Connection",
+    "ContentPart",
+    "CustomFormat",
+    "CustomModel",
+    "CustomParser",
+    "CustomTool",
+    "DelegatedStateReference",
+    "DeviceAuthorization",
+    "EngineCheckpoint",
+    "ErrorChunk",
+    "FailureChunk",
+    "FilePart",
+    "FormatConfig",
+    "FoundryConnection",
+    "FunctionTool",
+    "ImagePart",
+    "InvocationContextDecision",
+    "InvocationContextState",
+    "InvocationUsage",
+    "Jinja2Format",
+    "McpApprovalMode",
+    "McpTool",
+    "MemoryEntry",
+    "MemoryStore",
+    "Message",
+    "Model",
+    "ModelInfo",
+    "ModelInvocationContextSnapshot",
+    "ModelInvocationRequest",
+    "ModelInvocationResponse",
+    "ModelOptions",
+    "ModelReconciliationState",
+    "ModelToolRequest",
+    "ModelToolResult",
+    "MustacheFormat",
+    "OAuthConnection",
+    "OAuthToken",
+    "ObjectProperty",
+    "OpenAIModel",
+    "OpenApiTool",
+    "ParserConfig",
+    "PermissionDecision",
+    "PermissionRequest",
+    "PromptyParser",
+    "Property",
+    "RedactedField",
+    "RedactionMetadata",
+    "ReferenceConnection",
+    "RemoteConnection",
+    "RenderSegment",
+    "ReplayJournalRecord",
+    "ResumeContext",
+    "SessionEvent",
+    "StreamChunk",
+    "StreamFailure",
+    "Template",
+    "TextChunk",
+    "TextPart",
+    "ThinkingChunk",
+    "Tool",
+    "ToolCall",
+    "ToolChunk",
+    "ToolResult",
+    "TurnEvent",
+    "UnionProperty",
+    "UsageChunk"
   ]
 }

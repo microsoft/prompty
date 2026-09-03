@@ -23,6 +23,7 @@ alias RenderSegmentKind = "literal" | "interp";
  * whose `source` property is declared strict is flagged `strict`; a strict span
  * that forges a role boundary is rejected loudly rather than emitted.
  */
+@serializable
 model RenderSegment {
   @doc("Whether this span came from the template (literal) or an input value (interp)")
   kind: RenderSegmentKind;

@@ -403,43 +403,6 @@ mod tests {
         assert_eq!(extract_resource_group("/subscriptions/s/providers/x"), "");
     }
 
-    #[test]
-    fn generated_contracts_map_to_foundry_wire_names() {
-        let res = AiResource {
-            name: "a".into(),
-            kind: "AIServices".into(),
-            endpoint: "https://e".into(),
-            location: "eastus".into(),
-            resource_group: "rg".into(),
-            service_url: Some("https://f".into()),
-        };
-        let json = res.to_wire("foundry");
-        assert_eq!(json["resource_group"], "rg");
-        assert_eq!(json["foundry_url"], "https://f");
-
-        let sub = Subscription {
-            subscription_id: "s".into(),
-            display_name: "d".into(),
-            state: "Enabled".into(),
-        };
-        let sub_json = sub.to_wire("foundry");
-        assert_eq!(sub_json["subscription_id"], "s");
-        assert_eq!(sub_json["display_name"], "d");
-    }
-
-    #[test]
-    fn ai_resource_service_url_defaults_when_absent() {
-        let v = json!({
-            "name": "a",
-            "kind": "OpenAI",
-            "endpoint": "https://e",
-            "location": "eastus",
-            "resourceGroup": "rg"
-        });
-        let res = AiResource::load_from_value(&v, &prompty::model::context::LoadContext::default());
-        assert_eq!(res.service_url, None);
-    }
-
     // Regression tests for #445: a non-object `value` entry must not become a
     // phantom project (and must not suppress the classic-hub fallback).
     #[test]

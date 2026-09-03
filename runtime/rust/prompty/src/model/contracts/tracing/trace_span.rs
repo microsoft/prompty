@@ -45,81 +45,6 @@ impl TraceSpan {
         Self::default()
     }
 
-    /// Load TraceSpan from a JSON string.
-    pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load TraceSpan from a YAML string.
-    pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
-        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load TraceSpan from an already-parsed JSON value, returning an error
-    /// instead of panicking on invalid input. Fallible companion to
-    /// `load_from_value` with the same validation policy as `from_json`.
-    pub fn try_load_from_value(
-        value: &serde_json::Value,
-        ctx: &LoadContext,
-    ) -> Result<Self, serde_json::Error> {
-        Self::validate_input_at(value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(value, ctx))
-    }
-
-    /// Load TraceSpan from a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_input` before field extraction.
-    pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
-        let value = ctx.process_input(value.clone());
-        if let Err(message) = Self::validate_input_at(&value, "") {
-            panic!("{}", message);
-        }
-        Self {
-            name: value
-                .get("name")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default()
-                .to_string(),
-            __time: value
-                .get("__time")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| TraceTime::load_from_value(v, ctx))
-                .unwrap_or_default(),
-            signature: value
-                .get("signature")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            inputs: value
-                .get("inputs")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
-            output: value.get("output").cloned(),
-            error: value
-                .get("error")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            __usage: value
-                .get("__usage")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| TokenUsage::load_from_value(v, ctx)),
-            attributes: value
-                .get("attributes")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
-            __frames: value
-                .get("__frames")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.to_vec()),
-        }
-    }
-
     pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
         let child_path = if path.is_empty() {
             "__time".to_string()
@@ -142,62 +67,6 @@ impl TraceSpan {
         Ok(())
     }
 
-    /// Serialize TraceSpan to a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_dict` after serialization.
-    pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
-        let mut result = serde_json::Map::new();
-        // Write base fields
-        result.insert(
-            "name".to_string(),
-            serde_json::Value::String(self.name.clone()),
-        );
-        {
-            let nested = self.__time.to_value(ctx);
-            result.insert("__time".to_string(), nested);
-        }
-        if let Some(val) = self.signature.as_ref() {
-            result.insert(
-                "signature".to_string(),
-                serde_json::Value::String(val.clone()),
-            );
-        }
-        if !self.inputs.is_null() {
-            result.insert("inputs".to_string(), self.inputs.clone());
-        }
-        if let Some(val) = self.output.as_ref() {
-            result.insert("output".to_string(), val.clone());
-        }
-        if let Some(val) = self.error.as_ref() {
-            result.insert("error".to_string(), serde_json::Value::String(val.clone()));
-        }
-        if let Some(val) = self.__usage.as_ref() {
-            let nested = val.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("__usage".to_string(), nested);
-            }
-        }
-        if !self.attributes.is_null() {
-            result.insert("attributes".to_string(), self.attributes.clone());
-        }
-        if let Some(items) = self.__frames.as_ref() {
-            result.insert(
-                "__frames".to_string(),
-                serde_json::to_value(items).unwrap_or(serde_json::Value::Null),
-            );
-        }
-        ctx.process_dict(serde_json::Value::Object(result))
-    }
-
-    /// Serialize TraceSpan to a JSON string.
-    pub fn to_json(&self, ctx: &SaveContext) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self.to_value(ctx))
-    }
-
-    /// Serialize TraceSpan to a YAML string.
-    pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(&self.to_value(ctx))
-    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_inputs_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
@@ -208,24 +77,5 @@ impl TraceSpan {
     /// Returns `None` if the field is null or not an object.
     pub fn as_attributes_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.attributes.as_object()
-    }
-}
-
-// Serde for `TraceSpan` delegates to the canonical to_value/load_from_value
-// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
-// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
-#[cfg(feature = "serde")]
-impl serde::Serialize for TraceSpan {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for TraceSpan {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
-        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
-        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

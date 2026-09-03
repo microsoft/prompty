@@ -4,7 +4,7 @@
 import Foundation
 
 /// Summary statistics for a completed turn trace.
-public struct TurnSummary: TypraModel {
+public struct TurnSummary {
   public static let shorthandProperty: String? = nil
   public var turnId: String = ""
   public var status: String = ""
@@ -26,72 +26,4 @@ public struct TurnSummary: TypraModel {
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnSummary {
-    let object = try TypraRuntime.object(data, typeName: "TurnSummary")
-    var instance = TurnSummary()
-    if let value = object["turnId"] {
-      instance.turnId = try TypraRuntime.string(value, field: "turnId")
-    }
-    if let value = object["status"] {
-      instance.status = try TypraRuntime.string(value, field: "status")
-    }
-    if let value = object["iterations"] {
-      instance.iterations = try TypraRuntime.int32(value, field: "iterations")
-    }
-    if let value = object["llmCalls"] {
-      instance.llmCalls = try TypraRuntime.int32(value, field: "llmCalls")
-    }
-    if let value = object["toolCalls"] {
-      instance.toolCalls = try TypraRuntime.int32(value, field: "toolCalls")
-    }
-    if let value = object["retries"] {
-      instance.retries = try TypraRuntime.int32(value, field: "retries")
-    }
-    if let value = object["usage"] {
-      instance.usage = try TokenUsage.load(value, context: context.at("usage"))
-    }
-    if let value = object["durationMs"] {
-      instance.durationMs = try TypraRuntime.double(value, field: "durationMs")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["turnId"] = self.turnId
-    result["status"] = self.status
-    result["iterations"] = self.iterations
-    if let value = self.llmCalls {
-      result["llmCalls"] = value
-    }
-    if let value = self.toolCalls {
-      result["toolCalls"] = value
-    }
-    if let value = self.retries {
-      result["retries"] = value
-    }
-    if let value = self.usage {
-      result["usage"] = try value.save(context)
-    }
-    if let value = self.durationMs {
-      result["durationMs"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnSummary {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnSummary"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnSummary {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnSummary"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

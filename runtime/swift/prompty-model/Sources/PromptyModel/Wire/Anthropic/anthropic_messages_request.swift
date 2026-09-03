@@ -4,7 +4,7 @@
 import Foundation
 
 /// The full request body for the Anthropic Messages API (§7.5).
-public struct AnthropicMessagesRequest: TypraModel {
+public struct AnthropicMessagesRequest {
   public static let shorthandProperty: String? = nil
   public var model: String = ""
   public var messages: [AnthropicWireMessage] = []
@@ -28,78 +28,4 @@ public struct AnthropicMessagesRequest: TypraModel {
     self.tools = tools
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
-    let object = try TypraRuntime.object(data, typeName: "AnthropicMessagesRequest")
-    var instance = AnthropicMessagesRequest()
-    if let value = object["model"] {
-      instance.model = try TypraRuntime.string(value, field: "model")
-    }
-    if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try AnthropicWireMessage.load($1, context: context.at("messages").atIndex($0)) }
-    }
-    if let value = object["max_tokens"] {
-      instance.maxTokens = try TypraRuntime.int32(value, field: "max_tokens")
-    }
-    if let value = object["system"] {
-      instance.system = try TypraRuntime.string(value, field: "system")
-    }
-    if let value = object["temperature"] {
-      instance.temperature = try TypraRuntime.float(value, field: "temperature")
-    }
-    if let value = object["top_p"] {
-      instance.topP = try TypraRuntime.float(value, field: "top_p")
-    }
-    if let value = object["top_k"] {
-      instance.topK = try TypraRuntime.int32(value, field: "top_k")
-    }
-    if let value = object["stop_sequences"] {
-      instance.stopSequences = try TypraRuntime.array(value, field: "stop_sequences").map { try TypraRuntime.string($0, field: "stop_sequences") }
-    }
-    if let value = object["tools"] {
-      instance.tools = try TypraRuntime.array(value, field: "tools").enumerated().map { try AnthropicToolDefinition.load($1, context: context.at("tools").atIndex($0)) }
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["model"] = self.model
-    result["messages"] = try self.messages.map { try $0.save(context) }
-    result["max_tokens"] = self.maxTokens
-    if let value = self.system {
-      result["system"] = value
-    }
-    if let value = self.temperature {
-      result["temperature"] = value
-    }
-    if let value = self.topP {
-      result["top_p"] = value
-    }
-    if let value = self.topK {
-      result["top_k"] = value
-    }
-    if let value = self.stopSequences {
-      result["stop_sequences"] = value
-    }
-    if let value = self.tools {
-      result["tools"] = try value.map { try $0.save(context) }
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesRequest"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesRequest {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesRequest"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

@@ -565,8 +565,7 @@ async def test_vector_16_loadconformance_load_basic_load():
           "apiType": "chat",
           "connection": {
             "kind": "key",
-            "endpoint": "https://test.openai.com",
-            "apiKey": "sk-test123"
+            "endpoint": "https://test.openai.com"
           },
           "options": {
             "temperature": 0.7,
@@ -663,8 +662,7 @@ async def test_vector_18_loadconformance_load_embedding_load():
           "apiType": "embedding",
           "connection": {
             "kind": "key",
-            "endpoint": "https://test.openai.com",
-            "apiKey": "sk-test123"
+            "endpoint": "https://test.openai.com"
           }
         },
         "inputs": [
@@ -834,8 +832,7 @@ async def test_vector_23_loadconformance_load_file_reference_in_tree_allowed():
         "model": {
           "connection": {
             "kind": "key",
-            "endpoint": "https://in-tree.example.com",
-            "apiKey": "ok"
+            "endpoint": "https://in-tree.example.com"
           }
         }
       },
@@ -908,8 +905,7 @@ async def test_vector_25_loadconformance_load_file_resolution():
         "model": {
           "connection": {
             "kind": "key",
-            "endpoint": "https://shared.example.com",
-            "apiKey": "shared-key"
+            "endpoint": "https://shared.example.com"
           }
         }
       },

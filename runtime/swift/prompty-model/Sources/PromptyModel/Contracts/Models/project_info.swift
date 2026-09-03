@@ -4,7 +4,7 @@
 import Foundation
 
 /// A project hosted by an AI service resource.
-public struct ProjectInfo: TypraModel {
+public struct ProjectInfo {
   public static let shorthandProperty: String? = nil
   public var name: String = ""
   public var displayName: String = ""
@@ -16,82 +16,4 @@ public struct ProjectInfo: TypraModel {
     self.endpoint = endpoint
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ProjectInfo {
-    let object = try TypraRuntime.object(data, typeName: "ProjectInfo")
-    var instance = ProjectInfo()
-    if let value = object["name"] {
-      instance.name = try TypraRuntime.string(value, field: "name")
-    }
-    if let value = object["displayName"] {
-      instance.displayName = try TypraRuntime.string(value, field: "displayName")
-    }
-    if let value = object["endpoint"] {
-      instance.endpoint = try TypraRuntime.string(value, field: "endpoint")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["name"] = self.name
-    result["displayName"] = self.displayName
-    result["endpoint"] = self.endpoint
-    return result
-  }
-
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    let wireNameName: String?
-    switch provider {
-    case "foundry": wireNameName = "name"
-    default: wireNameName = nil
-    }
-    if let wireKey = wireNameName { result[wireKey] = self.name }
-    let wireNameDisplayName: String?
-    switch provider {
-    case "foundry": wireNameDisplayName = "display_name"
-    default: wireNameDisplayName = nil
-    }
-    if let wireKey = wireNameDisplayName { result[wireKey] = self.displayName }
-    let wireNameEndpoint: String?
-    switch provider {
-    case "foundry": wireNameEndpoint = "endpoint"
-    default: wireNameEndpoint = nil
-    }
-    if let wireKey = wireNameEndpoint { result[wireKey] = self.endpoint }
-    return result
-  }
-
-  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> ProjectInfo {
-    let wireMap: [String: [String: String]] = [
-      "name": ["foundry": "name"],
-      "displayName": ["foundry": "display_name"],
-      "endpoint": ["foundry": "endpoint"],
-    ]
-    var inverse: [String: String] = [:]
-    for (field, mapping) in wireMap {
-      if let wireName = mapping[provider] { inverse[wireName] = field }
-    }
-    var canonical: [String: Any] = [:]
-    for (key, value) in data {
-      canonical[inverse[key] ?? key] = value
-    }
-    return try load(canonical, context: context)
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ProjectInfo {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ProjectInfo"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ProjectInfo {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ProjectInfo"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

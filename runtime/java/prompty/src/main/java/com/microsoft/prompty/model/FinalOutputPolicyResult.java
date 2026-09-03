@@ -15,67 +15,6 @@ public class FinalOutputPolicyResult {
 
   public FinalOutputPolicyResult() { }
 
-  @SuppressWarnings("unchecked")
-  public static FinalOutputPolicyResult load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new FinalOutputPolicyResult());
-    }
-    FinalOutputPolicyResult result = new FinalOutputPolicyResult();
-    FinalOutputPolicyResult.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(FinalOutputPolicyResult result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("output") && map.get("output") != null) {
-      result.output = map.get("output");
-    }
-    if (map.containsKey("metadata") && map.get("metadata") != null) {
-      if (map.get("metadata") instanceof Map<?, ?> dict) {
-        result.metadata = copyMap(dict);
-      }
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    FinalOutputPolicyResult obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    FinalOutputPolicyResult obj = this;
-    if (obj.output != null) result.put("output", serializeScalar(obj.output));
-    if (obj.metadata != null) result.put("metadata", serializeScalar(obj.metadata));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static FinalOutputPolicyResult fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static FinalOutputPolicyResult fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static FinalOutputPolicyResult fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static FinalOutputPolicyResult fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

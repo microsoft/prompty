@@ -434,8 +434,6 @@ class ApiKeyConnection(Connection):
             result["kind"] = obj.kind
         if obj.endpoint is not None:
             result["endpoint"] = obj.endpoint
-        if obj.api_key is not None:
-            result["apiKey"] = obj.api_key
         return result
 
     def to_yaml(self, context: SaveContext | None = None) -> str:

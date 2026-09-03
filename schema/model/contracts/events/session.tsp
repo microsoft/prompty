@@ -132,6 +132,7 @@ model SessionWarningPayload {
 /**
  * A canonical event envelope emitted by an outer harness session.
  */
+@serializable
 model SessionEvent {
   @doc("Unique identifier for this event")
   @sample(SessionEventIdSample)
@@ -170,6 +171,7 @@ model SessionEvent {
 /**
  * A persisted handoff point for a harness session.
  */
+@serializable
 model Checkpoint {
   @doc("Stable checkpoint identifier")
   @sample(CheckpointIdSample)

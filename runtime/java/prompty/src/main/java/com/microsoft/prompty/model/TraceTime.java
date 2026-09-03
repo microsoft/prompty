@@ -16,69 +16,6 @@ public class TraceTime {
 
   public TraceTime() { }
 
-  @SuppressWarnings("unchecked")
-  public static TraceTime load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new TraceTime());
-    }
-    TraceTime result = new TraceTime();
-    TraceTime.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(TraceTime result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("start") && map.get("start") != null) {
-      result.start = String.valueOf(map.get("start"));
-    }
-    if (map.containsKey("end") && map.get("end") != null) {
-      result.end = String.valueOf(map.get("end"));
-    }
-    if (map.containsKey("duration") && map.get("duration") != null) {
-      result.duration = (map.get("duration") instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(map.get("duration"))));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    TraceTime obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    TraceTime obj = this;
-    if (obj.start != null) result.put("start", serializeScalar(obj.start));
-    if (obj.end != null) result.put("end", serializeScalar(obj.end));
-    if (obj.duration != null) result.put("duration", serializeScalar(obj.duration));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static TraceTime fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static TraceTime fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static TraceTime fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static TraceTime fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

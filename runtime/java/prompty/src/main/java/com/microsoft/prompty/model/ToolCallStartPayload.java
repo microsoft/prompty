@@ -16,69 +16,6 @@ public class ToolCallStartPayload {
 
   public ToolCallStartPayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static ToolCallStartPayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new ToolCallStartPayload());
-    }
-    ToolCallStartPayload result = new ToolCallStartPayload();
-    ToolCallStartPayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(ToolCallStartPayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("id") && map.get("id") != null) {
-      result.id = String.valueOf(map.get("id"));
-    }
-    if (map.containsKey("name") && map.get("name") != null) {
-      result.name = String.valueOf(map.get("name"));
-    }
-    if (map.containsKey("arguments") && map.get("arguments") != null) {
-      result.arguments = String.valueOf(map.get("arguments"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    ToolCallStartPayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    ToolCallStartPayload obj = this;
-    if (obj.id != null) result.put("id", serializeScalar(obj.id));
-    if (obj.name != null) result.put("name", serializeScalar(obj.name));
-    if (obj.arguments != null) result.put("arguments", serializeScalar(obj.arguments));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static ToolCallStartPayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static ToolCallStartPayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static ToolCallStartPayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static ToolCallStartPayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

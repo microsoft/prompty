@@ -4,12 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ReplayMismatch represents A single mismatch produced by replay verification.
 
 type ReplayMismatch struct {
@@ -17,106 +11,4 @@ type ReplayMismatch struct {
 	Expected *ReplayJournalRecord `json:"expected,omitempty" yaml:"expected,omitempty"`
 	Actual   *ReplayJournalRecord `json:"actual,omitempty" yaml:"actual,omitempty"`
 	Message  string               `json:"message" yaml:"message"`
-}
-
-// LoadReplayMismatch creates a ReplayMismatch from a map[string]interface{}
-func LoadReplayMismatch(data interface{}, ctx *LoadContext) (ReplayMismatch, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := ReplayMismatch{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["index"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
-			var v int32
-			switch n := val.(type) {
-			case int:
-				v = int32(n)
-			case int32:
-				v = int32(n)
-			case int64:
-				v = int32(n)
-			case float64:
-				v = int32(n)
-			}
-			result.Index = v
-		}
-		if val, ok := m["expected"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadReplayJournalRecord(m, ctx.At("expected"))
-				if err != nil {
-					return result, err
-				}
-				result.Expected = &loaded
-			}
-		}
-		if val, ok := m["actual"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadReplayJournalRecord(m, ctx.At("actual"))
-				if err != nil {
-					return result, err
-				}
-				result.Actual = &loaded
-			}
-		}
-		if val, ok := m["message"]; ok && val != nil {
-			result.Message = string(val.(string))
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ReplayMismatch to map[string]interface{}
-func (obj ReplayMismatch) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["index"] = obj.Index
-	if obj.Expected != nil {
-		result["expected"] = obj.Expected.Save(ctx)
-	}
-	if obj.Actual != nil {
-		result["actual"] = obj.Actual.Save(ctx)
-	}
-	result["message"] = obj.Message
-
-	return result
-}
-
-// ToJSON serializes ReplayMismatch to JSON string
-func (obj *ReplayMismatch) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ReplayMismatch to YAML string
-func (obj *ReplayMismatch) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ReplayMismatch from JSON string
-func ReplayMismatchFromJSON(jsonStr string) (ReplayMismatch, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ReplayMismatch{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadReplayMismatch(data, ctx)
-}
-
-// FromYAML creates ReplayMismatch from YAML string
-func ReplayMismatchFromYAML(yamlStr string) (ReplayMismatch, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ReplayMismatch{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadReplayMismatch(data, ctx)
 }

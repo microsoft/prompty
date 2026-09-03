@@ -15,68 +15,6 @@ public class ToolResultPayload {
 
   public ToolResultPayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static ToolResultPayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new ToolResultPayload());
-    }
-    ToolResultPayload result = new ToolResultPayload();
-    ToolResultPayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(ToolResultPayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("name") && map.get("name") != null) {
-      result.name = String.valueOf(map.get("name"));
-    }
-    if (!map.containsKey("result") || map.get("result") == null) {
-      throw new IllegalArgumentException(ctx.at("result").path + ": missing required field");
-    }
-    if (map.containsKey("result") && map.get("result") != null) {
-      result.result = ToolResult.load(map.get("result"), ctx.at("result"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    ToolResultPayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    ToolResultPayload obj = this;
-    if (obj.name != null) result.put("name", serializeScalar(obj.name));
-    if (obj.result != null) result.put("result", obj.result.save(ctx));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static ToolResultPayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static ToolResultPayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static ToolResultPayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static ToolResultPayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

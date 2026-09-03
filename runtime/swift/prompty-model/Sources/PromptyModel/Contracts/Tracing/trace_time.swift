@@ -4,7 +4,7 @@
 import Foundation
 
 /// Timing information for a trace span.
-public struct TraceTime: TypraModel {
+public struct TraceTime {
   public static let shorthandProperty: String? = nil
   public var start: String = ""
   public var end: String = ""
@@ -16,42 +16,4 @@ public struct TraceTime: TypraModel {
     self.duration = duration
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TraceTime {
-    let object = try TypraRuntime.object(data, typeName: "TraceTime")
-    var instance = TraceTime()
-    if let value = object["start"] {
-      instance.start = try TypraRuntime.string(value, field: "start")
-    }
-    if let value = object["end"] {
-      instance.end = try TypraRuntime.string(value, field: "end")
-    }
-    if let value = object["duration"] {
-      instance.duration = try TypraRuntime.double(value, field: "duration")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["start"] = self.start
-    result["end"] = self.end
-    result["duration"] = self.duration
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TraceTime {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "TraceTime"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TraceTime {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TraceTime"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

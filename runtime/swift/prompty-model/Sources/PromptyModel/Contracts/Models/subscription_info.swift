@@ -4,7 +4,7 @@
 import Foundation
 
 /// A cloud subscription or account boundary available to the authenticated user.
-public struct SubscriptionInfo: TypraModel {
+public struct SubscriptionInfo {
   public static let shorthandProperty: String? = nil
   public var subscriptionId: String = ""
   public var displayName: String = ""
@@ -16,82 +16,4 @@ public struct SubscriptionInfo: TypraModel {
     self.state = state
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
-    let object = try TypraRuntime.object(data, typeName: "SubscriptionInfo")
-    var instance = SubscriptionInfo()
-    if let value = object["subscriptionId"] {
-      instance.subscriptionId = try TypraRuntime.string(value, field: "subscriptionId")
-    }
-    if let value = object["displayName"] {
-      instance.displayName = try TypraRuntime.string(value, field: "displayName")
-    }
-    if let value = object["state"] {
-      instance.state = try TypraRuntime.string(value, field: "state")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["subscriptionId"] = self.subscriptionId
-    result["displayName"] = self.displayName
-    result["state"] = self.state
-    return result
-  }
-
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    let wireNameSubscriptionId: String?
-    switch provider {
-    case "foundry": wireNameSubscriptionId = "subscription_id"
-    default: wireNameSubscriptionId = nil
-    }
-    if let wireKey = wireNameSubscriptionId { result[wireKey] = self.subscriptionId }
-    let wireNameDisplayName: String?
-    switch provider {
-    case "foundry": wireNameDisplayName = "display_name"
-    default: wireNameDisplayName = nil
-    }
-    if let wireKey = wireNameDisplayName { result[wireKey] = self.displayName }
-    let wireNameState: String?
-    switch provider {
-    case "foundry": wireNameState = "state"
-    default: wireNameState = nil
-    }
-    if let wireKey = wireNameState { result[wireKey] = self.state }
-    return result
-  }
-
-  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
-    let wireMap: [String: [String: String]] = [
-      "subscriptionId": ["foundry": "subscription_id"],
-      "displayName": ["foundry": "display_name"],
-      "state": ["foundry": "state"],
-    ]
-    var inverse: [String: String] = [:]
-    for (field, mapping) in wireMap {
-      if let wireName = mapping[provider] { inverse[wireName] = field }
-    }
-    var canonical: [String: Any] = [:]
-    for (key, value) in data {
-      canonical[inverse[key] ?? key] = value
-    }
-    return try load(canonical, context: context)
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "SubscriptionInfo"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SubscriptionInfo {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SubscriptionInfo"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

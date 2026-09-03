@@ -20,7 +20,7 @@ public enum SessionEndStatus: String, Codable, CaseIterable {
 }
 
 /// Payload for "session_end" events.
-public struct SessionEndPayload: TypraModel {
+public struct SessionEndPayload {
   public static let shorthandProperty: String? = nil
   public var sessionId: String? = nil
   public var status: SessionEndStatus? = nil
@@ -34,54 +34,4 @@ public struct SessionEndPayload: TypraModel {
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
-    let object = try TypraRuntime.object(data, typeName: "SessionEndPayload")
-    var instance = SessionEndPayload()
-    if let value = object["sessionId"] {
-      instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
-    }
-    if let value = object["status"] {
-      instance.status = try SessionEndStatus.parse(try TypraRuntime.string(value, field: "status"))
-    }
-    if let value = object["reason"] {
-      instance.reason = try TypraRuntime.string(value, field: "reason")
-    }
-    if let value = object["durationMs"] {
-      instance.durationMs = try TypraRuntime.double(value, field: "durationMs")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.sessionId {
-      result["sessionId"] = value
-    }
-    if let value = self.status {
-      result["status"] = value.rawValue
-    }
-    if let value = self.reason {
-      result["reason"] = value
-    }
-    if let value = self.durationMs {
-      result["durationMs"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionEndPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionEndPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionEndPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

@@ -4,12 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ToolContext represents Context passed to tool handlers during agent loop execution. Provides
 // access to the agent configuration, current conversation state, and
 // arbitrary metadata for tool implementations that need broader context.
@@ -17,92 +11,4 @@ import (
 type ToolContext struct {
 	Messages []Message              `json:"messages" yaml:"messages"`
 	Metadata map[string]interface{} `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-}
-
-// LoadToolContext creates a ToolContext from a map[string]interface{}
-func LoadToolContext(data interface{}, ctx *LoadContext) (ToolContext, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := ToolContext{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["messages"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
-				result.Messages = make([]Message, len(arr))
-				for i, v := range arr {
-					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
-						if err != nil {
-							return result, err
-						}
-						result.Messages[i] = loaded
-					}
-				}
-			}
-		}
-		if val, ok := m["metadata"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				result.Metadata = m
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ToolContext to map[string]interface{}
-func (obj ToolContext) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	if obj.Messages != nil {
-		arr := make([]interface{}, len(obj.Messages))
-		for i, item := range obj.Messages {
-			arr[i] = item.Save(ctx)
-		}
-		result["messages"] = arr
-	}
-	if obj.Metadata != nil {
-		result["metadata"] = obj.Metadata
-	}
-
-	return result
-}
-
-// ToJSON serializes ToolContext to JSON string
-func (obj *ToolContext) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ToolContext to YAML string
-func (obj *ToolContext) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ToolContext from JSON string
-func ToolContextFromJSON(jsonStr string) (ToolContext, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ToolContext{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolContext(data, ctx)
-}
-
-// FromYAML creates ToolContext from YAML string
-func ToolContextFromYAML(yamlStr string) (ToolContext, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ToolContext{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolContext(data, ctx)
 }

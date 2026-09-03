@@ -14,61 +14,6 @@ public class TokenEventPayload {
 
   public TokenEventPayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static TokenEventPayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new TokenEventPayload());
-    }
-    TokenEventPayload result = new TokenEventPayload();
-    TokenEventPayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(TokenEventPayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("token") && map.get("token") != null) {
-      result.token = String.valueOf(map.get("token"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    TokenEventPayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    TokenEventPayload obj = this;
-    if (obj.token != null) result.put("token", serializeScalar(obj.token));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static TokenEventPayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static TokenEventPayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static TokenEventPayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static TokenEventPayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

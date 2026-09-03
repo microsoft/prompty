@@ -6,9 +6,8 @@
 ##########################################
 
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import ClassVar
 
-from ..._context import LoadContext, SaveContext
 from ._CompactionConfig import CompactionConfig
 
 
@@ -48,100 +47,3 @@ class TurnOptions:
     raw: bool | None = None
     turn: int | None = None
     compaction: CompactionConfig | None = None
-
-    @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "TurnOptions":
-        """Load a TurnOptions instance.
-        Args:
-            data (Any): The data to load the instance from.
-            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            TurnOptions: The loaded TurnOptions instance.
-
-        """
-
-        if context is None:
-            context = LoadContext()
-        data = context.process_input(data)
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for TurnOptions: {data}")
-
-        # create new instance
-        instance = TurnOptions()
-
-        if data is not None and "maxIterations" in data:
-            instance.max_iterations = data["maxIterations"]
-        if data is not None and "maxLlmRetries" in data:
-            instance.max_llm_retries = data["maxLlmRetries"]
-        if data is not None and "contextBudget" in data:
-            instance.context_budget = data["contextBudget"]
-        if data is not None and "parallelToolCalls" in data:
-            instance.parallel_tool_calls = data["parallelToolCalls"]
-        if data is not None and "raw" in data:
-            instance.raw = data["raw"]
-        if data is not None and "turn" in data:
-            instance.turn = data["turn"]
-        if data is not None and "compaction" in data:
-            instance.compaction = CompactionConfig.load(data["compaction"], context.at("compaction"))
-        if context is not None:
-            instance = context.process_output(instance)
-        return instance
-
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the TurnOptions instance to a dictionary.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            dict[str, Any]: The dictionary representation of this instance.
-
-        """
-        obj = self
-        if context is not None:
-            obj = context.process_object(obj)
-
-        result: dict[str, Any] = {}
-
-        if obj.max_iterations is not None:
-            result["maxIterations"] = obj.max_iterations
-        if obj.max_llm_retries is not None:
-            result["maxLlmRetries"] = obj.max_llm_retries
-        if obj.context_budget is not None:
-            result["contextBudget"] = obj.context_budget
-        if obj.parallel_tool_calls is not None:
-            result["parallelToolCalls"] = obj.parallel_tool_calls
-        if obj.raw is not None:
-            result["raw"] = obj.raw
-        if obj.turn is not None:
-            result["turn"] = obj.turn
-        if obj.compaction is not None:
-            result["compaction"] = obj.compaction.save(context)
-
-        if context is not None:
-            result = context.process_dict(result)
-        return result
-
-    def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the TurnOptions instance to a YAML string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            str: The YAML string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_yaml(self.save(context))
-
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the TurnOptions instance to a JSON string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-            indent (int): Number of spaces for indentation. Defaults to 2.
-        Returns:
-            str: The JSON string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_json(self.save(context), indent)

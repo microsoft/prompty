@@ -4,7 +4,7 @@
 import Foundation
 
 /// The response body from the Anthropic Messages API.
-public struct AnthropicMessagesResponse: TypraModel {
+public struct AnthropicMessagesResponse {
   public static let shorthandProperty: String? = nil
   public var id: String = ""
   public var type: String = "message"
@@ -24,67 +24,4 @@ public struct AnthropicMessagesResponse: TypraModel {
     self.usage = usage
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
-    let object = try TypraRuntime.object(data, typeName: "AnthropicMessagesResponse")
-    var instance = AnthropicMessagesResponse()
-    if let value = object["id"] {
-      instance.id = try TypraRuntime.string(value, field: "id")
-    }
-    if let value = object["type"] {
-      instance.type = try TypraRuntime.string(value, field: "type")
-    }
-    else {
-      instance.type = "message"
-    }
-    if let value = object["role"] {
-      instance.role = try TypraRuntime.string(value, field: "role")
-    }
-    else {
-      instance.role = "assistant"
-    }
-    if let value = object["content"] {
-      instance.content = try TypraRuntime.array(value, field: "content").map { $0 }
-    }
-    if let value = object["model"] {
-      instance.model = try TypraRuntime.string(value, field: "model")
-    }
-    if let value = object["stop_reason"] {
-      instance.stopReason = try TypraRuntime.string(value, field: "stop_reason")
-    }
-    if object["usage"] == nil || object["usage"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("usage").path + ": missing required field")
-    }
-    if let value = object["usage"] {
-      instance.usage = try AnthropicUsage.load(value, context: context.at("usage"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["id"] = self.id
-    result["type"] = self.type
-    result["role"] = self.role
-    result["content"] = self.content
-    result["model"] = self.model
-    result["stop_reason"] = self.stopReason
-    result["usage"] = try self.usage.save(context)
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicMessagesResponse"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicMessagesResponse {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicMessagesResponse"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

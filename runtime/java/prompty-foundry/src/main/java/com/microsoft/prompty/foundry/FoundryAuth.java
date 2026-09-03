@@ -1,7 +1,9 @@
 package com.microsoft.prompty.foundry;
 
+import com.microsoft.prompty.model.ApiKeyConnection;
 import com.microsoft.prompty.model.Connection;
 import com.microsoft.prompty.model.SaveContext;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -58,7 +60,18 @@ final class FoundryAuth {
   }
 
   private static Map<String, Object> saved(Connection connection) {
-    return connection == null ? Map.of() : connection.save(new SaveContext());
+    if (connection == null) {
+      return Map.of();
+    }
+    Map<String, Object> result = new LinkedHashMap<>(connection.save(new SaveContext()));
+    // apiKey is @sensitive("save") and so is withheld from the saved form; read it from the typed
+    // connection directly so credential resolution still sees a host-supplied key.
+    if (connection instanceof ApiKeyConnection key
+        && key.apiKey != null
+        && !key.apiKey.trim().isEmpty()) {
+      result.put("apiKey", key.apiKey);
+    }
+    return result;
   }
 
   private static Optional<String> firstNonBlank(Map<?, ?> saved, String[] fields) {

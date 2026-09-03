@@ -20,11 +20,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Connectivity/AuthorizationCodeFlowConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Connectivity/ConnectionConversionTests.cs",
       "marker": true
     },
@@ -90,11 +85,6 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Conversation/ThreadMarkerConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Conversation/ToolCallConversionTests.cs",
       "marker": true
     },
@@ -106,16 +96,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Core/ArrayPropertyConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Core/FileNotFoundErrorConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Core/InvokerErrorConversionTests.cs",
       "marker": true
     },
     {
@@ -135,37 +115,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Core/ValidationErrorConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Core/ValidationResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/CheckpointConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/CompactionCompletePayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/CompactionFailedPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/CompactionStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/DoneEventPayloadConversionTests.cs",
       "marker": true
     },
     {
@@ -175,27 +125,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ErrorEventPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/FailureChunkConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/HarnessContextConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/HookEndPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/HookStartPayloadConversionTests.cs",
       "marker": true
     },
     {
@@ -210,37 +140,12 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/LlmCompletePayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/LlmStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/MessagesUpdatedPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/PermissionCompletedPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/PermissionDecisionConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/PermissionRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/PermissionRequestedPayloadConversionTests.cs",
       "marker": true
     },
     {
@@ -255,52 +160,12 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/RetryPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionEndPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionEventConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionFileRefConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionRefConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionSummaryConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionTraceConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/SessionWarningPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/StatusEventPayloadConversionTests.cs",
       "marker": true
     },
     {
@@ -325,52 +190,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ThinkingEventPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TokenEventPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolCallCompletePayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolCallStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolChunkConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolExecutionCompletePayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolExecutionStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/ToolResultPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TrajectoryEventConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TurnEndPayloadConversionTests.cs",
       "marker": true
     },
     {
@@ -380,27 +200,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TurnStartPayloadConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TurnSummaryConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/TurnTraceConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Events/UsageChunkConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Guardrails/GuardrailResultConversionTests.cs",
       "marker": true
     },
     {
@@ -411,11 +211,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Memory/MemoryStoreConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/AiResourceInfoConversionTests.cs",
       "marker": true
     },
     {
@@ -455,32 +250,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/ProjectInfoConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/SubscriptionInfoConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Models/TokenUsageConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/CompactionConfigConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ContextCandidateConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ContextRequestConversionTests.cs",
       "marker": true
     },
     {
@@ -501,26 +271,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/EnginePermissionDecisionConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/FinalOutputPolicyRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/FinalOutputPolicyResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/HostPolicyRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/HostPolicyResultConversionTests.cs",
       "marker": true
     },
     {
@@ -570,67 +320,12 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ReplayMismatchConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ReplayVerificationRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ReplayVerificationResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/ResumeContextConversionTests.cs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/RetryPolicyRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/RunTurnRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/RunTurnResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/TurnCommitConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/TurnEngineResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/TurnModelRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/TurnModelResponseConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Pipeline/TurnOptionsConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Streaming/StreamOptionsConversionTests.cs",
       "marker": true
     },
     {
@@ -705,32 +400,7 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tooling/ToolContextConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tooling/ToolConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tooling/ToolDispatchResultConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tracing/TraceFileConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tracing/TraceSpanConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Contracts/Tracing/TraceTimeConversionTests.cs",
       "marker": true
     },
     {
@@ -761,56 +431,6 @@
     {
       "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
       "path": "../runtime/csharp/Prompty.Core.Tests/Model/VectorRunner.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicImageBlockConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicImageSourceConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicMessagesRequestConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicMessagesResponseConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicTextBlockConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicToolDefinitionConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicToolResultBlockConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicToolUseBlockConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicUsageConversionTests.cs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/csharp/Prompty.Core.Tests/Model",
-      "path": "../runtime/csharp/Prompty.Core.Tests/Model/Wire/Anthropic/AnthropicWireMessageConversionTests.cs",
       "marker": true
     },
     {
@@ -1780,6 +1400,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/VectorConformance.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/Wire/Anthropic/AnthropicImageBlock.cs",
       "marker": true
     },
@@ -1845,11 +1470,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/ai_resource_info_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/ai_resource_info.go",
       "marker": true
     },
@@ -1860,17 +1480,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_image_block_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_image_block.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_image_source_test.go",
       "marker": true
     },
     {
@@ -1880,17 +1490,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_messages_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_messages_request.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_messages_response_test.go",
       "marker": true
     },
     {
@@ -1900,17 +1500,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_text_block_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_text_block.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_tool_definition_test.go",
       "marker": true
     },
     {
@@ -1920,17 +1510,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_tool_result_block_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_tool_result_block.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_tool_use_block_test.go",
       "marker": true
     },
     {
@@ -1940,17 +1520,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_usage_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/anthropic_usage.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/anthropic_wire_message_test.go",
       "marker": true
     },
     {
@@ -1971,11 +1541,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/audio_part_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/authorization_code_flow_test.go",
       "marker": true
     },
     {
@@ -2015,17 +1580,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/compaction_complete_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/compaction_complete_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/compaction_config_test.go",
       "marker": true
     },
     {
@@ -2035,17 +1590,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/compaction_failed_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/compaction_failed_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/compaction_start_payload_test.go",
       "marker": true
     },
     {
@@ -2075,17 +1620,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/context_candidate_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/context_candidate.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/context_request_test.go",
       "marker": true
     },
     {
@@ -2141,11 +1676,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/discovery_conformance.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/done_event_payload_test.go",
       "marker": true
     },
     {
@@ -2210,11 +1740,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/error_event_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/error_event_payload.go",
       "marker": true
     },
@@ -2240,11 +1765,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/file_not_found_error_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/file_not_found_error.go",
       "marker": true
     },
@@ -2255,17 +1775,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/final_output_policy_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/final_output_policy_request.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/final_output_policy_result_test.go",
       "marker": true
     },
     {
@@ -2295,17 +1805,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/guardrail_result_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/guardrail_result.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/harness_context_test.go",
       "marker": true
     },
     {
@@ -2315,17 +1815,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/hook_end_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/hook_end_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/hook_start_payload_test.go",
       "marker": true
     },
     {
@@ -2335,17 +1825,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/host_policy_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/host_policy_request.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/host_policy_result_test.go",
       "marker": true
     },
     {
@@ -2415,11 +1895,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/invoker_error_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/invoker_error.go",
       "marker": true
     },
@@ -2430,17 +1905,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/llm_complete_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/llm_complete_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/llm_start_payload_test.go",
       "marker": true
     },
     {
@@ -2496,11 +1961,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/message.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/messages_updated_payload_test.go",
       "marker": true
     },
     {
@@ -2665,11 +2125,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/permission_completed_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/permission_completed_payload.go",
       "marker": true
     },
@@ -2695,11 +2150,6 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/permission_requested_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/permission_requested_payload.go",
       "marker": true
     },
@@ -2721,11 +2171,6 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/processor.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/project_info_test.go",
       "marker": true
     },
     {
@@ -2815,27 +2260,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/replay_mismatch_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/replay_mismatch.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/replay_verification_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/replay_verification_request.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/replay_verification_result_test.go",
       "marker": true
     },
     {
@@ -2855,17 +2285,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/retry_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/retry_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/retry_policy_request_test.go",
       "marker": true
     },
     {
@@ -2875,27 +2295,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/run_turn_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/run_turn_request.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/run_turn_result_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/run_turn_result.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_end_payload_test.go",
       "marker": true
     },
     {
@@ -2915,27 +2320,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_file_ref_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/session_file_ref.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_ref_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/session_ref.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_start_payload_test.go",
       "marker": true
     },
     {
@@ -2955,27 +2345,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_trace_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/session_trace.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/session_warning_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/session_warning_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/status_event_payload_test.go",
       "marker": true
     },
     {
@@ -3005,17 +2380,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/stream_options_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/stream_options.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/subscription_info_test.go",
       "marker": true
     },
     {
@@ -3050,27 +2415,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/thinking_event_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/thinking_event_payload.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/thread_marker_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/thread_marker.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/token_event_payload_test.go",
       "marker": true
     },
     {
@@ -3090,17 +2440,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_call_complete_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/tool_call_complete_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_call_start_payload_test.go",
       "marker": true
     },
     {
@@ -3125,17 +2465,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_context_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/tool_context.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_dispatch_result_test.go",
       "marker": true
     },
     {
@@ -3145,27 +2475,12 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_execution_complete_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/tool_execution_complete_payload.go",
       "marker": true
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_execution_start_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/tool_execution_start_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/tool_result_payload_test.go",
       "marker": true
     },
     {
@@ -3195,17 +2510,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/trace_file_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/trace_file.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/trace_span_test.go",
       "marker": true
     },
     {
@@ -3215,17 +2520,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/trace_time_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/trace_time.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/trajectory_event_test.go",
       "marker": true
     },
     {
@@ -3250,17 +2545,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_end_payload_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_end_payload.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_engine_result_test.go",
       "marker": true
     },
     {
@@ -3280,17 +2565,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_model_request_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_model_request.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_model_response_test.go",
       "marker": true
     },
     {
@@ -3300,17 +2575,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_options_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_options.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_start_payload_test.go",
       "marker": true
     },
     {
@@ -3320,17 +2585,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_summary_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/turn_summary.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/turn_trace_test.go",
       "marker": true
     },
     {
@@ -3350,17 +2605,7 @@
     },
     {
       "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/validation_error_test.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/validation_error.go",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/go/prompty/model",
-      "path": "../runtime/go/prompty/model/validation_result_test.go",
       "marker": true
     },
     {
@@ -3371,6 +2616,16 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/vector_conformance_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/vectorbridge/bridge.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/vectorconformance/vector_conformance.go",
       "marker": true
     },
     {
@@ -4435,6 +3690,11 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/VectorConformance.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/WireConformance.java",
       "marker": true
     },
@@ -4445,62 +3705,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AiResourceInfoGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnonymousConnectionGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicImageBlockGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicImageSourceGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicMessagesRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicMessagesResponseGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicTextBlockGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolDefinitionGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolResultBlockGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicToolUseBlockGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicUsageGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AnthropicWireMessageGeneratedTest.java",
       "marker": true
     },
     {
@@ -4520,11 +3725,6 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AuthorizationCodeFlowGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/AzureModelGeneratedTest.java",
       "marker": true
     },
@@ -4540,42 +3740,12 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionCompletePayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionConfigGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionFailedPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/CompactionStartPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ConnectionGeneratedTest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContentPartGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContextCandidateGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ContextRequestGeneratedTest.java",
       "marker": true
     },
     {
@@ -4610,11 +3780,6 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/DoneEventPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/EngineCheckpointGeneratedTest.java",
       "marker": true
     },
@@ -4635,32 +3800,12 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ErrorEventPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FailureChunkGeneratedTest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FileNotFoundErrorGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FilePartGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FinalOutputPolicyRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FinalOutputPolicyResultGeneratedTest.java",
       "marker": true
     },
     {
@@ -4676,36 +3821,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/FunctionToolGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/GuardrailResultGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HarnessContextGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HookEndPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HookStartPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostPolicyRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/HostPolicyResultGeneratedTest.java",
       "marker": true
     },
     {
@@ -4740,22 +3855,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/InvokerErrorGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/Jinja2FormatGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/LlmCompletePayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/LlmStartPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -4781,11 +3881,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MessageGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/MessagesUpdatedPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -4875,17 +3970,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionCompletedPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionDecisionGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/PermissionRequestedPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -4896,11 +3981,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProcessorConformanceTests.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ProjectInfoGeneratedTest.java",
       "marker": true
     },
     {
@@ -4950,47 +4030,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayMismatchGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayVerificationRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ReplayVerificationResultGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ResumeContextGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RetryPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RetryPolicyRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RunTurnRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/RunTurnResultGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionEndPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -5000,37 +4040,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionFileRefGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionRefGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionStartPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionSummaryGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionTraceGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SessionWarningPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StatusEventPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -5041,16 +4051,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StreamFailureGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/StreamOptionsGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/SubscriptionInfoGeneratedTest.java",
       "marker": true
     },
     {
@@ -5075,27 +4075,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ThinkingEventPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ThreadMarkerGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TokenEventPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TokenUsageGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolCallCompletePayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -5105,32 +4085,7 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolCallStartPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolChunkGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolContextGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolDispatchResultGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolExecutionCompletePayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolExecutionStartPayloadGeneratedTest.java",
       "marker": true
     },
     {
@@ -5145,77 +4100,12 @@
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ToolResultPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceFileGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceSpanGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TraceTimeGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TrajectoryEventGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnCommitGeneratedTest.java",
       "marker": true
     },
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEndPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEngineResultGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnEventGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnModelRequestGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnModelResponseGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnOptionsGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnStartPayloadGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnSummaryGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/TurnTraceGeneratedTest.java",
       "marker": true
     },
     {
@@ -5231,16 +4121,6 @@
     {
       "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/UsageChunkGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ValidationErrorGeneratedTest.java",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model",
-      "path": "../runtime/java/prompty/src/test/java/com/microsoft/prompty/model/ValidationResultGeneratedTest.java",
       "marker": true
     },
     {
@@ -6030,6 +4910,11 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/vector_conformance.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/wire/__init__.py",
       "marker": true
     },
@@ -6100,11 +4985,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/connectivity/test_authorization_code_flow.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/connectivity/test_connection.py",
       "marker": true
     },
@@ -6170,11 +5050,6 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/conversation/test_thread_marker.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/conversation/test_tool_call.py",
       "marker": true
     },
@@ -6186,16 +5061,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/core/test_array_property.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/core/test_file_not_found_error.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/core/test_invoker_error.py",
       "marker": true
     },
     {
@@ -6215,37 +5080,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/core/test_validation_error.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/core/test_validation_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_checkpoint.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_compaction_complete_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_compaction_failed_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_compaction_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_done_event_payload.py",
       "marker": true
     },
     {
@@ -6255,27 +5090,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_error_event_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_failure_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_harness_context.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_hook_end_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_hook_start_payload.py",
       "marker": true
     },
     {
@@ -6290,37 +5105,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_llm_complete_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_llm_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_messages_updated_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_permission_completed_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_permission_decision.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_permission_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_permission_requested_payload.py",
       "marker": true
     },
     {
@@ -6335,52 +5125,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_retry_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_end_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_event.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_file_ref.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_ref.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_summary.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_trace.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_session_warning_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_status_event_payload.py",
       "marker": true
     },
     {
@@ -6405,52 +5155,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_thinking_event_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_token_event_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_call_complete_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_call_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_execution_complete_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_execution_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_tool_result_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_trajectory_event.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_turn_end_payload.py",
       "marker": true
     },
     {
@@ -6460,27 +5165,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_turn_start_payload.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_turn_summary.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/events/test_turn_trace.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/events/test_usage_chunk.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/guardrails/test_guardrail_result.py",
       "marker": true
     },
     {
@@ -6491,11 +5176,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/memory/test_memory_store.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/models/test_ai_resource_info.py",
       "marker": true
     },
     {
@@ -6535,32 +5215,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/models/test_project_info.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/models/test_subscription_info.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/models/test_token_usage.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_compaction_config.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_context_candidate.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_context_request.py",
       "marker": true
     },
     {
@@ -6581,26 +5236,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_engine_permission_decision.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_final_output_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_final_output_policy_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_host_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_host_policy_result.py",
       "marker": true
     },
     {
@@ -6650,67 +5285,12 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_replay_mismatch.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_replay_verification_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_replay_verification_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_resume_context.py",
       "marker": true
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_retry_policy_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_run_turn_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_run_turn_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_turn_commit.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_turn_engine_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_turn_model_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_turn_model_response.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/pipeline/test_turn_options.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/streaming/test_stream_options.py",
       "marker": true
     },
     {
@@ -6785,32 +5365,7 @@
     },
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tooling/test_tool_context.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tooling/test_tool_dispatch_result.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/contracts/tooling/test_tool.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tracing/test_trace_file.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tracing/test_trace_span.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/contracts/tracing/test_trace_time.py",
       "marker": true
     },
     {
@@ -6851,56 +5406,6 @@
     {
       "outputRoot": "../runtime/python/prompty/tests/model",
       "path": "../runtime/python/prompty/tests/model/vector_runner.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_image_block.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_image_source.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_messages_request.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_messages_response.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_text_block.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_tool_definition.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_tool_result_block.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_tool_use_block.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_usage.py",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/python/prompty/tests/model",
-      "path": "../runtime/python/prompty/tests/model/wire/anthropic/test_anthropic_wire_message.py",
       "marker": true
     },
     {
@@ -7670,6 +6175,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/vector_conformance.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/wire_conformance.rs",
       "marker": true
     },
@@ -7740,11 +6250,6 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/connectivity/authorization_code_flow_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/connectivity/connection_test.rs",
       "marker": true
     },
@@ -7780,27 +6285,12 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/conversation/thread_marker_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/conversation/tool_call_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/conversation/tool_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/core/file_not_found_error_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/core/invoker_error_test.rs",
       "marker": true
     },
     {
@@ -7815,57 +6305,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/core/validation_error_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/core/validation_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/checkpoint_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/compaction_complete_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/compaction_failed_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/compaction_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/done_event_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/error_event_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/harness_context_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/hook_end_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/hook_start_payload_test.rs",
       "marker": true
     },
     {
@@ -7880,27 +6320,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/llm_complete_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/llm_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/messages_updated_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/permission_completed_payload_test.rs",
       "marker": true
     },
     {
@@ -7915,11 +6335,6 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/permission_requested_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/redacted_field_test.rs",
       "marker": true
     },
@@ -7930,52 +6345,12 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/retry_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_end_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/session_event_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_file_ref_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_ref_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/session_summary_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_trace_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/session_warning_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/status_event_payload_test.rs",
       "marker": true
     },
     {
@@ -7990,77 +6365,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/thinking_event_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/token_event_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/tool_call_complete_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/tool_call_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/tool_execution_complete_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/tool_execution_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/tool_result_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/trajectory_event_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/turn_end_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/events/turn_event_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/turn_start_payload_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/turn_summary_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/events/turn_trace_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/guardrails/guardrail_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/guardrails/mod.rs",
       "marker": true
     },
     {
@@ -8081,11 +6386,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/models/ai_resource_info_test.rs",
       "marker": true
     },
     {
@@ -8115,32 +6415,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/models/project_info_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/models/subscription_info_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/models/token_usage_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/compaction_config_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/context_candidate_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/context_request_test.rs",
       "marker": true
     },
     {
@@ -8161,26 +6436,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/engine_permission_decision_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/final_output_policy_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/final_output_policy_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/host_policy_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/host_policy_result_test.rs",
       "marker": true
     },
     {
@@ -8235,72 +6490,12 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/replay_mismatch_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/replay_verification_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/replay_verification_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/resume_context_test.rs",
       "marker": true
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/retry_policy_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/run_turn_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/run_turn_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/turn_commit_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/turn_engine_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/turn_model_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/turn_model_response_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/pipeline/turn_options_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/streaming/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/streaming/stream_options_test.rs",
       "marker": true
     },
     {
@@ -8340,37 +6535,7 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tooling/tool_context_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tooling/tool_dispatch_result_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/contracts/tooling/tool_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tracing/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tracing/trace_file_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tracing/trace_span_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/contracts/tracing/trace_time_test.rs",
       "marker": true
     },
     {
@@ -8416,66 +6581,6 @@
     {
       "outputRoot": "../runtime/rust/prompty/tests/model",
       "path": "../runtime/rust/prompty/tests/model/vector_runner/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_image_block_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_image_source_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_messages_request_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_messages_response_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_text_block_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_tool_definition_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_tool_result_block_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_tool_use_block_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_usage_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/anthropic_wire_message_test.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/anthropic/mod.rs",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/rust/prompty/tests/model",
-      "path": "../runtime/rust/prompty/tests/model/wire/mod.rs",
       "marker": true
     },
     {
@@ -9170,6 +7275,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/vector_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/wire_conformance.swift",
       "marker": true
     },
@@ -9235,11 +7345,6 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/AuthorizationCodeFlowTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Connectivity/ConnectionTests.swift",
       "marker": true
     },
@@ -9265,11 +7370,6 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ThreadMarkerTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Conversation/ToolCallTests.swift",
       "marker": true
     },
@@ -9280,72 +7380,12 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/FileNotFoundErrorTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/InvokerErrorTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/PropertyTests.swift",
       "marker": true
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/ValidationErrorTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Core/ValidationResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CheckpointTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionCompletePayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionFailedPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/CompactionStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/DoneEventPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ErrorEventPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HarnessContextTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HookEndPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/HookStartPayloadTests.swift",
       "marker": true
     },
     {
@@ -9360,32 +7400,7 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/LlmCompletePayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/LlmStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/MessagesUpdatedPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionCompletedPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionDecisionTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/PermissionRequestedPayloadTests.swift",
       "marker": true
     },
     {
@@ -9405,52 +7420,12 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/RetryPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionEndPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionEventTests.swift",
       "marker": true
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionFileRefTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionRefTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionSummaryTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionTraceTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/SessionWarningPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/StatusEventPayloadTests.swift",
       "marker": true
     },
     {
@@ -9465,72 +7440,7 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ThinkingEventPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TokenEventPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolCallCompletePayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolCallStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolExecutionCompletePayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolExecutionStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/ToolResultPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TrajectoryEventTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnEndPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnEventTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnStartPayloadTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnSummaryTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Events/TurnTraceTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Guardrails/GuardrailResultTests.swift",
       "marker": true
     },
     {
@@ -9541,11 +7451,6 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Memory/MemoryStoreTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/AiResourceInfoTests.swift",
       "marker": true
     },
     {
@@ -9570,32 +7475,7 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/ProjectInfoTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/SubscriptionInfoTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Models/TokenUsageTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/CompactionConfigTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ContextCandidateTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ContextRequestTests.swift",
       "marker": true
     },
     {
@@ -9616,26 +7496,6 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/EnginePermissionDecisionTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/FinalOutputPolicyRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/FinalOutputPolicyResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/HostPolicyRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/HostPolicyResultTests.swift",
       "marker": true
     },
     {
@@ -9685,67 +7545,12 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayMismatchTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayVerificationRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ReplayVerificationResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/ResumeContextTests.swift",
       "marker": true
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RetryPolicyRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RunTurnRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/RunTurnResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnCommitTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnEngineResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnModelRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnModelResponseTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Pipeline/TurnOptionsTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Streaming/StreamOptionsTests.swift",
       "marker": true
     },
     {
@@ -9775,32 +7580,7 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolContextTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolDispatchResultTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tooling/ToolTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceFileTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceSpanTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Contracts/Tracing/TraceTimeTests.swift",
       "marker": true
     },
     {
@@ -9831,56 +7611,6 @@
     {
       "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/VectorRunner.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicImageBlockTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicImageSourceTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicMessagesRequestTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicMessagesResponseTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicTextBlockTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolDefinitionTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolResultBlockTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicToolUseBlockTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicUsageTests.swift",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/swift/prompty-model",
-      "path": "../runtime/swift/prompty-model/Tests/PromptyModelTests/Wire/Anthropic/AnthropicWireMessageTests.swift",
       "marker": true
     },
     {
@@ -10645,6 +8375,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/vector-conformance.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/wire-conformance.ts",
       "marker": true
     },
@@ -10720,11 +8455,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/connectivity/authorization-code-flow.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/connectivity/connection.test.ts",
       "marker": true
     },
@@ -10790,11 +8520,6 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/conversation/thread-marker.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/conversation/tool-call.test.ts",
       "marker": true
     },
@@ -10806,16 +8531,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/core/array-property.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/core/file-not-found-error.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/core/invoker-error.test.ts",
       "marker": true
     },
     {
@@ -10835,37 +8550,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/core/validation-error.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/core/validation-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/checkpoint.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/compaction-complete-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/compaction-failed-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/compaction-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/done-event-payload.test.ts",
       "marker": true
     },
     {
@@ -10875,27 +8560,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/error-event-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/failure-chunk.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/harness-context.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/hook-end-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/hook-start-payload.test.ts",
       "marker": true
     },
     {
@@ -10910,37 +8575,12 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/llm-complete-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/llm-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/messages-updated-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/permission-completed-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/permission-decision.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/permission-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/permission-requested-payload.test.ts",
       "marker": true
     },
     {
@@ -10955,52 +8595,12 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/retry-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-end-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-event.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-file-ref.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-ref.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-summary.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-trace.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/session-warning-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/status-event-payload.test.ts",
       "marker": true
     },
     {
@@ -11025,52 +8625,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/thinking-event-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/token-event-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-call-complete-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-call-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-chunk.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-execution-complete-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-execution-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/tool-result-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/trajectory-event.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/turn-end-payload.test.ts",
       "marker": true
     },
     {
@@ -11080,27 +8635,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/turn-start-payload.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/turn-summary.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/events/turn-trace.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/events/usage-chunk.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/guardrails/guardrail-result.test.ts",
       "marker": true
     },
     {
@@ -11111,11 +8646,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/memory/memory-store.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/ai-resource-info.test.ts",
       "marker": true
     },
     {
@@ -11155,32 +8685,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/project-info.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/models/subscription-info.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/models/token-usage.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/compaction-config.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/context-candidate.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/context-request.test.ts",
       "marker": true
     },
     {
@@ -11201,26 +8706,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/engine-permission-decision.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/final-output-policy-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/final-output-policy-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/host-policy-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/host-policy-result.test.ts",
       "marker": true
     },
     {
@@ -11270,67 +8755,12 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/replay-mismatch.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/replay-verification-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/replay-verification-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/resume-context.test.ts",
       "marker": true
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/retry-policy-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/run-turn-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/run-turn-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/turn-commit.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/turn-engine-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/turn-model-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/turn-model-response.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/pipeline/turn-options.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/streaming/stream-options.test.ts",
       "marker": true
     },
     {
@@ -11405,32 +8835,7 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tooling/tool-context.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tooling/tool-dispatch-result.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/contracts/tooling/tool.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tracing/trace-file.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tracing/trace-span.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/contracts/tracing/trace-time.test.ts",
       "marker": true
     },
     {
@@ -11461,56 +8866,6 @@
     {
       "outputRoot": "../runtime/typescript/packages/core/tests/model",
       "path": "../runtime/typescript/packages/core/tests/model/vector-runner.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-image-block.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-image-source.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-messages-request.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-messages-response.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-text-block.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-tool-definition.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-tool-result-block.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-tool-use-block.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-usage.test.ts",
-      "marker": true
-    },
-    {
-      "outputRoot": "../runtime/typescript/packages/core/tests/model",
-      "path": "../runtime/typescript/packages/core/tests/model/wire/anthropic/anthropic-wire-message.test.ts",
       "marker": true
     },
     {

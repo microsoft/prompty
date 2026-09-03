@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 
 	prompty "prompty/model"
 )
@@ -184,8 +185,45 @@ func ResolveConnection(agent prompty.Agent) ConnectionInfo {
 	info.Kind, _ = m["kind"].(string)
 	info.Endpoint, _ = m["endpoint"].(string)
 	info.APIKey, _ = m["apiKey"].(string)
+	if info.APIKey == "" {
+		// apiKey is @sensitive("save"), so it is intentionally omitted from the
+		// Save() map read above; recover it from the live loaded connection struct.
+		info.APIKey = connectionAPIKey(agent.Model)
+	}
 	info.Name, _ = m["name"].(string)
 	return info
+}
+
+// connectionAPIKey recovers the apiKey from the live loaded connection struct.
+// The apiKey field is @sensitive("save"): the generated Save() correctly omits it,
+// so it must be read from the loaded model rather than a Save() round-trip. The
+// Model|string union lowers to interface{} and resolves to one of several
+// provider-specific model structs (Model, OpenAIModel, AzureModel, CustomModel),
+// each carrying a `Connection interface{}` field, so the field is read reflectively.
+func connectionAPIKey(model interface{}) string {
+	v := reflect.ValueOf(model)
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return ""
+		}
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return ""
+	}
+	field := v.FieldByName("Connection")
+	if !field.IsValid() || !field.CanInterface() {
+		return ""
+	}
+	switch c := field.Interface().(type) {
+	case prompty.ApiKeyConnection:
+		return c.ApiKey
+	case *prompty.ApiKeyConnection:
+		if c != nil {
+			return c.ApiKey
+		}
+	}
+	return ""
 }
 
 func connectionToMap(conn interface{}) map[string]interface{} {

@@ -264,7 +264,7 @@ public final class ReferenceTurnRunner {
       }
       invocation.toolRequests = toolRequests;
       invocation.metadata =
-          new LinkedHashMap<>(Map.of("referenceResponse", response.save(new SaveContext())));
+          new LinkedHashMap<>(Map.of("referenceResponse", referenceResponsePayload(response)));
       return invocation;
     }
   }
@@ -512,24 +512,19 @@ public final class ReferenceTurnRunner {
     private void saveModelCheckpoint(EngineEvent event) {
       int iteration = event.iteration == null ? 0 : event.iteration;
       Map<String, Object> payload = asMap(event.payload);
-      TurnModelResponse response =
-          TurnModelResponse.load(
-              asMap(payload.get("metadata")).get("referenceResponse"), new LoadContext());
+      Map<String, Object> reference =
+          asMap(asMap(payload.get("metadata")).get("referenceResponse"));
 
       Map<String, Object> checkpointState = new LinkedHashMap<>();
       checkpointState.put("iteration", iteration);
-      checkpointState.put("output", response.output);
-      List<Object> toolRequests = new ArrayList<>();
-      if (response.toolRequests != null) {
-        for (HostToolRequest request : response.toolRequests) {
-          toolRequests.add(request.save(new SaveContext()));
-        }
-      }
-      checkpointState.put("toolRequests", toolRequests);
-      if (response.checkpointState != null) {
+      checkpointState.put("output", reference.get("output"));
+      Object toolRequests = reference.get("toolRequests");
+      checkpointState.put("toolRequests", toolRequests == null ? new ArrayList<>() : toolRequests);
+      Object modelCheckpointState = reference.get("checkpointState");
+      if (modelCheckpointState != null) {
         // The model gets the last word on its own resumable state; the fields above are what the
         // runner needs to reconstruct a turn, not a claim about what the model considers durable.
-        checkpointState.putAll(response.checkpointState);
+        checkpointState.putAll(asMap(modelCheckpointState));
       }
 
       Checkpoint checkpoint = new Checkpoint();
@@ -677,6 +672,26 @@ public final class ReferenceTurnRunner {
   }
 
   @SuppressWarnings("unchecked")
+  private static Map<String, Object> referenceResponsePayload(TurnModelResponse response) {
+    // Carry only the fields the runner reconstructs a checkpoint from, extracted directly instead
+    // of round-tripping the whole TurnModelResponse — that DTO is transient (not @serializable), so
+    // it has no save/load. Mirrors the Go reference runner, which builds checkpoint state from
+    // response fields (output / toolRequests / checkpointState) rather than serializing the struct.
+    Map<String, Object> payload = new LinkedHashMap<>();
+    payload.put("output", response.output);
+    List<Object> toolRequests = new ArrayList<>();
+    if (response.toolRequests != null) {
+      for (HostToolRequest host : response.toolRequests) {
+        toolRequests.add(host.save(new SaveContext()));
+      }
+    }
+    payload.put("toolRequests", toolRequests);
+    if (response.checkpointState != null) {
+      payload.put("checkpointState", new LinkedHashMap<>(response.checkpointState));
+    }
+    return payload;
+  }
+
   private static Map<String, Object> asMap(Object value) {
     if (value instanceof Map<?, ?> map) {
       return (Map<String, Object>) map;
