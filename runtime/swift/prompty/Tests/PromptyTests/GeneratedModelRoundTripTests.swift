@@ -224,7 +224,16 @@ final class GeneratedModelRoundTripTests: XCTestCase {
       let saved = try loaded.save()
       XCTAssertEqual(saved["kind"] as? String, kind, "\(kind): discriminator lost")
       for (key, value) in declared {
-        XCTAssertEqual(saved[key] as? String, value, "\(kind): declared field \(key) lost")
+        if key == "apiKey" {
+          // `apiKey` is `@sensitive("save")`: it loads into the struct but is
+          // intentionally withheld from `save()` output. Assert the withholding
+          // rather than survival.
+          XCTAssertNil(
+            saved[key],
+            "\(kind): @sensitive(\"save\") field \(key) must be withheld from save()")
+        } else {
+          XCTAssertEqual(saved[key] as? String, value, "\(kind): declared field \(key) lost")
+        }
       }
 
       XCTAssertEqual(

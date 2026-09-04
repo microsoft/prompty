@@ -17,43 +17,6 @@ enum VectorAdapters {
         let provider = context.provider ?? ""
         return try Discovery.mapModel(input, provider: provider).save()
       },
-      "Renderer.renderSegments": VectorAdapter { input, _ in
-        guard let object = input as? [String: Any],
-          let template = object["template"] as? String
-        else {
-          throw VectorError("Missing renderSegments input")
-        }
-        let inputs = object["inputs"] as? [String: Any] ?? [:]
-        let strictProps = object["strict_props"] as? [String] ?? []
-        do {
-          let segments = try renderSegments(
-            template: template, inputs: inputs, strictProps: strictProps)
-          return [
-            "segments": segments.map { segment in
-              [
-                "kind": segment.kind,
-                "text": segment.text,
-                "source": segment.source ?? NSNull(),
-                "strict": segment.strict,
-              ] as [String: Any]
-            }
-          ]
-        } catch JinjaError.strictViolation {
-          return ["error": "StrictViolation"]
-        }
-      },
-      "Renderer.render": VectorAdapter(
-        sync: { input, _ in try renderInvoke(input) },
-        normalize: { observed, context in renderNormalize(observed, context) }
-      ),
-      "Parser.parse": VectorAdapter(
-        sync: { input, _ in try parseInvoke(input) },
-        normalize: { observed, context in projectNormalize(observed, context) }
-      ),
-      "Processor.process": VectorAdapter(
-        sync: { input, _ in try processInvoke(input) },
-        normalize: { observed, context in projectNormalize(observed, context) }
-      ),
       "WireConformance.toRequest": VectorAdapter(
         sync: { input, _ in try wireInvoke(input) },
         normalize: { observed, context in projectNormalize(observed, context) }
@@ -71,10 +34,6 @@ enum VectorAdapters {
       ),
       "TurnConformance.runTurn": VectorAdapter(
         asynchronous: { input, context in runTurnInvoke(input, context) },
-        normalize: { observed, context in projectNormalize(observed, context) }
-      ),
-      "Processor.processStream": VectorAdapter(
-        sync: { input, _ in try processStreamInvoke(input) },
         normalize: { observed, context in projectNormalize(observed, context) }
       ),
     ]
@@ -151,106 +110,6 @@ enum VectorAdapters {
     let dotted = (["agent"] + path).joined(separator: ".")
     throw VectorError(
       "vector input missing @dispatch discriminator at '\(dotted)'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback).")
-  }
-
-  // MARK: - Renderer.render
-
-  static func buildRenderAgent(_ template: String, _ engine: String, _ inputs: [String: Any]) throws -> Agent {
-    let properties = inputs.map { name, value -> Property in
-      var kind = "string"
-      if let object = value as? [String: Any], let marker = object["_kind"] as? String {
-        kind = marker
-      }
-      return .unknown(["name": name, "kind": kind])
-    }
-    return Agent(
-      inputs: properties,
-      template: Template(
-        format: try FormatConfig.load(["kind": engine]),
-        parser: try ParserConfig.load(["kind": "prompty"])),
-      instructions: template)
-  }
-
-  static func renderInvoke(_ input: Any?) throws -> Any? {
-    let object = input as? [String: Any] ?? [:]
-    let template = object["template"] as? String ?? ""
-    let engine = try seamDiscriminator(object, "template", "format", "kind")
-    let inputs = object["inputs"] as? [String: Any] ?? [:]
-    let agent = try buildRenderAgent(template, engine, inputs)
-    let (rendered, _) = try render(agent: agent, inputs: inputs)
-    return ["rendered": rendered]
-  }
-
-  static func renderNormalize(_ observed: Any?, _ context: VectorContext) -> Any? {
-    let expected = context.vector["expected"] as? [String: Any] ?? [:]
-    if let pattern = expected["nonce_pattern"] as? String {
-      let rendered = (observed as? [String: Any])?["rendered"] as? String ?? ""
-      if (try? NSRegularExpression(pattern: pattern))
-        .map({ $0.firstMatch(in: rendered, range: NSRange(rendered.startIndex..<rendered.endIndex, in: rendered)) != nil }) == true
-      {
-        return expected
-      }
-      return ["nonce_pattern": rendered]
-    }
-    return project(observed, context.vector["expected"])
-  }
-
-  // MARK: - Parser.parse
-
-  static func parseInvoke(_ input: Any?) throws -> Any? {
-    let object = input as? [String: Any] ?? [:]
-    var messages = parseMessages(object["rendered"] as? String ?? "")
-    if let threadRaw = object["thread_inputs"] as? [String: Any], !threadRaw.isEmpty {
-      var threads: [String: [Message]] = [:]
-      for (name, value) in threadRaw {
-        threads[name] = vectorMessagesToModel(value)
-      }
-      messages = expandThreadMarkers(messages, threadInputs: threads)
-    }
-    return ["messages": try saveConformanceMessages(messages)]
-  }
-
-  static func vectorMessagesToModel(_ value: Any?) -> [Message] {
-    (value as? [[String: Any]] ?? []).map { item in
-      let role = (try? Role.parse(item["role"] as? String ?? "")) ?? .user
-      let parts = (item["content"] as? [[String: Any]] ?? []).map { content -> ContentPart in
-        .textPart(TextPart(kind: content["kind"] as? String ?? "text", value: content["value"] as? String ?? ""))
-      }
-      return Message(role: role, parts: parts, metadata: item["metadata"] as? [String: Any] ?? [:])
-    }
-  }
-
-  static func saveConformanceMessages(_ messages: [Message]) throws -> [[String: Any]] {
-    try messages.map { message in
-      var out: [String: Any] = [
-        "role": message.role.rawValue,
-        "content": try message.parts.map { try partToConformance($0) },
-      ]
-      if !message.metadata.isEmpty { out["metadata"] = message.metadata }
-      return out
-    }
-  }
-
-  static func partToConformance(_ part: ContentPart) throws -> [String: Any] {
-    switch part {
-    case .textPart(let text):
-      return ["kind": text.kind, "value": text.value]
-    default:
-      return try part.save()
-    }
-  }
-
-  // MARK: - Processor.process
-
-  static func processInvoke(_ input: Any?) throws -> Any? {
-    let object = input as? [String: Any] ?? [:]
-    let provider = try seamDiscriminator(object, "model", "provider")
-    let result = processResponse(
-      provider: provider,
-      apiType: object["apiType"] as? String ?? "",
-      response: object["response"],
-      hasOutputs: object["has_outputs"] as? Bool ?? false)
-    return ["result": result ?? NSNull()]
   }
 
   // MARK: - WireConformance.toRequest
@@ -538,71 +397,6 @@ enum VectorAdapters {
         return "turn:\(record.type):\(record.iteration)"
       }
     }
-  }
-
-  // MARK: - Processor.processStream
-
-  /// Classify a vector's raw provider stream events into ``StreamChunk`` values
-  /// and reconcile them with the provider-agnostic ``reconcileStream(_:)`` in
-  /// `PromptyModel`. The vectors carry raw SSE JSON (a `provider` chunk with
-  /// `value.choices[].delta`, or a `transportError`), so the classification is
-  /// pure JSON-shape logic — no provider SDK is required, matching the Python,
-  /// Rust, TypeScript, Go and Java reference runtimes.
-  static func processStreamInvoke(_ input: Any?) throws -> Any? {
-    let object = input as? [String: Any] ?? [:]
-    let provider = try seamDiscriminator(object, "model", "provider")
-    guard provider == "openai" else {
-      throw VectorError("Unsupported stream provider: \(provider)")
-    }
-    let events = object["events"] as? [[String: Any]] ?? []
-    let chunks = try classifyStreamEvents(events)
-    let reconciliation = reconcileStream(chunks)
-
-    var savedChunks: [[String: Any]] = []
-    for chunk in chunks {
-      savedChunks.append(try chunk.save())
-    }
-    return [
-      "chunks": savedChunks,
-      "partialText": reconciliation.partialText,
-      "requiresReconciliation": reconciliation.requiresReconciliation,
-      "completionCommitted": reconciliation.completionCommitted,
-    ]
-  }
-
-  static func classifyStreamEvents(_ events: [[String: Any]]) throws -> [StreamChunk] {
-    var chunks: [StreamChunk] = []
-    for event in events {
-      let kind = event["kind"] as? String
-      switch kind {
-      case "provider":
-        guard let value = event["value"] as? [String: Any],
-          let choices = value["choices"] as? [[String: Any]],
-          let first = choices.first,
-          let delta = first["delta"] as? [String: Any]
-        else {
-          continue
-        }
-        if let content = delta["content"] as? String {
-          chunks.append(.textChunk(TextChunk(value: content)))
-        }
-        if let refusal = delta["refusal"] as? String {
-          chunks.append(
-            .failureChunk(
-              FailureChunk(
-                failure: StreamFailure(outcome: .determinate, message: "Model refused: \(refusal)"))
-            ))
-        }
-      case "transportError":
-        let message = event["message"] as? String ?? ""
-        chunks.append(
-          .failureChunk(
-            FailureChunk(failure: StreamFailure(outcome: .indeterminate, message: message))))
-      default:
-        throw VectorError("unsupported stream event kind: \(kind ?? "nil")")
-      }
-    }
-    return chunks
   }
 
   // MARK: - TurnConformance.run

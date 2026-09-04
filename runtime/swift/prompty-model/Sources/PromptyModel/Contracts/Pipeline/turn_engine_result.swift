@@ -4,7 +4,7 @@
 import Foundation
 
 /// The result returned by the live turn engine.
-public struct TurnEngineResult: TypraModel {
+public struct TurnEngineResult {
   public static let shorthandProperty: String? = nil
   public var commit: TurnCommit = TurnCommit()
   public var snapshots: [ModelInvocationContextSnapshot]? = nil
@@ -18,55 +18,4 @@ public struct TurnEngineResult: TypraModel {
     self.postCommitError = postCommitError
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
-    let object = try TypraRuntime.object(data, typeName: "TurnEngineResult")
-    var instance = TurnEngineResult()
-    if object["commit"] == nil || object["commit"] is NSNull {
-      throw TypraRuntimeError.unsupported(context.at("commit").path + ": missing required field")
-    }
-    if let value = object["commit"] {
-      instance.commit = try TurnCommit.load(value, context: context.at("commit"))
-    }
-    if let value = object["snapshots"] {
-      instance.snapshots = try TypraRuntime.array(value, field: "snapshots").enumerated().map { try ModelInvocationContextSnapshot.load($1, context: context.at("snapshots").atIndex($0)) }
-    }
-    if let value = object["toolResults"] {
-      instance.toolResults = try TypraRuntime.array(value, field: "toolResults").enumerated().map { try ModelToolResult.load($1, context: context.at("toolResults").atIndex($0)) }
-    }
-    if let value = object["postCommitError"] {
-      instance.postCommitError = try TypraRuntime.string(value, field: "postCommitError")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["commit"] = try self.commit.save(context)
-    if let value = self.snapshots {
-      result["snapshots"] = try value.map { try $0.save(context) }
-    }
-    if let value = self.toolResults {
-      result["toolResults"] = try value.map { try $0.save(context) }
-    }
-    if let value = self.postCommitError {
-      result["postCommitError"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnEngineResult"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnEngineResult {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnEngineResult"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

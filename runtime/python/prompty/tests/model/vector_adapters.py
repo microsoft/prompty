@@ -28,7 +28,6 @@ import os
 import tempfile
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
 
 from prompty import (
     AllowAllPermissionResolver,
@@ -64,7 +63,6 @@ from prompty.core.agent_loop import (
 )
 from prompty.core.errors import PromptyLoadError
 from prompty.core.loader import default_save_context
-from prompty.core.streaming import reconcile_stream
 from prompty.core.turn_engine import (
     TurnModelTurn as _TurnModelTurn,
 )
@@ -78,10 +76,8 @@ from prompty.core.turn_engine import (
     run_turn as _run_turn,
 )
 from prompty.core.types import AudioPart, ContentPart, ImagePart, Message, TextPart
-from prompty.model import Agent, HostToolRequest, ModelInfo, Property, TurnOptions
-from prompty.parsers.prompty import PromptyChatParser
+from prompty.model import Agent, HostToolRequest, ModelInfo, TurnOptions
 from prompty.providers.anthropic.executor import _build_chat_args as _anthropic_build_chat_args
-from prompty.providers.anthropic.processor import _process_response as _anthropic_process_response
 from prompty.providers.discovery import enrich as _discovery_enrich
 from prompty.providers.discovery import map_model as _discovery_map_model
 from prompty.providers.openai.executor import (
@@ -95,9 +91,6 @@ from prompty.providers.openai.executor import (
     _responses_tools_to_wire,
     _tools_to_wire,
 )
-from prompty.providers.openai.processor import ToolCall, _process_response, process_stream_events
-from prompty.renderers.jinja2 import Jinja2Renderer
-from prompty.renderers.mustache import MustacheRenderer
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -329,114 +322,6 @@ def _seam_discriminator(input: dict, *path: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# RENDER
-# ---------------------------------------------------------------------------
-
-
-def _render_invoke(input: dict, context: dict) -> Any:
-    import re
-
-    template = input["template"]
-    engine = _seam_discriminator(input, "template", "format", "kind")
-    inputs = dict(input.get("inputs", {}))
-    expected = context["vector"]["expected"]
-
-    agent = Agent(name="render_test")
-    if any(isinstance(v, dict) and v.get("_kind") == "thread" for v in inputs.values()):
-        thread_inputs = []
-        regular_inputs: dict[str, Any] = {}
-        for k, v in inputs.items():
-            if isinstance(v, dict) and v.get("_kind") == "thread":
-                thread_inputs.append(Property(name=k, kind="thread"))
-                regular_inputs[k] = v.get("messages", [])
-            else:
-                regular_inputs[k] = v
-        thread_names = {t.name for t in thread_inputs}
-        agent.inputs = thread_inputs + [
-            Property(name=k, kind="string") for k in regular_inputs if k not in thread_names
-        ]
-        inputs = regular_inputs
-
-    if engine == "jinja2":
-        renderer: Any = Jinja2Renderer()
-    elif engine == "mustache":
-        renderer = MustacheRenderer()
-    else:
-        raise ValueError(f"Unknown engine: {engine}")
-
-    rendered = renderer._render(agent, template, inputs)
-
-    if isinstance(expected, dict) and "nonce_pattern" in expected:
-        if re.match(expected["nonce_pattern"], rendered, re.DOTALL):
-            return expected
-        return {"rendered": rendered}
-    return {"rendered": rendered}
-
-
-def _render_segments_invoke(input: dict, context: dict) -> Any:
-    """Provenance-tagged segment rendering via the owned ``jinja_subset`` engine (§7).
-
-    ``render_segments`` is the provenance-carrying superset of ``render``:
-    concatenating each segment's ``text`` reproduces the flat render, while the
-    ``kind``/``source``/``strict`` tags carry literal-vs-interpolated provenance.
-    A ``strict`` value that forges a role boundary raises ``StrictViolation``,
-    which we surface as ``{"error": "StrictViolation"}`` to match the vector's
-    ``expected`` (the same catch-and-return convention the load-error vectors use).
-    """
-    from dataclasses import asdict
-
-    from prompty.jinja_subset import StrictViolation, render_segments
-
-    template = input["template"]
-    inputs = dict(input.get("inputs", {}))
-    strict_props = input.get("strict_props")
-    try:
-        segments = render_segments(template, inputs, strict_props=strict_props)
-    except StrictViolation:
-        return {"error": "StrictViolation"}
-    return {"segments": [asdict(segment) for segment in segments]}
-
-
-# ---------------------------------------------------------------------------
-# PARSE
-# ---------------------------------------------------------------------------
-
-
-def _message_to_canonical(msg: Message) -> dict:
-    content = [p.save() for p in msg.parts]
-    result: dict[str, Any] = {"role": msg.role, "content": content}
-    if msg.metadata:
-        result["metadata"] = msg.metadata
-    return result
-
-
-def _parse_invoke(input: dict, context: dict) -> Any:
-    import re
-
-    rendered = input["rendered"]
-    parser = PromptyChatParser()
-    agent = Agent(name="parse_test")
-    messages = parser._parse(agent, rendered)
-
-    thread_inputs = input.get("thread_inputs")
-    if thread_inputs:
-        from prompty.core.pipeline import _expand_thread_markers, _inject_thread_markers
-        from prompty.renderers._common import THREAD_NONCE_PREFIX
-
-        nonces: dict[str, str] = {}
-        for name in thread_inputs:
-            pattern = re.escape(THREAD_NONCE_PREFIX) + r"[0-9a-fA-F]+_" + re.escape(name) + r"__"
-            found = re.search(pattern, rendered)
-            if found:
-                nonces[found.group(0)] = name
-        rich_inputs = {name: "thread" for name in thread_inputs}
-        injected = _inject_thread_markers(messages, nonces, rich_inputs)
-        messages = _expand_thread_markers(injected, thread_inputs, rich_inputs)
-
-    return {"messages": [_message_to_canonical(m) for m in messages]}
-
-
-# ---------------------------------------------------------------------------
 # WIRE (toRequest)
 # ---------------------------------------------------------------------------
 
@@ -529,153 +414,6 @@ def _wire_invoke(input: dict, context: dict) -> Any:
         return {"request_body": body}
 
     raise ValueError(f"Unknown apiType for wire: {api_type}")
-
-
-# ---------------------------------------------------------------------------
-# PROCESS
-# ---------------------------------------------------------------------------
-
-
-def _make_mock_response(data: dict, obj_type: str) -> MagicMock:
-    mock = MagicMock()
-    mock.object = obj_type
-    if "choices" in data:
-        choices = []
-        for c in data["choices"]:
-            choice = MagicMock()
-            choice.index = c.get("index", 0)
-            choice.finish_reason = c.get("finish_reason", "stop")
-            msg = c.get("message", {})
-            choice.message = MagicMock()
-            choice.message.role = msg.get("role", "assistant")
-            choice.message.content = msg.get("content")
-            choice.message.refusal = msg.get("refusal")
-            tc_data = msg.get("tool_calls")
-            if tc_data:
-                tool_calls = []
-                for tc in tc_data:
-                    tc_mock = MagicMock()
-                    tc_mock.id = tc["id"]
-                    tc_mock.type = tc["type"]
-                    tc_mock.function = MagicMock()
-                    tc_mock.function.name = tc["function"]["name"]
-                    tc_mock.function.arguments = tc["function"]["arguments"]
-                    tool_calls.append(tc_mock)
-                choice.message.tool_calls = tool_calls
-            else:
-                choice.message.tool_calls = None
-            choices.append(choice)
-        mock.choices = choices
-    if "data" in data:
-        items = []
-        for d in data["data"]:
-            item = MagicMock()
-            for k, v in d.items():
-                setattr(item, k, v)
-            items.append(item)
-        mock.data = items
-    return mock
-
-
-def _make_mock_chat_completion(response_data: dict) -> Any:
-    try:
-        from openai.types.chat.chat_completion import ChatCompletion
-
-        return ChatCompletion.model_validate(response_data)
-    except Exception:  # noqa: BLE001
-        return _make_mock_response(response_data, "chat.completion")
-
-
-def _make_mock_embedding_response(response_data: dict) -> Any:
-    try:
-        from openai.types.create_embedding_response import CreateEmbeddingResponse
-
-        return CreateEmbeddingResponse.model_validate(response_data)
-    except Exception:  # noqa: BLE001
-        return _make_mock_response(response_data, "list")
-
-
-def _make_mock_image_response(response_data: dict) -> Any:
-    try:
-        from openai.types.images_response import ImagesResponse
-
-        return ImagesResponse.model_validate(response_data)
-    except Exception:  # noqa: BLE001
-        return _make_mock_response(response_data, "images")
-
-
-def _process_result_to_canonical(result: Any) -> Any:
-    if isinstance(result, list) and result and isinstance(result[0], ToolCall):
-        return [{"id": tc.id, "name": tc.name, "arguments": tc.arguments} for tc in result]
-    if result is None:
-        return ""
-    return result
-
-
-def _make_responses_api_mock(data: dict) -> MagicMock:
-    """Build a mock Responses API response mirroring the SDK surface."""
-    mock = MagicMock()
-    mock.object = "response"
-    mock.id = data.get("id", "")
-    mock.status = data.get("status", "completed")
-    mock.output_text = data.get("output_text", "")
-    mock.model = data.get("model", "")
-    mock.error = None
-
-    output_items = []
-    for item in data.get("output", []):
-        item_mock = MagicMock()
-        item_mock.type = item["type"]
-        if item["type"] == "message":
-            item_mock.id = item.get("id", "")
-            item_mock.status = item.get("status", "completed")
-            item_mock.role = item.get("role", "assistant")
-            content_mocks = []
-            for c in item.get("content", []):
-                c_mock = MagicMock()
-                c_mock.type = c["type"]
-                c_mock.text = c.get("text", "")
-                c_mock.annotations = c.get("annotations", [])
-                content_mocks.append(c_mock)
-            item_mock.content = content_mocks
-        elif item["type"] == "function_call":
-            item_mock.id = item.get("id", "")
-            item_mock.call_id = item.get("call_id", "")
-            item_mock.name = item.get("name", "")
-            item_mock.arguments = item.get("arguments", "")
-            item_mock.status = item.get("status", "completed")
-        output_items.append(item_mock)
-    mock.output = output_items
-    return mock
-
-
-def _process_invoke(input: dict, context: dict) -> Any:
-    provider = _seam_discriminator(input, "model", "provider")
-    api_type = input.get("apiType", "chat")
-    response_data = input["response"]
-    has_outputs = input.get("has_outputs", False)
-
-    agent = None
-    if has_outputs:
-        agent = Agent(name="process_test", outputs=[Property(name="dummy", kind="string")])
-
-    if provider == "anthropic":
-        result = _anthropic_process_response(agent, response_data)
-        return {"result": _process_result_to_canonical(result)}
-
-    if api_type == "chat":
-        response = _make_mock_chat_completion(response_data)
-    elif api_type == "embedding":
-        response = _make_mock_embedding_response(response_data)
-    elif api_type == "image":
-        response = _make_mock_image_response(response_data)
-    elif api_type == "responses":
-        response = _make_responses_api_mock(response_data)
-    else:
-        raise ValueError(f"Unknown apiType for process: {api_type}")
-
-    result = _process_response(response, agent)
-    return {"result": _process_result_to_canonical(result)}
 
 
 # ---------------------------------------------------------------------------
@@ -825,21 +563,6 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
     provider = context.get("provider") or ""
     info = _discovery_map_model(resolved_input, provider)
     return info.save()
-
-
-def _process_stream_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
-    """Classify a raw provider stream and reconcile the streaming-failure contract."""
-    provider = _seam_discriminator(resolved_input, "model", "provider")
-    events = resolved_input.get("events") or []
-    if provider == "openai":
-        chunks = process_stream_events(events)
-    else:
-        raise ValueError(f"Unsupported stream provider: {provider!r}")
-    reconciliation = reconcile_stream(chunks)
-    return {
-        "chunks": [chunk.save() for chunk in chunks],
-        **reconciliation.save(),
-    }
 
 
 # ---------------------------------------------------------------------------
@@ -1367,12 +1090,7 @@ def _live_chat_normalize(observed: Any, context: dict) -> dict:
 
 VECTOR_ADAPTERS: dict[str, Any] = {
     "LoadConformance.load": {"invoke": _load_invoke, "normalize": _load_normalize},
-    "Renderer.render": {"invoke": _render_invoke, "normalize": _project_normalize},
-    "Renderer.renderSegments": {"invoke": _render_segments_invoke, "normalize": _project_normalize},
-    "Parser.parse": {"invoke": _parse_invoke, "normalize": _project_normalize},
     "WireConformance.toRequest": {"invoke": _wire_invoke, "normalize": _project_normalize},
-    "Processor.process": {"invoke": _process_invoke, "normalize": _project_normalize},
-    "Processor.processStream": {"invoke": _process_stream_invoke, "normalize": _project_normalize},
     "TurnConformance.run": {"invoke": _run_invoke, "normalize": _run_normalize},
     "TurnConformance.runTurn": {"invoke": _run_turn_invoke, "normalize": _project_normalize},
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},

@@ -12,6 +12,4 @@
 
 mod binding_test;
 mod mcp_approval_mode_test;
-mod tool_context_test;
-mod tool_dispatch_result_test;
 mod tool_test;

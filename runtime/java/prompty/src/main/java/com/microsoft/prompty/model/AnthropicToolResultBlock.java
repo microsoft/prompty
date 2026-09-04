@@ -16,69 +16,6 @@ public class AnthropicToolResultBlock {
 
   public AnthropicToolResultBlock() { }
 
-  @SuppressWarnings("unchecked")
-  public static AnthropicToolResultBlock load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new AnthropicToolResultBlock());
-    }
-    AnthropicToolResultBlock result = new AnthropicToolResultBlock();
-    AnthropicToolResultBlock.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(AnthropicToolResultBlock result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("type") && map.get("type") != null) {
-      result.type = String.valueOf(map.get("type"));
-    }
-    if (map.containsKey("tool_use_id") && map.get("tool_use_id") != null) {
-      result.tool_use_id = String.valueOf(map.get("tool_use_id"));
-    }
-    if (map.containsKey("content") && map.get("content") != null) {
-      result.content = String.valueOf(map.get("content"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    AnthropicToolResultBlock obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    AnthropicToolResultBlock obj = this;
-    if (obj.type != null) result.put("type", serializeScalar(obj.type));
-    if (obj.tool_use_id != null) result.put("tool_use_id", serializeScalar(obj.tool_use_id));
-    if (obj.content != null) result.put("content", serializeScalar(obj.content));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static AnthropicToolResultBlock fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static AnthropicToolResultBlock fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static AnthropicToolResultBlock fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static AnthropicToolResultBlock fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

@@ -4,7 +4,7 @@
 import Foundation
 
 /// A single mismatch produced by replay verification.
-public struct ReplayMismatch: TypraModel {
+public struct ReplayMismatch {
   public static let shorthandProperty: String? = nil
   public var index: Int32 = 0
   public var expected: ReplayJournalRecord? = nil
@@ -18,50 +18,4 @@ public struct ReplayMismatch: TypraModel {
     self.message = message
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
-    let object = try TypraRuntime.object(data, typeName: "ReplayMismatch")
-    var instance = ReplayMismatch()
-    if let value = object["index"] {
-      instance.index = try TypraRuntime.int32(value, field: "index")
-    }
-    if let value = object["expected"] {
-      instance.expected = try ReplayJournalRecord.load(value, context: context.at("expected"))
-    }
-    if let value = object["actual"] {
-      instance.actual = try ReplayJournalRecord.load(value, context: context.at("actual"))
-    }
-    if let value = object["message"] {
-      instance.message = try TypraRuntime.string(value, field: "message")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["index"] = self.index
-    if let value = self.expected {
-      result["expected"] = try value.save(context)
-    }
-    if let value = self.actual {
-      result["actual"] = try value.save(context)
-    }
-    result["message"] = self.message
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReplayMismatch"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReplayMismatch {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReplayMismatch"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

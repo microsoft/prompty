@@ -16,69 +16,6 @@ public class CompactionCompletePayload {
 
   public CompactionCompletePayload() { }
 
-  @SuppressWarnings("unchecked")
-  public static CompactionCompletePayload load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new CompactionCompletePayload());
-    }
-    CompactionCompletePayload result = new CompactionCompletePayload();
-    CompactionCompletePayload.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(CompactionCompletePayload result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("removed") && map.get("removed") != null) {
-      result.removed = (map.get("removed") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("removed"))));
-    }
-    if (map.containsKey("remaining") && map.get("remaining") != null) {
-      result.remaining = (map.get("remaining") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("remaining"))));
-    }
-    if (map.containsKey("summaryLength") && map.get("summaryLength") != null) {
-      result.summaryLength = (map.get("summaryLength") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("summaryLength"))));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    CompactionCompletePayload obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    CompactionCompletePayload obj = this;
-    if (obj.removed != null) result.put("removed", serializeScalar(obj.removed));
-    if (obj.remaining != null) result.put("remaining", serializeScalar(obj.remaining));
-    if (obj.summaryLength != null) result.put("summaryLength", serializeScalar(obj.summaryLength));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static CompactionCompletePayload fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static CompactionCompletePayload fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static CompactionCompletePayload fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static CompactionCompletePayload fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

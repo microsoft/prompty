@@ -4,7 +4,7 @@
 import Foundation
 
 /// Host-owned deterministic state supplied before one model invocation.
-public struct HostPolicyRequest: TypraModel {
+public struct HostPolicyRequest {
   public static let shorthandProperty: String? = nil
   public var sessionId: String = ""
   public var turnId: String = ""
@@ -22,59 +22,4 @@ public struct HostPolicyRequest: TypraModel {
     self.inputs = inputs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> HostPolicyRequest {
-    let object = try TypraRuntime.object(data, typeName: "HostPolicyRequest")
-    var instance = HostPolicyRequest()
-    if let value = object["sessionId"] {
-      instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
-    }
-    if let value = object["turnId"] {
-      instance.turnId = try TypraRuntime.string(value, field: "turnId")
-    }
-    if let value = object["iteration"] {
-      instance.iteration = try TypraRuntime.int32(value, field: "iteration")
-    }
-    if let value = object["messages"] {
-      instance.messages = try TypraRuntime.array(value, field: "messages").enumerated().map { try Message.load($1, context: context.at("messages").atIndex($0)) }
-    }
-    if let value = object["stablePrefixMessages"] {
-      instance.stablePrefixMessages = try TypraRuntime.int32(value, field: "stablePrefixMessages")
-    }
-    else {
-      instance.stablePrefixMessages = 0
-    }
-    if let value = object["inputs"] {
-      instance.inputs = value
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["sessionId"] = self.sessionId
-    result["turnId"] = self.turnId
-    result["iteration"] = self.iteration
-    result["messages"] = try self.messages.map { try $0.save(context) }
-    result["stablePrefixMessages"] = self.stablePrefixMessages
-    if let value = self.inputs {
-      result["inputs"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> HostPolicyRequest {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "HostPolicyRequest"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> HostPolicyRequest {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "HostPolicyRequest"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

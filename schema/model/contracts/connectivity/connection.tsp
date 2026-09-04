@@ -89,6 +89,7 @@ model ApiKeyConnection extends Connection {
   endpoint: string;
 
   @doc("The API key for authenticating with the AI service")
+  @sensitive("save")
   @sample(ApiKeyConnectionApiKeySample)
   apiKey: string;
 }

@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "tool_execution_start" events — the host is about to execute a concrete tool request.  This is distinct from "tool_call_start", which records the model requesting a tool. Tool execution events capture the harness-side action after policy and permission checks.
-public struct ToolExecutionStartPayload: TypraModel {
+public struct ToolExecutionStartPayload {
   public static let shorthandProperty: String? = nil
   public var requestId: String? = nil
   public var toolCallId: String? = nil
@@ -22,64 +22,4 @@ public struct ToolExecutionStartPayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolExecutionStartPayload {
-    let object = try TypraRuntime.object(data, typeName: "ToolExecutionStartPayload")
-    var instance = ToolExecutionStartPayload()
-    if let value = object["requestId"] {
-      instance.requestId = try TypraRuntime.string(value, field: "requestId")
-    }
-    if let value = object["toolCallId"] {
-      instance.toolCallId = try TypraRuntime.string(value, field: "toolCallId")
-    }
-    if let value = object["toolName"] {
-      instance.toolName = try TypraRuntime.string(value, field: "toolName")
-    }
-    if let value = object["arguments"] {
-      instance.arguments = try TypraRuntime.dictionary(value, field: "arguments")
-    }
-    if let value = object["workingDirectory"] {
-      instance.workingDirectory = try TypraRuntime.string(value, field: "workingDirectory")
-    }
-    if let value = object["redaction"] {
-      instance.redaction = try RedactionMetadata.load(value, context: context.at("redaction"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.requestId {
-      result["requestId"] = value
-    }
-    if let value = self.toolCallId {
-      result["toolCallId"] = value
-    }
-    result["toolName"] = self.toolName
-    if let value = self.arguments {
-      result["arguments"] = value
-    }
-    if let value = self.workingDirectory {
-      result["workingDirectory"] = value
-    }
-    if let value = self.redaction {
-      result["redaction"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolExecutionStartPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolExecutionStartPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolExecutionStartPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolExecutionStartPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

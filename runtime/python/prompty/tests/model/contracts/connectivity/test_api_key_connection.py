@@ -53,7 +53,6 @@ def test_roundtrip_json_apikeyconnection():
     assert reloaded is not None
     assert reloaded.kind == "key"
     assert reloaded.endpoint == "https://{your-custom-endpoint}.openai.azure.com/"
-    assert reloaded.api_key == "your-api-key"
 
 
 def test_to_json_apikeyconnection():

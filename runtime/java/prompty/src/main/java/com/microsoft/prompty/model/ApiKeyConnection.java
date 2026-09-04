@@ -51,7 +51,6 @@ public class ApiKeyConnection extends Connection {
     super.saveFields(result, ctx);
     ApiKeyConnection obj = this;
     if (obj.endpoint != null) result.put("endpoint", serializeScalar(obj.endpoint));
-    if (obj.apiKey != null) result.put("apiKey", serializeScalar(obj.apiKey));
   }
 
   public String toYaml() {

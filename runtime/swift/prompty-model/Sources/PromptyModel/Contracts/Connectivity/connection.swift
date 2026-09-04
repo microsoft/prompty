@@ -268,7 +268,6 @@ public struct ApiKeyConnection: TypraModel {
       result["usageDescription"] = value
     }
     result["endpoint"] = self.endpoint
-    result["apiKey"] = self.apiKey
     return result
   }
 

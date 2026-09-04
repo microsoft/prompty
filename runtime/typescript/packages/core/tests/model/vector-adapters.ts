@@ -58,19 +58,13 @@ import {
   Template,
   TurnModelResponse,
   load,
-  parse,
   registerParser,
   registerRenderer,
-  render,
   renderSegments,
   validateInputs,
   MustacheRenderer,
   NunjucksRenderer,
   PromptyChatParser,
-  StrictViolationError,
-  TextChunk,
-  StreamChunk,
-  reconcileStream,
   runAgentLoop,
   totalMessages,
   runTurnEngine,
@@ -85,7 +79,6 @@ import {
 } from "../../src/index.js";
 import { defaultSaveContext } from "../../src/core/loader.js";
 import { TurnOptions } from "../../src/model/index.js";
-import { expandThreads } from "../../src/core/pipeline.js";
 import { enrich, mapModel } from "../../src/model/discovery.js";
 import { ModelInfo } from "../../src/model/contracts/models/model-info.js";
 import {
@@ -99,7 +92,6 @@ import {
 import {
   AnthropicProcessor,
   buildChatArgs as anthropicBuildChatArgs,
-  processResponse as anthropicProcessResponse,
 } from "@prompty/anthropic";
 
 // The pipeline drives renderer/parser lookups through the registry; register the
@@ -251,10 +243,6 @@ function project(observed: any, expected: any): any {
 
 function projectNormalize(observed: unknown, context: AdapterContext): unknown {
   return project(observed, context.vector.expected);
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 // ---------------------------------------------------------------------------
@@ -440,127 +428,9 @@ function seamDiscriminator(input: any, ...path: string[]): string {
 // RENDER
 // ---------------------------------------------------------------------------
 
-async function renderInvoke(
-  input: any,
-  context: AdapterContext,
-): Promise<unknown> {
-  const template: string = input.template;
-  const engine = seamDiscriminator(input, "template", "format", "kind");
-  let inputs: Record<string, any> = { ...(input.inputs ?? {}) };
-  const expected = context.vector.expected;
-
-  const agent = new Agent({
-    name: "render_test",
-    instructions: template,
-    template: new Template({
-      format: new FormatConfig({ kind: engine }),
-      parser: new ParserConfig({ kind: "prompty" }),
-    }),
-  });
-
-  const hasThread = Object.values(inputs).some(
-    (v: any) => v && typeof v === "object" && v._kind === "thread",
-  );
-  if (hasThread) {
-    const threadProps: Property[] = [];
-    const regular: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(inputs)) {
-      if (v && typeof v === "object" && (v as any)._kind === "thread") {
-        threadProps.push(new Property({ name: k, kind: "thread" }));
-        regular[k] = (v as any).messages ?? [];
-      } else {
-        regular[k] = v;
-      }
-    }
-    const threadNames = new Set(threadProps.map((p) => p.name));
-    agent.inputs = [
-      ...threadProps,
-      ...Object.keys(regular)
-        .filter((k) => !threadNames.has(k))
-        .map((k) => new Property({ name: k, kind: "string" })),
-    ];
-    inputs = regular;
-  }
-
-  const rendered = await render(agent, inputs);
-
-  if (expected && typeof expected === "object" && "nonce_pattern" in expected) {
-    const re = new RegExp(expected.nonce_pattern, "s");
-    const match = re.exec(rendered);
-    if (match && match.index === 0) return expected;
-    return { rendered };
-  }
-
-  return { rendered };
-}
-
-function renderSegmentsInvoke(input: any, _context: AdapterContext): unknown {
-  try {
-    return {
-      segments: renderSegments(
-        input.template,
-        input.inputs ?? {},
-        input.strict_props ?? [],
-      ).map((segment) => ({
-        kind: segment.kind,
-        text: segment.text,
-        source: segment.source,
-        strict: segment.strict,
-      })),
-    };
-  } catch (error) {
-    if (error instanceof StrictViolationError) {
-      return { error: "StrictViolation" };
-    }
-    throw error;
-  }
-}
-
 // ---------------------------------------------------------------------------
 // PARSE
 // ---------------------------------------------------------------------------
-
-function messageToCanonical(msg: any): Record<string, unknown> {
-  const content = (msg.parts ?? []).map((p: any) =>
-    typeof p?.save === "function" ? p.save() : { ...p },
-  );
-  const result: Record<string, unknown> = { role: msg.role, content };
-  if (msg.metadata && Object.keys(msg.metadata).length > 0) {
-    result.metadata = msg.metadata;
-  }
-  return result;
-}
-
-async function parseInvoke(
-  input: any,
-  _context: AdapterContext,
-): Promise<unknown> {
-  const rendered: string = input.rendered;
-  const agent = new Agent({
-    name: "parse_test",
-    template: new Template({
-      format: new FormatConfig({ kind: "jinja2", strict: false }),
-      parser: new ParserConfig({ kind: "prompty" }),
-    }),
-  });
-
-  let messages = await parse(agent, rendered);
-
-  const threadInputs: Record<string, any[]> | undefined = input.thread_inputs;
-  if (threadInputs) {
-    const nonces = new Map<string, string>();
-    for (const name of Object.keys(threadInputs)) {
-      const re = new RegExp(
-        `__PROMPTY_THREAD_[0-9a-fA-F]+_${escapeRegExp(name)}__`,
-      );
-      const match = re.exec(rendered);
-      if (match) nonces.set(name, match[0]);
-    }
-    messages = expandThreads(messages, nonces, threadInputs);
-  }
-
-  return { messages: messages.map(messageToCanonical) };
-}
 
 // ---------------------------------------------------------------------------
 // WIRE (toRequest)
@@ -660,43 +530,6 @@ function wireInvoke(input: any, _context: AdapterContext): unknown {
 // ---------------------------------------------------------------------------
 // PROCESS
 // ---------------------------------------------------------------------------
-
-function processResultToCanonical(result: any): unknown {
-  if (
-    Array.isArray(result) &&
-    result.length > 0 &&
-    result[0] &&
-    typeof result[0] === "object" &&
-    "id" in result[0] &&
-    "name" in result[0] &&
-    "arguments" in result[0]
-  ) {
-    return result.map((tc: any) => ({
-      id: tc.id,
-      name: tc.name,
-      arguments: tc.arguments,
-    }));
-  }
-  if (result == null) return "";
-  return result;
-}
-
-function processInvoke(input: any, _context: AdapterContext): unknown {
-  const provider = seamDiscriminator(input, "model", "provider");
-  const responseData = input.response;
-  const hasOutputs = input.has_outputs ?? false;
-
-  const agent = new Agent({ name: "process_test", model: "test" });
-  if (hasOutputs) {
-    agent.outputs = [new Property({ name: "dummy", kind: "string" })];
-  }
-
-  const result =
-    provider === "anthropic"
-      ? anthropicProcessResponse(agent, responseData)
-      : openaiProcessResponse(agent, responseData);
-  return { result: processResultToCanonical(result) };
-}
 
 // ---------------------------------------------------------------------------
 // TurnConformance.replay
@@ -895,61 +728,6 @@ function discoveryMapInvoke(
  * chunks, and core's `reconcileStream` reduces that sequence identically for
  * every provider. Nothing about the contract is recomputed in the adapter.
  */
-async function processStreamInvoke(
-  input: any,
-  _context: AdapterContext,
-): Promise<Record<string, unknown>> {
-  const provider = seamDiscriminator(input, "model", "provider");
-  if (provider !== "openai") {
-    throw new Error(`Unsupported stream provider: ${JSON.stringify(provider)}`);
-  }
-  const events = (input.events ?? []) as Array<
-    | { kind: "provider"; value: Record<string, unknown> }
-    | { kind: "transportError"; message: string }
-  >;
-
-  const response: AsyncIterable<unknown> = {
-    async *[Symbol.asyncIterator](): AsyncIterator<unknown> {
-      for (const event of events) {
-        if (event.kind === "transportError") {
-          throw new Error(event.message);
-        }
-        yield event.value;
-      }
-    },
-  };
-
-  const agent = new Agent({ name: "stream-vector", model: "gpt-test" });
-  const chunks: StreamChunk[] = [];
-  const saved: Record<string, unknown>[] = [];
-  const processed = openaiProcessResponse(
-    agent,
-    response,
-  ) as AsyncIterable<unknown>;
-  for await (const item of processed) {
-    // The provider yields either a plain text string or a FailureChunk. Round
-    // its value through save()/load() with the local (src) StreamChunk so the
-    // reconciler's `instanceof` checks see this package's class identity — the
-    // provider package classifies against @prompty/core's built output, whose
-    // class objects differ from the source under test.
-    let chunk: StreamChunk;
-    if (typeof item === "string") {
-      chunk = new TextChunk({ value: item });
-    } else {
-      chunk = StreamChunk.load((item as StreamChunk).save());
-    }
-    chunks.push(chunk);
-    saved.push(chunk.save());
-  }
-
-  const reconciliation = reconcileStream(chunks);
-  return {
-    chunks: saved,
-    partialText: reconciliation.partialText,
-    requiresReconciliation: reconciliation.requiresReconciliation,
-    completionCommitted: reconciliation.completionCommitted,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // TurnConformance.run — provider-agnostic agent loop
@@ -1286,19 +1064,8 @@ async function runTurnInvoke(
 
 export const vectorAdapters = {
   "LoadConformance.load": { invoke: loadInvoke, normalize: loadNormalize },
-  "Renderer.render": { invoke: renderInvoke, normalize: projectNormalize },
-  "Renderer.renderSegments": {
-    invoke: renderSegmentsInvoke,
-    normalize: projectNormalize,
-  },
-  "Parser.parse": { invoke: parseInvoke, normalize: projectNormalize },
   "WireConformance.toRequest": {
     invoke: wireInvoke,
-    normalize: projectNormalize,
-  },
-  "Processor.process": { invoke: processInvoke, normalize: projectNormalize },
-  "Processor.processStream": {
-    invoke: processStreamInvoke,
     normalize: projectNormalize,
   },
   "TurnConformance.run": { invoke: runInvoke, normalize: runNormalize },

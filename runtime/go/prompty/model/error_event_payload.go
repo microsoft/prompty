@@ -4,90 +4,10 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ErrorEventPayload represents Payload for "error" events — an error occurred during the loop.
 
 type ErrorEventPayload struct {
 	Message   string  `json:"message" yaml:"message"`
 	ErrorKind *string `json:"errorKind,omitempty" yaml:"errorKind,omitempty"`
 	Phase     *string `json:"phase,omitempty" yaml:"phase,omitempty"`
-}
-
-// LoadErrorEventPayload creates a ErrorEventPayload from a map[string]interface{}
-func LoadErrorEventPayload(data interface{}, ctx *LoadContext) (ErrorEventPayload, error) {
-	result := ErrorEventPayload{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["message"]; ok && val != nil {
-			result.Message = string(val.(string))
-		}
-		if val, ok := m["errorKind"]; ok && val != nil {
-			v := string(val.(string))
-			result.ErrorKind = &v
-		}
-		if val, ok := m["phase"]; ok && val != nil {
-			v := string(val.(string))
-			result.Phase = &v
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ErrorEventPayload to map[string]interface{}
-func (obj ErrorEventPayload) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["message"] = obj.Message
-	if obj.ErrorKind != nil {
-		result["errorKind"] = *obj.ErrorKind
-	}
-	if obj.Phase != nil {
-		result["phase"] = *obj.Phase
-	}
-
-	return result
-}
-
-// ToJSON serializes ErrorEventPayload to JSON string
-func (obj *ErrorEventPayload) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ErrorEventPayload to YAML string
-func (obj *ErrorEventPayload) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ErrorEventPayload from JSON string
-func ErrorEventPayloadFromJSON(jsonStr string) (ErrorEventPayload, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ErrorEventPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadErrorEventPayload(data, ctx)
-}
-
-// FromYAML creates ErrorEventPayload from YAML string
-func ErrorEventPayloadFromYAML(yamlStr string) (ErrorEventPayload, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ErrorEventPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadErrorEventPayload(data, ctx)
 }

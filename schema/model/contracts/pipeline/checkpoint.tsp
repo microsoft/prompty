@@ -101,6 +101,7 @@ model EngineCheckpoint {
  * A host supplies this to restart an interrupted turn without duplicating a
  * committed model or tool effect.
  */
+@serializable
 model ResumeContext {
   @doc("Checkpoint to resume from")
   checkpoint: EngineCheckpoint;

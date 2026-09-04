@@ -599,8 +599,7 @@ public class VectorConformanceTests
       "apiType": "chat",
       "connection": {
         "kind": "key",
-        "endpoint": "https://test.openai.com",
-        "apiKey": "sk-test123"
+        "endpoint": "https://test.openai.com"
       },
       "options": {
         "temperature": 0.7,
@@ -701,8 +700,7 @@ public class VectorConformanceTests
       "apiType": "embedding",
       "connection": {
         "kind": "key",
-        "endpoint": "https://test.openai.com",
-        "apiKey": "sk-test123"
+        "endpoint": "https://test.openai.com"
       }
     },
     "inputs": [
@@ -882,8 +880,7 @@ public class VectorConformanceTests
     "model": {
       "connection": {
         "kind": "key",
-        "endpoint": "https://in-tree.example.com",
-        "apiKey": "ok"
+        "endpoint": "https://in-tree.example.com"
       }
     }
   },
@@ -960,8 +957,7 @@ public class VectorConformanceTests
     "model": {
       "connection": {
         "kind": "key",
-        "endpoint": "https://shared.example.com",
-        "apiKey": "shared-key"
+        "endpoint": "https://shared.example.com"
       }
     }
   },

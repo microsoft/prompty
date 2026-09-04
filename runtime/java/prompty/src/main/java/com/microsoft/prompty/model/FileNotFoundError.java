@@ -15,65 +15,6 @@ public class FileNotFoundError {
 
   public FileNotFoundError() { }
 
-  @SuppressWarnings("unchecked")
-  public static FileNotFoundError load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new FileNotFoundError());
-    }
-    FileNotFoundError result = new FileNotFoundError();
-    FileNotFoundError.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(FileNotFoundError result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("message") && map.get("message") != null) {
-      result.message = String.valueOf(map.get("message"));
-    }
-    if (map.containsKey("path") && map.get("path") != null) {
-      result.path = String.valueOf(map.get("path"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    FileNotFoundError obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    FileNotFoundError obj = this;
-    if (obj.message != null) result.put("message", serializeScalar(obj.message));
-    if (obj.path != null) result.put("path", serializeScalar(obj.path));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static FileNotFoundError fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static FileNotFoundError fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static FileNotFoundError fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static FileNotFoundError fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

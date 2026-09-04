@@ -4,94 +4,10 @@
 
 package prompty
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
 // AnthropicImageBlock represents An image content block using base64-encoded data.
 // Anthropic requires images as base64 with an explicit media type.
 
 type AnthropicImageBlock struct {
 	Type   string               `json:"type" yaml:"type"`
 	Source AnthropicImageSource `json:"source" yaml:"source"`
-}
-
-// LoadAnthropicImageBlock creates a AnthropicImageBlock from a map[string]interface{}
-func LoadAnthropicImageBlock(data interface{}, ctx *LoadContext) (AnthropicImageBlock, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := AnthropicImageBlock{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["source"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("source").Path)
-		}
-		if val, ok := m["type"]; ok && val != nil {
-			result.Type = string(val.(string))
-		}
-		if val, ok := m["source"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadAnthropicImageSource(m, ctx.At("source"))
-				if err != nil {
-					return result, err
-				}
-				result.Source = loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes AnthropicImageBlock to map[string]interface{}
-func (obj AnthropicImageBlock) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["type"] = obj.Type
-
-	result["source"] = obj.Source.Save(ctx)
-
-	return result
-}
-
-// ToJSON serializes AnthropicImageBlock to JSON string
-func (obj *AnthropicImageBlock) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes AnthropicImageBlock to YAML string
-func (obj *AnthropicImageBlock) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates AnthropicImageBlock from JSON string
-func AnthropicImageBlockFromJSON(jsonStr string) (AnthropicImageBlock, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return AnthropicImageBlock{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicImageBlock(data, ctx)
-}
-
-// FromYAML creates AnthropicImageBlock from YAML string
-func AnthropicImageBlockFromYAML(yamlStr string) (AnthropicImageBlock, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return AnthropicImageBlock{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadAnthropicImageBlock(data, ctx)
 }

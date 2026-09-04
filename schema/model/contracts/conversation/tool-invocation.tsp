@@ -42,6 +42,7 @@ model ToolCall {
   #{ parts: #[#{ kind: "text", value: "{value}" }] },
   #{ value: "string" }
 )
+@serializable
 model ToolResult {
   @doc("The content parts of the tool result")
   @sample(ToolResultPartsSample)

@@ -105,77 +105,6 @@ impl HookEndPayload {
         Self::default()
     }
 
-    /// Load HookEndPayload from a JSON string.
-    pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load HookEndPayload from a YAML string.
-    pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
-        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load HookEndPayload from an already-parsed JSON value, returning an error
-    /// instead of panicking on invalid input. Fallible companion to
-    /// `load_from_value` with the same validation policy as `from_json`.
-    pub fn try_load_from_value(
-        value: &serde_json::Value,
-        ctx: &LoadContext,
-    ) -> Result<Self, serde_json::Error> {
-        Self::validate_input_at(value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(value, ctx))
-    }
-
-    /// Load HookEndPayload from a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_input` before field extraction.
-    pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
-        let value = ctx.process_input(value.clone());
-        if let Err(message) = Self::validate_input_at(&value, "") {
-            panic!("{}", message);
-        }
-        Self {
-            hook_invocation_id: value
-                .get("hookInvocationId")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default()
-                .to_string(),
-            hook_type: value
-                .get("hookType")
-                .and_then(|v| v.as_str())
-                .unwrap_or_default()
-                .to_string(),
-            scope: value
-                .get("scope")
-                .and_then(|v| v.as_str())
-                .and_then(|s| HookEndScope::from_str_opt(s)),
-            success: value
-                .get("success")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false),
-            output: value
-                .get("output")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
-            duration_ms: value.get("durationMs").and_then(|v| v.as_f64()),
-            error: value
-                .get("error")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string()),
-            redaction: value
-                .get("redaction")
-                .filter(|v| v.is_object() || v.is_array() || v.is_string())
-                .map(|v| RedactionMetadata::load_from_value(v, ctx)),
-        }
-    }
-
     pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
         let child_path = if path.is_empty() {
             "redaction".to_string()
@@ -188,81 +117,9 @@ impl HookEndPayload {
         Ok(())
     }
 
-    /// Serialize HookEndPayload to a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_dict` after serialization.
-    pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
-        let mut result = serde_json::Map::new();
-        // Write base fields
-        result.insert(
-            "hookInvocationId".to_string(),
-            serde_json::Value::String(self.hook_invocation_id.clone()),
-        );
-        result.insert(
-            "hookType".to_string(),
-            serde_json::Value::String(self.hook_type.clone()),
-        );
-        if let Some(val) = self.scope.as_ref() {
-            result.insert(
-                "scope".to_string(),
-                serde_json::Value::String(val.to_string()),
-            );
-        }
-        result.insert("success".to_string(), serde_json::Value::Bool(self.success));
-        if !self.output.is_null() {
-            result.insert("output".to_string(), self.output.clone());
-        }
-        if let Some(val) = self.duration_ms.as_ref() {
-            result.insert(
-                "durationMs".to_string(),
-                serde_json::Number::from_f64(*val as f64)
-                    .map(serde_json::Value::Number)
-                    .unwrap_or(serde_json::Value::Null),
-            );
-        }
-        if let Some(val) = self.error.as_ref() {
-            result.insert("error".to_string(), serde_json::Value::String(val.clone()));
-        }
-        if let Some(val) = self.redaction.as_ref() {
-            let nested = val.to_value(ctx);
-            if !nested.is_null() {
-                result.insert("redaction".to_string(), nested);
-            }
-        }
-        ctx.process_dict(serde_json::Value::Object(result))
-    }
-
-    /// Serialize HookEndPayload to a JSON string.
-    pub fn to_json(&self, ctx: &SaveContext) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self.to_value(ctx))
-    }
-
-    /// Serialize HookEndPayload to a YAML string.
-    pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(&self.to_value(ctx))
-    }
     /// Returns typed reference to the map if the field is an object.
     /// Returns `None` if the field is null or not an object.
     pub fn as_output_dict(&self) -> Option<&serde_json::Map<String, serde_json::Value>> {
         self.output.as_object()
-    }
-}
-
-// Serde for `HookEndPayload` delegates to the canonical to_value/load_from_value
-// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
-// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
-#[cfg(feature = "serde")]
-impl serde::Serialize for HookEndPayload {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for HookEndPayload {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
-        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
-        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

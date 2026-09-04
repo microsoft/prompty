@@ -17,6 +17,7 @@ interface ModelLister {
  * many fields as the provider's API supports and MAY enrich sparse results
  * from a built-in lookup table of known models.
  */
+@serializable
 model ModelInfo {
   @doc("The model identifier (e.g., 'gpt-4o', 'claude-3-opus')")
   @sample(availableIdSample)

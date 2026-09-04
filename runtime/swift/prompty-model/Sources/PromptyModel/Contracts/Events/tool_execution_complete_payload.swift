@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "tool_execution_complete" events — a concrete host tool execution finished.
-public struct ToolExecutionCompletePayload: TypraModel {
+public struct ToolExecutionCompletePayload {
   public static let shorthandProperty: String? = nil
   public var requestId: String? = nil
   public var toolCallId: String? = nil
@@ -30,86 +30,4 @@ public struct ToolExecutionCompletePayload: TypraModel {
     self.redaction = redaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
-    let object = try TypraRuntime.object(data, typeName: "ToolExecutionCompletePayload")
-    var instance = ToolExecutionCompletePayload()
-    if let value = object["requestId"] {
-      instance.requestId = try TypraRuntime.string(value, field: "requestId")
-    }
-    if let value = object["toolCallId"] {
-      instance.toolCallId = try TypraRuntime.string(value, field: "toolCallId")
-    }
-    if let value = object["toolName"] {
-      instance.toolName = try TypraRuntime.string(value, field: "toolName")
-    }
-    if let value = object["success"] {
-      instance.success = try TypraRuntime.bool(value, field: "success")
-    }
-    if let value = object["result"] {
-      instance.result = value
-    }
-    if let value = object["exitCode"] {
-      instance.exitCode = try TypraRuntime.int32(value, field: "exitCode")
-    }
-    if let value = object["durationMs"] {
-      instance.durationMs = try TypraRuntime.double(value, field: "durationMs")
-    }
-    if let value = object["errorKind"] {
-      instance.errorKind = try TypraRuntime.string(value, field: "errorKind")
-    }
-    if let value = object["telemetry"] {
-      instance.telemetry = try TypraRuntime.dictionary(value, field: "telemetry")
-    }
-    if let value = object["redaction"] {
-      instance.redaction = try RedactionMetadata.load(value, context: context.at("redaction"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.requestId {
-      result["requestId"] = value
-    }
-    if let value = self.toolCallId {
-      result["toolCallId"] = value
-    }
-    result["toolName"] = self.toolName
-    result["success"] = self.success
-    if let value = self.result {
-      result["result"] = value
-    }
-    if let value = self.exitCode {
-      result["exitCode"] = value
-    }
-    if let value = self.durationMs {
-      result["durationMs"] = value
-    }
-    if let value = self.errorKind {
-      result["errorKind"] = value
-    }
-    if let value = self.telemetry {
-      result["telemetry"] = value
-    }
-    if let value = self.redaction {
-      result["redaction"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ToolExecutionCompletePayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ToolExecutionCompletePayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ToolExecutionCompletePayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

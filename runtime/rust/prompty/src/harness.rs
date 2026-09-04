@@ -477,7 +477,16 @@ impl ModelPort for ReferenceModelPort {
                 .expect("reference adapter failure lock poisoned") = Some(message.clone());
             PortError::new(message)
         })?;
-        let response_value = response.to_value(&SaveContext::new());
+        let reference_response = json!({
+            "output": response.output.clone(),
+            "toolRequests": response
+                .tool_requests
+                .iter()
+                .flatten()
+                .map(|host| host.to_value(&SaveContext::new()))
+                .collect::<Vec<_>>(),
+            "checkpointState": response.checkpoint_state.clone(),
+        });
 
         let tool_requests = response
             .tool_requests
@@ -510,7 +519,7 @@ impl ModelPort for ReferenceModelPort {
             tool_requests: Some(tool_requests),
             next_context_state: None,
             metadata: json!({
-                "referenceResponse": response_value,
+                "referenceResponse": reference_response,
             }),
         })
     }
@@ -722,23 +731,16 @@ where
     async fn save_model_checkpoint(&self, event: &EngineEvent) -> Result<Checkpoint, PortError> {
         let iteration = event.iteration.unwrap_or_default();
         let event_payload = event.payload.clone().unwrap_or_else(|| json!({}));
-        let response = TurnModelResponse::load_from_value(
-            &event_payload["metadata"]["referenceResponse"],
-            &crate::model::context::LoadContext::new(),
-        );
+        let reference = &event_payload["metadata"]["referenceResponse"];
         let mut state = json!({
             "iteration": iteration,
-            "output": response.output,
-            "toolRequests": response
-                .tool_requests
-                .iter()
-                .flatten()
-                .map(|request| request.to_value(&SaveContext::new()))
-                .collect::<Vec<_>>()
+            "output": reference["output"].clone(),
+            "toolRequests": reference["toolRequests"].clone(),
         });
-        if let (Some(target), Some(extra)) =
-            (state.as_object_mut(), response.checkpoint_state.as_object())
-        {
+        if let (Some(target), Some(extra)) = (
+            state.as_object_mut(),
+            reference["checkpointState"].as_object(),
+        ) {
             for (key, value) in extra {
                 target.insert(key.clone(), value.clone());
             }

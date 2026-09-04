@@ -132,7 +132,7 @@ describe("callable vector conformance", () => {
   });
   it("LoadConformance.load:basic_load", async () => {
     const vector = JSON.parse(
-      '{"name":"basic_load","description":"Load basic.prompty with env var resolution and verify all PromptAgent fields","stage":"load","input":{"fixture":"basic.prompty","env":{"OPENAI_ENDPOINT":"https://test.openai.com","OPENAI_API_KEY":"sk-test123"}},"expected":{"kind":"prompt","name":"basic-prompt","description":"A basic prompt for testing","metadata":{"authors":["testauthor"]},"model":{"id":"gpt-4","provider":"openai","apiType":"chat","connection":{"kind":"key","endpoint":"https://test.openai.com","apiKey":"sk-test123"},"options":{"temperature":0.7,"maxOutputTokens":1000}},"inputs":[{"name":"firstName","kind":"string","default":"Jane"},{"name":"lastName","kind":"string","default":"Doe"},{"name":"question","kind":"string","default":"What is the meaning of life?"}],"template":{"format":{"kind":"jinja2"},"parser":{"kind":"prompty"}},"instructions":"system:\\nYou are an AI assistant who helps people find information.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\\n\\nuser:\\n{{question}}"},"operation":"load"}',
+      '{"name":"basic_load","description":"Load basic.prompty with env var resolution and verify all PromptAgent fields","stage":"load","input":{"fixture":"basic.prompty","env":{"OPENAI_ENDPOINT":"https://test.openai.com","OPENAI_API_KEY":"sk-test123"}},"expected":{"kind":"prompt","name":"basic-prompt","description":"A basic prompt for testing","metadata":{"authors":["testauthor"]},"model":{"id":"gpt-4","provider":"openai","apiType":"chat","connection":{"kind":"key","endpoint":"https://test.openai.com"},"options":{"temperature":0.7,"maxOutputTokens":1000}},"inputs":[{"name":"firstName","kind":"string","default":"Jane"},{"name":"lastName","kind":"string","default":"Doe"},{"name":"question","kind":"string","default":"What is the meaning of life?"}],"template":{"format":{"kind":"jinja2"},"parser":{"kind":"prompty"}},"instructions":"system:\\nYou are an AI assistant who helps people find information.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\\n\\nuser:\\n{{question}}"},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
@@ -144,7 +144,7 @@ describe("callable vector conformance", () => {
   });
   it("LoadConformance.load:embedding_load", async () => {
     const vector = JSON.parse(
-      '{"name":"embedding_load","description":"Load embedding.prompty and verify apiType=embedding with correct model id","stage":"load","input":{"fixture":"embedding.prompty","env":{"OPENAI_ENDPOINT":"https://test.openai.com","OPENAI_API_KEY":"sk-test123"}},"expected":{"kind":"prompt","name":"embedding","model":{"id":"text-embedding-3-small","provider":"openai","apiType":"embedding","connection":{"kind":"key","endpoint":"https://test.openai.com","apiKey":"sk-test123"}},"inputs":[{"name":"text","kind":"string","default":"Hello world"}],"instructions":"{{text}}"},"operation":"load"}',
+      '{"name":"embedding_load","description":"Load embedding.prompty and verify apiType=embedding with correct model id","stage":"load","input":{"fixture":"embedding.prompty","env":{"OPENAI_ENDPOINT":"https://test.openai.com","OPENAI_API_KEY":"sk-test123"}},"expected":{"kind":"prompt","name":"embedding","model":{"id":"text-embedding-3-small","provider":"openai","apiType":"embedding","connection":{"kind":"key","endpoint":"https://test.openai.com"}},"inputs":[{"name":"text","kind":"string","default":"Hello world"}],"instructions":"{{text}}"},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
@@ -174,7 +174,7 @@ describe("callable vector conformance", () => {
   });
   it("LoadConformance.load:file_reference_in_tree_allowed", async () => {
     const vector = JSON.parse(
-      '{"name":"file_reference_in_tree_allowed","description":"A ${file:sub/data.json} reference that stays within the prompt file\'s directory tree resolves to the parsed content (containment control alongside the traversal-reject vector)","stage":"load","input":{"agent_subdir":"app","frontmatter":{"name":"file-in-tree-test","model":{"id":"gpt-4","connection":"${file:sub/data.json}"}},"files":{"sub/data.json":{"kind":"key","endpoint":"https://in-tree.example.com","apiKey":"ok"}}},"expected":{"model":{"connection":{"kind":"key","endpoint":"https://in-tree.example.com","apiKey":"ok"}}},"operation":"load"}',
+      '{"name":"file_reference_in_tree_allowed","description":"A ${file:sub/data.json} reference that stays within the prompt file\'s directory tree resolves to the parsed content (containment control alongside the traversal-reject vector)","stage":"load","input":{"agent_subdir":"app","frontmatter":{"name":"file-in-tree-test","model":{"id":"gpt-4","connection":"${file:sub/data.json}"}},"files":{"sub/data.json":{"kind":"key","endpoint":"https://in-tree.example.com","apiKey":"ok"}}},"expected":{"model":{"connection":{"kind":"key","endpoint":"https://in-tree.example.com"}}},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
@@ -186,7 +186,7 @@ describe("callable vector conformance", () => {
   });
   it("LoadConformance.load:file_resolution", async () => {
     const vector = JSON.parse(
-      '{"name":"file_resolution","description":"${file:shared_connection.json} resolves to the parsed JSON content of the referenced file","stage":"load","input":{"frontmatter":{"name":"file-ref-test","model":{"id":"gpt-4","connection":"${file:shared_connection.json}"}},"env":{"OPENAI_API_KEY":"shared-key"},"files":{"shared_connection.json":{"kind":"key","endpoint":"https://shared.example.com","apiKey":"shared-key"}}},"expected":{"model":{"connection":{"kind":"key","endpoint":"https://shared.example.com","apiKey":"shared-key"}}},"operation":"load"}',
+      '{"name":"file_resolution","description":"${file:shared_connection.json} resolves to the parsed JSON content of the referenced file","stage":"load","input":{"frontmatter":{"name":"file-ref-test","model":{"id":"gpt-4","connection":"${file:shared_connection.json}"}},"env":{"OPENAI_API_KEY":"shared-key"},"files":{"shared_connection.json":{"kind":"key","endpoint":"https://shared.example.com","apiKey":"shared-key"}}},"expected":{"model":{"connection":{"kind":"key","endpoint":"https://shared.example.com"}}},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });

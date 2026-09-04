@@ -16,7 +16,7 @@ public enum ReplayVerificationStatus: String, Codable, CaseIterable {
 }
 
 /// Result returned by a replay verifier implementation.
-public struct ReplayVerificationResult: TypraModel {
+public struct ReplayVerificationResult {
   public static let shorthandProperty: String? = nil
   public var status: ReplayVerificationStatus = (try! ReplayVerificationStatus.parse("passed"))
   public var mismatches: [ReplayMismatch]? = nil
@@ -30,48 +30,4 @@ public struct ReplayVerificationResult: TypraModel {
     self.actualCount = actualCount
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> ReplayVerificationResult {
-    let object = try TypraRuntime.object(data, typeName: "ReplayVerificationResult")
-    var instance = ReplayVerificationResult()
-    if let value = object["status"] {
-      instance.status = try ReplayVerificationStatus.parse(try TypraRuntime.string(value, field: "status"))
-    }
-    if let value = object["mismatches"] {
-      instance.mismatches = try TypraRuntime.array(value, field: "mismatches").enumerated().map { try ReplayMismatch.load($1, context: context.at("mismatches").atIndex($0)) }
-    }
-    if let value = object["expectedCount"] {
-      instance.expectedCount = try TypraRuntime.int32(value, field: "expectedCount")
-    }
-    if let value = object["actualCount"] {
-      instance.actualCount = try TypraRuntime.int32(value, field: "actualCount")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["status"] = self.status.rawValue
-    if let value = self.mismatches {
-      result["mismatches"] = try value.map { try $0.save(context) }
-    }
-    result["expectedCount"] = self.expectedCount
-    result["actualCount"] = self.actualCount
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> ReplayVerificationResult {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "ReplayVerificationResult"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> ReplayVerificationResult {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "ReplayVerificationResult"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

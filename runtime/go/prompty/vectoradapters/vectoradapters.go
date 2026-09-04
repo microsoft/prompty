@@ -7,11 +7,9 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
-	"prompty/jinjasubset"
 	prompty "prompty/model"
 )
 
@@ -48,55 +46,6 @@ var VectorAdapters = map[string]Adapter{
 			return prompty.MapModel(input, ctx.Provider).Save(prompty.NewSaveContext()), nil
 		},
 	},
-	"Renderer.renderSegments": {
-		Invoke: func(input any, ctx Context) (any, error) {
-			typed, _ := input.(map[string]any)
-			template, _ := typed["template"].(string)
-			inputs, _ := typed["inputs"].(map[string]any)
-			strictProps := toStringSlice(typed["strict_props"])
-			segments, err := jinjasubset.RenderSegments(template, inputs, strictProps)
-			if err != nil {
-				if jinjasubset.IsStrictViolation(err) {
-					return map[string]any{"error": "StrictViolation"}, nil
-				}
-				return nil, err
-			}
-			out := make([]any, len(segments))
-			for i, segment := range segments {
-				var source any
-				if segment.Source != nil {
-					source = *segment.Source
-				}
-				out[i] = map[string]any{
-					"kind":   segment.Kind,
-					"text":   segment.Text,
-					"source": source,
-					"strict": segment.Strict,
-				}
-			}
-			return map[string]any{"segments": out}, nil
-		},
-		Normalize: projectNormalize,
-	},
-	// Renderer.render -- render agent instructions through the real render
-	// pipeline (jinja2/mustache dispatch + thread-nonce injection).
-	"Renderer.render": {
-		Invoke:    renderInvoke,
-		Normalize: renderNormalize,
-	},
-	// Parser.parse -- parse rendered role-marker text into structured messages
-	// through the real chat parser + thread-marker expansion.
-	"Parser.parse": {
-		Invoke:    parseInvoke,
-		Normalize: projectNormalize,
-	},
-	// Processor.process -- normalize a raw provider response into the result
-	// contract (text / tool calls / structured object / embeddings) via the real
-	// OpenAI + Anthropic processors.
-	"Processor.process": {
-		Invoke:    processInvoke,
-		Normalize: projectNormalize,
-	},
 	// WireConformance.toRequest -- map canonical agent + messages into a
 	// provider-specific request body via the real wire builders.
 	"WireConformance.toRequest": {
@@ -109,12 +58,6 @@ var VectorAdapters = map[string]Adapter{
 	"LoadConformance.load": {
 		Invoke:    loadInvoke,
 		Normalize: loadNormalize,
-	},
-	// Processor.processStream -- classify a raw provider stream and reconcile the
-	// streaming-failure contract via the provider-agnostic engine.
-	"Processor.processStream": {
-		Invoke:    processStreamInvoke,
-		Normalize: projectNormalize,
 	},
 	// TurnConformance.run -- drive the provider-agnostic agent loop.
 	"TurnConformance.run": {
@@ -189,167 +132,6 @@ func project(observed any, expected any) any {
 	}
 
 	return observed
-}
-
-// ---------------------------------------------------------------------------
-// Renderer.render
-// ---------------------------------------------------------------------------
-
-// buildRenderAgent synthesizes an Agent from a render vector's raw input,
-// inferring declared input kinds from any embedded `_kind` markers so that
-// rich-kind (thread/image/file/audio) inputs trigger nonce substitution.
-func buildRenderAgent(template, engine string, inputs map[string]any) *prompty.Agent {
-	if engine == "" {
-		engine = "jinja2"
-	}
-	props := make([]any, 0, len(inputs))
-	for name, val := range inputs {
-		kind := "string"
-		if m, ok := val.(map[string]any); ok {
-			if k, ok := m["_kind"].(string); ok {
-				kind = k
-			}
-		}
-		props = append(props, prompty.Property{Name: name, Kind: kind})
-	}
-	instr := template
-	return &prompty.Agent{
-		Instructions: &instr,
-		Inputs:       props,
-		Template: &prompty.Template{
-			Format: prompty.FormatConfig{Kind: engine},
-			Parser: prompty.ParserConfig{Kind: "prompty"},
-		},
-	}
-}
-
-func renderInvoke(input any, _ Context) (any, error) {
-	typed, _ := input.(map[string]any)
-	template, _ := typed["template"].(string)
-	engine, err := seamDiscriminator(typed, "template", "format", "kind")
-	if err != nil {
-		return nil, err
-	}
-	inputs, _ := typed["inputs"].(map[string]any)
-	agent := buildRenderAgent(template, engine, inputs)
-	rendered, _, err := prompty.Render(agent, inputs)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]any{"rendered": rendered}, nil
-}
-
-// renderNormalize handles both exact-text expectations ({"rendered": ...}) and
-// nonce-pattern expectations, where the rendered output contains a random hex
-// nonce and is graded against a regular expression.
-func renderNormalize(observed any, ctx Context) any {
-	expected, _ := ctx.Vector["expected"].(map[string]any)
-	if pat, ok := expected["nonce_pattern"].(string); ok {
-		obs, _ := observed.(map[string]any)
-		rendered, _ := obs["rendered"].(string)
-		if regexp.MustCompile(pat).MatchString(rendered) {
-			return expected
-		}
-		return map[string]any{"nonce_pattern": rendered}
-	}
-	return project(observed, ctx.Vector["expected"])
-}
-
-// ---------------------------------------------------------------------------
-// Parser.parse
-// ---------------------------------------------------------------------------
-
-func parseInvoke(input any, _ Context) (any, error) {
-	typed, _ := input.(map[string]any)
-	rendered, _ := typed["rendered"].(string)
-	messages := prompty.ParseMessages(rendered)
-
-	if ti, ok := typed["thread_inputs"].(map[string]any); ok && len(ti) > 0 {
-		threadInputs := map[string][]prompty.Message{}
-		for name, val := range ti {
-			threadInputs[name] = vectorMessagesToModel(val)
-		}
-		messages = prompty.ExpandThreadMarkers(messages, threadInputs)
-	}
-
-	return map[string]any{"messages": saveConformanceMessages(messages)}, nil
-}
-
-// vectorMessagesToModel converts conformance-shaped message maps (which use a
-// `content` array) into runtime Message values.
-func vectorMessagesToModel(val any) []prompty.Message {
-	out := []prompty.Message{}
-	for _, item := range toMapSlice(val) {
-		role, _ := item["role"].(string)
-		parts := []any{}
-		for _, c := range toMapSlice(item["content"]) {
-			kind, _ := c["kind"].(string)
-			value, _ := c["value"].(string)
-			if kind == "" {
-				kind = "text"
-			}
-			parts = append(parts, prompty.TextPart{Kind: kind, Value: value})
-		}
-		msg := prompty.Message{Role: prompty.Role(role), Parts: parts}
-		if md, ok := item["metadata"].(map[string]any); ok && len(md) > 0 {
-			msg.Metadata = md
-		}
-		out = append(out, msg)
-	}
-	return out
-}
-
-// saveConformanceMessages serializes messages into the conformance wire shape,
-// which uses a `content` array (not `parts`) and omits empty metadata.
-func saveConformanceMessages(messages []prompty.Message) []any {
-	out := make([]any, 0, len(messages))
-	for _, msg := range messages {
-		content := make([]any, 0, len(msg.Parts))
-		for _, p := range msg.Parts {
-			content = append(content, partToConformance(p))
-		}
-		m := map[string]any{"role": string(msg.Role), "content": content}
-		if len(msg.Metadata) > 0 {
-			m["metadata"] = msg.Metadata
-		}
-		out = append(out, m)
-	}
-	return out
-}
-
-func partToConformance(p any) any {
-	switch tp := p.(type) {
-	case prompty.TextPart:
-		return map[string]any{"kind": tp.Kind, "value": tp.Value}
-	case *prompty.TextPart:
-		if tp == nil {
-			return map[string]any{}
-		}
-		return map[string]any{"kind": tp.Kind, "value": tp.Value}
-	case map[string]any:
-		return tp
-	default:
-		return map[string]any{}
-	}
-}
-
-// -----------------------------------------------------------------------------
-// Processor.process
-// -----------------------------------------------------------------------------
-
-func processInvoke(input any, _ Context) (any, error) {
-	typed, _ := input.(map[string]any)
-	provider, err := seamDiscriminator(typed, "model", "provider")
-	if err != nil {
-		return nil, err
-	}
-	apiType, _ := typed["apiType"].(string)
-	hasOutputs, _ := typed["has_outputs"].(bool)
-	result, err := prompty.ProcessResponse(provider, apiType, typed["response"], hasOutputs)
-	if err != nil {
-		return nil, err
-	}
-	return map[string]any{"result": result}, nil
 }
 
 // -----------------------------------------------------------------------------
@@ -782,36 +564,6 @@ func seamDiscriminator(input map[string]any, path ...string) (string, error) {
 		dotted += "." + key
 	}
 	return "", fmt.Errorf("vector input missing @dispatch discriminator at '%s'; every conformance vector must nest the discriminator under the seam-param path (no flat-sibling fallback)", dotted)
-}
-
-// ---------------------------------------------------------------------------
-// Processor.processStream
-// ---------------------------------------------------------------------------
-
-func processStreamInvoke(input any, _ Context) (any, error) {
-	typed, _ := input.(map[string]any)
-	provider, err := seamDiscriminator(typed, "model", "provider")
-	if err != nil {
-		return nil, err
-	}
-	if provider != "openai" {
-		return nil, fmt.Errorf("unsupported stream provider: %q", provider)
-	}
-
-	chunks, err := prompty.ClassifyStreamEvents(toAnySlice(typed["events"]))
-	if err != nil {
-		return nil, err
-	}
-
-	saved := make([]any, len(chunks))
-	for i, chunk := range chunks {
-		saved[i] = chunk.Save(prompty.NewSaveContext())
-	}
-	out := map[string]any{"chunks": saved}
-	for key, value := range prompty.ReconcileStream(chunks).Save() {
-		out[key] = value
-	}
-	return out, nil
 }
 
 // ---------------------------------------------------------------------------

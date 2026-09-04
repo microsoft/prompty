@@ -404,7 +404,6 @@ func (obj ApiKeyConnection) Save(ctx *SaveContext) map[string]interface{} {
 		result["usageDescription"] = *obj.UsageDescription
 	}
 	result["endpoint"] = obj.Endpoint
-	result["apiKey"] = obj.ApiKey
 
 	return result
 }

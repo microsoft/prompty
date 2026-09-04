@@ -33,6 +33,7 @@ namespace Prompty;
  * directory tree after canonicalization, and any additional allowed roots must
  * be supplied by the host application's load options rather than frontmatter.
  */
+@serializable
 @extension("additionalProperties", false)
 model Agent {
   // Identity & metadata

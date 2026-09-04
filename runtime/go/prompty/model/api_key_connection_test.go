@@ -152,9 +152,6 @@ func TestApiKeyConnectionRoundtrip(t *testing.T) {
 	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
 	}
-	if reloaded.ApiKey != "your-api-key" {
-		t.Errorf(`Expected ApiKey to be "your-api-key", got %v`, reloaded.ApiKey)
-	}
 }
 
 // TestApiKeyConnectionToJSON tests that ToJSON produces valid JSON
@@ -196,9 +193,6 @@ func TestApiKeyConnectionToJSON(t *testing.T) {
 	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
 	}
-	if reloaded.ApiKey != "your-api-key" {
-		t.Errorf(`Expected ApiKey to be "your-api-key", got %v`, reloaded.ApiKey)
-	}
 }
 
 // TestApiKeyConnectionToYAML tests that ToYAML produces valid YAML
@@ -239,9 +233,6 @@ func TestApiKeyConnectionToYAML(t *testing.T) {
 	}
 	if reloaded.Endpoint != "https://{your-custom-endpoint}.openai.azure.com/" {
 		t.Errorf(`Expected Endpoint to be "https://{your-custom-endpoint}.openai.azure.com/", got %v`, reloaded.Endpoint)
-	}
-	if reloaded.ApiKey != "your-api-key" {
-		t.Errorf(`Expected ApiKey to be "your-api-key", got %v`, reloaded.ApiKey)
 	}
 }
 

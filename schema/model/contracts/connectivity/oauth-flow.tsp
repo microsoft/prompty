@@ -4,6 +4,7 @@ using Prompty.Conformance.Samples;
 namespace Prompty.Contracts.Connectivity;
 
 /** Provider-neutral OAuth token material returned by an authorization server. */
+@serializable
 model OAuthToken {
   @doc("The bearer access token")
   accessToken: string;
@@ -24,6 +25,7 @@ model OAuthToken {
 }
 
 /** Provider-neutral device authorization challenge shown to a user. */
+@serializable
 model DeviceAuthorization {
   @doc("The device code used when polling the token endpoint")
   deviceCode: string;

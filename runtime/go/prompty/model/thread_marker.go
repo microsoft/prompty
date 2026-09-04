@@ -4,12 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ThreadMarker represents Positional marker for conversation history insertion during template rendering.
 //
 // During `prepare()`, nonce strings in rendered text are replaced with
@@ -19,68 +13,4 @@ import (
 type ThreadMarker struct {
 	Name string `json:"name" yaml:"name"`
 	Kind string `json:"kind" yaml:"kind"`
-}
-
-// LoadThreadMarker creates a ThreadMarker from a map[string]interface{}
-func LoadThreadMarker(data interface{}, ctx *LoadContext) (ThreadMarker, error) {
-	result := ThreadMarker{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["name"]; ok && val != nil {
-			result.Name = string(val.(string))
-		}
-		if val, ok := m["kind"]; ok && val != nil {
-			result.Kind = string(val.(string))
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ThreadMarker to map[string]interface{}
-func (obj ThreadMarker) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["name"] = obj.Name
-	result["kind"] = obj.Kind
-
-	return result
-}
-
-// ToJSON serializes ThreadMarker to JSON string
-func (obj *ThreadMarker) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ThreadMarker to YAML string
-func (obj *ThreadMarker) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ThreadMarker from JSON string
-func ThreadMarkerFromJSON(jsonStr string) (ThreadMarker, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ThreadMarker{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadThreadMarker(data, ctx)
-}
-
-// FromYAML creates ThreadMarker from YAML string
-func ThreadMarkerFromYAML(yamlStr string) (ThreadMarker, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ThreadMarker{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadThreadMarker(data, ctx)
 }

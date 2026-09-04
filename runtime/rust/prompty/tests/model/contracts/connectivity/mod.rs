@@ -10,7 +10,6 @@
     clippy::all
 )]
 
-mod authorization_code_flow_test;
 mod connection_test;
 mod device_authorization_test;
 mod o_auth_token_test;

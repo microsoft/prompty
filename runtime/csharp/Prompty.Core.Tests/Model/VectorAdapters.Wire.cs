@@ -1,15 +1,9 @@
 #nullable enable
 
-#pragma warning disable OPENAI001 // Responses API is in preview
-
 using System.ClientModel.Primitives;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using OpenAI.Chat;
-using OpenAI.Embeddings;
-using OpenAI.Images;
-using OpenAI.Responses;
 using Prompty.Anthropic;
 using Prompty.Core;
 using Prompty.OpenAI;
@@ -17,11 +11,10 @@ using Prompty.OpenAI;
 namespace Prompty.Core.Conformance;
 
 /// <summary>
-/// @vector conformance adapters for the wire (WireConformance.toRequest) and
-/// process (Processor.process) stages. These drive the REAL provider layers —
-/// <see cref="WireFormat"/>, <see cref="OpenAIProcessor"/>,
-/// <see cref="AnthropicExecutor"/>, <see cref="AnthropicProcessor"/> — exactly as
-/// production code does, then align the SDK-shaped observation to each vector's
+/// @vector conformance adapters for the wire (WireConformance.toRequest) stage.
+/// These drive the REAL provider layers — <see cref="WireFormat"/> and
+/// <see cref="AnthropicExecutor"/> — exactly as production code does, then align
+/// the SDK-shaped observation to each vector's
 /// canonical <c>expected</c> shape via <see cref="AlignValue"/> (subset projection +
 /// content-string/array collapse + float tolerance + JSON-equivalent tool arguments +
 /// URI trailing-slash normalization). No behavior is faked: alignment only reshapes,
@@ -293,109 +286,6 @@ public static partial class VectorAdapters
     }
 
     // =======================================================================
-    // PROCESS — Processor.process
-    // =======================================================================
-
-    private static JsonNode? ProcessInvoke(JsonNode? inputNode, VectorContext ctx)
-    {
-        var input = JsonSerializer.Deserialize<JsonElement>((inputNode ?? new JsonObject()).ToJsonString());
-        var provider = SeamDiscriminator(input, "model", "provider");
-        var apiType = input.TryGetProperty("apiType", out var at) ? at.GetString() ?? "chat" : "chat";
-        var response = input.GetProperty("response");
-        var hasOutputs = input.TryGetProperty("has_outputs", out var ho) && ho.GetBoolean();
-
-        var agent = BuildProcessAgent(hasOutputs);
-        object? result;
-
-        if (provider == "anthropic")
-        {
-            result = new AnthropicProcessor().ProcessAsync(agent, response).GetAwaiter().GetResult();
-        }
-        else
-        {
-            var processor = new OpenAIProcessor();
-            var raw = BinaryData.FromString(response.GetRawText());
-            switch (apiType)
-            {
-                case "chat":
-                    {
-                        var chat = ModelReaderWriter.Read<ChatCompletion>(raw, WireJson)
-                            ?? throw new InvalidOperationException("Failed to read ChatCompletion.");
-                        result = processor.ProcessAsync(agent, chat).GetAwaiter().GetResult();
-                        break;
-                    }
-                case "responses":
-                    {
-                        var rr = ModelReaderWriter.Read<ResponseResult>(raw, WireJson)
-                            ?? throw new InvalidOperationException("Failed to read ResponseResult.");
-                        result = processor.ProcessAsync(agent, rr).GetAwaiter().GetResult();
-                        break;
-                    }
-                case "embedding":
-                    {
-                        var emb = ModelReaderWriter.Read<OpenAIEmbeddingCollection>(raw, WireJson)
-                            ?? throw new InvalidOperationException("Failed to read embeddings.");
-                        result = processor.ProcessAsync(agent, emb).GetAwaiter().GetResult();
-                        break;
-                    }
-                case "image":
-                    {
-                        var images = ModelReaderWriter.Read<GeneratedImageCollection>(raw, WireJson)
-                            ?? throw new InvalidOperationException("Failed to read images.");
-                        result = processor.ProcessAsync(agent, images[0]).GetAwaiter().GetResult();
-                        break;
-                    }
-                default:
-                    throw new InvalidOperationException($"Unsupported apiType '{apiType}' for process vector.");
-            }
-        }
-
-        return new JsonObject { ["result"] = ResultToCanonical(result) };
-    }
-
-    private static JsonNode ResultToCanonical(object? result)
-    {
-        switch (result)
-        {
-            case null:
-                return JsonValue.Create(string.Empty)!;
-            case string s:
-                return JsonValue.Create(s)!;
-            case float[] vec:
-                return new JsonArray(vec.Select(f => (JsonNode)JsonValue.Create((double)f)!).ToArray());
-            case IList<float[]> batch:
-                return new JsonArray(batch
-                    .Select(v => (JsonNode)new JsonArray(v.Select(f => (JsonNode)JsonValue.Create((double)f)!).ToArray()))
-                    .ToArray());
-            case ToolCallResult tcr:
-                {
-                    var arr = new JsonArray();
-                    foreach (var tc in tcr.ToolCalls)
-                        arr.Add(new JsonObject
-                        {
-                            ["id"] = tc.Id,
-                            ["name"] = tc.Name,
-                            ["arguments"] = tc.Arguments,
-                        });
-                    return arr;
-                }
-            case StructuredResult sr:
-                {
-                    try
-                    {
-                        return JsonNode.Parse(sr.RawJson) ?? JsonValue.Create(sr.RawJson)!;
-                    }
-                    catch
-                    {
-                        return JsonValue.Create(sr.RawJson)!;
-                    }
-                }
-            default:
-                return JsonValue.Create(result.ToString() ?? string.Empty)!;
-        }
-    }
-
-    // =======================================================================
     // Helpers — build Agent / Messages from a vector input (JsonElement).
     // =======================================================================
 
@@ -481,14 +371,6 @@ public static partial class VectorAdapters
             messages.Add(new Message { Role = Enum.Parse<Role>(role, true), Parts = parts });
         }
         return messages;
-    }
-
-    private static Core.Agent BuildProcessAgent(bool hasOutputs)
-    {
-        var agent = new Core.Agent { Name = "process_test" };
-        if (hasOutputs)
-            agent.Outputs = [new Property { Name = "dummy", Kind = "string" }];
-        return agent;
     }
 
     // =======================================================================

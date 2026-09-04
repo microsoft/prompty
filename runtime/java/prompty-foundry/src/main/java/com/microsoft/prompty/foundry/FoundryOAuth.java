@@ -4,7 +4,6 @@ import com.microsoft.prompty.Http;
 import com.microsoft.prompty.InvokerException;
 import com.microsoft.prompty.model.AuthorizationCodeFlow;
 import com.microsoft.prompty.model.DeviceAuthorization;
-import com.microsoft.prompty.model.LoadContext;
 import com.microsoft.prompty.model.OAuthToken;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -258,45 +257,29 @@ public final class FoundryOAuth {
   // ---------------------------------------------------------------------------------------------
 
   /**
-   * The OAuth wire is snake_case; the generated model is camelCase.
+   * The OAuth wire is snake_case; the generated models are camelCase plain structs.
    *
-   * <p>Renaming through a load hook rather than a hand-written mapper means the model stays the
-   * single source of truth for what these values are — a field added upstream arrives here without
-   * this class changing.
+   * <p>{@link OAuthToken} and {@link DeviceAuthorization} are wire-only DTOs and are intentionally
+   * not {@code @serializable}, so the emitter produces plain structs with no generated {@code load}.
+   * The snake_case → camelCase mapping is therefore hand-written here — the one place conformance
+   * requires it — while the field set still tracks the generated model.
    */
-  private static LoadContext wireContext() {
-    return new LoadContext(
-        value -> {
-          if (!(value instanceof Map<?, ?> source)) {
-            return value;
-          }
-          Map<String, Object> renamed = new LinkedHashMap<>();
-          source.forEach((key, item) -> renamed.put(String.valueOf(key), item));
-          for (String[] pair :
-              new String[][] {
-                {"access_token", "accessToken"},
-                {"token_type", "tokenType"},
-                {"expires_in", "expiresIn"},
-                {"refresh_token", "refreshToken"},
-                {"device_code", "deviceCode"},
-                {"user_code", "userCode"},
-                {"verification_uri", "verificationUri"},
-              }) {
-            if (renamed.containsKey(pair[0])) {
-              renamed.put(pair[1], renamed.remove(pair[0]));
-            }
-          }
-          return renamed;
-        },
-        null);
-  }
-
   static OAuthToken parseToken(String body) {
     Map<String, Object> value = asObject(body);
     requireString(value, "access_token");
     requireString(value, "token_type");
     requireNonNegative(value, "expires_in");
-    return OAuthToken.load(value, wireContext());
+    OAuthToken token = new OAuthToken();
+    token.accessToken = (String) value.get("access_token");
+    token.tokenType = (String) value.get("token_type");
+    token.expiresIn = ((Number) value.get("expires_in")).longValue();
+    if (value.get("refresh_token") instanceof String refreshToken) {
+      token.refreshToken = refreshToken;
+    }
+    if (value.get("scope") instanceof String scope) {
+      token.scope = scope;
+    }
+    return token;
   }
 
   static DeviceAuthorization parseDeviceAuthorization(String body) {
@@ -306,7 +289,16 @@ public final class FoundryOAuth {
     requireString(value, "verification_uri");
     requireNonNegative(value, "expires_in");
     requireNonNegative(value, "interval");
-    return DeviceAuthorization.load(value, wireContext());
+    DeviceAuthorization auth = new DeviceAuthorization();
+    auth.deviceCode = (String) value.get("device_code");
+    auth.userCode = (String) value.get("user_code");
+    auth.verificationUri = (String) value.get("verification_uri");
+    auth.expiresIn = ((Number) value.get("expires_in")).longValue();
+    auth.interval = ((Number) value.get("interval")).longValue();
+    if (value.get("message") instanceof String message) {
+      auth.message = message;
+    }
+    return auth;
   }
 
   @SuppressWarnings("unchecked")

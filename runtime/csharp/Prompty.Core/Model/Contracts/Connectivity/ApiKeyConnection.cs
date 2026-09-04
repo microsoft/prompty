@@ -129,9 +129,6 @@ public partial class ApiKeyConnection : Connection
         result["endpoint"] = obj.Endpoint;
 
 
-        result["apiKey"] = obj.ApiKey;
-
-
         return result;
     }
 

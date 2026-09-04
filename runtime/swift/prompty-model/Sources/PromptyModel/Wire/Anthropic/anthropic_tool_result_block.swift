@@ -4,7 +4,7 @@
 import Foundation
 
 /// A tool result content block sent back to the API with the tool's output.
-public struct AnthropicToolResultBlock: TypraModel {
+public struct AnthropicToolResultBlock {
   public static let shorthandProperty: String? = nil
   public var type: String = "tool_result"
   public var toolUseId: String = ""
@@ -16,45 +16,4 @@ public struct AnthropicToolResultBlock: TypraModel {
     self.content = content
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AnthropicToolResultBlock {
-    let object = try TypraRuntime.object(data, typeName: "AnthropicToolResultBlock")
-    var instance = AnthropicToolResultBlock()
-    if let value = object["type"] {
-      instance.type = try TypraRuntime.string(value, field: "type")
-    }
-    else {
-      instance.type = "tool_result"
-    }
-    if let value = object["tool_use_id"] {
-      instance.toolUseId = try TypraRuntime.string(value, field: "tool_use_id")
-    }
-    if let value = object["content"] {
-      instance.content = try TypraRuntime.string(value, field: "content")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["type"] = self.type
-    result["tool_use_id"] = self.toolUseId
-    result["content"] = self.content
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AnthropicToolResultBlock {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "AnthropicToolResultBlock"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AnthropicToolResultBlock {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AnthropicToolResultBlock"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

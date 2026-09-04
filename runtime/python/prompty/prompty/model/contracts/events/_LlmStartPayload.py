@@ -6,9 +6,7 @@
 ##########################################
 
 from dataclasses import dataclass
-from typing import Any, ClassVar
-
-from ..._context import LoadContext, SaveContext
+from typing import ClassVar
 
 
 @dataclass
@@ -33,88 +31,3 @@ class LlmStartPayload:
     model_id: str | None = None
     message_count: int | None = None
     attempt: int | None = None
-
-    @staticmethod
-    def load(data: Any, context: LoadContext | None = None) -> "LlmStartPayload":
-        """Load a LlmStartPayload instance.
-        Args:
-            data (Any): The data to load the instance from.
-            context (Optional[LoadContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            LlmStartPayload: The loaded LlmStartPayload instance.
-
-        """
-
-        if context is None:
-            context = LoadContext()
-        data = context.process_input(data)
-
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid data for LlmStartPayload: {data}")
-
-        # create new instance
-        instance = LlmStartPayload()
-
-        if data is not None and "provider" in data:
-            instance.provider = data["provider"]
-        if data is not None and "modelId" in data:
-            instance.model_id = data["modelId"]
-        if data is not None and "messageCount" in data:
-            instance.message_count = data["messageCount"]
-        if data is not None and "attempt" in data:
-            instance.attempt = data["attempt"]
-        if context is not None:
-            instance = context.process_output(instance)
-        return instance
-
-    def save(self, context: SaveContext | None = None) -> dict[str, Any]:
-        """Save the LlmStartPayload instance to a dictionary.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            dict[str, Any]: The dictionary representation of this instance.
-
-        """
-        obj = self
-        if context is not None:
-            obj = context.process_object(obj)
-
-        result: dict[str, Any] = {}
-
-        if obj.provider is not None:
-            result["provider"] = obj.provider
-        if obj.model_id is not None:
-            result["modelId"] = obj.model_id
-        if obj.message_count is not None:
-            result["messageCount"] = obj.message_count
-        if obj.attempt is not None:
-            result["attempt"] = obj.attempt
-
-        if context is not None:
-            result = context.process_dict(result)
-        return result
-
-    def to_yaml(self, context: SaveContext | None = None) -> str:
-        """Convert the LlmStartPayload instance to a YAML string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-        Returns:
-            str: The YAML string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_yaml(self.save(context))
-
-    def to_json(self, context: SaveContext | None = None, indent: int = 2) -> str:
-        """Convert the LlmStartPayload instance to a JSON string.
-        Args:
-            context (Optional[SaveContext]): Optional context with pre/post processing callbacks.
-            indent (int): Number of spaces for indentation. Defaults to 2.
-        Returns:
-            str: The JSON string representation of this instance.
-
-        """
-        if context is None:
-            context = SaveContext()
-        return context.to_json(self.save(context), indent)

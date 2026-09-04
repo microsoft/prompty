@@ -4,13 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
 // ToolDispatchResult represents The result of dispatching a single tool call. Pairs the tool call
 // identifier with the tool's name and result for correlation in the
 // agent loop's message assembly.
@@ -19,85 +12,4 @@ type ToolDispatchResult struct {
 	ToolCallId string     `json:"toolCallId" yaml:"toolCallId"`
 	Name       string     `json:"name" yaml:"name"`
 	Result     ToolResult `json:"result" yaml:"result"`
-}
-
-// LoadToolDispatchResult creates a ToolDispatchResult from a map[string]interface{}
-func LoadToolDispatchResult(data interface{}, ctx *LoadContext) (ToolDispatchResult, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := ToolDispatchResult{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["result"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("result").Path)
-		}
-		if val, ok := m["toolCallId"]; ok && val != nil {
-			result.ToolCallId = string(val.(string))
-		}
-		if val, ok := m["name"]; ok && val != nil {
-			result.Name = string(val.(string))
-		}
-		if val, ok := m["result"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadToolResult(m, ctx.At("result"))
-				if err != nil {
-					return result, err
-				}
-				result.Result = loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes ToolDispatchResult to map[string]interface{}
-func (obj ToolDispatchResult) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["toolCallId"] = obj.ToolCallId
-	result["name"] = obj.Name
-
-	result["result"] = obj.Result.Save(ctx)
-
-	return result
-}
-
-// ToJSON serializes ToolDispatchResult to JSON string
-func (obj *ToolDispatchResult) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes ToolDispatchResult to YAML string
-func (obj *ToolDispatchResult) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates ToolDispatchResult from JSON string
-func ToolDispatchResultFromJSON(jsonStr string) (ToolDispatchResult, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return ToolDispatchResult{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolDispatchResult(data, ctx)
-}
-
-// FromYAML creates ToolDispatchResult from YAML string
-func ToolDispatchResultFromYAML(yamlStr string) (ToolDispatchResult, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return ToolDispatchResult{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadToolDispatchResult(data, ctx)
 }

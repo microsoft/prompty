@@ -587,8 +587,7 @@ func TestVector16LoadConformanceLoadBasicLoad(t *testing.T) {
       "apiType": "chat",
       "connection": {
         "kind": "key",
-        "endpoint": "https://test.openai.com",
-        "apiKey": "sk-test123"
+        "endpoint": "https://test.openai.com"
       },
       "options": {
         "temperature": 0.7,
@@ -687,8 +686,7 @@ func TestVector18LoadConformanceLoadEmbeddingLoad(t *testing.T) {
       "apiType": "embedding",
       "connection": {
         "kind": "key",
-        "endpoint": "https://test.openai.com",
-        "apiKey": "sk-test123"
+        "endpoint": "https://test.openai.com"
       }
     },
     "inputs": [
@@ -863,8 +861,7 @@ func TestVector23LoadConformanceLoadFileReferenceInTreeAllowed(t *testing.T) {
     "model": {
       "connection": {
         "kind": "key",
-        "endpoint": "https://in-tree.example.com",
-        "apiKey": "ok"
+        "endpoint": "https://in-tree.example.com"
       }
     }
   },
@@ -914,8 +911,7 @@ func TestVector25LoadConformanceLoadFileResolution(t *testing.T) {
     "model": {
       "connection": {
         "kind": "key",
-        "endpoint": "https://shared.example.com",
-        "apiKey": "shared-key"
+        "endpoint": "https://shared.example.com"
       }
     }
   },

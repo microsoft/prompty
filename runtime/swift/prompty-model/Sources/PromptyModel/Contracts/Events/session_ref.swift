@@ -4,7 +4,7 @@
 import Foundation
 
 /// A non-file reference observed by a harness session.
-public struct SessionRef: TypraModel {
+public struct SessionRef {
   public static let shorthandProperty: String? = nil
   public var sessionId: String? = nil
   public var refType: String = ""
@@ -20,56 +20,4 @@ public struct SessionRef: TypraModel {
     self.createdAt = createdAt
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> SessionRef {
-    let object = try TypraRuntime.object(data, typeName: "SessionRef")
-    var instance = SessionRef()
-    if let value = object["sessionId"] {
-      instance.sessionId = try TypraRuntime.string(value, field: "sessionId")
-    }
-    if let value = object["refType"] {
-      instance.refType = try TypraRuntime.string(value, field: "refType")
-    }
-    if let value = object["refValue"] {
-      instance.refValue = try TypraRuntime.string(value, field: "refValue")
-    }
-    if let value = object["turnIndex"] {
-      instance.turnIndex = try TypraRuntime.int32(value, field: "turnIndex")
-    }
-    if let value = object["createdAt"] {
-      instance.createdAt = try TypraRuntime.string(value, field: "createdAt")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.sessionId {
-      result["sessionId"] = value
-    }
-    result["refType"] = self.refType
-    result["refValue"] = self.refValue
-    if let value = self.turnIndex {
-      result["turnIndex"] = value
-    }
-    if let value = self.createdAt {
-      result["createdAt"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> SessionRef {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "SessionRef"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> SessionRef {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "SessionRef"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

@@ -29,54 +29,6 @@ impl DoneEventPayload {
         Self::default()
     }
 
-    /// Load DoneEventPayload from a JSON string.
-    pub fn from_json(json: &str, ctx: &LoadContext) -> Result<Self, serde_json::Error> {
-        let value: serde_json::Value = serde_json::from_str(json)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load DoneEventPayload from a YAML string.
-    pub fn from_yaml(yaml: &str, ctx: &LoadContext) -> Result<Self, serde_yaml::Error> {
-        let value: serde_json::Value = serde_yaml::from_str(yaml)?;
-        Self::validate_input_at(&value, "")
-            .map_err(|message| <serde_yaml::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(&value, ctx))
-    }
-
-    /// Load DoneEventPayload from an already-parsed JSON value, returning an error
-    /// instead of panicking on invalid input. Fallible companion to
-    /// `load_from_value` with the same validation policy as `from_json`.
-    pub fn try_load_from_value(
-        value: &serde_json::Value,
-        ctx: &LoadContext,
-    ) -> Result<Self, serde_json::Error> {
-        Self::validate_input_at(value, "")
-            .map_err(|message| <serde_json::Error as serde::de::Error>::custom(message))?;
-        Ok(Self::load_from_value(value, ctx))
-    }
-
-    /// Load DoneEventPayload from a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_input` before field extraction.
-    pub fn load_from_value(value: &serde_json::Value, ctx: &LoadContext) -> Self {
-        let value = ctx.process_input(value.clone());
-        if let Err(message) = Self::validate_input_at(&value, "") {
-            panic!("{}", message);
-        }
-        Self {
-            response: value
-                .get("response")
-                .cloned()
-                .unwrap_or(serde_json::Value::Null),
-            messages: value
-                .get("messages")
-                .map(|v| Self::load_messages(v, ctx))
-                .unwrap_or_default(),
-        }
-    }
-
     pub(crate) fn validate_input_at(value: &serde_json::Value, path: &str) -> Result<(), String> {
         if let Some(entries) = value
             .get("messages")
@@ -93,71 +45,5 @@ impl DoneEventPayload {
             }
         }
         Ok(())
-    }
-
-    /// Serialize DoneEventPayload to a `serde_json::Value`.
-    ///
-    /// Calls `ctx.process_dict` after serialization.
-    pub fn to_value(&self, ctx: &SaveContext) -> serde_json::Value {
-        let mut result = serde_json::Map::new();
-        // Write base fields
-        result.insert("response".to_string(), self.response.clone());
-        result.insert(
-            "messages".to_string(),
-            Self::save_messages(&self.messages, ctx),
-        );
-        ctx.process_dict(serde_json::Value::Object(result))
-    }
-
-    /// Serialize DoneEventPayload to a JSON string.
-    pub fn to_json(&self, ctx: &SaveContext) -> Result<String, serde_json::Error> {
-        serde_json::to_string_pretty(&self.to_value(ctx))
-    }
-
-    /// Serialize DoneEventPayload to a YAML string.
-    pub fn to_yaml(&self, ctx: &SaveContext) -> Result<String, serde_yaml::Error> {
-        serde_yaml::to_string(&self.to_value(ctx))
-    }
-
-    /// Load a collection of Message from a JSON value.
-    /// Handles both array format `[{...}]`.
-    fn load_messages(data: &serde_json::Value, ctx: &LoadContext) -> Vec<Message> {
-        match data {
-            serde_json::Value::Array(arr) => arr
-                .iter()
-                .map(|v| Message::load_from_value(v, ctx))
-                .collect(),
-
-            _ => Vec::new(),
-        }
-    }
-
-    /// Save a collection of Message to a JSON value.
-    fn save_messages(items: &[Message], ctx: &SaveContext) -> serde_json::Value {
-        serde_json::Value::Array(
-            items
-                .iter()
-                .map(|item| item.to_value(ctx))
-                .collect::<Vec<_>>(),
-        )
-    }
-}
-
-// Serde for `DoneEventPayload` delegates to the canonical to_value/load_from_value
-// logic so its serde wire form always equals the canonical to_value/load_from_value form. Uses a default (no-op) context — no ${env:}/${file:}
-// resolution here — leaving the context-aware LoadContext/SaveContext API intact.
-#[cfg(feature = "serde")]
-impl serde::Serialize for DoneEventPayload {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        serde::Serialize::serialize(&self.to_value(&SaveContext::default()), serializer)
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<'de> serde::Deserialize<'de> for DoneEventPayload {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let value = <serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;
-        Self::validate_input_at(&value, "").map_err(serde::de::Error::custom)?;
-        Ok(Self::load_from_value(&value, &LoadContext::default()))
     }
 }

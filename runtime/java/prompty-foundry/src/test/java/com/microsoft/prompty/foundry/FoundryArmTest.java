@@ -272,9 +272,9 @@ final class FoundryArmTest {
   class ModelShape {
 
     @Test
-    void resultsRoundTripThroughTheGeneratedModel() {
-      // These values cross a process boundary as the generated model, so a field the mappers set but
-      // the model does not persist would silently vanish on the way to a host.
+    void theMapperPopulatesEveryDerivedFieldTheCallerReads() {
+      // AiResourceInfo is a parsed value object handed back to the caller (listAiResources), not a
+      // persisted model, so a field the mapper fails to set would silently vanish on the way to a host.
       AiResourceInfo resource =
           FoundryArm.parseAiResource(
               json(
@@ -282,13 +282,11 @@ final class FoundryArmTest {
                       + "\"id\":\"/subscriptions/s/resourceGroups/rg/x\","
                       + "\"properties\":{\"endpoint\":\"https://e.example\"}}"));
       assertNotNull(resource);
-      Map<String, Object> saved =
-          resource.save(new com.microsoft.prompty.model.SaveContext());
-      assertEquals("acct", saved.get("name"));
-      assertEquals("rg", saved.get("resourceGroup"));
+      assertEquals("acct", resource.name);
+      assertEquals("rg", resource.resourceGroup);
       assertTrue(
-          String.valueOf(saved.get("serviceUrl")).contains("services.ai.azure.com"),
-          "the project-style host should survive the round trip: " + saved);
+          resource.serviceUrl.contains("services.ai.azure.com"),
+          "the project-style host should survive mapping: " + resource.serviceUrl);
     }
   }
 

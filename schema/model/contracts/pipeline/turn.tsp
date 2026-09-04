@@ -174,6 +174,7 @@ model RunTurnResult {
  * or provider-specific data. Replay verification compares this normalized shape so
  * deterministic orchestration semantics are mechanically shared across runtimes.
  */
+@serializable
 model ReplayJournalRecord {
   @doc("Journal record kind")
   kind: ReplayRecordKind;

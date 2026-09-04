@@ -4,99 +4,9 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // DoneEventPayload represents Payload for "done" events — the agent loop completed successfully.
 
 type DoneEventPayload struct {
 	Response interface{} `json:"response" yaml:"response"`
 	Messages []Message   `json:"messages" yaml:"messages"`
-}
-
-// LoadDoneEventPayload creates a DoneEventPayload from a map[string]interface{}
-func LoadDoneEventPayload(data interface{}, ctx *LoadContext) (DoneEventPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := DoneEventPayload{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["response"]; ok && val != nil {
-			result.Response = val
-		}
-		if val, ok := m["messages"]; ok && val != nil {
-			if arr, ok := val.([]interface{}); ok {
-				result.Messages = make([]Message, len(arr))
-				for i, v := range arr {
-					if item, ok := v.(map[string]interface{}); ok {
-						loaded, err := LoadMessage(item, ctx.At("messages").AtIndex(i))
-						if err != nil {
-							return result, err
-						}
-						result.Messages[i] = loaded
-					}
-				}
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes DoneEventPayload to map[string]interface{}
-func (obj DoneEventPayload) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["response"] = obj.Response
-	if obj.Messages != nil {
-		arr := make([]interface{}, len(obj.Messages))
-		for i, item := range obj.Messages {
-			arr[i] = item.Save(ctx)
-		}
-		result["messages"] = arr
-	}
-
-	return result
-}
-
-// ToJSON serializes DoneEventPayload to JSON string
-func (obj *DoneEventPayload) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes DoneEventPayload to YAML string
-func (obj *DoneEventPayload) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates DoneEventPayload from JSON string
-func DoneEventPayloadFromJSON(jsonStr string) (DoneEventPayload, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return DoneEventPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadDoneEventPayload(data, ctx)
-}
-
-// FromYAML creates DoneEventPayload from YAML string
-func DoneEventPayloadFromYAML(yamlStr string) (DoneEventPayload, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return DoneEventPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadDoneEventPayload(data, ctx)
 }

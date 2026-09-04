@@ -4,98 +4,10 @@
 
 package prompty
 
-import (
-	"encoding/json"
-	"fmt"
-
-	"gopkg.in/yaml.v3"
-)
-
 // TraceFile represents The top-level .tracy file structure written by the file backend (§3.6.1).
 
 type TraceFile struct {
 	Runtime string    `json:"runtime" yaml:"runtime"`
 	Version string    `json:"version" yaml:"version"`
 	Trace   TraceSpan `json:"trace" yaml:"trace"`
-}
-
-// LoadTraceFile creates a TraceFile from a map[string]interface{}
-func LoadTraceFile(data interface{}, ctx *LoadContext) (TraceFile, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := TraceFile{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if requiredValue, exists := m["trace"]; !exists || requiredValue == nil {
-			return result, fmt.Errorf("%s: missing required field", ctx.At("trace").Path)
-		}
-		if val, ok := m["runtime"]; ok && val != nil {
-			result.Runtime = string(val.(string))
-		}
-		if val, ok := m["version"]; ok && val != nil {
-			result.Version = string(val.(string))
-		}
-		if val, ok := m["trace"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadTraceSpan(m, ctx.At("trace"))
-				if err != nil {
-					return result, err
-				}
-				result.Trace = loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes TraceFile to map[string]interface{}
-func (obj TraceFile) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["runtime"] = obj.Runtime
-	result["version"] = obj.Version
-
-	result["trace"] = obj.Trace.Save(ctx)
-
-	return result
-}
-
-// ToJSON serializes TraceFile to JSON string
-func (obj *TraceFile) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes TraceFile to YAML string
-func (obj *TraceFile) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates TraceFile from JSON string
-func TraceFileFromJSON(jsonStr string) (TraceFile, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return TraceFile{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadTraceFile(data, ctx)
-}
-
-// FromYAML creates TraceFile from YAML string
-func TraceFileFromYAML(yamlStr string) (TraceFile, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return TraceFile{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadTraceFile(data, ctx)
 }

@@ -144,3 +144,31 @@ func agentModelDiscriminator(agent prompty.Agent, field, fallback string) string
 	}
 	return fallback
 }
+
+// buildRenderAgent synthesizes an Agent from a render vector's raw input,
+// inferring declared input kinds from any embedded `_kind` markers so that
+// rich-kind (thread/image/file/audio) inputs trigger nonce substitution.
+func buildRenderAgent(template, engine string, inputs map[string]any) *prompty.Agent {
+	if engine == "" {
+		engine = "jinja2"
+	}
+	props := make([]any, 0, len(inputs))
+	for name, val := range inputs {
+		kind := "string"
+		if m, ok := val.(map[string]any); ok {
+			if k, ok := m["_kind"].(string); ok {
+				kind = k
+			}
+		}
+		props = append(props, prompty.Property{Name: name, Kind: kind})
+	}
+	instr := template
+	return &prompty.Agent{
+		Instructions: &instr,
+		Inputs:       props,
+		Template: &prompty.Template{
+			Format: prompty.FormatConfig{Kind: engine},
+			Parser: prompty.ParserConfig{Kind: "prompty"},
+		},
+	}
+}

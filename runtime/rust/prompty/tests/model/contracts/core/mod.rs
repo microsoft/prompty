@@ -10,8 +10,4 @@
     clippy::all
 )]
 
-mod file_not_found_error_test;
-mod invoker_error_test;
 mod property_test;
-mod validation_error_test;
-mod validation_result_test;

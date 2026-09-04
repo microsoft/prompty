@@ -85,4 +85,6 @@ pub mod processor_resolver;
 
 pub mod renderer_resolver;
 
+pub mod vector_conformance;
+
 pub use contracts::pipeline;

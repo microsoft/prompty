@@ -8,9 +8,7 @@ import com.microsoft.prompty.LoadException;
 import com.microsoft.prompty.Loader;
 import com.microsoft.prompty.Messages;
 import com.microsoft.prompty.Pipeline;
-import com.microsoft.prompty.Registry;
 import com.microsoft.prompty.SpecVectors;
-import com.microsoft.prompty.Threads;
 import com.microsoft.prompty.VectorAgents;
 import com.microsoft.prompty.engine.DefaultPorts;
 import com.microsoft.prompty.engine.PortException;
@@ -25,9 +23,6 @@ import com.microsoft.prompty.harness.FunctionHostToolExecutor;
 import com.microsoft.prompty.harness.InMemoryCheckpointStore;
 import com.microsoft.prompty.harness.JsonlEventJournalWriter;
 import com.microsoft.prompty.harness.ReferenceTurnRunner;
-import com.microsoft.prompty.jinjasubset.JinjaSubsetRenderer;
-import com.microsoft.prompty.jinjasubset.Segment;
-import com.microsoft.prompty.jinjasubset.StrictViolationException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -48,22 +43,19 @@ import org.yaml.snakeyaml.Yaml;
  * Hand-written adapters for the generated vector conformance harness.
  *
  * <p>Each adapter drives real, provider-agnostic Java runtime code against the shared cross-runtime
- * vectors: the streaming reconciliation contract ({@code Processor.processStream}), the agent loop
- * ({@code TurnConformance.run}), the snapshot/portability turn engine ({@code
- * TurnConformance.runTurn}), and the reference replay runner ({@code TurnConformance.replay}). The
- * remaining waivers are covered by dedicated Java driver tests elsewhere in this module.
+ * vectors: the agent loop ({@code TurnConformance.run}), the snapshot/portability turn engine
+ * ({@code TurnConformance.runTurn}), the reference replay runner ({@code TurnConformance.replay}),
+ * model load ({@code LoadConformance.load}), request wire ({@code WireConformance.toRequest}), and
+ * discovery ({@code DiscoveryConformance.enrich} / {@code mapModel}). The dispatch seams
+ * (Renderer/Parser/Processor) now retire through the generated typed {@code @dispatch} resolver
+ * rail and its per-interface conformance tests, so they are no longer adapted here. The remaining
+ * waivers are covered by dedicated Java driver tests elsewhere in this module.
  */
 public final class VectorAdapters {
   private VectorAdapters() {}
 
   public static Map<String, VectorRunner.VectorAdapter> adapters() {
     Map<String, VectorRunner.VectorAdapter> adapters = new LinkedHashMap<>();
-    adapters.put(
-        "Renderer.renderSegments", new VectorRunner.VectorAdapter(VectorAdapters::renderSegments));
-    adapters.put(
-        "Processor.processStream",
-        new VectorRunner.VectorAdapter(
-            VectorAdapters::processStreamInvoke, VectorAdapters::projectNormalize));
     adapters.put(
         "TurnConformance.run",
         new VectorRunner.VectorAdapter(VectorAdapters::runInvoke, VectorAdapters::runNormalize));
@@ -73,12 +65,9 @@ public final class VectorAdapters {
             VectorAdapters::runTurnInvoke, VectorAdapters::projectNormalize));
     adapters.put(
         "TurnConformance.replay", new VectorRunner.VectorAdapter(VectorAdapters::replayInvoke));
-    adapters.put("Renderer.render", new VectorRunner.VectorAdapter(VectorAdapters::renderInvoke));
-    adapters.put("Parser.parse", new VectorRunner.VectorAdapter(VectorAdapters::parseInvoke));
     adapters.put("LoadConformance.load", new VectorRunner.VectorAdapter(VectorAdapters::loadInvoke));
     adapters.put(
         "WireConformance.toRequest", new VectorRunner.VectorAdapter(VectorAdapters::wireInvoke));
-    adapters.put("Processor.process", new VectorRunner.VectorAdapter(VectorAdapters::processInvoke));
     adapters.put(
         "DiscoveryConformance.enrich", new VectorRunner.VectorAdapter(VectorAdapters::enrichInvoke));
     adapters.put(
@@ -136,127 +125,6 @@ public final class VectorAdapters {
             + String.join(".", path)
             + "'; every conformance vector must nest the discriminator under the seam-param path "
             + "(no flat-sibling fallback).");
-  }
-
-  // ------------------------------------------------------------- Renderer.render
-  private static Object renderInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
-    Registry.bootstrap();
-    Map<String, Object> input = asMap(rawInput);
-    Map<String, Object> inputs = asMap(input.get("inputs"));
-    Agent agent =
-        buildRenderAgent(
-            string(input.get("template")),
-            seamDiscriminator(input, "template", "format", "kind"),
-            inputs);
-    String rendered = Pipeline.render(agent, stripKindMarkers(inputs));
-
-    Map<String, Object> expected = asMap(expectedNode(ctx));
-    String name = vectorName(ctx);
-    if (expected.containsKey("rendered")) {
-      String exact = string(expected.get("rendered"));
-      if (!exact.equals(rendered)) {
-        throw new AssertionError(
-            "[" + name + "] rendered output: expected \"" + exact + "\" but got \"" + rendered + "\"");
-      }
-    }
-    if (expected.get("nonce_pattern") instanceof String pattern
-        && !Pattern.compile(pattern).matcher(rendered).find()) {
-      throw new AssertionError("[" + name + "] expected output matching /" + pattern + "/, got: " + rendered);
-    }
-    return expectedNode(ctx);
-  }
-
-  private static Agent buildRenderAgent(String template, String engine, Map<String, Object> inputs) {
-    List<Object> declared = new ArrayList<>();
-    for (Map.Entry<String, Object> entry : inputs.entrySet()) {
-      Map<String, Object> property = new LinkedHashMap<>();
-      property.put("name", entry.getKey());
-      property.put("kind", kindOf(entry.getValue()));
-      declared.add(property);
-    }
-    Map<String, Object> data = new LinkedHashMap<>();
-    data.put("kind", "prompt");
-    data.put("name", "test");
-    data.put("model", Map.of("id", "test"));
-    data.put("instructions", template);
-    data.put("inputs", declared);
-    data.put("template", Map.of("format", Map.of("kind", engine), "parser", Map.of("kind", "prompty")));
-    return Agent.load(data, new LoadContext(null, null));
-  }
-
-  private static String kindOf(Object value) {
-    if (value instanceof Map<?, ?> map && map.get("_kind") instanceof String kind) {
-      return kind;
-    }
-    return "string";
-  }
-
-  private static Map<String, Object> stripKindMarkers(Map<String, Object> inputs) {
-    Map<String, Object> result = new LinkedHashMap<>();
-    for (Map.Entry<String, Object> entry : inputs.entrySet()) {
-      Object value = entry.getValue();
-      if (value instanceof Map<?, ?> map && map.containsKey("_kind")) {
-        Object messages = map.get("messages");
-        result.put(entry.getKey(), messages != null ? messages : map.get("value"));
-      } else {
-        result.put(entry.getKey(), value);
-      }
-    }
-    return result;
-  }
-
-  // --------------------------------------------------------------- Parser.parse
-  private static Object parseInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
-    Registry.bootstrap();
-    Map<String, Object> input = asMap(rawInput);
-    String rendered = string(input.get("rendered"));
-    Map<String, Object> threadInputs = asMap(input.get("thread_inputs"));
-
-    Agent agent = buildParseAgent(threadInputs);
-    List<Message> messages = Pipeline.parse(agent, rendered, null);
-    messages = Threads.expand(messages, noncesIn(rendered, threadInputs), threadInputs);
-
-    SpecVectors.assertMatches(
-        "[" + vectorName(ctx) + "] messages", asMap(expectedNode(ctx)).get("messages"), saveMessages(messages));
-    return expectedNode(ctx);
-  }
-
-  private static Agent buildParseAgent(Map<String, Object> threadInputs) {
-    List<Object> declared = new ArrayList<>();
-    for (String name : threadInputs.keySet()) {
-      declared.add(Map.of("name", name, "kind", "thread"));
-    }
-    Map<String, Object> data = new LinkedHashMap<>();
-    data.put("kind", "prompt");
-    data.put("name", "test");
-    data.put("model", Map.of("id", "test"));
-    data.put("instructions", "");
-    data.put("inputs", declared);
-    return Agent.load(data, new LoadContext(null, null));
-  }
-
-  private static Map<String, String> noncesIn(String rendered, Map<String, Object> threadInputs) {
-    Map<String, String> nonces = new LinkedHashMap<>();
-    Matcher matcher = NONCE_MARKER.matcher(rendered);
-    while (matcher.find()) {
-      String property = matcher.group(2);
-      if (threadInputs.containsKey(property)) {
-        nonces.put(property, matcher.group());
-      }
-    }
-    return nonces;
-  }
-
-  private static List<Object> saveMessages(List<Message> messages) {
-    SaveContext context = new SaveContext("array", false);
-    List<Object> saved = new ArrayList<>(messages.size());
-    for (Message message : messages) {
-      Map<String, Object> item = new LinkedHashMap<>(message.save(context));
-      Object parts = item.remove("parts");
-      item.put("content", parts);
-      saved.add(item);
-    }
-    return saved;
   }
 
   // ------------------------------------------------------- LoadConformance.load
@@ -484,27 +352,6 @@ public final class VectorAdapters {
     return expectedNode(ctx);
   }
 
-  // -------------------------------------------------------------- Processor.process
-  private static Object processInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
-    Map<String, Object> input = asMap(rawInput);
-    String provider = seamDiscriminator(input, "model", "provider");
-    Agent agent =
-        VectorAgents.buildProcessAgent(input, "anthropic".equals(provider) ? "claude-3" : "gpt-4", provider);
-    Object actual =
-        "anthropic".equals(provider)
-            ? com.microsoft.prompty.anthropic.AnthropicProcessor.processResponse(agent, input.get("response"))
-            : com.microsoft.prompty.openai.OpenAIProcessor.processResponse(agent, input.get("response"));
-
-    Object expected = asMap(expectedNode(ctx)).get("result");
-    // A response with nothing to say and a response that said nothing are the same
-    // outcome to a caller; the fixtures spell one of them as an empty string.
-    if ("".equals(expected) && (actual == null || "".equals(actual))) {
-      return expectedNode(ctx);
-    }
-    SpecVectors.assertEquivalent(vectorName(ctx), expected, actual);
-    return expectedNode(ctx);
-  }
-
   // ------------------------------------------------- DiscoveryConformance.enrich
   private static Object enrichInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
     Map<String, Object> input = asMap(rawInput);
@@ -534,117 +381,6 @@ public final class VectorAdapters {
         };
     SpecVectors.assertEquivalent(vectorName(ctx), expectedNode(ctx), actual.save(new SaveContext()));
     return expectedNode(ctx);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Renderer.renderSegments
-  // ---------------------------------------------------------------------------
-
-  @SuppressWarnings("unchecked")
-  private static Object renderSegments(Object input, VectorRunner.VectorContext ctx) {
-    Map<String, Object> map = input instanceof Map<?, ?> m ? copyMap(m) : new LinkedHashMap<>();
-    String template = string(map.get("template"));
-    Map<String, Object> inputs = map.get("inputs") instanceof Map<?, ?> m ? copyMap(m) : new LinkedHashMap<>();
-    List<String> strictProps = new ArrayList<>();
-    if (map.get("strict_props") instanceof Iterable<?> items) {
-      for (Object item : items) if (item != null) strictProps.add(String.valueOf(item));
-    }
-
-    Map<String, Object> result = new LinkedHashMap<>();
-    try {
-      List<Object> serialized = new ArrayList<>();
-      for (Segment segment : JinjaSubsetRenderer.renderSegments(template, inputs, strictProps)) {
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("kind", segment.kind());
-        out.put("text", segment.text());
-        out.put("source", segment.source());
-        out.put("strict", segment.strict());
-        serialized.add(out);
-      }
-      result.put("segments", serialized);
-    } catch (StrictViolationException ex) {
-      result.put("error", "StrictViolation");
-    }
-    return result;
-  }
-
-  // ---------------------------------------------------------------------------
-  // Processor.processStream -- provider-agnostic classification + reconciliation
-  // ---------------------------------------------------------------------------
-
-  private static Object processStreamInvoke(Object input, VectorRunner.VectorContext ctx) {
-    Map<String, Object> map = asMap(input);
-    String provider = seamDiscriminator(map, "model", "provider");
-    if (!"openai".equals(provider)) {
-      throw new IllegalStateException("unsupported stream provider: " + provider);
-    }
-
-    List<StreamChunk> chunks = classifyStreamEvents(asList(map.get("events")));
-    List<Object> saved = new ArrayList<>();
-    for (StreamChunk chunk : chunks) {
-      saved.add(chunk.save(new SaveContext()));
-    }
-
-    String partialText = "";
-    boolean requiresReconciliation = false;
-    int failureCount = 0;
-    for (StreamChunk chunk : chunks) {
-      if (chunk instanceof TextChunk text) {
-        partialText += text.value;
-      } else if (chunk instanceof FailureChunk failure) {
-        failureCount++;
-        if (failure.failure != null && "indeterminate".equals(failure.failure.outcome.value)) {
-          requiresReconciliation = true;
-        }
-      }
-    }
-
-    Map<String, Object> out = new LinkedHashMap<>();
-    out.put("chunks", saved);
-    out.put("partialText", partialText);
-    out.put("requiresReconciliation", requiresReconciliation);
-    out.put("completionCommitted", failureCount == 0);
-    return out;
-  }
-
-  private static List<StreamChunk> classifyStreamEvents(List<Object> events) {
-    List<StreamChunk> chunks = new ArrayList<>();
-    for (Object raw : events) {
-      Map<String, Object> event = asMap(raw);
-      String kind = string(event.get("kind"));
-      switch (kind) {
-        case "provider" -> {
-          Map<String, Object> value = asMap(event.get("value"));
-          List<Object> choices = asList(value.get("choices"));
-          if (choices.isEmpty()) {
-            continue;
-          }
-          Map<String, Object> delta = asMap(asMap(choices.get(0)).get("delta"));
-          if (delta.get("content") != null) {
-            TextChunk text = new TextChunk();
-            text.kind = "text";
-            text.value = String.valueOf(delta.get("content"));
-            chunks.add(text);
-          }
-          if (delta.get("refusal") != null) {
-            chunks.add(failureChunk("determinate", "Model refused: " + String.valueOf(delta.get("refusal"))));
-          }
-        }
-        case "transportError" -> chunks.add(failureChunk("indeterminate", string(event.get("message"))));
-        default -> throw new IllegalStateException("unsupported stream event kind: " + kind);
-      }
-    }
-    return chunks;
-  }
-
-  private static FailureChunk failureChunk(String outcome, String message) {
-    FailureChunk chunk = new FailureChunk();
-    chunk.kind = "failure";
-    StreamFailure failure = new StreamFailure();
-    failure.outcome = StreamFailureOutcome.fromValue(outcome);
-    failure.message = message;
-    chunk.failure = failure;
-    return chunk;
   }
 
   // ---------------------------------------------------------------------------

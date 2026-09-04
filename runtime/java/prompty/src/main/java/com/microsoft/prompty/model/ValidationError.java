@@ -16,69 +16,6 @@ public class ValidationError {
 
   public ValidationError() { }
 
-  @SuppressWarnings("unchecked")
-  public static ValidationError load(Object input, LoadContext context) {
-    LoadContext ctx = context == null ? new LoadContext() : context;
-    Object data = ctx.processInput(input);
-    if (!(data instanceof Map<?, ?> map)) {
-      return ctx.processOutput(new ValidationError());
-    }
-    ValidationError result = new ValidationError();
-    ValidationError.loadBaseInto(result, map, ctx);
-    return ctx.processOutput(result);
-  }
-
-  static void loadBaseInto(ValidationError result, Map<?, ?> map, LoadContext ctx) {
-    if (map.containsKey("message") && map.get("message") != null) {
-      result.message = String.valueOf(map.get("message"));
-    }
-    if (map.containsKey("property") && map.get("property") != null) {
-      result.property = String.valueOf(map.get("property"));
-    }
-    if (map.containsKey("constraint") && map.get("constraint") != null) {
-      result.constraint = String.valueOf(map.get("constraint"));
-    }
-  }
-
-  public Map<String, Object> save(SaveContext context) {
-    SaveContext ctx = context == null ? new SaveContext() : context;
-    ValidationError obj = ctx.processObject(this);
-    Map<String, Object> result = new LinkedHashMap<>();
-    obj.saveFields(result, ctx);
-    return ctx.processDict(result);
-  }
-
-  protected void saveFields(Map<String, Object> result, SaveContext ctx) {
-    ValidationError obj = this;
-    if (obj.message != null) result.put("message", serializeScalar(obj.message));
-    if (obj.property != null) result.put("property", serializeScalar(obj.property));
-    if (obj.constraint != null) result.put("constraint", serializeScalar(obj.constraint));
-  }
-
-  public String toYaml() {
-    return TypraYaml.stringify(save(new SaveContext()));
-  }
-
-  public String toJson() {
-    return TypraJson.stringify(save(new SaveContext()));
-  }
-
-  public static ValidationError fromYaml(String yaml) {
-    return fromYaml(yaml, new LoadContext());
-  }
-
-  public static ValidationError fromYaml(String yaml, LoadContext context) {
-    return load(TypraYaml.parse(yaml), context);
-  }
-
-  public static ValidationError fromJson(String json) {
-    return fromJson(json, new LoadContext());
-  }
-
-  public static ValidationError fromJson(String json, LoadContext context) {
-    return load(TypraJson.parse(json), context);
-  }
-
   private static Map<String, Object> copyMap(Map<?, ?> source) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (Map.Entry<?, ?> entry : source.entrySet()) {

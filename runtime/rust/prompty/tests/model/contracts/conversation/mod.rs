@@ -12,6 +12,5 @@
 
 mod content_part_test;
 mod message_test;
-mod thread_marker_test;
 mod tool_call_test;
 mod tool_result_test;

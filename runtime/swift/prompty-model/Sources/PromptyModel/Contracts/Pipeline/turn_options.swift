@@ -4,7 +4,7 @@
 import Foundation
 
 /// Configuration for the agent loop's turn() function. Controls iteration limits, retry policy, context management, and execution behavior.  Runtimes accept these as either a TurnOptions object or individual keyword/named parameters — the TypeSpec model defines the canonical field set.
-public struct TurnOptions: TypraModel {
+public struct TurnOptions {
   public static let shorthandProperty: String? = nil
   public var maxIterations: Int32? = nil
   public var maxLlmRetries: Int32? = nil
@@ -24,72 +24,4 @@ public struct TurnOptions: TypraModel {
     self.compaction = compaction
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnOptions {
-    let object = try TypraRuntime.object(data, typeName: "TurnOptions")
-    var instance = TurnOptions()
-    if let value = object["maxIterations"] {
-      instance.maxIterations = try TypraRuntime.int32(value, field: "maxIterations")
-    }
-    if let value = object["maxLlmRetries"] {
-      instance.maxLlmRetries = try TypraRuntime.int32(value, field: "maxLlmRetries")
-    }
-    if let value = object["contextBudget"] {
-      instance.contextBudget = try TypraRuntime.int32(value, field: "contextBudget")
-    }
-    if let value = object["parallelToolCalls"] {
-      instance.parallelToolCalls = try TypraRuntime.bool(value, field: "parallelToolCalls")
-    }
-    if let value = object["raw"] {
-      instance.raw = try TypraRuntime.bool(value, field: "raw")
-    }
-    if let value = object["turn"] {
-      instance.turn = try TypraRuntime.int32(value, field: "turn")
-    }
-    if let value = object["compaction"] {
-      instance.compaction = try CompactionConfig.load(value, context: context.at("compaction"))
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.maxIterations {
-      result["maxIterations"] = value
-    }
-    if let value = self.maxLlmRetries {
-      result["maxLlmRetries"] = value
-    }
-    if let value = self.contextBudget {
-      result["contextBudget"] = value
-    }
-    if let value = self.parallelToolCalls {
-      result["parallelToolCalls"] = value
-    }
-    if let value = self.raw {
-      result["raw"] = value
-    }
-    if let value = self.turn {
-      result["turn"] = value
-    }
-    if let value = self.compaction {
-      result["compaction"] = try value.save(context)
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnOptions {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnOptions"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnOptions {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnOptions"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

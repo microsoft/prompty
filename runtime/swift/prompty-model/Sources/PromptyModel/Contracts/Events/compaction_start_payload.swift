@@ -4,7 +4,7 @@
 import Foundation
 
 /// Payload for "compaction_start" events — context compaction is beginning.
-public struct CompactionStartPayload: TypraModel {
+public struct CompactionStartPayload {
   public static let shorthandProperty: String? = nil
   public var droppedCount: Int32 = 0
 
@@ -12,34 +12,4 @@ public struct CompactionStartPayload: TypraModel {
     self.droppedCount = droppedCount
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> CompactionStartPayload {
-    let object = try TypraRuntime.object(data, typeName: "CompactionStartPayload")
-    var instance = CompactionStartPayload()
-    if let value = object["droppedCount"] {
-      instance.droppedCount = try TypraRuntime.int32(value, field: "droppedCount")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["droppedCount"] = self.droppedCount
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> CompactionStartPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "CompactionStartPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> CompactionStartPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "CompactionStartPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

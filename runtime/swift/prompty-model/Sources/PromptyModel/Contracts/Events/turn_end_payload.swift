@@ -18,7 +18,7 @@ public enum TurnStatus: String, Codable, CaseIterable {
 }
 
 /// Payload for "turn_end" events — a turn has completed.
-public struct TurnEndPayload: TypraModel {
+public struct TurnEndPayload {
   public static let shorthandProperty: String? = nil
   public var iterations: Int32? = nil
   public var status: TurnStatus? = nil
@@ -32,54 +32,4 @@ public struct TurnEndPayload: TypraModel {
     self.durationMs = durationMs
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> TurnEndPayload {
-    let object = try TypraRuntime.object(data, typeName: "TurnEndPayload")
-    var instance = TurnEndPayload()
-    if let value = object["iterations"] {
-      instance.iterations = try TypraRuntime.int32(value, field: "iterations")
-    }
-    if let value = object["status"] {
-      instance.status = try TurnStatus.parse(try TypraRuntime.string(value, field: "status"))
-    }
-    if let value = object["response"] {
-      instance.response = value
-    }
-    if let value = object["durationMs"] {
-      instance.durationMs = try TypraRuntime.double(value, field: "durationMs")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    if let value = self.iterations {
-      result["iterations"] = value
-    }
-    if let value = self.status {
-      result["status"] = value.rawValue
-    }
-    if let value = self.response {
-      result["response"] = value
-    }
-    if let value = self.durationMs {
-      result["durationMs"] = value
-    }
-    return result
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> TurnEndPayload {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "TurnEndPayload"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> TurnEndPayload {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "TurnEndPayload"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }

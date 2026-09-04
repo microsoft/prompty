@@ -4,12 +4,6 @@
 
 package prompty
 
-import (
-	"encoding/json"
-
-	"gopkg.in/yaml.v3"
-)
-
 // HookStartScope represents the allowed values for HookStartScope.
 type HookStartScope string
 
@@ -26,98 +20,4 @@ type HookStartPayload struct {
 	Scope            *HookStartScope        `json:"scope,omitempty" yaml:"scope,omitempty"`
 	Input            map[string]interface{} `json:"input,omitempty" yaml:"input,omitempty"`
 	Redaction        *RedactionMetadata     `json:"redaction,omitempty" yaml:"redaction,omitempty"`
-}
-
-// LoadHookStartPayload creates a HookStartPayload from a map[string]interface{}
-func LoadHookStartPayload(data interface{}, ctx *LoadContext) (HookStartPayload, error) {
-	if ctx == nil {
-		ctx = NewLoadContext()
-	}
-	result := HookStartPayload{}
-
-	// Load from map
-	if m, ok := data.(map[string]interface{}); ok {
-		if val, ok := m["hookInvocationId"]; ok && val != nil {
-			result.HookInvocationId = string(val.(string))
-		}
-		if val, ok := m["hookType"]; ok && val != nil {
-			result.HookType = string(val.(string))
-		}
-		if val, ok := m["scope"]; ok && val != nil {
-			v := HookStartScope(val.(string))
-			result.Scope = &v
-		}
-		if val, ok := m["input"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				result.Input = m
-			}
-		}
-		if val, ok := m["redaction"]; ok && val != nil {
-			if m, ok := val.(map[string]interface{}); ok {
-				loaded, err := LoadRedactionMetadata(m, ctx.At("redaction"))
-				if err != nil {
-					return result, err
-				}
-				result.Redaction = &loaded
-			}
-		}
-	}
-
-	return result, nil
-}
-
-// Save serializes HookStartPayload to map[string]interface{}
-func (obj HookStartPayload) Save(ctx *SaveContext) map[string]interface{} {
-	result := make(map[string]interface{})
-	result["hookInvocationId"] = obj.HookInvocationId
-	result["hookType"] = obj.HookType
-	if obj.Scope != nil {
-		result["scope"] = string(*obj.Scope)
-	}
-	if obj.Input != nil {
-		result["input"] = obj.Input
-	}
-	if obj.Redaction != nil {
-		result["redaction"] = obj.Redaction.Save(ctx)
-	}
-
-	return result
-}
-
-// ToJSON serializes HookStartPayload to JSON string
-func (obj *HookStartPayload) ToJSON() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
-}
-
-// ToYAML serializes HookStartPayload to YAML string
-func (obj *HookStartPayload) ToYAML() (string, error) {
-	ctx := NewSaveContext()
-	data := obj.Save(ctx)
-	return marshalYAMLDocument(data)
-}
-
-// FromJSON creates HookStartPayload from JSON string
-func HookStartPayloadFromJSON(jsonStr string) (HookStartPayload, error) {
-	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
-		return HookStartPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadHookStartPayload(data, ctx)
-}
-
-// FromYAML creates HookStartPayload from YAML string
-func HookStartPayloadFromYAML(yamlStr string) (HookStartPayload, error) {
-	var data map[string]interface{}
-	if err := yaml.Unmarshal([]byte(yamlStr), &data); err != nil {
-		return HookStartPayload{}, err
-	}
-	ctx := NewLoadContext()
-	return LoadHookStartPayload(data, ctx)
 }

@@ -23,11 +23,9 @@ final class ApiKeyConnectionGeneratedTest {
     ApiKeyConnection fromYaml1 = ApiKeyConnection.fromYaml(yamlRoundtrip1);
     assertEquals("key", fromYaml1.kind, "Expected kind");
     assertEquals("https://{your-custom-endpoint}.openai.azure.com/", fromYaml1.endpoint, "Expected endpoint");
-    assertEquals("your-api-key", fromYaml1.apiKey, "Expected apiKey");
     ApiKeyConnection reloaded1 = ApiKeyConnection.load(instance1.save(new SaveContext()), new LoadContext());
     assertEquals("key", reloaded1.kind, "Expected kind");
     assertEquals("https://{your-custom-endpoint}.openai.azure.com/", reloaded1.endpoint, "Expected endpoint");
-    assertEquals("your-api-key", reloaded1.apiKey, "Expected apiKey");
 
     assertThrows(() -> ApiKeyConnection.fromJson("{"), "ApiKeyConnection.fromJson should reject malformed JSON");
 

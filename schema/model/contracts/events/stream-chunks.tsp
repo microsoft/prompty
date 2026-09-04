@@ -40,6 +40,7 @@ model StreamFailure {
  * A chunk of data from a streaming LLM response. Stream chunks are
  * discriminated on the `kind` field.
  */
+@serializable
 @abstract
 @discriminator("kind")
 model StreamChunk {

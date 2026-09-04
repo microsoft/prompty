@@ -4,7 +4,7 @@
 import Foundation
 
 /// Provider-neutral initialization result for an authorization-code flow.
-public struct AuthorizationCodeFlow: TypraModel {
+public struct AuthorizationCodeFlow {
   public static let shorthandProperty: String? = nil
   public var authUrl: String = ""
   public var codeVerifier: String = ""
@@ -14,71 +14,4 @@ public struct AuthorizationCodeFlow: TypraModel {
     self.codeVerifier = codeVerifier
   }
 
-  public static func load(_ data: Any, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
-    let object = try TypraRuntime.object(data, typeName: "AuthorizationCodeFlow")
-    var instance = AuthorizationCodeFlow()
-    if let value = object["authUrl"] {
-      instance.authUrl = try TypraRuntime.string(value, field: "authUrl")
-    }
-    if let value = object["codeVerifier"] {
-      instance.codeVerifier = try TypraRuntime.string(value, field: "codeVerifier")
-    }
-    return instance
-  }
-
-  public func save(_ context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    result["authUrl"] = self.authUrl
-    result["codeVerifier"] = self.codeVerifier
-    return result
-  }
-
-  public func toWire(_ provider: String, context: SaveContext = SaveContext()) throws -> [String: Any] {
-    var result: [String: Any] = [:]
-    let wireNameAuthUrl: String?
-    switch provider {
-    case "foundry": wireNameAuthUrl = "auth_url"
-    default: wireNameAuthUrl = nil
-    }
-    if let wireKey = wireNameAuthUrl { result[wireKey] = self.authUrl }
-    let wireNameCodeVerifier: String?
-    switch provider {
-    case "foundry": wireNameCodeVerifier = "code_verifier"
-    default: wireNameCodeVerifier = nil
-    }
-    if let wireKey = wireNameCodeVerifier { result[wireKey] = self.codeVerifier }
-    return result
-  }
-
-  public static func fromWire(_ provider: String, _ data: [String: Any], context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
-    let wireMap: [String: [String: String]] = [
-      "authUrl": ["foundry": "auth_url"],
-      "codeVerifier": ["foundry": "code_verifier"],
-    ]
-    var inverse: [String: String] = [:]
-    for (field, mapping) in wireMap {
-      if let wireName = mapping[provider] { inverse[wireName] = field }
-    }
-    var canonical: [String: Any] = [:]
-    for (key, value) in data {
-      canonical[inverse[key] ?? key] = value
-    }
-    return try load(canonical, context: context)
-  }
-
-  public static func fromJSON(_ json: String, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
-    return try load(TypraRuntime.jsonObject(from: json, typeName: "AuthorizationCodeFlow"), context: context)
-  }
-
-  public func toJSON(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.jsonString(from: save(context))
-  }
-
-  public static func fromYAML(_ yaml: String, context: LoadContext = LoadContext()) throws -> AuthorizationCodeFlow {
-    return try load(TypraRuntime.yamlObject(from: yaml, typeName: "AuthorizationCodeFlow"), context: context)
-  }
-
-  public func toYAML(_ context: SaveContext = SaveContext()) throws -> String {
-    return try TypraRuntime.yamlString(from: save(context))
-  }
 }
