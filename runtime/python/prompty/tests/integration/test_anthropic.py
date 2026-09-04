@@ -19,7 +19,7 @@ from prompty.core.types import Message, PromptyStream, TextPart
 from prompty.providers.anthropic.executor import AnthropicExecutor
 from prompty.providers.anthropic.processor import AnthropicProcessor
 
-from .conftest import make_anthropic_agent, skip_anthropic
+from .conftest import make_anthropic_agent, run_anthropic
 
 executor = AnthropicExecutor()
 processor = AnthropicProcessor()
@@ -32,7 +32,7 @@ def _hello_messages() -> list[Message]:
     ]
 
 
-@skip_anthropic
+@run_anthropic
 class TestAnthropicChat:
     def test_basic_chat(self):
         agent = make_anthropic_agent(options={"maxOutputTokens": 64})
@@ -61,7 +61,7 @@ class TestAnthropicChat:
         assert r1 == r2
 
 
-@skip_anthropic
+@run_anthropic
 class TestAnthropicStructured:
     def test_structured_output(self):
         agent = make_anthropic_agent(
@@ -83,7 +83,7 @@ class TestAnthropicStructured:
         assert "language" in result
 
 
-@skip_anthropic
+@run_anthropic
 class TestAnthropicAgent:
     def test_tool_calling(self):
         def get_weather(location: str) -> str:
@@ -135,7 +135,7 @@ class TestAnthropicAgent:
         assert len(result) > 0
 
 
-@skip_anthropic
+@run_anthropic
 class TestAnthropicStreaming:
     def test_streaming_chat(self):
         agent = make_anthropic_agent(
@@ -154,7 +154,7 @@ class TestAnthropicStreaming:
         assert len(events) > 0
 
 
-@skip_anthropic
+@run_anthropic
 class TestAnthropicMultiTurn:
     def test_multi_turn_conversation(self):
         """Test sending prior assistant/user turns — Anthropic is strict about role alternation."""

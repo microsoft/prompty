@@ -10,7 +10,7 @@ from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
-from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
+from .conftest import make_foundry_agent, make_openai_agent, run_foundry, run_openai
 
 
 def _hello_messages() -> list[Message]:
@@ -28,7 +28,7 @@ def _hello_messages() -> list[Message]:
 # ---------------------------------------------------------------------------
 
 
-@skip_openai
+@run_openai
 class TestOpenAIChat:
     executor = OpenAIExecutor()
     processor = OpenAIProcessor()
@@ -63,7 +63,7 @@ class TestOpenAIChat:
 # ---------------------------------------------------------------------------
 
 
-@skip_foundry
+@run_foundry
 class TestFoundryChat:
     executor = FoundryExecutor()
     processor = FoundryProcessor()

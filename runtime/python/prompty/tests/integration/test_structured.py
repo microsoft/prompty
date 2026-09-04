@@ -10,7 +10,7 @@ from prompty.providers.foundry.processor import FoundryProcessor
 from prompty.providers.openai.executor import OpenAIExecutor
 from prompty.providers.openai.processor import OpenAIProcessor
 
-from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
+from .conftest import make_foundry_agent, make_openai_agent, run_foundry, run_openai
 
 _OUTPUT_SCHEMA = {
     "properties": [
@@ -43,7 +43,7 @@ def _structured_messages() -> list[Message]:
 # ---------------------------------------------------------------------------
 
 
-@skip_openai
+@run_openai
 class TestOpenAIStructuredOutput:
     executor = OpenAIExecutor()
     processor = OpenAIProcessor()
@@ -82,7 +82,7 @@ class TestOpenAIStructuredOutput:
 # ---------------------------------------------------------------------------
 
 
-@skip_foundry
+@run_foundry
 class TestFoundryStructuredOutput:
     executor = FoundryExecutor()
     processor = FoundryProcessor()

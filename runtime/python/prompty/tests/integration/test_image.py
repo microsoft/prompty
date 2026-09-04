@@ -14,12 +14,12 @@ from .conftest import (
     _OPENAI_IMAGE_MODEL,
     make_foundry_agent,
     make_openai_agent,
-    skip_foundry_image,
-    skip_openai_image,
+    run_foundry_image,
+    run_openai_image,
 )
 
 
-@skip_openai_image
+@run_openai_image
 class TestOpenAIImage:
     executor = OpenAIExecutor()
     processor = OpenAIProcessor()
@@ -37,7 +37,7 @@ class TestOpenAIImage:
         assert result.startswith("http") or len(base64.b64decode(result)) > 1000
 
 
-@skip_foundry_image
+@run_foundry_image
 class TestFoundryImage:
     executor = FoundryExecutor()
     processor = FoundryProcessor()
