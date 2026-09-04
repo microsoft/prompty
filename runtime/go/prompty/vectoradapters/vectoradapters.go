@@ -79,9 +79,7 @@ var VectorAdapters = map[string]Adapter{
 
 // VectorWaivers records explicit, honest conformance gaps. Empty: every gap is
 // being driven to green rather than waived.
-var VectorWaivers = map[string]string{
-	"LiveChatConformance.complete": "drill: consumer-owned transport-seam probe (Python/TS only)",
-}
+var VectorWaivers = map[string]string{}
 
 // VectorDoubles is reserved for deterministic test doubles.
 var VectorDoubles = map[string]any{}

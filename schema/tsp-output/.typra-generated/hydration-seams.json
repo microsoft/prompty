@@ -85,14 +85,6 @@
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "LiveChatConformance",
-      "target": "csharp",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "LiveChatConformance.cs",
-      "seamKind": "protocol-adapter"
-    },
-    {
       "contract": "LoadConformance",
       "target": "csharp",
       "group": "",
@@ -234,14 +226,6 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "host_tool_executor.go",
-      "seamKind": "protocol-adapter"
-    },
-    {
-      "contract": "LiveChatConformance",
-      "target": "go",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "live_chat_conformance.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -389,14 +373,6 @@
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "LiveChatConformance",
-      "target": "java",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "LiveChatConformance.java",
-      "seamKind": "protocol-adapter"
-    },
-    {
       "contract": "LoadConformance",
       "target": "java",
       "group": "",
@@ -538,14 +514,6 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "HostToolExecutor",
-      "seamKind": "protocol-adapter"
-    },
-    {
-      "contract": "LiveChatConformance",
-      "target": "markdown",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "LiveChatConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -693,14 +661,6 @@
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "LiveChatConformance",
-      "target": "python",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "._LiveChatConformance",
-      "seamKind": "protocol-adapter"
-    },
-    {
       "contract": "LoadConformance",
       "target": "python",
       "group": "",
@@ -842,14 +802,6 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "host_tool_executor",
-      "seamKind": "protocol-adapter"
-    },
-    {
-      "contract": "LiveChatConformance",
-      "target": "rust",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "live_chat_conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -997,14 +949,6 @@
       "seamKind": "protocol-adapter"
     },
     {
-      "contract": "LiveChatConformance",
-      "target": "swift",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "Sources/PromptyModel/live_chat_conformance.swift",
-      "seamKind": "protocol-adapter"
-    },
-    {
       "contract": "LoadConformance",
       "target": "swift",
       "group": "",
@@ -1146,14 +1090,6 @@
       "group": "",
       "symbol": "HostToolExecutor",
       "generatedSource": "./host-tool-executor",
-      "seamKind": "protocol-adapter"
-    },
-    {
-      "contract": "LiveChatConformance",
-      "target": "typescript",
-      "group": "",
-      "symbol": "LiveChatConformance",
-      "generatedSource": "./live-chat-conformance",
       "seamKind": "protocol-adapter"
     },
     {

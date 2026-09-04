@@ -6,8 +6,7 @@ shipped in the Typra emitter (>= 1.1.0). They exercise:
 * the ``VECTOR_CAPABILITIES`` predicates in ``vector_adapters`` (present/absent),
 * a faithful LOCAL REPLICA of the emitter's two-pass guard so the skip/hard-fail
   semantics are verified without waiting for a regenerated harness, and
-* the structure-not-content ``_drill_normalize`` projection (the drill's
-  semantic-plane reducer).
+* the structure-not-content ``_live_chat_normalize`` projection.
 
 The generated harness (``test_vector_conformance.py``) only invokes the guard
 once a schema vector declares ``requires`` AND the emitter pin is bumped to
@@ -208,7 +207,7 @@ def _openai_response(role: str = "assistant", content: str = "Hello", finish: st
 
 class TestLiveChatNormalize:
     def test_openai_shape_reduces_to_structure(self) -> None:
-        result = va._drill_normalize(_openai_response(), _context())
+        result = va._live_chat_normalize(_openai_response(), _context())
         assert result == {
             "role": "assistant",
             "contentNonEmpty": True,
@@ -216,11 +215,11 @@ class TestLiveChatNormalize:
         }
 
     def test_empty_content_flags_false(self) -> None:
-        result = va._drill_normalize(_openai_response(content="   "), _context())
+        result = va._live_chat_normalize(_openai_response(content="   "), _context())
         assert result["contentNonEmpty"] is False
 
     def test_finish_reason_outside_enum_flags_false(self) -> None:
-        result = va._drill_normalize(_openai_response(finish="explode"), _context())
+        result = va._live_chat_normalize(_openai_response(finish="explode"), _context())
         assert result["finishReasonInEnum"] is False
 
     @pytest.mark.parametrize(
@@ -228,7 +227,7 @@ class TestLiveChatNormalize:
         ["stop", "length", "tool_calls", "content_filter", "function_call"],
     )
     def test_all_canonical_finish_reasons_pass(self, finish: str) -> None:
-        result = va._drill_normalize(_openai_response(finish=finish), _context())
+        result = va._live_chat_normalize(_openai_response(finish=finish), _context())
         assert result["finishReasonInEnum"] is True
 
     def test_anthropic_shape_maps_stop_reason(self) -> None:
@@ -238,7 +237,7 @@ class TestLiveChatNormalize:
         response.role = "assistant"
         response.content = [block]
         response.stop_reason = "end_turn"
-        result = va._drill_normalize(response, _context())
+        result = va._live_chat_normalize(response, _context())
         assert result == {
             "role": "assistant",
             "contentNonEmpty": True,
@@ -266,8 +265,8 @@ class TestLiveChatEndToEnd:
             "options": {"temperature": 0, "maxOutputTokens": 16},
         }
         context = _context(vector={"input": resolved})
-        observed = va._drill_execute(resolved, endpoint=None, api_key=resolved["apiKey"])
-        structure = va._drill_normalize(observed, context)
+        observed = va._live_chat_invoke(resolved, context)
+        structure = va._live_chat_normalize(observed, context)
         assert structure["role"] == "assistant"
         assert structure["contentNonEmpty"] is True
         assert structure["finishReasonInEnum"] is True

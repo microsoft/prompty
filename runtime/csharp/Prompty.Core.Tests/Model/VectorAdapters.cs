@@ -74,10 +74,7 @@ public static partial class VectorAdapters
         ["WireConformance.toRequest"] = new(WireInvoke, AlignNormalize),
     };
 
-    public static IReadOnlyDictionary<string, string> Waivers() => new Dictionary<string, string>
-    {
-        ["LiveChatConformance.complete"] = "drill: consumer-owned transport-seam probe (Python/TS only)",
-    };
+    public static IReadOnlyDictionary<string, string> Waivers() => new Dictionary<string, string>();
 
     public static JsonNode? Doubles() => null;
 

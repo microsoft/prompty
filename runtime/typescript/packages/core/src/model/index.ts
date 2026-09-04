@@ -14,7 +14,6 @@ export type { EventJournalWriter } from "./event-journal-writer";
 export type { EventSink } from "./event-sink";
 export type { Executor } from "./executor";
 export type { HostToolExecutor } from "./host-tool-executor";
-export type { LiveChatConformance } from "./live-chat-conformance";
 export type { LoadConformance } from "./load-conformance";
 export type { ModelLister } from "./model-lister";
 export type { Parser } from "./parser";

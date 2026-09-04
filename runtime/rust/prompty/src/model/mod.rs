@@ -46,9 +46,6 @@ pub use executor::*;
 pub mod host_tool_executor;
 pub use host_tool_executor::*;
 
-pub mod live_chat_conformance;
-pub use live_chat_conformance::*;
-
 pub mod load_conformance;
 pub use load_conformance::*;
 

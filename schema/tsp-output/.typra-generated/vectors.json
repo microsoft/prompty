@@ -568,63 +568,6 @@
       }
     },
     {
-      "contract": "LiveChatConformance",
-      "namespace": "Prompty.Conformance.Seams",
-      "group": "",
-      "operation": "complete",
-      "params": {
-        "input": "unknown"
-      },
-      "returns": "unknown",
-      "sync": false,
-      "vector": {
-        "name": "openai_chat_drill",
-        "stage": "drill",
-        "provider": "openai",
-        "input": {
-          "provider": "openai",
-          "model": "gpt-4o-mini",
-          "apiKey": {
-            "$env": "OPENAI_API_KEY"
-          },
-          "endpoint": {
-            "$env": "OPENAI_BASE_URL"
-          },
-          "messages": [
-            {
-              "role": "user",
-              "content": "Say hello in exactly one word."
-            }
-          ],
-          "options": {
-            "temperature": 0,
-            "maxOutputTokens": 16
-          }
-        },
-        "exchange": {
-          "transport": {
-            "baseUrl": {
-              "$env": "OPENAI_BASE_URL"
-            }
-          },
-          "cassette": {
-            "$json": "cassettes/openai_chat_drill.json"
-          },
-          "planes": [
-            "transport",
-            "wire",
-            "semantic"
-          ]
-        },
-        "expected": {
-          "role": "assistant",
-          "contentNonEmpty": true,
-          "finishReasonInEnum": true
-        },
-        "operation": "complete"
-      }
-    },
-    {
       "contract": "LoadConformance",
       "namespace": "Prompty.Conformance.Seams",
       "group": "",

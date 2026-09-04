@@ -56,27 +56,6 @@ func DiscoveryConformanceMapModel(impl fixtures.DiscoveryConformance) func(rawIn
 	}
 }
 
-// LiveChatConformanceComplete decodes LiveChatConformance.complete vector input and invokes a
-// typed fixtures.LiveChatConformance. Adapt the returned func into your Adapter, e.g.:
-//
-//	VectorAdapters["LiveChatConformance.complete"] = bridged(vectorbridge.LiveChatConformanceComplete(impl))
-func LiveChatConformanceComplete(impl fixtures.LiveChatConformance) func(rawInput any) (any, error) {
-	return func(rawInput any) (any, error) {
-		payload, _ := rawInput.(map[string]any)
-		var input interface{}
-		{
-			inputBytes, marshalErr := json.Marshal(payload["input"])
-			if marshalErr != nil {
-				return nil, marshalErr
-			}
-			if unmarshalErr := json.Unmarshal(inputBytes, &input); unmarshalErr != nil {
-				return nil, unmarshalErr
-			}
-		}
-		return impl.Complete(input)
-	}
-}
-
 // LoadConformanceLoad decodes LoadConformance.load vector input and invokes a
 // typed fixtures.LoadConformance. Adapt the returned func into your Adapter, e.g.:
 //
