@@ -570,7 +570,62 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector16LoadConformanceLoadBasicLoad()
+    public async Task Vector16LiveChatConformanceCompleteOpenaiChatDrill()
+    {
+        string vectorJson = """
+{
+  "name": "openai_chat_drill",
+  "stage": "drill",
+  "provider": "openai",
+  "input": {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "apiKey": {
+      "$env": "OPENAI_API_KEY"
+    },
+    "endpoint": {
+      "$env": "OPENAI_BASE_URL"
+    },
+    "messages": [
+      {
+        "role": "user",
+        "content": "Say hello in exactly one word."
+      }
+    ],
+    "options": {
+      "temperature": 0,
+      "maxOutputTokens": 16
+    }
+  },
+  "exchange": {
+    "transport": {
+      "baseUrl": {
+        "$env": "OPENAI_BASE_URL"
+      }
+    },
+    "cassette": {
+      "$json": "cassettes/openai_chat_drill.json"
+    },
+    "planes": [
+      "transport",
+      "wire",
+      "semantic"
+    ]
+  },
+  "expected": {
+    "role": "assistant",
+    "contentNonEmpty": true,
+    "finishReasonInEnum": true
+  },
+  "operation": "complete"
+}
+""";
+        var vector = JsonNode.Parse(vectorJson) as JsonObject ?? new JsonObject();
+        await VectorRunner.RunVector("LiveChatConformance", "complete", vector, false, Seam());
+    }
+
+    [Fact]
+    public async Task Vector17LoadConformanceLoadBasicLoad()
     {
         string vectorJson = """
 {
@@ -641,7 +696,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector17LoadConformanceLoadConnectionTypesLoad()
+    public async Task Vector18LoadConformanceLoadConnectionTypesLoad()
     {
         string vectorJson = """
 {
@@ -677,7 +732,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector18LoadConformanceLoadEmbeddingLoad()
+    public async Task Vector19LoadConformanceLoadEmbeddingLoad()
     {
         string vectorJson = """
 {
@@ -720,7 +775,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector19LoadConformanceLoadEmptyFrontmatterBodyOnly()
+    public async Task Vector20LoadConformanceLoadEmptyFrontmatterBodyOnly()
     {
         string vectorJson = """
 {
@@ -747,7 +802,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector20LoadConformanceLoadEnvDefault()
+    public async Task Vector21LoadConformanceLoadEnvDefault()
     {
         string vectorJson = """
 {
@@ -783,7 +838,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector21LoadConformanceLoadEnvMissingError()
+    public async Task Vector22LoadConformanceLoadEnvMissingError()
     {
         string vectorJson = """
 {
@@ -814,7 +869,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector22LoadConformanceLoadEnvResolution()
+    public async Task Vector23LoadConformanceLoadEnvResolution()
     {
         string vectorJson = """
 {
@@ -852,7 +907,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector23LoadConformanceLoadFileReferenceInTreeAllowed()
+    public async Task Vector24LoadConformanceLoadFileReferenceInTreeAllowed()
     {
         string vectorJson = """
 {
@@ -892,7 +947,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector24LoadConformanceLoadFileReferenceTraversalRejected()
+    public async Task Vector25LoadConformanceLoadFileReferenceTraversalRejected()
     {
         string vectorJson = """
 {
@@ -927,7 +982,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector25LoadConformanceLoadFileResolution()
+    public async Task Vector26LoadConformanceLoadFileResolution()
     {
         string vectorJson = """
 {
@@ -969,7 +1024,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector26LoadConformanceLoadImageApitypeLoad()
+    public async Task Vector27LoadConformanceLoadImageApitypeLoad()
     {
         string vectorJson = """
 {
@@ -1015,7 +1070,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector27LoadConformanceLoadInputScalarShorthand()
+    public async Task Vector28LoadConformanceLoadInputScalarShorthand()
     {
         string vectorJson = """
 {
@@ -1062,7 +1117,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector28LoadConformanceLoadInputValidationDefaultFill()
+    public async Task Vector29LoadConformanceLoadInputValidationDefaultFill()
     {
         string vectorJson = """
 {
@@ -1096,7 +1151,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector29LoadConformanceLoadInputValidationExampleNotUsed()
+    public async Task Vector30LoadConformanceLoadInputValidationExampleNotUsed()
     {
         string vectorJson = """
 {
@@ -1129,7 +1184,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector30LoadConformanceLoadInputValidationOptionalOmit()
+    public async Task Vector31LoadConformanceLoadInputValidationOptionalOmit()
     {
         string vectorJson = """
 {
@@ -1161,7 +1216,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector31LoadConformanceLoadInputValidationRequired()
+    public async Task Vector32LoadConformanceLoadInputValidationRequired()
     {
         string vectorJson = """
 {
@@ -1194,7 +1249,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector32LoadConformanceLoadInstructionsFromBody()
+    public async Task Vector33LoadConformanceLoadInstructionsFromBody()
     {
         string vectorJson = """
 {
@@ -1219,7 +1274,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector33LoadConformanceLoadInvalidFrontmatterError()
+    public async Task Vector34LoadConformanceLoadInvalidFrontmatterError()
     {
         string vectorJson = """
 {
@@ -1240,7 +1295,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector34LoadConformanceLoadKindAlwaysPrompt()
+    public async Task Vector35LoadConformanceLoadKindAlwaysPrompt()
     {
         string vectorJson = """
 {
@@ -1261,7 +1316,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector35LoadConformanceLoadMinimalLoad()
+    public async Task Vector36LoadConformanceLoadMinimalLoad()
     {
         string vectorJson = """
 {
@@ -1290,7 +1345,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector36LoadConformanceLoadMissingFileError()
+    public async Task Vector37LoadConformanceLoadMissingFileError()
     {
         string vectorJson = """
 {
@@ -1311,7 +1366,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector37LoadConformanceLoadModelShorthand()
+    public async Task Vector38LoadConformanceLoadModelShorthand()
     {
         string vectorJson = """
 {
@@ -1339,7 +1394,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector38LoadConformanceLoadStructuredOutputsLoad()
+    public async Task Vector39LoadConformanceLoadStructuredOutputsLoad()
     {
         string vectorJson = """
 {
@@ -1407,7 +1462,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector39LoadConformanceLoadTemplateStringInvalid()
+    public async Task Vector40LoadConformanceLoadTemplateStringInvalid()
     {
         string vectorJson = """
 {
@@ -1434,7 +1489,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector40LoadConformanceLoadToolsCustomLoad()
+    public async Task Vector41LoadConformanceLoadToolsCustomLoad()
     {
         string vectorJson = """
 {
@@ -1473,7 +1528,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector41LoadConformanceLoadToolsFunctionLoad()
+    public async Task Vector42LoadConformanceLoadToolsFunctionLoad()
     {
         string vectorJson = """
 {
@@ -1541,7 +1596,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector42LoadConformanceLoadToolsMcpLoad()
+    public async Task Vector43LoadConformanceLoadToolsMcpLoad()
     {
         string vectorJson = """
 {
@@ -1582,7 +1637,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector43LoadConformanceLoadToolsOpenapiLoad()
+    public async Task Vector44LoadConformanceLoadToolsOpenapiLoad()
     {
         string vectorJson = """
 {
@@ -1623,7 +1678,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector44TurnConformanceReplayMaxIterations()
+    public async Task Vector45TurnConformanceReplayMaxIterations()
     {
         string vectorJson = """
 {
@@ -1660,7 +1715,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector45TurnConformanceReplayNoTool()
+    public async Task Vector46TurnConformanceReplayNoTool()
     {
         string vectorJson = """
 {
@@ -1693,7 +1748,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector46TurnConformanceReplayPermissionDenied()
+    public async Task Vector47TurnConformanceReplayPermissionDenied()
     {
         string vectorJson = """
 {
@@ -1729,7 +1784,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector47TurnConformanceReplayToolFailure()
+    public async Task Vector48TurnConformanceReplayToolFailure()
     {
         string vectorJson = """
 {
@@ -1767,7 +1822,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector48TurnConformanceReplayToolSuccess()
+    public async Task Vector49TurnConformanceReplayToolSuccess()
     {
         string vectorJson = """
 {
@@ -1805,7 +1860,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector49TurnConformanceRunAssistantToolCallsMetadata()
+    public async Task Vector50TurnConformanceRunAssistantToolCallsMetadata()
     {
         string vectorJson = """
 {
@@ -1959,7 +2014,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector50TurnConformanceRunAsyncToolFunction()
+    public async Task Vector51TurnConformanceRunAsyncToolFunction()
     {
         string vectorJson = """
 {
@@ -2071,7 +2126,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector51TurnConformanceRunBindingsInjected()
+    public async Task Vector52TurnConformanceRunBindingsInjected()
     {
         string vectorJson = """
 {
@@ -2203,7 +2258,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector52TurnConformanceRunCancellationBeforeLlm()
+    public async Task Vector53TurnConformanceRunCancellationBeforeLlm()
     {
         string vectorJson = """
 {
@@ -2266,7 +2321,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector53TurnConformanceRunCancellationBetweenIterations()
+    public async Task Vector54TurnConformanceRunCancellationBetweenIterations()
     {
         string vectorJson = """
 {
@@ -2398,7 +2453,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector54TurnConformanceRunCancellationBetweenTools()
+    public async Task Vector55TurnConformanceRunCancellationBetweenTools()
     {
         string vectorJson = """
 {
@@ -2539,7 +2594,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector55TurnConformanceRunContextNoTrimWhenFits()
+    public async Task Vector56TurnConformanceRunContextNoTrimWhenFits()
     {
         string vectorJson = """
 {
@@ -2612,7 +2667,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector56TurnConformanceRunContextPreservesSystemMessages()
+    public async Task Vector57TurnConformanceRunContextPreservesSystemMessages()
     {
         string vectorJson = """
 {
@@ -2721,7 +2776,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector57TurnConformanceRunContextTrimBasic()
+    public async Task Vector58TurnConformanceRunContextTrimBasic()
     {
         string vectorJson = """
 {
@@ -2881,7 +2936,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector58TurnConformanceRunEmptyToolResult()
+    public async Task Vector59TurnConformanceRunEmptyToolResult()
     {
         string vectorJson = """
 {
@@ -2998,7 +3053,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector59TurnConformanceRunEventsBasicToolLoop()
+    public async Task Vector60TurnConformanceRunEventsBasicToolLoop()
     {
         string vectorJson = """
 {
@@ -3146,7 +3201,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector60TurnConformanceRunEventsErrorLogged()
+    public async Task Vector61TurnConformanceRunEventsErrorLogged()
     {
         string vectorJson = """
 {
@@ -3274,7 +3329,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector61TurnConformanceRunEventsNoTools()
+    public async Task Vector62TurnConformanceRunEventsNoTools()
     {
         string vectorJson = """
 {
@@ -3354,7 +3409,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector62TurnConformanceRunGuardrailAllPass()
+    public async Task Vector63TurnConformanceRunGuardrailAllPass()
     {
         string vectorJson = """
 {
@@ -3479,7 +3534,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector63TurnConformanceRunGuardrailInputDeny()
+    public async Task Vector64TurnConformanceRunGuardrailInputDeny()
     {
         string vectorJson = """
 {
@@ -3537,7 +3592,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector64TurnConformanceRunGuardrailOutputDeny()
+    public async Task Vector65TurnConformanceRunGuardrailOutputDeny()
     {
         string vectorJson = """
 {
@@ -3617,7 +3672,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector65TurnConformanceRunGuardrailToolDeny()
+    public async Task Vector66TurnConformanceRunGuardrailToolDeny()
     {
         string vectorJson = """
 {
@@ -3773,7 +3828,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector66TurnConformanceRunMaxIterationsExceeded()
+    public async Task Vector67TurnConformanceRunMaxIterationsExceeded()
     {
         string vectorJson = """
 {
@@ -4285,7 +4340,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector67TurnConformanceRunMultiTurnToolCalls()
+    public async Task Vector68TurnConformanceRunMultiTurnToolCalls()
     {
         string vectorJson = """
 {
@@ -4464,7 +4519,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector68TurnConformanceRunMultipleToolCallsSingleTurn()
+    public async Task Vector69TurnConformanceRunMultipleToolCallsSingleTurn()
     {
         string vectorJson = """
 {
@@ -4647,7 +4702,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector69TurnConformanceRunNoToolCalls()
+    public async Task Vector70TurnConformanceRunNoToolCalls()
     {
         string vectorJson = """
 {
@@ -4717,7 +4772,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector70TurnConformanceRunParallelToolsBasic()
+    public async Task Vector71TurnConformanceRunParallelToolsBasic()
     {
         string vectorJson = """
 {
@@ -4893,7 +4948,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector71TurnConformanceRunParallelToolsWithGuardrailDeny()
+    public async Task Vector72TurnConformanceRunParallelToolsWithGuardrailDeny()
     {
         string vectorJson = """
 {
@@ -5087,7 +5142,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector72TurnConformanceRunSingleToolCall()
+    public async Task Vector73TurnConformanceRunSingleToolCall()
     {
         string vectorJson = """
 {
@@ -5236,7 +5291,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector73TurnConformanceRunSteeringInjectMessage()
+    public async Task Vector74TurnConformanceRunSteeringInjectMessage()
     {
         string vectorJson = """
 {
@@ -5446,7 +5501,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector74TurnConformanceRunSteeringMultipleMessages()
+    public async Task Vector75TurnConformanceRunSteeringMultipleMessages()
     {
         string vectorJson = """
 {
@@ -5618,7 +5673,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector75TurnConformanceRunToolNotRegisteredError()
+    public async Task Vector76TurnConformanceRunToolNotRegisteredError()
     {
         string vectorJson = """
 {
@@ -5704,7 +5759,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector76TurnConformanceRunToolResultMessageFormat()
+    public async Task Vector77TurnConformanceRunToolResultMessageFormat()
     {
         string vectorJson = """
 {
@@ -5827,7 +5882,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector77TurnConformanceRunTurnCancelBeforeContext()
+    public async Task Vector78TurnConformanceRunTurnCancelBeforeContext()
     {
         string vectorJson = """
 {
@@ -5861,7 +5916,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector78TurnConformanceRunTurnDelegatedProviderState()
+    public async Task Vector79TurnConformanceRunTurnDelegatedProviderState()
     {
         string vectorJson = """
 {
@@ -5930,7 +5985,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector79TurnConformanceRunTurnFinalOutput()
+    public async Task Vector80TurnConformanceRunTurnFinalOutput()
     {
         string vectorJson = """
 {
@@ -5977,7 +6032,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector80TurnConformanceRunTurnOrderedToolRound()
+    public async Task Vector81TurnConformanceRunTurnOrderedToolRound()
     {
         string vectorJson = """
 {
@@ -6070,7 +6125,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector81TurnConformanceRunTurnPermissionDenialIsModelVisible()
+    public async Task Vector82TurnConformanceRunTurnPermissionDenialIsModelVisible()
     {
         string vectorJson = """
 {
@@ -6123,7 +6178,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector82WireConformanceToRequestAnthropicImageFormat()
+    public async Task Vector83WireConformanceToRequestAnthropicImageFormat()
     {
         string vectorJson = """
 {
@@ -6195,7 +6250,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector83WireConformanceToRequestAnthropicMaxTokensRequired()
+    public async Task Vector84WireConformanceToRequestAnthropicMaxTokensRequired()
     {
         string vectorJson = """
 {
@@ -6252,7 +6307,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector84WireConformanceToRequestAnthropicOptions()
+    public async Task Vector85WireConformanceToRequestAnthropicOptions()
     {
         string vectorJson = """
 {
@@ -6323,7 +6378,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector85WireConformanceToRequestAnthropicSystemSeparate()
+    public async Task Vector86WireConformanceToRequestAnthropicSystemSeparate()
     {
         string vectorJson = """
 {
@@ -6392,7 +6447,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector86WireConformanceToRequestAnthropicToolWire()
+    public async Task Vector87WireConformanceToRequestAnthropicToolWire()
     {
         string vectorJson = """
 {
@@ -6479,7 +6534,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector87WireConformanceToRequestChatAudioMp3()
+    public async Task Vector88WireConformanceToRequestChatAudioMp3()
     {
         string vectorJson = """
 {
@@ -6539,7 +6594,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector88WireConformanceToRequestChatAudioPart()
+    public async Task Vector89WireConformanceToRequestChatAudioPart()
     {
         string vectorJson = """
 {
@@ -6599,7 +6654,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector89WireConformanceToRequestChatImageBase64()
+    public async Task Vector90WireConformanceToRequestChatImageBase64()
     {
         string vectorJson = """
 {
@@ -6665,7 +6720,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector90WireConformanceToRequestChatImagePart()
+    public async Task Vector91WireConformanceToRequestChatImagePart()
     {
         string vectorJson = """
 {
@@ -6731,7 +6786,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector91WireConformanceToRequestChatMultipartContent()
+    public async Task Vector92WireConformanceToRequestChatMultipartContent()
     {
         string vectorJson = """
 {
@@ -6797,7 +6852,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector92WireConformanceToRequestChatSimple()
+    public async Task Vector93WireConformanceToRequestChatSimple()
     {
         string vectorJson = """
 {
@@ -6861,7 +6916,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector93WireConformanceToRequestChatSingleTextOptimized()
+    public async Task Vector94WireConformanceToRequestChatSingleTextOptimized()
     {
         string vectorJson = """
 {
@@ -6912,7 +6967,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector94WireConformanceToRequestChatWithOptions()
+    public async Task Vector95WireConformanceToRequestChatWithOptions()
     {
         string vectorJson = """
 {
@@ -6982,7 +7037,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector95WireConformanceToRequestEmbeddingWire()
+    public async Task Vector96WireConformanceToRequestEmbeddingWire()
     {
         string vectorJson = """
 {
@@ -7028,7 +7083,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector96WireConformanceToRequestImageWire()
+    public async Task Vector97WireConformanceToRequestImageWire()
     {
         string vectorJson = """
 {
@@ -7074,7 +7129,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector97WireConformanceToRequestKindToJsonTypeMapping()
+    public async Task Vector98WireConformanceToRequestKindToJsonTypeMapping()
     {
         string vectorJson = """
 {
@@ -7195,7 +7250,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector98WireConformanceToRequestOptionsAdditionalProperties()
+    public async Task Vector99WireConformanceToRequestOptionsAdditionalProperties()
     {
         string vectorJson = """
 {
@@ -7251,7 +7306,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector99WireConformanceToRequestOptionsMaxCompletionTokens()
+    public async Task Vector100WireConformanceToRequestOptionsMaxCompletionTokens()
     {
         string vectorJson = """
 {
@@ -7305,7 +7360,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector100WireConformanceToRequestOptionsStopSequences()
+    public async Task Vector101WireConformanceToRequestOptionsStopSequences()
     {
         string vectorJson = """
 {
@@ -7365,7 +7420,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector101WireConformanceToRequestResponsesSimple()
+    public async Task Vector102WireConformanceToRequestResponsesSimple()
     {
         string vectorJson = """
 {
@@ -7426,7 +7481,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector102WireConformanceToRequestResponsesStructuredOutput()
+    public async Task Vector103WireConformanceToRequestResponsesStructuredOutput()
     {
         string vectorJson = """
 {
@@ -7515,7 +7570,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector103WireConformanceToRequestResponsesWithTools()
+    public async Task Vector104WireConformanceToRequestResponsesWithTools()
     {
         string vectorJson = """
 {
@@ -7597,7 +7652,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector104WireConformanceToRequestStructuredOutput()
+    public async Task Vector105WireConformanceToRequestStructuredOutput()
     {
         string vectorJson = """
 {
@@ -7682,7 +7737,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector105WireConformanceToRequestStructuredOutputNestedOptional()
+    public async Task Vector106WireConformanceToRequestStructuredOutputNestedOptional()
     {
         string vectorJson = """
 {
@@ -7786,7 +7841,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector106WireConformanceToRequestToolsBindingsStripped()
+    public async Task Vector107WireConformanceToRequestToolsBindingsStripped()
     {
         string vectorJson = """
 {
@@ -7880,7 +7935,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector107WireConformanceToRequestToolsFunctionWire()
+    public async Task Vector108WireConformanceToRequestToolsFunctionWire()
     {
         string vectorJson = """
 {
@@ -7964,7 +8019,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector108WireConformanceToRequestToolsNullWhenEmpty()
+    public async Task Vector109WireConformanceToRequestToolsNullWhenEmpty()
     {
         string vectorJson = """
 {
@@ -8015,7 +8070,7 @@ public class VectorConformanceTests
     }
 
     [Fact]
-    public async Task Vector109WireConformanceToRequestToolsStrictMode()
+    public async Task Vector110WireConformanceToRequestToolsStrictMode()
     {
         string vectorJson = """
 {

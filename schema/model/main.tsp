@@ -82,6 +82,10 @@ import "./conformance/seams/load-conformance.tsp";
 import "./conformance/seams/wire-conformance.tsp";
 import "./conformance/seams/discovery-conformance.tsp";
 import "./conformance/seams/turn-conformance.tsp";
+// Service-drill seam: carries the transport-crossing drill vector. Emitter-change
+// free by design -- the drill's non-standard "exchange" key rides through as an
+// unknown vector key and is consumed only by the runtime's roster adapter.
+import "./conformance/seams/live-chat-conformance.tsp";
 
 // Behavior vectors (conformance evidence attached to callable operations)
 import "./conformance/vectors/render.tsp";
@@ -106,6 +110,10 @@ import "./conformance/vectors/replay.tsp";
 // spec/vectors/process/stream_failure_vectors.json into the typra vector system so
 // every runtime is held to the same streaming-failure semantics.
 import "./conformance/vectors/stream.tsp";
+// Service-drill vector (LiveChatConformance.complete): the first vector to cross
+// the real Executor->Processor transport seam. Carries a non-standard "exchange"
+// block that the emitter passes through untouched into every runtime's harness.
+import "./conformance/vectors/drill.tsp";
 
 // Events
 import "./contracts/events/payloads.tsp";

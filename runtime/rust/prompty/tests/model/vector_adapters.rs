@@ -201,7 +201,10 @@ pub fn adapters() -> HashMap<&'static str, Adapter> {
 }
 
 pub fn waivers() -> HashMap<&'static str, &'static str> {
-    HashMap::new()
+    HashMap::from([(
+        "LiveChatConformance.complete",
+        "drill: consumer-owned transport-seam probe (Python/TS only)",
+    )])
 }
 
 pub fn doubles() -> Value {

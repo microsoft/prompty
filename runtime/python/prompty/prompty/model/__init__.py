@@ -16,6 +16,7 @@ from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
 from ._HostToolExecutor import HostToolExecutor
+from ._LiveChatConformance import LiveChatConformance
 from ._LoadConformance import LoadConformance
 from ._ModelLister import ModelLister
 from ._Parser import Parser
@@ -379,6 +380,7 @@ __all__ = [
     "EventSink",
     "Executor",
     "HostToolExecutor",
+    "LiveChatConformance",
     "LoadConformance",
     "ModelLister",
     "Parser",

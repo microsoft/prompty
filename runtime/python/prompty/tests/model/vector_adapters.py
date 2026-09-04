@@ -983,28 +983,27 @@ def _live_provider_impls(provider: str) -> tuple[Any, Any]:
     raise ValueError(f"live-chat adapter: unknown provider {provider!r}")
 
 
-def _build_live_agent(resolved_input: dict) -> Any:
-    """Construct a chat ``Agent`` from a resolved live-chat vector input."""
+def _drill_build_agent(resolved_input: dict, *, endpoint: str | None, api_key: str | None) -> Any:
+    """Construct a chat ``Agent`` bound to a specific transport ``endpoint``.
+
+    The drill binds the transport seam via base-URL redirect, so ``endpoint`` and
+    ``api_key`` are supplied by the caller (a local cassette-replay server in
+    replay mode, the real base URL + key in live mode) rather than read from the
+    vector input. When ``endpoint`` is falsy the connection omits it so the SDK
+    falls back to the provider's default base URL (live mode without an override).
+    """
     from prompty.model import Agent
 
     provider = (resolved_input.get("provider") or "openai").lower()
-    api_key = resolved_input.get("apiKey")
-    endpoint = resolved_input.get("endpoint")
 
-    if provider in ("foundry", "azure") and not api_key:
-        # Entra ID path: no key, DefaultAzureCredential drives auth.
-        connection: dict[str, Any] = {"kind": "foundry"}
-        if endpoint:
-            connection["endpoint"] = endpoint
-    else:
-        connection = {"kind": "key"}
-        if api_key:
-            connection["apiKey"] = api_key
-        if endpoint:
-            connection["endpoint"] = endpoint
+    connection: dict[str, Any] = {"kind": "key"}
+    if api_key:
+        connection["apiKey"] = api_key
+    if endpoint:
+        connection["endpoint"] = endpoint
 
     data: dict[str, Any] = {
-        "name": "live-chat-vector",
+        "name": "drill-chat-vector",
         "model": {
             "id": resolved_input.get("model") or "gpt-4o-mini",
             "provider": provider,
@@ -1056,25 +1055,63 @@ def _extract_chat_structure(observed: Any) -> tuple[Any, Any, Any]:
     return role, content, finish
 
 
-def _live_chat_invoke(resolved_input: dict, context: dict) -> Any:
-    """Call a real provider and return its raw chat response.
+# ---------------------------------------------------------------------------
+# LiveChatConformance.complete -- the service-drill adapter
+# ---------------------------------------------------------------------------
+#
+# A "drill" is a conformance vector that crosses the REAL Executor transport
+# seam. Unlike the pure conformance vectors that stop at the SDK edge, the drill
+# binds the seam via base-URL redirect -- to a local ``CassetteReplayServer``
+# (replay mode) or the real base URL (live mode) -- and asserts three planes:
+#
+#   1. transport -- the seam was reached and returned bytes (executor got a
+#      response, and the replay server captured an inbound request).
+#   2. wire      -- the outbound provider request body matches the cassette's
+#      recorded request body (canonical equality; throw on mismatch).
+#   3. semantic  -- normalized executor output == the vector `expected`. This
+#      plane is asserted by the RUNNER via the registered ``normalize``, so the
+#      drill's semantic plane IS a conformance vector over the executor.
+#
+# In live mode the adapter additionally asserts live-semantic == replay-semantic
+# (parity). ``requires`` is deliberately OMITTED from the drill vector -- the
+# ``requires`` guard is all-or-nothing and would skip the WHOLE vector when creds
+# are absent, defeating the replay plane. Instead the adapter self-gates the live
+# plane on credential presence and always runs replay.
+#
+# Cassette bytes and the SDK transport binding are consumer-owned "roster" -- by
+# design NOT modeled in TypeSpec/Typra.
 
-    Only reached when the capability guard has already confirmed the required
-    credentials/capabilities are present, so this makes a genuine network call.
-    """
+_DRILL_REPLAY_API_KEY = "sk-drill-replay-placeholder"
+
+
+def _drill_canonical(value: Any) -> str:
+    """Order-insensitive canonical JSON for wire/parity equality checks."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
+
+
+def _drill_build_messages(resolved_input: dict) -> list:
     from prompty.core.types import Message, TextPart
 
-    messages_spec = resolved_input.get("messages") or []
-    messages = [
+    return [
         Message(role=spec.get("role", "user"), parts=[TextPart(value=spec.get("content", ""))])
-        for spec in messages_spec
+        for spec in (resolved_input.get("messages") or [])
     ]
-    agent = _build_live_agent(resolved_input)
+
+
+def _drill_execute(resolved_input: dict, *, endpoint: str | None, api_key: str | None) -> Any:
+    """Drive the real executor with its transport bound to ``endpoint``.
+
+    Returns the raw provider response. Shared by the replay path (``endpoint`` =
+    a ``CassetteReplayServer`` base URL) and the live path (``endpoint`` = the
+    real base URL or ``None`` for the SDK default).
+    """
+    agent = _drill_build_agent(resolved_input, endpoint=endpoint, api_key=api_key)
     executor, _processor = _live_provider_impls(resolved_input.get("provider") or "openai")
+    messages = _drill_build_messages(resolved_input)
     return executor.execute(agent, messages)
 
 
-def _live_chat_normalize(observed: Any, context: dict) -> dict:
+def _drill_normalize_response(observed: Any) -> dict:
     """Project a raw chat response onto the canonical structural shape."""
     role, content, finish = _extract_chat_structure(observed)
     return {
@@ -1082,6 +1119,82 @@ def _live_chat_normalize(observed: Any, context: dict) -> dict:
         "contentNonEmpty": bool(content and str(content).strip()),
         "finishReasonInEnum": finish in _FINISH_REASONS,
     }
+
+
+def _drill_live_enabled(resolved_input: dict) -> bool:
+    """Live plane is enabled iff a base URL AND an API key resolved from env.
+
+    ``$env`` refs resolve to ``""`` when unset, so this is false in replay-only
+    (no-creds) runs and true only when the vector's endpoint+apiKey env vars are
+    both populated.
+    """
+    return bool(resolved_input.get("endpoint") and resolved_input.get("apiKey"))
+
+
+def _drill_invoke(resolved_input: dict, context: dict) -> Any:
+    """Run the drill: bind transport, replay the cassette, assert 3 planes.
+
+    Returns the raw replay response; the runner then applies ``normalize`` and
+    compares against the vector ``expected`` (the semantic plane).
+    """
+    from _drill_replay import CassetteReplayServer
+
+    resolve = context.get("resolveInput")
+    vector = context.get("vector") or {}
+    exchange_raw = vector.get("exchange") or {}
+    # The runner resolves refs only on `input`; the adapter owns `exchange`
+    # resolution (nested `$env` transport ref + `$json` cassette ref).
+    exchange = resolve(exchange_raw) if callable(resolve) else exchange_raw
+
+    cassette = exchange.get("cassette") or {}
+    recorded_request = (cassette.get("request") or {}).get("body")
+    recorded_response = (cassette.get("response") or {}).get("body")
+    recorded_status = int((cassette.get("response") or {}).get("status", 200))
+    if recorded_response is None:
+        raise AssertionError("drill cassette missing response.body")
+
+    # --- Replay: bind the transport to the local cassette server -------------
+    with CassetteReplayServer(recorded_response, recorded_status) as server:
+        raw = _drill_execute(resolved_input, endpoint=server.base_url, api_key=_DRILL_REPLAY_API_KEY)
+
+        # Plane 1: transport -- the seam was reached and a request was captured.
+        captured = server.last_request
+        if captured is None:
+            raise AssertionError("drill transport plane: no request reached the replay server")
+        if raw is None:
+            raise AssertionError("drill transport plane: executor returned no response")
+
+        # Plane 2: wire -- outbound request body matches the cassette request.
+        if recorded_request is not None:
+            observed_body = captured.get("body")
+            if _drill_canonical(observed_body) != _drill_canonical(recorded_request):
+                raise AssertionError(
+                    "drill wire plane mismatch:\n"
+                    f"  observed={_drill_canonical(observed_body)}\n"
+                    f"  cassette={_drill_canonical(recorded_request)}"
+                )
+
+    # --- Live parity (self-gated): live-semantic must equal replay-semantic ---
+    if _drill_live_enabled(resolved_input):
+        live_raw = _drill_execute(
+            resolved_input,
+            endpoint=resolved_input.get("endpoint") or None,
+            api_key=resolved_input.get("apiKey"),
+        )
+        if _drill_canonical(_drill_normalize_response(live_raw)) != _drill_canonical(_drill_normalize_response(raw)):
+            raise AssertionError(
+                "drill live/replay parity mismatch:\n"
+                f"  live={_drill_normalize_response(live_raw)}\n"
+                f"  replay={_drill_normalize_response(raw)}"
+            )
+
+    # Plane 3 (semantic) is asserted by the runner: normalize(raw) == expected.
+    return raw
+
+
+def _drill_normalize(observed: Any, context: dict) -> dict:
+    """Registered semantic projection: raw response -> canonical structure."""
+    return _drill_normalize_response(observed)
 
 
 # ---------------------------------------------------------------------------
@@ -1096,7 +1209,7 @@ VECTOR_ADAPTERS: dict[str, Any] = {
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},
     "DiscoveryConformance.mapModel": {"invoke": _discovery_map_invoke},
     "TurnConformance.replay": {"invoke": _replay_invoke},
-    "LiveChatConformance.complete": {"invoke": _live_chat_invoke, "normalize": _live_chat_normalize},
+    "LiveChatConformance.complete": {"invoke": _drill_invoke, "normalize": _drill_normalize},
 }
 
 # Contracts introduced/tightened by Typra 0.12.0 that the Python runtime does not

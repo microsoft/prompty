@@ -40,7 +40,10 @@ enum VectorAdapters {
   }
 
   static func waivers() -> [String: String] {
-    return [:]
+    return [
+      "LiveChatConformance.complete":
+        "drill: consumer-owned transport-seam probe (Python/TS only)"
+    ]
   }
 
   static func doubles() -> Any? {

@@ -77,7 +77,11 @@ public final class VectorAdapters {
   }
 
   public static Map<String, String> waivers() {
-    return new LinkedHashMap<>();
+    Map<String, String> waivers = new LinkedHashMap<>();
+    waivers.put(
+        "LiveChatConformance.complete",
+        "drill: consumer-owned transport-seam probe (Python/TS only)");
+    return waivers;
   }
 
   public static Object doubles() {

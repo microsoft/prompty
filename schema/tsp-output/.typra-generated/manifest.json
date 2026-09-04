@@ -1335,6 +1335,11 @@
     },
     {
       "outputRoot": "../runtime/csharp/Prompty.Core/Model",
+      "path": "../runtime/csharp/Prompty.Core/Model/LiveChatConformance.cs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/csharp/Prompty.Core/Model",
       "path": "../runtime/csharp/Prompty.Core/Model/LoadConformance.cs",
       "marker": true
     },
@@ -1901,6 +1906,11 @@
     {
       "outputRoot": "../runtime/go/prompty/model",
       "path": "../runtime/go/prompty/model/jinja2format_test.go",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/go/prompty/model",
+      "path": "../runtime/go/prompty/model/live_chat_conformance.go",
       "marker": true
     },
     {
@@ -3031,6 +3041,11 @@
     {
       "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
       "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/Jinja2Format.java",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model",
+      "path": "../runtime/java/prompty/src/main/java/com/microsoft/prompty/model/LiveChatConformance.java",
       "marker": true
     },
     {
@@ -4196,6 +4211,11 @@
     {
       "outputRoot": "../runtime/python/prompty/prompty/model",
       "path": "../runtime/python/prompty/prompty/model/_HostToolExecutor.py",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/python/prompty/prompty/model",
+      "path": "../runtime/python/prompty/prompty/model/_LiveChatConformance.py",
       "marker": true
     },
     {
@@ -6105,6 +6125,11 @@
     },
     {
       "outputRoot": "../runtime/rust/prompty/src/model",
+      "path": "../runtime/rust/prompty/src/model/live_chat_conformance.rs",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/rust/prompty/src/model",
       "path": "../runtime/rust/prompty/src/model/load_conformance.rs",
       "marker": true
     },
@@ -7215,6 +7240,11 @@
     },
     {
       "outputRoot": "../runtime/swift/prompty-model",
+      "path": "../runtime/swift/prompty-model/Sources/PromptyModel/live_chat_conformance.swift",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/swift/prompty-model",
       "path": "../runtime/swift/prompty-model/Sources/PromptyModel/load_conformance.swift",
       "marker": true
     },
@@ -8315,6 +8345,11 @@
     },
     {
       "outputRoot": "../runtime/typescript/packages/core/src/model",
+      "path": "../runtime/typescript/packages/core/src/model/live-chat-conformance.ts",
+      "marker": true
+    },
+    {
+      "outputRoot": "../runtime/typescript/packages/core/src/model",
       "path": "../runtime/typescript/packages/core/src/model/load-conformance.ts",
       "marker": true
     },
@@ -9231,6 +9266,11 @@
     {
       "outputRoot": "../web/src/content/docs/reference",
       "path": "../web/src/content/docs/reference/Jinja2Format.md",
+      "marker": true
+    },
+    {
+      "outputRoot": "../web/src/content/docs/reference",
+      "path": "../web/src/content/docs/reference/LiveChatConformance.md",
       "marker": true
     },
     {

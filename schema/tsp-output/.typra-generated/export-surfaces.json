@@ -106,6 +106,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -286,6 +287,13 @@
           "kind": "type",
           "group": "",
           "source": "HostToolExecutor.cs",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveChatConformance.cs",
           "protocol": true
         },
         {
@@ -2094,6 +2102,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "LiveChatConformance.cs",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -2433,6 +2461,7 @@
         "EventSink.cs",
         "Executor.cs",
         "HostToolExecutor.cs",
+        "LiveChatConformance.cs",
         "LoadConformance.cs",
         "ModelLister.cs",
         "Parser.cs",
@@ -2645,6 +2674,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -2825,6 +2855,13 @@
           "kind": "type",
           "group": "",
           "source": "host_tool_executor.go",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "live_chat_conformance.go",
           "protocol": true
         },
         {
@@ -4633,6 +4670,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "live_chat_conformance.go",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -5017,6 +5074,7 @@
         "invocation_context_state.go",
         "invocation_usage.go",
         "invoker_error.go",
+        "live_chat_conformance.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "load_conformance.go",
@@ -5184,6 +5242,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -5364,6 +5423,13 @@
           "kind": "type",
           "group": "",
           "source": "HostToolExecutor.java",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveChatConformance.java",
           "protocol": true
         },
         {
@@ -7172,6 +7238,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "LiveChatConformance.java",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -7556,6 +7642,7 @@
         "InvocationContextState.java",
         "InvocationUsage.java",
         "InvokerError.java",
+        "LiveChatConformance.java",
         "LlmCompletePayload.java",
         "LlmStartPayload.java",
         "LoadConformance.java",
@@ -7722,6 +7809,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -7902,6 +7990,13 @@
           "kind": "type",
           "group": "",
           "source": "HostToolExecutor",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveChatConformance",
           "protocol": true
         },
         {
@@ -9710,6 +9805,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "LiveChatConformance",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -10094,6 +10209,7 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -10261,6 +10377,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -10441,6 +10558,13 @@
           "kind": "type",
           "group": "",
           "source": "._HostToolExecutor",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._LiveChatConformance",
           "protocol": true
         },
         {
@@ -12249,6 +12373,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "._LiveChatConformance",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -12588,6 +12732,7 @@
         "._EventSink",
         "._Executor",
         "._HostToolExecutor",
+        "._LiveChatConformance",
         "._LoadConformance",
         "._ModelLister",
         "._Parser",
@@ -12677,6 +12822,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -12857,6 +13003,13 @@
           "kind": "type",
           "group": "",
           "source": "host_tool_executor",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "live_chat_conformance",
           "protocol": true
         },
         {
@@ -14665,6 +14818,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "live_chat_conformance",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -15006,6 +15179,7 @@
         "event_sink",
         "executor",
         "host_tool_executor",
+        "live_chat_conformance",
         "load_conformance",
         "model_lister",
         "operations",
@@ -15095,6 +15269,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -15275,6 +15450,13 @@
           "kind": "type",
           "group": "",
           "source": "Sources/PromptyModel/host_tool_executor.swift",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/live_chat_conformance.swift",
           "protocol": true
         },
         {
@@ -17083,6 +17265,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "Sources/PromptyModel/live_chat_conformance.swift",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -17536,6 +17738,7 @@
         "Sources/PromptyModel/event_sink.swift",
         "Sources/PromptyModel/executor.swift",
         "Sources/PromptyModel/host_tool_executor.swift",
+        "Sources/PromptyModel/live_chat_conformance.swift",
         "Sources/PromptyModel/load_conformance.swift",
         "Sources/PromptyModel/model_lister.swift",
         "Sources/PromptyModel/operations/render_segment.swift",
@@ -17634,6 +17837,7 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveChatConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
@@ -17814,6 +18018,13 @@
           "kind": "type",
           "group": "",
           "source": "./host-tool-executor",
+          "protocol": true
+        },
+        {
+          "name": "LiveChatConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./live-chat-conformance",
           "protocol": true
         },
         {
@@ -19622,6 +19833,26 @@
           ]
         },
         {
+          "name": "LiveChatConformance",
+          "group": "",
+          "symbol": "LiveChatConformance",
+          "source": "./live-chat-conformance",
+          "methods": [
+            {
+              "name": "complete",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -20075,6 +20306,7 @@
         "./event-sink",
         "./executor",
         "./host-tool-executor",
+        "./live-chat-conformance",
         "./load-conformance",
         "./model-lister",
         "./operations/render-segment",

@@ -130,6 +130,12 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("DiscoveryConformance", "mapModel", vector, false, seam);
   });
+  it("LiveChatConformance.complete:openai_chat_drill", async () => {
+    const vector = JSON.parse(
+      '{"name":"openai_chat_drill","stage":"drill","provider":"openai","input":{"provider":"openai","model":"gpt-4o-mini","apiKey":{"$env":"OPENAI_API_KEY"},"endpoint":{"$env":"OPENAI_BASE_URL"},"messages":[{"role":"user","content":"Say hello in exactly one word."}],"options":{"temperature":0,"maxOutputTokens":16}},"exchange":{"transport":{"baseUrl":{"$env":"OPENAI_BASE_URL"}},"cassette":{"$json":"cassettes/openai_chat_drill.json"},"planes":["transport","wire","semantic"]},"expected":{"role":"assistant","contentNonEmpty":true,"finishReasonInEnum":true},"operation":"complete"}',
+    ) as Record<string, unknown>;
+    await runVector("LiveChatConformance", "complete", vector, false, seam);
+  });
   it("LoadConformance.load:basic_load", async () => {
     const vector = JSON.parse(
       '{"name":"basic_load","description":"Load basic.prompty with env var resolution and verify all PromptAgent fields","stage":"load","input":{"fixture":"basic.prompty","env":{"OPENAI_ENDPOINT":"https://test.openai.com","OPENAI_API_KEY":"sk-test123"}},"expected":{"kind":"prompt","name":"basic-prompt","description":"A basic prompt for testing","metadata":{"authors":["testauthor"]},"model":{"id":"gpt-4","provider":"openai","apiType":"chat","connection":{"kind":"key","endpoint":"https://test.openai.com"},"options":{"temperature":0.7,"maxOutputTokens":1000}},"inputs":[{"name":"firstName","kind":"string","default":"Jane"},{"name":"lastName","kind":"string","default":"Doe"},{"name":"question","kind":"string","default":"What is the meaning of life?"}],"template":{"format":{"kind":"jinja2"},"parser":{"kind":"prompty"}},"instructions":"system:\\nYou are an AI assistant who helps people find information.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\\n\\nuser:\\n{{question}}"},"operation":"load"}',

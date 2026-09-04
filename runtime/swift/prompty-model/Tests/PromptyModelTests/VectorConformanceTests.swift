@@ -194,7 +194,17 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "DiscoveryConformance", operation: "mapModel", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector16LoadConformanceLoadBasicLoad() async throws {
+  func testVector16LiveChatConformanceCompleteOpenaiChatDrill() async throws {
+    guard let vectorData = "{\"name\":\"openai_chat_drill\",\"stage\":\"drill\",\"provider\":\"openai\",\"input\":{\"provider\":\"openai\",\"model\":\"gpt-4o-mini\",\"apiKey\":{\"$env\":\"OPENAI_API_KEY\"},\"endpoint\":{\"$env\":\"OPENAI_BASE_URL\"},\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in exactly one word.\"}],\"options\":{\"temperature\":0,\"maxOutputTokens\":16}},\"exchange\":{\"transport\":{\"baseUrl\":{\"$env\":\"OPENAI_BASE_URL\"}},\"cassette\":{\"$json\":\"cassettes/openai_chat_drill.json\"},\"planes\":[\"transport\",\"wire\",\"semantic\"]},\"expected\":{\"role\":\"assistant\",\"contentNonEmpty\":true,\"finishReasonInEnum\":true},\"operation\":\"complete\"}".data(using: .utf8),
+      let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
+    else {
+      XCTFail("failed to parse embedded vector")
+      return
+    }
+    _ = await VectorRunner.runVector(contract: "LiveChatConformance", operation: "complete", vector: vector, sync: false, seam: seam())
+  }
+
+  func testVector17LoadConformanceLoadBasicLoad() async throws {
     guard let vectorData = "{\"name\":\"basic_load\",\"description\":\"Load basic.prompty with env var resolution and verify all PromptAgent fields\",\"stage\":\"load\",\"input\":{\"fixture\":\"basic.prompty\",\"env\":{\"OPENAI_ENDPOINT\":\"https://test.openai.com\",\"OPENAI_API_KEY\":\"sk-test123\"}},\"expected\":{\"kind\":\"prompt\",\"name\":\"basic-prompt\",\"description\":\"A basic prompt for testing\",\"metadata\":{\"authors\":[\"testauthor\"]},\"model\":{\"id\":\"gpt-4\",\"provider\":\"openai\",\"apiType\":\"chat\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://test.openai.com\"},\"options\":{\"temperature\":0.7,\"maxOutputTokens\":1000}},\"inputs\":[{\"name\":\"firstName\",\"kind\":\"string\",\"default\":\"Jane\"},{\"name\":\"lastName\",\"kind\":\"string\",\"default\":\"Doe\"},{\"name\":\"question\",\"kind\":\"string\",\"default\":\"What is the meaning of life?\"}],\"template\":{\"format\":{\"kind\":\"jinja2\"},\"parser\":{\"kind\":\"prompty\"}},\"instructions\":\"system:\\nYou are an AI assistant who helps people find information.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\\n\\nuser:\\n{{question}}\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -204,7 +214,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector17LoadConformanceLoadConnectionTypesLoad() async throws {
+  func testVector18LoadConformanceLoadConnectionTypesLoad() async throws {
     guard let vectorData = "{\"name\":\"connection_types_load\",\"description\":\"All connection kinds (key, reference, remote, anonymous) load correctly\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"connection-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}}},\"expected\":{\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -214,7 +224,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector18LoadConformanceLoadEmbeddingLoad() async throws {
+  func testVector19LoadConformanceLoadEmbeddingLoad() async throws {
     guard let vectorData = "{\"name\":\"embedding_load\",\"description\":\"Load embedding.prompty and verify apiType=embedding with correct model id\",\"stage\":\"load\",\"input\":{\"fixture\":\"embedding.prompty\",\"env\":{\"OPENAI_ENDPOINT\":\"https://test.openai.com\",\"OPENAI_API_KEY\":\"sk-test123\"}},\"expected\":{\"kind\":\"prompt\",\"name\":\"embedding\",\"model\":{\"id\":\"text-embedding-3-small\",\"provider\":\"openai\",\"apiType\":\"embedding\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://test.openai.com\"}},\"inputs\":[{\"name\":\"text\",\"kind\":\"string\",\"default\":\"Hello world\"}],\"instructions\":\"{{text}}\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -224,7 +234,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector19LoadConformanceLoadEmptyFrontmatterBodyOnly() async throws {
+  func testVector20LoadConformanceLoadEmptyFrontmatterBodyOnly() async throws {
     guard let vectorData = "{\"name\":\"empty_frontmatter_body_only\",\"description\":\"Empty frontmatter with body \u{2014} instructions extracted, defaults applied\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"empty-fm\"}},\"expected\":{\"kind\":\"prompt\",\"name\":\"empty-fm\",\"model\":null,\"inputs\":null,\"tools\":null},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -234,7 +244,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector20LoadConformanceLoadEnvDefault() async throws {
+  func testVector21LoadConformanceLoadEnvDefault() async throws {
     guard let vectorData = "{\"name\":\"env_default\",\"description\":\"${env:MISSING_VAR:fallback_value} resolves to the default when the var is not set\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"env-default-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MISSING_VAR:fallback_value}\"}}},\"env\":{}},\"expected\":{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"fallback_value\"}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -244,7 +254,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector21LoadConformanceLoadEnvMissingError() async throws {
+  func testVector22LoadConformanceLoadEnvMissingError() async throws {
     guard let vectorData = "{\"name\":\"env_missing_error\",\"description\":\"${env:NONEXISTENT} with no default and var not set raises an error\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"env-error-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:NONEXISTENT}\"}}},\"env\":{}},\"expectedError\":{\"kind\":\"env_var_not_set\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -254,7 +264,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector22LoadConformanceLoadEnvResolution() async throws {
+  func testVector23LoadConformanceLoadEnvResolution() async throws {
     guard let vectorData = "{\"name\":\"env_resolution\",\"description\":\"${env:MY_VAR} resolves to the environment variable value when set\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"env-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MY_VAR}\"}}},\"env\":{\"MY_VAR\":\"hello\"}},\"expected\":{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"hello\"}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -264,7 +274,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector23LoadConformanceLoadFileReferenceInTreeAllowed() async throws {
+  func testVector24LoadConformanceLoadFileReferenceInTreeAllowed() async throws {
     guard let vectorData = "{\"name\":\"file_reference_in_tree_allowed\",\"description\":\"A ${file:sub/data.json} reference that stays within the prompt file's directory tree resolves to the parsed content (containment control alongside the traversal-reject vector)\",\"stage\":\"load\",\"input\":{\"agent_subdir\":\"app\",\"frontmatter\":{\"name\":\"file-in-tree-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":\"${file:sub/data.json}\"}},\"files\":{\"sub/data.json\":{\"kind\":\"key\",\"endpoint\":\"https://in-tree.example.com\",\"apiKey\":\"ok\"}}},\"expected\":{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://in-tree.example.com\"}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -274,7 +284,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector24LoadConformanceLoadFileReferenceTraversalRejected() async throws {
+  func testVector25LoadConformanceLoadFileReferenceTraversalRejected() async throws {
     guard let vectorData = "{\"name\":\"file_reference_traversal_rejected\",\"description\":\"A ${file:../secret.json} reference that escapes the prompt file's directory via `..` is rejected even though the target file exists, preventing arbitrary file disclosure (GHSA-7pfc-5v9r-j299). Uses forward-slash separators so the vector holds on every OS.\",\"stage\":\"load\",\"input\":{\"agent_subdir\":\"app\",\"frontmatter\":{\"name\":\"file-traversal-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":\"${file:../secret.json}\"}},\"files\":{\"../secret.json\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\"leaked\"}}},\"expectedError\":{\"kind\":\"file_reference\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -284,7 +294,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector25LoadConformanceLoadFileResolution() async throws {
+  func testVector26LoadConformanceLoadFileResolution() async throws {
     guard let vectorData = "{\"name\":\"file_resolution\",\"description\":\"${file:shared_connection.json} resolves to the parsed JSON content of the referenced file\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"file-ref-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":\"${file:shared_connection.json}\"}},\"env\":{\"OPENAI_API_KEY\":\"shared-key\"},\"files\":{\"shared_connection.json\":{\"kind\":\"key\",\"endpoint\":\"https://shared.example.com\",\"apiKey\":\"shared-key\"}}},\"expected\":{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://shared.example.com\"}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -294,7 +304,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector26LoadConformanceLoadImageApitypeLoad() async throws {
+  func testVector27LoadConformanceLoadImageApitypeLoad() async throws {
     guard let vectorData = "{\"name\":\"image_apitype_load\",\"description\":\"An image-generation prompt loads with apiType image and passthrough additionalProperties model options\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"image-gen\",\"model\":{\"id\":\"dall-e-3\",\"provider\":\"openai\",\"apiType\":\"image\",\"options\":{\"additionalProperties\":{\"size\":\"1024x1024\",\"quality\":\"standard\"}}}}},\"expected\":{\"kind\":\"prompt\",\"name\":\"image-gen\",\"model\":{\"id\":\"dall-e-3\",\"provider\":\"openai\",\"apiType\":\"image\",\"options\":{\"additionalProperties\":{\"size\":\"1024x1024\",\"quality\":\"standard\"}}}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -304,7 +314,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector27LoadConformanceLoadInputScalarShorthand() async throws {
+  func testVector28LoadConformanceLoadInputScalarShorthand() async throws {
     guard let vectorData = "{\"name\":\"input_scalar_shorthand\",\"description\":\"Scalar input values create typed Property with default set\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"scalar-test\",\"model\":\"gpt-4\",\"inputs\":[{\"name\":\"topic\",\"kind\":\"string\",\"default\":\"science\"},{\"name\":\"count\",\"kind\":\"integer\",\"default\":5}]}},\"expected\":{\"inputs\":[{\"name\":\"topic\",\"kind\":\"string\",\"default\":\"science\"},{\"name\":\"count\",\"kind\":\"integer\",\"default\":5}]},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -314,7 +324,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector28LoadConformanceLoadInputValidationDefaultFill() async throws {
+  func testVector29LoadConformanceLoadInputValidationDefaultFill() async throws {
     guard let vectorData = "{\"name\":\"input_validation_default_fill\",\"description\":\"An input with a default value is filled in when no value is provided\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"default-fill-test\",\"model\":\"gpt-4\",\"inputs\":[{\"name\":\"name\",\"kind\":\"string\",\"default\":\"world\"}]},\"inputs\":{}},\"expected\":{\"validated_inputs\":{\"name\":\"world\"}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -324,7 +334,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector29LoadConformanceLoadInputValidationExampleNotUsed() async throws {
+  func testVector30LoadConformanceLoadInputValidationExampleNotUsed() async throws {
     guard let vectorData = "{\"name\":\"input_validation_example_not_used\",\"description\":\"An input with example='sample' but no default must NOT use the example at runtime\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"example-not-used-test\",\"model\":\"gpt-4\",\"inputs\":[{\"name\":\"topic\",\"kind\":\"string\",\"required\":false,\"example\":\"sample\"}]},\"inputs\":{}},\"expected\":{\"validated_inputs\":{}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -334,7 +344,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector30LoadConformanceLoadInputValidationOptionalOmit() async throws {
+  func testVector31LoadConformanceLoadInputValidationOptionalOmit() async throws {
     guard let vectorData = "{\"name\":\"input_validation_optional_omit\",\"description\":\"A non-required input with no default and no value is omitted (not an error)\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"optional-omit-test\",\"model\":\"gpt-4\",\"inputs\":[{\"name\":\"nickname\",\"kind\":\"string\",\"required\":false}]},\"inputs\":{}},\"expected\":{\"validated_inputs\":{}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -344,7 +354,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector31LoadConformanceLoadInputValidationRequired() async throws {
+  func testVector32LoadConformanceLoadInputValidationRequired() async throws {
     guard let vectorData = "{\"name\":\"input_validation_required\",\"description\":\"A required input with no default and no value provided raises ValueError\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"required-input-test\",\"model\":\"gpt-4\",\"inputs\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},\"inputs\":{}},\"expectedError\":{\"kind\":\"missing_required_input\",\"field\":\"city\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -354,7 +364,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector32LoadConformanceLoadInstructionsFromBody() async throws {
+  func testVector33LoadConformanceLoadInstructionsFromBody() async throws {
     guard let vectorData = "{\"name\":\"instructions_from_body\",\"description\":\"The markdown body after the closing --- becomes the instructions field\",\"stage\":\"load\",\"input\":{\"fixture\":\"basic.prompty\",\"env\":{\"OPENAI_ENDPOINT\":\"https://test.openai.com\",\"OPENAI_API_KEY\":\"sk-test123\"}},\"expected\":{\"instructions\":\"system:\\nYou are an AI assistant who helps people find information.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to their questions.\\n\\nuser:\\n{{question}}\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -364,7 +374,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector33LoadConformanceLoadInvalidFrontmatterError() async throws {
+  func testVector34LoadConformanceLoadInvalidFrontmatterError() async throws {
     guard let vectorData = "{\"name\":\"invalid_frontmatter_error\",\"description\":\"Malformed YAML in frontmatter raises a parse error\",\"stage\":\"load\",\"input\":{\"frontmatter_raw\":\"---\\nname: [invalid\\n---\\nHello\"},\"expectedError\":{\"kind\":\"invalid_frontmatter\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -374,7 +384,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector34LoadConformanceLoadKindAlwaysPrompt() async throws {
+  func testVector35LoadConformanceLoadKindAlwaysPrompt() async throws {
     guard let vectorData = "{\"name\":\"kind_always_prompt\",\"description\":\"The loader always injects kind='prompt' \u{2014} .prompty files never specify kind themselves\",\"stage\":\"load\",\"input\":{\"fixture\":\"minimal.prompty\"},\"expected\":{\"kind\":\"prompt\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -384,7 +394,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector35LoadConformanceLoadMinimalLoad() async throws {
+  func testVector36LoadConformanceLoadMinimalLoad() async throws {
     guard let vectorData = "{\"name\":\"minimal_load\",\"description\":\"Load minimal.prompty with model shorthand and bare-minimum frontmatter\",\"stage\":\"load\",\"input\":{\"fixture\":\"minimal.prompty\"},\"expected\":{\"kind\":\"prompt\",\"name\":\"minimal\",\"model\":{\"id\":\"gpt-4\"},\"instructions\":\"system:\\nHello world.\",\"inputs\":null,\"outputs\":null,\"tools\":null},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -394,7 +404,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector36LoadConformanceLoadMissingFileError() async throws {
+  func testVector37LoadConformanceLoadMissingFileError() async throws {
     guard let vectorData = "{\"name\":\"missing_file_error\",\"description\":\"Loading a nonexistent .prompty file raises FileNotFoundError\",\"stage\":\"load\",\"input\":{\"fixture\":\"nonexistent.prompty\"},\"expectedError\":{\"kind\":\"file_not_found\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -404,7 +414,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector37LoadConformanceLoadModelShorthand() async throws {
+  func testVector38LoadConformanceLoadModelShorthand() async throws {
     guard let vectorData = "{\"name\":\"model_shorthand\",\"description\":\"String shorthand 'model: gpt-4o' expands to a Model object with id set\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"test\",\"model\":\"gpt-4o\"}},\"expected\":{\"kind\":\"prompt\",\"name\":\"test\",\"model\":{\"id\":\"gpt-4o\"}},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -414,7 +424,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector38LoadConformanceLoadStructuredOutputsLoad() async throws {
+  func testVector39LoadConformanceLoadStructuredOutputsLoad() async throws {
     guard let vectorData = "{\"name\":\"structured_outputs_load\",\"description\":\"Outputs load as a list of properties preserving kind, description, and required flags\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"structured-output\",\"model\":{\"id\":\"gpt-4\",\"apiType\":\"chat\"},\"outputs\":[{\"name\":\"temperature\",\"kind\":\"integer\",\"description\":\"Temperature in Fahrenheit\",\"required\":true},{\"name\":\"condition\",\"kind\":\"string\",\"description\":\"Weather condition\",\"required\":true},{\"name\":\"city\",\"kind\":\"string\",\"description\":\"City name\",\"required\":true}]}},\"expected\":{\"kind\":\"prompt\",\"name\":\"structured-output\",\"outputs\":[{\"name\":\"temperature\",\"kind\":\"integer\",\"description\":\"Temperature in Fahrenheit\",\"required\":true},{\"name\":\"condition\",\"kind\":\"string\",\"description\":\"Weather condition\",\"required\":true},{\"name\":\"city\",\"kind\":\"string\",\"description\":\"City name\",\"required\":true}]},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -424,7 +434,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector39LoadConformanceLoadTemplateStringInvalid() async throws {
+  func testVector40LoadConformanceLoadTemplateStringInvalid() async throws {
     guard let vectorData = "{\"name\":\"template_string_invalid\",\"description\":\"Template as a bare string is not valid v2 \u{2014} must be an object with format/parser\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"shorthand-test\",\"model\":{\"id\":\"gpt-4\"},\"template\":\"jinja2\"}},\"expectedError\":{\"kind\":\"invalid_template\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -434,7 +444,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector40LoadConformanceLoadToolsCustomLoad() async throws {
+  func testVector41LoadConformanceLoadToolsCustomLoad() async throws {
     guard let vectorData = "{\"name\":\"tools_custom_load\",\"description\":\"Load a prompty with an unknown tool kind \u{2014} falls through to CustomTool\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"custom-tool-test\",\"model\":\"gpt-4\",\"tools\":[{\"name\":\"my_tool\",\"kind\":\"my_provider\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://custom.example.com\"}}]}},\"expected\":{\"tools\":[{\"name\":\"my_tool\",\"kind\":\"my_provider\"}]},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -444,7 +454,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector41LoadConformanceLoadToolsFunctionLoad() async throws {
+  func testVector42LoadConformanceLoadToolsFunctionLoad() async throws {
     guard let vectorData = "{\"name\":\"tools_function_load\",\"description\":\"Load tools_function.prompty and verify FunctionTool with parameters, strict, and bindings\",\"stage\":\"load\",\"input\":{\"fixture\":\"tools_function.prompty\"},\"expected\":{\"kind\":\"prompt\",\"name\":\"function-tools\",\"model\":{\"id\":\"gpt-4\",\"apiType\":\"chat\"},\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather in a given location\",\"strict\":true,\"parameters\":[{\"name\":\"location\",\"kind\":\"string\",\"description\":\"The city and state, e.g. San Francisco, CA\"},{\"name\":\"unit\",\"kind\":\"string\",\"description\":\"Temperature unit\",\"enumValues\":[\"celsius\",\"fahrenheit\"]}],\"bindings\":{\"unit\":{\"input\":\"preferred_unit\"}}}],\"inputs\":[{\"name\":\"question\",\"kind\":\"string\",\"default\":\"What's the weather in Paris?\"},{\"name\":\"preferred_unit\",\"kind\":\"string\",\"default\":\"celsius\"}],\"instructions\":\"system:\\nYou are a helpful assistant with access to tools.\\n\\nuser:\\n{{question}}\"},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -454,7 +464,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector42LoadConformanceLoadToolsMcpLoad() async throws {
+  func testVector43LoadConformanceLoadToolsMcpLoad() async throws {
     guard let vectorData = "{\"name\":\"tools_mcp_load\",\"description\":\"Load a prompty with an MCP tool \u{2014} kind, serverName, connection preserved\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"mcp-test\",\"model\":\"gpt-4\",\"tools\":[{\"name\":\"filesystem\",\"kind\":\"mcp\",\"serverName\":\"fs-server\",\"connection\":{\"kind\":\"reference\",\"name\":\"my-mcp\"}}]}},\"expected\":{\"tools\":[{\"name\":\"filesystem\",\"kind\":\"mcp\",\"serverName\":\"fs-server\"}]},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -464,7 +474,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector43LoadConformanceLoadToolsOpenapiLoad() async throws {
+  func testVector44LoadConformanceLoadToolsOpenapiLoad() async throws {
     guard let vectorData = "{\"name\":\"tools_openapi_load\",\"description\":\"Load a prompty with an OpenAPI tool \u{2014} specification path preserved\",\"stage\":\"load\",\"input\":{\"frontmatter\":{\"name\":\"openapi-test\",\"model\":\"gpt-4\",\"tools\":[{\"name\":\"weather_api\",\"kind\":\"openapi\",\"specification\":\"./weather.json\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://api.weather.com\"}}]}},\"expected\":{\"tools\":[{\"name\":\"weather_api\",\"kind\":\"openapi\",\"specification\":\"./weather.json\"}]},\"operation\":\"load\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -474,7 +484,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "LoadConformance", operation: "load", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector44TurnConformanceReplayMaxIterations() async throws {
+  func testVector45TurnConformanceReplayMaxIterations() async throws {
     guard let vectorData = "{\"name\":\"max_iterations\",\"stage\":\"replay\",\"input\":{\"clock\":\"2026-06-28T00:00:00Z\",\"sessionId\":\"session-1\",\"turnId\":\"turn-1\",\"maxIterations\":1},\"expected\":[\"session:session_start:session-1:turn-1\",\"turn:turn_start:0\",\"turn:llm_start:0\",\"turn:llm_complete:0\",\"session:checkpoint_created:session-1:turn-1\",\"turn:permission_requested:0:exec-1-permission\",\"turn:permission_completed:0:true\",\"turn:tool_execution_start:0:add\",\"turn:tool_execution_complete:0:add:true\",\"turn:tool_result:0:add:true\",\"turn:messages_updated:0\",\"turn:error:1:max_iterations\",\"turn:turn_end:1:error\",\"session:session_end:session-1:turn-1:error\",\"summary:session-1:error:turns=1:checkpoints=1\"],\"operation\":\"replay\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -484,7 +494,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "replay", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector45TurnConformanceReplayNoTool() async throws {
+  func testVector46TurnConformanceReplayNoTool() async throws {
     guard let vectorData = "{\"name\":\"no_tool\",\"stage\":\"replay\",\"input\":{\"clock\":\"2026-06-28T00:00:00Z\",\"sessionId\":\"session-1\",\"turnId\":\"turn-1\",\"inputs\":{\"name\":\"Ada\"},\"maxIterations\":3},\"expected\":[\"session:session_start:session-1:turn-1\",\"turn:turn_start:0\",\"turn:llm_start:0\",\"turn:llm_complete:0\",\"session:checkpoint_created:session-1:turn-1\",\"turn:turn_end:1:success\",\"session:session_end:session-1:turn-1:success\",\"summary:session-1:success:turns=1:checkpoints=1\"],\"operation\":\"replay\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -494,7 +504,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "replay", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector46TurnConformanceReplayPermissionDenied() async throws {
+  func testVector47TurnConformanceReplayPermissionDenied() async throws {
     guard let vectorData = "{\"name\":\"permission_denied\",\"stage\":\"replay\",\"input\":{\"clock\":\"2026-06-28T00:00:00Z\",\"sessionId\":\"session-1\",\"turnId\":\"turn-1\"},\"expected\":[\"session:session_start:session-1:turn-1\",\"turn:turn_start:0\",\"turn:llm_start:0\",\"turn:llm_complete:0\",\"session:checkpoint_created:session-1:turn-1\",\"turn:permission_requested:0:exec-1-permission\",\"turn:permission_completed:0:false\",\"turn:tool_result:0:add:false:permission_denied\",\"turn:messages_updated:0\",\"turn:llm_start:1\",\"turn:llm_complete:1\",\"session:checkpoint_created:session-1:turn-1\",\"turn:turn_end:2:success\",\"session:session_end:session-1:turn-1:success\",\"summary:session-1:success:turns=1:checkpoints=2\"],\"operation\":\"replay\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -504,7 +514,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "replay", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector47TurnConformanceReplayToolFailure() async throws {
+  func testVector48TurnConformanceReplayToolFailure() async throws {
     guard let vectorData = "{\"name\":\"tool_failure\",\"stage\":\"replay\",\"input\":{\"clock\":\"2026-06-28T00:00:00Z\",\"sessionId\":\"session-1\",\"turnId\":\"turn-1\"},\"expected\":[\"session:session_start:session-1:turn-1\",\"turn:turn_start:0\",\"turn:llm_start:0\",\"turn:llm_complete:0\",\"session:checkpoint_created:session-1:turn-1\",\"turn:permission_requested:0:exec-1-permission\",\"turn:permission_completed:0:true\",\"turn:tool_execution_start:0:fail\",\"turn:tool_execution_complete:0:fail:false:exception\",\"turn:tool_result:0:fail:false:exception\",\"turn:messages_updated:0\",\"turn:llm_start:1\",\"turn:llm_complete:1\",\"session:checkpoint_created:session-1:turn-1\",\"turn:turn_end:2:success\",\"session:session_end:session-1:turn-1:success\",\"summary:session-1:success:turns=1:checkpoints=2\"],\"operation\":\"replay\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -514,7 +524,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "replay", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector48TurnConformanceReplayToolSuccess() async throws {
+  func testVector49TurnConformanceReplayToolSuccess() async throws {
     guard let vectorData = "{\"name\":\"tool_success\",\"stage\":\"replay\",\"input\":{\"clock\":\"2026-06-28T00:00:00Z\",\"sessionId\":\"session-1\",\"turnId\":\"turn-1\"},\"expected\":[\"session:session_start:session-1:turn-1\",\"turn:turn_start:0\",\"turn:llm_start:0\",\"turn:llm_complete:0\",\"session:checkpoint_created:session-1:turn-1\",\"turn:permission_requested:0:exec-1-permission\",\"turn:permission_completed:0:true\",\"turn:tool_execution_start:0:add\",\"turn:tool_execution_complete:0:add:true\",\"turn:tool_result:0:add:true\",\"turn:messages_updated:0\",\"turn:llm_start:1\",\"turn:llm_complete:1\",\"session:checkpoint_created:session-1:turn-1\",\"turn:turn_end:2:success\",\"session:session_end:session-1:turn-1:success\",\"summary:session-1:success:turns=1:checkpoints=2\"],\"operation\":\"replay\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -524,7 +534,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "replay", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector49TurnConformanceRunAssistantToolCallsMetadata() async throws {
+  func testVector50TurnConformanceRunAssistantToolCallsMetadata() async throws {
     guard let vectorData = "{\"name\":\"assistant_tool_calls_metadata\",\"description\":\"When the LLM returns tool calls, the assistant message appended to the conversation must have role='assistant', empty content, and metadata.tool_calls containing the full tool_calls array with id/type/function for each call.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Compare weather in two cities.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-meta-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_meta_paris\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_meta_london\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_meta_paris\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_meta_london\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"London\"}}],\"tool_results\":[{\"tool_call_id\":\"call_meta_paris\",\"result\":\"72\u{b0}F sunny\"},{\"tool_call_id\":\"call_meta_london\",\"result\":\"59\u{b0}F cloudy\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-meta-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Paris is warmer and sunnier than London today.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"Paris is warmer and sunnier than London today.\",\"iterations\":2,\"assistant_tool_calls_message\":{\"role\":\"assistant\",\"content\":\"\",\"metadata\":{\"tool_calls\":[{\"id\":\"call_meta_paris\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_meta_london\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]}}},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -534,7 +544,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector50TurnConformanceRunAsyncToolFunction() async throws {
+  func testVector51TurnConformanceRunAsyncToolFunction() async throws {
     guard let vectorData = "{\"name\":\"async_tool_function\",\"description\":\"Agent loop correctly handles async tool functions\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are helpful.\"},{\"role\":\"user\",\"content\":\"Look up the data\"}],\"tools\":[{\"name\":\"lookup\",\"kind\":\"function\",\"description\":\"Look up data\",\"parameters\":[{\"name\":\"query\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"lookup\":\"returns lookup result\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-async-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_async1\",\"type\":\"function\",\"function\":{\"name\":\"lookup\",\"arguments\":\"{\\\"query\\\":\\\"test\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_async1\",\"name\":\"lookup\",\"arguments\":{\"query\":\"test\"}}],\"tool_results\":[{\"tool_call_id\":\"call_async1\",\"result\":\"found: test data\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-async-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I found: test data\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"I found: test data\",\"iterations\":2,\"total_messages\":6},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -544,7 +554,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector51TurnConformanceRunBindingsInjected() async throws {
+  func testVector52TurnConformanceRunBindingsInjected() async throws {
     guard let vectorData = "{\"name\":\"bindings_injected\",\"description\":\"Tool has a binding {unit: {input: 'preferred_unit'}}. The LLM omits the bound parameter. At execution time, the binding injects the value from the parent inputs, so the tool receives the merged arguments.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"parent_inputs\":{\"preferred_unit\":\"celsius\"},\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true},{\"name\":\"unit\",\"kind\":\"string\",\"required\":false}],\"bindings\":{\"unit\":{\"input\":\"preferred_unit\"}}}],\"tool_functions\":{\"get_weather\":\"returns weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-binding-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_bind_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_bind_001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"expected_execution_args\":{\"get_weather\":{\"city\":\"Paris\",\"unit\":\"celsius\"}},\"tool_results\":[{\"tool_call_id\":\"call_bind_001\",\"result\":\"22\u{b0}C sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-binding-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 22\u{b0}C and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 22\u{b0}C and sunny.\",\"iterations\":2,\"total_messages\":6,\"notes\":\"The binding {unit: {input: 'preferred_unit'}} resolves 'preferred_unit' from parent_inputs to 'celsius' and injects it into the tool call arguments before execution, overriding any LLM-provided value.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -554,7 +564,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector52TurnConformanceRunCancellationBeforeLlm() async throws {
+  func testVector53TurnConformanceRunCancellationBeforeLlm() async throws {
     guard let vectorData = "{\"name\":\"cancellation_before_llm\",\"description\":\"\u{a7}13.2 Cancellation \u{2014} Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string\"},\"cancel\":{\"cancelled_at\":\"before_iteration\"},\"on_event\":true},\"sequence\":[],\"expected\":{\"error\":\"CancelledError\",\"iterations\":0,\"total_messages\":2,\"events\":[{\"type\":\"cancelled\",\"data\":{\"reason\":\"Cancellation requested before first iteration\"}}],\"notes\":\"No LLM calls are made. The cancel token is checked at the top of each iteration. Since it is already cancelled, the loop exits immediately with CancelledError.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -564,7 +574,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector53TurnConformanceRunCancellationBetweenIterations() async throws {
+  func testVector54TurnConformanceRunCancellationBetweenIterations() async throws {
     guard let vectorData = "{\"name\":\"cancellation_between_iterations\",\"description\":\"\u{a7}13.2 Cancellation \u{2014} Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"cancel\":{\"cancelled_at\":\"before_iteration_2\"},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-cancel-iter-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_cancel_iter001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_cancel_iter001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_cancel_iter001\",\"result\":\"72\u{b0}F sunny\"}]}],\"expected\":{\"error\":\"CancelledError\",\"iterations\":1,\"total_messages\":5,\"events\":[{\"type\":\"status\",\"data\":{\"message\":\"Starting agent loop\"}},{\"type\":\"tool_call_start\",\"data\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"type\":\"tool_result\",\"data\":{\"name\":\"get_weather\",\"result\":\"72\u{b0}F sunny\"}},{\"type\":\"messages_updated\",\"data\":{\"message_count\":5}},{\"type\":\"cancelled\",\"data\":{\"reason\":\"Cancellation requested before iteration 2\"}}],\"notes\":\"Iteration 1 runs to completion (LLM call + tool execution + message append). The cancel token is checked at the top of iteration 2, causing CancelledError. The 5 messages are: system, user, assistant(tool_calls), tool(result), but the second LLM call never happens.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -574,7 +584,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector54TurnConformanceRunCancellationBetweenTools() async throws {
+  func testVector55TurnConformanceRunCancellationBetweenTools() async throws {
     guard let vectorData = "{\"name\":\"cancellation_between_tools\",\"description\":\"\u{a7}13.2 Cancellation \u{2014} LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Compare weather in Paris and London.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"cancel\":{\"cancelled_at\":\"after_tool_0\"},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-cancel-tools-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_cancel_paris\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_cancel_london\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_cancel_paris\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_cancel_london\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"London\"}}],\"tool_results\":[{\"tool_call_id\":\"call_cancel_paris\",\"result\":\"72\u{b0}F sunny\"}]}],\"expected\":{\"error\":\"CancelledError\",\"iterations\":1,\"tools_executed\":1,\"events\":[{\"type\":\"status\",\"data\":{\"message\":\"Starting agent loop\"}},{\"type\":\"tool_call_start\",\"data\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"type\":\"tool_result\",\"data\":{\"name\":\"get_weather\",\"result\":\"72\u{b0}F sunny\"}},{\"type\":\"cancelled\",\"data\":{\"reason\":\"Cancellation requested after tool execution\"}}],\"notes\":\"Cancel is checked between tool executions. The first tool (Paris) completes, then the cancel token fires. The second tool (London) must NOT be executed. Only one tool_result event is emitted.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -584,7 +594,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector55TurnConformanceRunContextNoTrimWhenFits() async throws {
+  func testVector56TurnConformanceRunContextNoTrimWhenFits() async throws {
     guard let vectorData = "{\"name\":\"context_no_trim_when_fits\",\"description\":\"\u{a7}13.3 Context Window \u{2014} Messages fit within the context budget. No trimming occurs and all messages are preserved.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is 2 + 2?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"},\"context_budget\":10000},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-ctx-nofit-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"2 + 2 equals 4.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"2 + 2 equals 4.\",\"iterations\":1,\"total_messages\":3,\"trimmed_messages\":null,\"notes\":\"When messages fit within the context_budget (10000 characters), no trimming occurs. The trimmed_messages field is null to indicate no modification was needed.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -594,7 +604,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector56TurnConformanceRunContextPreservesSystemMessages() async throws {
+  func testVector57TurnConformanceRunContextPreservesSystemMessages() async throws {
     guard let vectorData = "{\"name\":\"context_preserves_system_messages\",\"description\":\"\u{a7}13.3 Context Window \u{2014} Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"system\",\"content\":\"Always respond in a formal tone.\"},{\"role\":\"user\",\"content\":\"Tell me about ancient Egypt and all the pharaohs and their dynasties in great detail.\"},{\"role\":\"assistant\",\"content\":\"Ancient Egypt's history spans over 3000 years. The Old Kingdom saw the building of the Great Pyramids at Giza under pharaohs Khufu, Khafre, and Menkaure. The Middle Kingdom was a period of reunification. The New Kingdom included famous rulers like Hatshepsut, Thutmose III, Akhenaten, and Tutankhamun.\"},{\"role\":\"user\",\"content\":\"Now tell me about Greek philosophy covering all major philosophers and their contributions.\"},{\"role\":\"assistant\",\"content\":\"Greek philosophy began with the Pre-Socratics. Socrates developed the Socratic method. Plato founded the Academy and wrote The Republic. Aristotle studied under Plato and founded the Lyceum, contributing to logic, metaphysics, ethics, and natural sciences. The Stoics and Epicureans followed in the Hellenistic period.\"},{\"role\":\"user\",\"content\":\"What is the weather today?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string\"},\"context_budget\":300},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-ctx-sys-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"I would need to know your city to provide the weather.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"I would need to know your city to provide the weather.\",\"iterations\":1,\"trimmed_messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"system\",\"content\":\"Always respond in a formal tone.\"},{\"role\":\"system\",\"content\":\"[Summary of earlier conversation] User asked about ancient Egypt and pharaohs, then about Greek philosophy and major philosophers.\"},{\"role\":\"user\",\"content\":\"What is the weather today?\"}],\"notes\":\"ALL system messages are preserved during context trimming \u{2014} they are never dropped regardless of budget. A summary is inserted after the last system message. The most recent user message is always kept.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -604,7 +614,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector57TurnConformanceRunContextTrimBasic() async throws {
+  func testVector58TurnConformanceRunContextTrimBasic() async throws {
     guard let vectorData = "{\"name\":\"context_trim_basic\",\"description\":\"\u{a7}13.3 Context Window \u{2014} Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Tell me about the history of Rome. I want a very detailed answer covering all major periods.\"},{\"role\":\"assistant\",\"content\":\"Rome was founded in 753 BC. The Roman Kingdom lasted until 509 BC when the Republic was established. The Republic expanded through the Punic Wars and conquered the Mediterranean. Julius Caesar rose to power and was assassinated in 44 BC. Augustus became the first Emperor in 27 BC, beginning the Roman Empire.\"},{\"role\":\"user\",\"content\":\"Now tell me about the fall of Rome. Again, very detailed with all the key events and dates.\"},{\"role\":\"assistant\",\"content\":\"The decline of Rome began in the 3rd century with the Crisis of the Third Century. Diocletian split the empire in 285 AD. Constantine founded Constantinople in 330 AD. The Western Empire fell in 476 AD when Odoacer deposed Romulus Augustulus. The Eastern Empire continued as the Byzantine Empire until 1453.\"},{\"role\":\"user\",\"content\":\"Tell me about medieval Europe after Rome fell. Cover the major kingdoms and events.\"},{\"role\":\"assistant\",\"content\":\"After Rome fell, Europe entered the Early Middle Ages. The Franks under Clovis established a kingdom in Gaul. Charlemagne united much of Western Europe and was crowned Emperor in 800 AD. The Viking Age began in 793 AD. The feudal system developed across Europe. The High Middle Ages saw the Crusades beginning in 1095.\"},{\"role\":\"user\",\"content\":\"Now tell me about the Renaissance period.\"},{\"role\":\"assistant\",\"content\":\"The Renaissance began in Italy in the 14th century. Florence was the center under the Medici family. Key figures included Leonardo da Vinci, Michelangelo, and Raphael. The printing press was invented by Gutenberg around 1440. The Renaissance spread north to France, England, and the Low Countries. It marked a transition from medieval to modern thinking.\"},{\"role\":\"user\",\"content\":\"Finally, what is the weather in Paris today?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string\"},\"context_budget\":500},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-ctx-trim-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_ctx_w001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_ctx_w001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_ctx_w001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-ctx-trim-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"iterations\":2,\"trimmed_messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"system\",\"content\":\"[Summary of earlier conversation] User asked about the history of Rome, the fall of Rome, medieval Europe, and the Renaissance period.\"},{\"role\":\"user\",\"content\":\"Finally, what is the weather in Paris today?\"}],\"summary_contains\":\"User asked\",\"notes\":\"Context trimming drops oldest user/assistant pairs to fit within the 500-character budget. The system message is always preserved. A summary message (role=system) is injected after the original system message. The most recent user message is always kept.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -614,7 +624,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector58TurnConformanceRunEmptyToolResult() async throws {
+  func testVector59TurnConformanceRunEmptyToolResult() async throws {
     guard let vectorData = "{\"name\":\"empty_tool_result\",\"description\":\"Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content \u{2014} it must not be skipped or filtered out.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Clear the cache.\"}],\"tools\":[{\"name\":\"clear_cache\",\"kind\":\"function\",\"description\":\"Clear the application cache, returns empty on success\",\"parameters\":[]}],\"tool_functions\":{\"clear_cache\":\"returns empty string on success\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-empty-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_empty_001\",\"type\":\"function\",\"function\":{\"name\":\"clear_cache\",\"arguments\":\"{}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_empty_001\",\"name\":\"clear_cache\",\"arguments\":{}}],\"tool_results\":[{\"tool_call_id\":\"call_empty_001\",\"result\":\"\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-empty-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The cache has been cleared successfully.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The cache has been cleared successfully.\",\"iterations\":2,\"total_messages\":6,\"tool_result_message\":{\"role\":\"tool\",\"content\":[{\"type\":\"text\",\"text\":\"\"}],\"metadata\":{\"tool_call_id\":\"call_empty_001\"}},\"notes\":\"Empty string result must NOT be skipped. The tool result message is still appended to the conversation so the LLM can see the tool was executed successfully.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -624,7 +634,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector59TurnConformanceRunEventsBasicToolLoop() async throws {
+  func testVector60TurnConformanceRunEventsBasicToolLoop() async throws {
     guard let vectorData = "{\"name\":\"events_basic_tool_loop\",\"description\":\"\u{a7}13.1 Events \u{2014} A 2-turn tool-call loop emits the full event lifecycle: status \u{2192} tool_call_start \u{2192} tool_result \u{2192} messages_updated \u{2192} done.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-evt-basic-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_evt_w001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_evt_w001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_evt_w001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-evt-basic-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"iterations\":2,\"total_messages\":6,\"events\":[{\"type\":\"status\",\"data\":{\"message\":\"Starting agent loop\"}},{\"type\":\"tool_call_start\",\"data\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"type\":\"tool_result\",\"data\":{\"name\":\"get_weather\",\"result\":\"72\u{b0}F sunny\"}},{\"type\":\"messages_updated\",\"data\":{\"message_count\":5}},{\"type\":\"done\",\"data\":{\"response\":\"The weather in Paris is 72\u{b0}F and sunny.\"}}],\"notes\":\"Events must be emitted in this exact order. tool_call_start fires before tool execution; tool_result fires after. messages_updated fires when tool result messages are appended. done is always the last event.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -634,7 +644,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector60TurnConformanceRunEventsErrorLogged() async throws {
+  func testVector61TurnConformanceRunEventsErrorLogged() async throws {
     guard let vectorData = "{\"name\":\"events_error_logged\",\"description\":\"\u{a7}13.1 Events \u{97} A tool function raises an exception during execution. The exception is caught and returned as an error string to the LLM. The loop continues normally.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"raises RuntimeError\"},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-evt-err-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_evt_err001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_evt_err001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_evt_err001\",\"result\":\"Error calling 'get_weather': RuntimeError: Weather service unavailable\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-evt-err-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Sorry, the weather service is currently unavailable.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"Sorry, the weather service is currently unavailable.\",\"iterations\":2,\"total_messages\":6,\"events\":[{\"type\":\"tool_call_start\"},{\"type\":\"tool_result\"},{\"type\":\"messages_updated\"},{\"type\":\"done\"}],\"notes\":\"Tool exceptions are caught by the dispatcher and returned as error strings. The loop continues \u{97} this is a success path. Events verify type sequence only (payloads vary by runtime).\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -644,7 +654,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector61TurnConformanceRunEventsNoTools() async throws {
+  func testVector62TurnConformanceRunEventsNoTools() async throws {
     guard let vectorData = "{\"name\":\"events_no_tools\",\"description\":\"\u{a7}13.1 Events \u{2014} Single-turn completion with no tool calls. Only the done event is emitted.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is 2 + 2?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-evt-notool-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"2 + 2 equals 4.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"2 + 2 equals 4.\",\"iterations\":1,\"total_messages\":3,\"events\":[{\"type\":\"done\",\"data\":{\"response\":\"2 + 2 equals 4.\"}}],\"notes\":\"When the LLM returns content without tool calls, no tool_call_start/tool_result/messages_updated events fire. Only the done event is emitted.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -654,7 +664,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector62TurnConformanceRunGuardrailAllPass() async throws {
+  func testVector63TurnConformanceRunGuardrailAllPass() async throws {
     guard let vectorData = "{\"name\":\"guardrail_all_pass\",\"description\":\"\u{a7}13.4 Guardrails \u{2014} All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"guardrails\":{\"input\":{\"action\":\"allow\"},\"output\":{\"action\":\"allow\"},\"tool\":{\"deny_tools\":[]}}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-guard-pass-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_guard_pass001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_guard_pass001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_guard_pass001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-guard-pass-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"iterations\":2,\"total_messages\":6,\"denied_tools\":[],\"notes\":\"All three guardrail types are configured but none deny. Input guardrail allows, tool guardrail has an empty deny list, and output guardrail allows. The agent loop completes as if no guardrails were present.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -664,7 +674,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector63TurnConformanceRunGuardrailInputDeny() async throws {
+  func testVector64TurnConformanceRunGuardrailInputDeny() async throws {
     guard let vectorData = "{\"name\":\"guardrail_input_deny\",\"description\":\"\u{a7}13.4 Guardrails \u{2014} Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"My SSN is 123-45-6789, can you look that up?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"},\"guardrails\":{\"input\":{\"action\":\"deny\",\"reason\":\"Contains PII\"}}},\"sequence\":[],\"expected\":{\"error\":\"GuardrailError\",\"error_reason\":\"Contains PII\",\"iterations\":0,\"total_messages\":2,\"notes\":\"Input guardrail runs before the first LLM call. When it returns action=deny, the loop immediately raises GuardrailError with the provided reason. No LLM calls or tool executions occur.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -674,7 +684,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector64TurnConformanceRunGuardrailOutputDeny() async throws {
+  func testVector65TurnConformanceRunGuardrailOutputDeny() async throws {
     guard let vectorData = "{\"name\":\"guardrail_output_deny\",\"description\":\"\u{a7}13.4 Guardrails \u{2014} Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Tell me something.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"},\"guardrails\":{\"input\":{\"action\":\"allow\"},\"output\":{\"action\":\"deny\",\"reason\":\"Response contains harmful content\"}}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-guard-out-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Here is some problematic content that the guardrail catches.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"error\":\"GuardrailError\",\"error_reason\":\"Response contains harmful content\",\"iterations\":1,\"notes\":\"The input guardrail passes (action=allow). The LLM returns a response. The output guardrail runs on the response and returns action=deny, causing GuardrailError. The LLM was called once but the result is not returned to the user.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -684,7 +694,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector65TurnConformanceRunGuardrailToolDeny() async throws {
+  func testVector66TurnConformanceRunGuardrailToolDeny() async throws {
     guard let vectorData = "{\"name\":\"guardrail_tool_deny\",\"description\":\"\u{a7}13.4 Guardrails \u{2014} LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Get the weather and also run the dangerous operation.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"dangerous_tool\",\"kind\":\"function\",\"description\":\"A dangerous operation that should be guarded\",\"parameters\":[{\"name\":\"target\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string\",\"dangerous_tool\":\"returns sensitive data\"},\"guardrails\":{\"tool\":{\"deny_tools\":[\"dangerous_tool\"],\"reason\":\"Tool not authorized\"}}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-guard-tool-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_guard_weather\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_guard_danger\",\"type\":\"function\",\"function\":{\"name\":\"dangerous_tool\",\"arguments\":\"{\\\"target\\\": \\\"secret_db\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_guard_weather\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_guard_danger\",\"name\":\"dangerous_tool\",\"arguments\":{\"target\":\"secret_db\"}}],\"tool_results\":[{\"tool_call_id\":\"call_guard_weather\",\"result\":\"72\u{b0}F sunny\"},{\"tool_call_id\":\"call_guard_danger\",\"result\":\"Tool denied by guardrail: Tool not authorized\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-guard-tool-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny. I was unable to run the dangerous operation as it was not authorized.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 72\u{b0}F and sunny. I was unable to run the dangerous operation as it was not authorized.\",\"iterations\":2,\"total_messages\":7,\"denied_tools\":[\"dangerous_tool\"],\"notes\":\"The tool guardrail intercepts tool calls before execution. get_weather is allowed and executes normally. dangerous_tool is denied \u{2014} its tool result message contains a synthetic denial string instead of actual execution output. Both results are sent to the LLM so it can respond appropriately.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -694,7 +704,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector66TurnConformanceRunMaxIterationsExceeded() async throws {
+  func testVector67TurnConformanceRunMaxIterationsExceeded() async throws {
     guard let vectorData = "{\"name\":\"max_iterations_exceeded\",\"description\":\"LLM returns tool calls on every turn for 11 iterations, exceeding MAX_ITERATIONS=10. The agent loop must raise an error.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Keep checking the weather forever.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-loop-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_01\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_01\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_01\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-loop-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_02\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_02\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"London\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_02\",\"result\":\"59\u{b0}F cloudy\"}]},{\"turn\":3,\"llm_response\":{\"id\":\"chatcmpl-loop-003\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_03\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Tokyo\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_03\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Tokyo\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_03\",\"result\":\"80\u{b0}F humid\"}]},{\"turn\":4,\"llm_response\":{\"id\":\"chatcmpl-loop-004\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_04\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Sydney\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_04\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Sydney\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_04\",\"result\":\"65\u{b0}F rainy\"}]},{\"turn\":5,\"llm_response\":{\"id\":\"chatcmpl-loop-005\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_05\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Berlin\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_05\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Berlin\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_05\",\"result\":\"55\u{b0}F windy\"}]},{\"turn\":6,\"llm_response\":{\"id\":\"chatcmpl-loop-006\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_06\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Cairo\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_06\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Cairo\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_06\",\"result\":\"95\u{b0}F dry\"}]},{\"turn\":7,\"llm_response\":{\"id\":\"chatcmpl-loop-007\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_07\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Mumbai\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_07\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Mumbai\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_07\",\"result\":\"88\u{b0}F humid\"}]},{\"turn\":8,\"llm_response\":{\"id\":\"chatcmpl-loop-008\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_08\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Moscow\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_08\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Moscow\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_08\",\"result\":\"30\u{b0}F snowy\"}]},{\"turn\":9,\"llm_response\":{\"id\":\"chatcmpl-loop-009\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_09\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Rio\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_09\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Rio\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_09\",\"result\":\"85\u{b0}F tropical\"}]},{\"turn\":10,\"llm_response\":{\"id\":\"chatcmpl-loop-010\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_10\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Seoul\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_10\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Seoul\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_10\",\"result\":\"68\u{b0}F clear\"}]},{\"turn\":11,\"llm_response\":{\"id\":\"chatcmpl-loop-011\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_loop_11\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Toronto\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_loop_11\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Toronto\"}}],\"tool_results\":[{\"tool_call_id\":\"call_loop_11\",\"result\":\"40\u{b0}F foggy\"}]}],\"expected\":{\"error\":\"Agent loop exceeded 10 iterations\",\"iterations\":11},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -704,7 +714,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector67TurnConformanceRunMultiTurnToolCalls() async throws {
+  func testVector68TurnConformanceRunMultiTurnToolCalls() async throws {
     guard let vectorData = "{\"name\":\"multi_turn_tool_calls\",\"description\":\"Three-turn chain: Turn 1 calls get_weather, Turn 2 calls convert_temperature with the result, Turn 3 returns the final answer.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant with access to weather and conversion tools.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris in Celsius?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city (returns Fahrenheit)\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"convert_temperature\",\"kind\":\"function\",\"description\":\"Convert a temperature between Fahrenheit and Celsius\",\"parameters\":[{\"name\":\"value\",\"kind\":\"float\",\"required\":true},{\"name\":\"from_unit\",\"kind\":\"string\",\"required\":true},{\"name\":\"to_unit\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string in Fahrenheit\",\"convert_temperature\":\"returns converted temperature string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-chain-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_weather_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_weather_001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_weather_001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-chain-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_convert_001\",\"type\":\"function\",\"function\":{\"name\":\"convert_temperature\",\"arguments\":\"{\\\"value\\\": 72.0, \\\"from_unit\\\": \\\"fahrenheit\\\", \\\"to_unit\\\": \\\"celsius\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_convert_001\",\"name\":\"convert_temperature\",\"arguments\":{\"value\":72,\"from_unit\":\"fahrenheit\",\"to_unit\":\"celsius\"}}],\"tool_results\":[{\"tool_call_id\":\"call_convert_001\",\"result\":\"22.2\u{b0}C\"}]},{\"turn\":3,\"llm_response\":{\"id\":\"chatcmpl-chain-003\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 22.2\u{b0}C and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 22.2\u{b0}C and sunny.\",\"iterations\":3,\"total_messages\":8},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -714,7 +724,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector68TurnConformanceRunMultipleToolCallsSingleTurn() async throws {
+  func testVector69TurnConformanceRunMultipleToolCallsSingleTurn() async throws {
     guard let vectorData = "{\"name\":\"multiple_tool_calls_single_turn\",\"description\":\"Turn 1: LLM returns two parallel tool calls \u{2014} get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"Compare the weather in Paris and London.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-multi-call-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_paris_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_london_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_paris_001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_london_001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"London\"}}],\"tool_results\":[{\"tool_call_id\":\"call_paris_001\",\"result\":\"72\u{b0}F sunny\"},{\"tool_call_id\":\"call_london_001\",\"result\":\"59\u{b0}F cloudy\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-multi-call-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Paris is 72\u{b0}F and sunny, while London is 59\u{b0}F and cloudy.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"Paris is 72\u{b0}F and sunny, while London is 59\u{b0}F and cloudy.\",\"iterations\":2,\"total_messages\":7,\"message_sequence\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"Compare the weather in Paris and London.\"},{\"role\":\"assistant\",\"content\":\"\",\"metadata\":{\"tool_calls\":[{\"id\":\"call_paris_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_london_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"London\\\"}\"}}]}},{\"role\":\"tool\",\"content\":\"72\u{b0}F sunny\",\"metadata\":{\"tool_call_id\":\"call_paris_001\"}},{\"role\":\"tool\",\"content\":\"59\u{b0}F cloudy\",\"metadata\":{\"tool_call_id\":\"call_london_001\"}},{\"role\":\"assistant\",\"content\":\"Paris is 72\u{b0}F and sunny, while London is 59\u{b0}F and cloudy.\"}]},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -724,7 +734,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector69TurnConformanceRunNoToolCalls() async throws {
+  func testVector70TurnConformanceRunNoToolCalls() async throws {
     guard let vectorData = "{\"name\":\"no_tool_calls\",\"description\":\"LLM returns content immediately with no tool calls \u{2014} the agent loop completes in a single iteration.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is 2 + 2?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-no-tools-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"2 + 2 equals 4.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"2 + 2 equals 4.\",\"iterations\":1,\"total_messages\":3},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -734,7 +744,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector70TurnConformanceRunParallelToolsBasic() async throws {
+  func testVector71TurnConformanceRunParallelToolsBasic() async throws {
     guard let vectorData = "{\"name\":\"parallel_tools_basic\",\"description\":\"\u{a7}13.6 Parallel Tools \u{2014} LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant with access to weather, time, and news tools.\"},{\"role\":\"user\",\"content\":\"Give me the weather in Paris, the current time in Tokyo, and the latest news.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"get_time\",\"kind\":\"function\",\"description\":\"Get the current time in a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"get_news\",\"kind\":\"function\",\"description\":\"Get the latest news headlines\",\"parameters\":[]}],\"tool_functions\":{\"get_weather\":\"returns weather string\",\"get_time\":\"returns current time string\",\"get_news\":\"returns news headlines\"},\"parallel_tool_calls\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-parallel-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_par_weather\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_par_time\",\"type\":\"function\",\"function\":{\"name\":\"get_time\",\"arguments\":\"{\\\"city\\\": \\\"Tokyo\\\"}\"}},{\"id\":\"call_par_news\",\"type\":\"function\",\"function\":{\"name\":\"get_news\",\"arguments\":\"{}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_par_weather\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_par_time\",\"name\":\"get_time\",\"arguments\":{\"city\":\"Tokyo\"}},{\"id\":\"call_par_news\",\"name\":\"get_news\",\"arguments\":{}}],\"tool_results\":[{\"tool_call_id\":\"call_par_weather\",\"result\":\"72\u{b0}F sunny\"},{\"tool_call_id\":\"call_par_time\",\"result\":\"3:45 PM JST\"},{\"tool_call_id\":\"call_par_news\",\"result\":\"Tech stocks rise 5%. New climate accord signed. Mars rover discovers ice.\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-parallel-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Here's your update: Paris is 72\u{b0}F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"rust_expected_error\":\"parallel_tool_calls=true is not supported by the canonical Rust engine\",\"result\":\"Here's your update: Paris is 72\u{b0}F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.\",\"iterations\":2,\"total_messages\":8,\"tool_execution_order\":[\"get_weather\",\"get_time\",\"get_news\"],\"notes\":\"With parallel_tool_calls=true, all 3 tool calls may execute concurrently. Regardless of execution order, tool result messages must be appended in the same order as the original tool_calls array. The total is 8 messages: system + user + assistant(3 tool_calls) + 3 tool results + final assistant.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -744,7 +754,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector71TurnConformanceRunParallelToolsWithGuardrailDeny() async throws {
+  func testVector72TurnConformanceRunParallelToolsWithGuardrailDeny() async throws {
     guard let vectorData = "{\"name\":\"parallel_tools_with_guardrail_deny\",\"description\":\"\u{a7}13.6 Parallel Tools + \u{a7}13.4 Guardrails \u{2014} 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Get weather, time, and run the dangerous operation.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"get_time\",\"kind\":\"function\",\"description\":\"Get the current time in a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]},{\"name\":\"dangerous_tool\",\"kind\":\"function\",\"description\":\"A dangerous operation\",\"parameters\":[{\"name\":\"target\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string\",\"get_time\":\"returns current time string\",\"dangerous_tool\":\"returns sensitive data\"},\"parallel_tool_calls\":true,\"guardrails\":{\"tool\":{\"deny_tools\":[\"dangerous_tool\"],\"reason\":\"Not authorized\"}}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-par-guard-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_pg_weather\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"id\":\"call_pg_danger\",\"type\":\"function\",\"function\":{\"name\":\"dangerous_tool\",\"arguments\":\"{\\\"target\\\": \\\"secret_db\\\"}\"}},{\"id\":\"call_pg_time\",\"type\":\"function\",\"function\":{\"name\":\"get_time\",\"arguments\":\"{\\\"city\\\": \\\"Tokyo\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_pg_weather\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}},{\"id\":\"call_pg_danger\",\"name\":\"dangerous_tool\",\"arguments\":{\"target\":\"secret_db\"}},{\"id\":\"call_pg_time\",\"name\":\"get_time\",\"arguments\":{\"city\":\"Tokyo\"}}],\"tool_results\":[{\"tool_call_id\":\"call_pg_weather\",\"result\":\"72\u{b0}F sunny\"},{\"tool_call_id\":\"call_pg_danger\",\"result\":\"Tool denied by guardrail: Not authorized\"},{\"tool_call_id\":\"call_pg_time\",\"result\":\"3:45 PM JST\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-par-guard-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Paris is 72\u{b0}F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"rust_expected_error\":\"parallel_tool_calls=true is not supported by the canonical Rust engine\",\"result\":\"Paris is 72\u{b0}F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.\",\"iterations\":2,\"total_messages\":8,\"denied_tools\":[\"dangerous_tool\"],\"tool_execution_order\":[\"get_weather\",\"get_time\"],\"notes\":\"The tool guardrail filters dangerous_tool before execution. get_weather and get_time execute (potentially in parallel). dangerous_tool receives a synthetic denial result. All 3 tool result messages are appended in the original tool_calls order. The denied tool is never actually called but its result slot is filled with the denial message.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -754,7 +764,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector72TurnConformanceRunSingleToolCall() async throws {
+  func testVector73TurnConformanceRunSingleToolCall() async throws {
     guard let vectorData = "{\"name\":\"single_tool_call\",\"description\":\"Turn 1: LLM requests get_weather for Paris. Turn 2: after receiving the tool result, LLM returns a final content response.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-single-tool-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_abc123\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_abc123\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_abc123\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-single-tool-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The weather in Paris is 72\u{b0}F and sunny.\",\"iterations\":2,\"total_messages\":6,\"message_sequence\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"},{\"role\":\"assistant\",\"content\":\"\",\"metadata\":{\"tool_calls\":[{\"id\":\"call_abc123\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]}},{\"role\":\"tool\",\"content\":\"72\u{b0}F sunny\",\"metadata\":{\"tool_call_id\":\"call_abc123\"}},{\"role\":\"assistant\",\"content\":\"The weather in Paris is 72\u{b0}F and sunny.\"}]},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -764,7 +774,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector73TurnConformanceRunSteeringInjectMessage() async throws {
+  func testVector74TurnConformanceRunSteeringInjectMessage() async throws {
     guard let vectorData = "{\"name\":\"steering_inject_message\",\"description\":\"\u{a7}13.5 Steering \u{2014} After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"steering\":{\"messages\":[{\"inject_before_iteration\":2,\"role\":\"user\",\"text\":\"Actually, focus on the temperature in Celsius.\"}]},\"on_event\":true},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-steer-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_steer_w001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_steer_w001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_steer_w001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-steer-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The temperature in Paris is approximately 22\u{b0}C and it is sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"The temperature in Paris is approximately 22\u{b0}C and it is sunny.\",\"iterations\":2,\"total_messages\":7,\"events\":[{\"type\":\"status\",\"data\":{\"message\":\"Starting agent loop\"}},{\"type\":\"tool_call_start\",\"data\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}},{\"type\":\"tool_result\",\"data\":{\"name\":\"get_weather\",\"result\":\"72\u{b0}F sunny\"}},{\"type\":\"messages_updated\",\"data\":{\"message_count\":5}},{\"type\":\"status\",\"data\":{\"message\":\"Injecting steering message\"}},{\"type\":\"messages_updated\",\"data\":{\"message_count\":6}},{\"type\":\"done\",\"data\":{\"response\":\"The temperature in Paris is approximately 22\u{b0}C and it is sunny.\"}}],\"message_sequence\":[{\"role\":\"system\",\"content\":\"You are a helpful weather assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"},{\"role\":\"assistant\",\"content\":\"\",\"metadata\":{\"tool_calls\":[{\"id\":\"call_steer_w001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]}},{\"role\":\"tool\",\"content\":\"72\u{b0}F sunny\",\"metadata\":{\"tool_call_id\":\"call_steer_w001\"}},{\"role\":\"user\",\"content\":\"Actually, focus on the temperature in Celsius.\"},{\"role\":\"assistant\",\"content\":\"The temperature in Paris is approximately 22\u{b0}C and it is sunny.\"}],\"notes\":\"The steering message is injected as a user message before iteration 2's LLM call. total_messages is 7 (system + user + assistant_tool + tool_result + steering_user + assistant_final = 6 shown, but 7 when including the final assistant). The steering message appears between the tool result and the final LLM call.\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -774,7 +784,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector74TurnConformanceRunSteeringMultipleMessages() async throws {
+  func testVector75TurnConformanceRunSteeringMultipleMessages() async throws {
     guard let vectorData = "{\"name\":\"steering_multiple_messages\",\"description\":\"\u{a7}13.5 Steering \u{2014} Two steering messages are queued and both injected before iteration 2. Tests atomic drain \u{2014} both appear in order.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns weather string for the requested city\"},\"steering\":{\"messages\":[{\"inject_before_iteration\":2,\"role\":\"user\",\"text\":\"Please respond in French.\"},{\"inject_before_iteration\":2,\"role\":\"user\",\"text\":\"Also include the humidity percentage.\"}]}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-steer-multi-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_steer_m001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_steer_m001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_steer_m001\",\"result\":\"72\u{b0}F sunny, 45% humidity\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-steer-multi-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Le temps \u{e0} Paris est de 22\u{b0}C et ensoleill\u{e9} avec une humidit\u{e9} de 45%.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"Le temps \u{e0} Paris est de 22\u{b0}C et ensoleill\u{e9} avec une humidit\u{e9} de 45%.\",\"iterations\":2,\"total_messages\":8,\"message_sequence\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"},{\"role\":\"assistant\",\"content\":\"\",\"metadata\":{\"tool_calls\":[{\"id\":\"call_steer_m001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]}},{\"role\":\"tool\",\"content\":\"72\u{b0}F sunny, 45% humidity\",\"metadata\":{\"tool_call_id\":\"call_steer_m001\"}},{\"role\":\"user\",\"content\":\"Please respond in French.\"},{\"role\":\"user\",\"content\":\"Also include the humidity percentage.\"},{\"role\":\"assistant\",\"content\":\"Le temps \u{e0} Paris est de 22\u{b0}C et ensoleill\u{e9} avec une humidit\u{e9} de 45%.\"}],\"notes\":\"Both steering messages are drained atomically and inserted in order before iteration 2's LLM call. They appear as consecutive user messages between the tool result and the final assistant response. total_messages is 8 (system + user + assistant_tool + tool_result + steer1 + steer2 + assistant_final = 7 content messages, but counting from 1-indexed gives 8 including all roles).\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -784,7 +794,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector75TurnConformanceRunToolNotRegisteredError() async throws {
+  func testVector76TurnConformanceRunToolNotRegisteredError() async throws {
     guard let vectorData = "{\"name\":\"tool_not_registered_error\",\"description\":\"LLM calls a tool named 'unknown_tool' that has no registered handler in tool_functions. The agent loop must raise a ValueError.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"Do something with an unknown tool.\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-unknown-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_unknown_001\",\"type\":\"function\",\"function\":{\"name\":\"unknown_tool\",\"arguments\":\"{\\\"query\\\": \\\"test\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_unknown_001\",\"name\":\"unknown_tool\",\"arguments\":{\"query\":\"test\"}}]}],\"expected\":{\"error\":\"Tool not registered: unknown_tool\",\"error_type\":\"ValueError\"},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -794,7 +804,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector76TurnConformanceRunToolResultMessageFormat() async throws {
+  func testVector77TurnConformanceRunToolResultMessageFormat() async throws {
     guard let vectorData = "{\"name\":\"tool_result_message_format\",\"description\":\"After executing a tool, the tool result message appended to the conversation must have role='tool', content as a TextPart with the stringified result, and metadata.tool_call_id matching the original call id.\",\"stage\":\"agent\",\"input\":{\"messages\":[{\"role\":\"system\",\"content\":\"You are a helpful assistant.\"},{\"role\":\"user\",\"content\":\"What is the weather?\"}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get the current weather for a city\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"tool_functions\":{\"get_weather\":\"returns a weather string\"}},\"sequence\":[{\"turn\":1,\"llm_response\":{\"id\":\"chatcmpl-format-001\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_fmt_001\",\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\": \\\"Paris\\\"}\"}}]},\"finish_reason\":\"tool_calls\"}]},\"expected_tool_calls\":[{\"id\":\"call_fmt_001\",\"name\":\"get_weather\",\"arguments\":{\"city\":\"Paris\"}}],\"tool_results\":[{\"tool_call_id\":\"call_fmt_001\",\"result\":\"72\u{b0}F sunny\"}]},{\"turn\":2,\"llm_response\":{\"id\":\"chatcmpl-format-002\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"It is 72\u{b0}F and sunny.\",\"tool_calls\":null},\"finish_reason\":\"stop\"}]},\"expected_tool_calls\":null}],\"expected\":{\"result\":\"It is 72\u{b0}F and sunny.\",\"iterations\":2,\"tool_result_message\":{\"role\":\"tool\",\"content\":[{\"type\":\"text\",\"text\":\"72\u{b0}F sunny\"}],\"metadata\":{\"tool_call_id\":\"call_fmt_001\"}}},\"operation\":\"run\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -804,7 +814,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "run", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector77TurnConformanceRunTurnCancelBeforeContext() async throws {
+  func testVector78TurnConformanceRunTurnCancelBeforeContext() async throws {
     guard let vectorData = "{\"name\":\"cancel_before_context\",\"stage\":\"turn\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"Do not invoke the model\"}],\"model\":[],\"cancelBeforeRun\":true},\"expected\":{\"status\":\"cancelled\",\"iterations\":0,\"snapshots\":0,\"toolResults\":0,\"eventKinds\":[\"turn_started\",\"turn_cancelled\"]},\"operation\":\"runTurn\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -814,7 +824,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "runTurn", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector78TurnConformanceRunTurnDelegatedProviderState() async throws {
+  func testVector79TurnConformanceRunTurnDelegatedProviderState() async throws {
     guard let vectorData = "{\"name\":\"delegated_provider_state\",\"stage\":\"turn\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"Continue a provider-managed response\"}],\"model\":[{\"tools\":[{\"id\":\"call-state\",\"name\":\"echo\",\"arguments\":{\"value\":\"state\"}}],\"nextPortability\":\"delegated\",\"delegatedState\":[{\"provider\":\"openai\",\"kind\":\"previous_response\",\"id\":\"resp_123\"}]},{\"output\":\"continued\"}],\"toolOutputs\":{\"call-state\":\"state\"}},\"expected\":{\"status\":\"success\",\"output\":\"continued\",\"iterations\":2,\"snapshots\":2,\"snapshotStablePrefixes\":[1,1],\"snapshotPortability\":[\"portable\",\"delegated\"],\"toolResults\":1,\"toolResultOrder\":[\"call-state\"],\"commitPortability\":\"delegated\",\"delegatedState\":1},\"operation\":\"runTurn\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -824,7 +834,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "runTurn", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector79TurnConformanceRunTurnFinalOutput() async throws {
+  func testVector80TurnConformanceRunTurnFinalOutput() async throws {
     guard let vectorData = "{\"name\":\"final_output\",\"stage\":\"turn\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"model\":[{\"output\":\"Hello back\"}]},\"expected\":{\"status\":\"success\",\"output\":\"Hello back\",\"iterations\":1,\"snapshots\":1,\"snapshotStablePrefixes\":[1],\"toolResults\":0,\"eventKinds\":[\"turn_started\",\"context_prepared\",\"model_invocation_started\",\"model_invocation_completed\",\"checkpoint_created\",\"turn_committed\",\"post_commit_started\",\"post_commit_completed\"]},\"operation\":\"runTurn\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -834,7 +844,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "runTurn", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector80TurnConformanceRunTurnOrderedToolRound() async throws {
+  func testVector81TurnConformanceRunTurnOrderedToolRound() async throws {
     guard let vectorData = "{\"name\":\"ordered_tool_round\",\"stage\":\"turn\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"Add two values\"}],\"model\":[{\"assistant\":\"I will use the tools.\",\"tools\":[{\"id\":\"call-a\",\"name\":\"echo\",\"arguments\":{\"value\":\"A\"}},{\"id\":\"call-b\",\"name\":\"echo\",\"arguments\":{\"value\":\"B\"}}]},{\"output\":\"A then B\"}],\"toolOutputs\":{\"call-a\":\"A\",\"call-b\":\"B\"}},\"expected\":{\"status\":\"success\",\"output\":\"A then B\",\"iterations\":2,\"snapshots\":2,\"snapshotStablePrefixes\":[1,1],\"toolResults\":2,\"toolResultOrder\":[\"call-a\",\"call-b\"],\"eventKinds\":[\"turn_started\",\"context_prepared\",\"model_invocation_started\",\"model_invocation_completed\",\"checkpoint_created\",\"permission_requested\",\"permission_resolved\",\"tool_execution_started\",\"tool_execution_completed\",\"checkpoint_created\",\"permission_requested\",\"permission_resolved\",\"tool_execution_started\",\"tool_execution_completed\",\"checkpoint_created\",\"tool_result_committed\",\"tool_result_committed\",\"conversation_updated\",\"checkpoint_created\",\"context_prepared\",\"model_invocation_started\",\"model_invocation_completed\",\"checkpoint_created\",\"turn_committed\",\"post_commit_started\",\"post_commit_completed\"]},\"operation\":\"runTurn\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -844,7 +854,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "runTurn", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector81TurnConformanceRunTurnPermissionDenialIsModelVisible() async throws {
+  func testVector82TurnConformanceRunTurnPermissionDenialIsModelVisible() async throws {
     guard let vectorData = "{\"name\":\"permission_denial_is_model_visible\",\"stage\":\"turn\",\"input\":{\"messages\":[{\"role\":\"user\",\"content\":\"Read the protected resource\"}],\"model\":[{\"tools\":[{\"id\":\"call-denied\",\"name\":\"protected\",\"arguments\":{}}]},{\"output\":\"Permission was denied\"}],\"denyTools\":[\"protected\"]},\"expected\":{\"status\":\"success\",\"output\":\"Permission was denied\",\"iterations\":2,\"snapshots\":2,\"snapshotStablePrefixes\":[1,1],\"toolResults\":1,\"toolResultOrder\":[\"call-denied\"]},\"operation\":\"runTurn\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -854,7 +864,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "TurnConformance", operation: "runTurn", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector82WireConformanceToRequestAnthropicImageFormat() async throws {
+  func testVector83WireConformanceToRequestAnthropicImageFormat() async throws {
     guard let vectorData = "{\"name\":\"anthropic_image_format\",\"description\":\"\u{a7}7.5 \u{2014} Anthropic: ImagePart uses base64 source block with media_type, not image_url format.\",\"stage\":\"wire\",\"provider\":\"anthropic\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"anthropic\"}},\"apiType\":\"chat\",\"model_id\":\"claude-3\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Describe this image\"},{\"kind\":\"image\",\"value\":\"base64data\",\"mediaType\":\"image/png\"}]}],\"tools\":[],\"options\":{\"maxOutputTokens\":4096},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"claude-3\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Describe this image\"},{\"type\":\"image\",\"source\":{\"type\":\"base64\",\"media_type\":\"image/png\",\"data\":\"base64data\"}}]}],\"max_tokens\":4096}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -864,7 +874,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector83WireConformanceToRequestAnthropicMaxTokensRequired() async throws {
+  func testVector84WireConformanceToRequestAnthropicMaxTokensRequired() async throws {
     guard let vectorData = "{\"name\":\"anthropic_max_tokens_required\",\"description\":\"\u{a7}7.5 \u{2014} Anthropic: when maxOutputTokens is not set, max_tokens MUST default to 4096 (required by API).\",\"stage\":\"wire\",\"provider\":\"anthropic\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"anthropic\"}},\"apiType\":\"chat\",\"model_id\":\"claude-3\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"claude-3\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}],\"max_tokens\":4096}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -874,7 +884,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector84WireConformanceToRequestAnthropicOptions() async throws {
+  func testVector85WireConformanceToRequestAnthropicOptions() async throws {
     guard let vectorData = "{\"name\":\"anthropic_options\",\"description\":\"Anthropic: option names map correctly (topK, stopSequences)\",\"stage\":\"wire\",\"provider\":\"anthropic\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"anthropic\"}},\"apiType\":\"chat\",\"model_id\":\"claude-sonnet-4-20250514\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hi\"}]}],\"tools\":[],\"options\":{\"temperature\":0.5,\"topP\":0.9,\"topK\":40,\"maxOutputTokens\":2000,\"stopSequences\":[\"END\"]},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"claude-sonnet-4-20250514\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Hi\"}]}],\"temperature\":0.5,\"top_p\":0.9,\"top_k\":40,\"max_tokens\":2000,\"stop_sequences\":[\"END\"]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -884,7 +894,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector85WireConformanceToRequestAnthropicSystemSeparate() async throws {
+  func testVector86WireConformanceToRequestAnthropicSystemSeparate() async throws {
     guard let vectorData = "{\"name\":\"anthropic_system_separate\",\"description\":\"\u{a7}7.5 \u{2014} Anthropic: system message extracted to top-level 'system' field; messages array contains only non-system messages.\",\"stage\":\"wire\",\"provider\":\"anthropic\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"anthropic\"}},\"apiType\":\"chat\",\"model_id\":\"claude-3\",\"messages\":[{\"role\":\"system\",\"content\":[{\"kind\":\"text\",\"value\":\"Be helpful\"}]},{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{\"maxOutputTokens\":4096},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"claude-3\",\"system\":\"Be helpful\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Hello\"}]}],\"max_tokens\":4096}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -894,7 +904,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector86WireConformanceToRequestAnthropicToolWire() async throws {
+  func testVector87WireConformanceToRequestAnthropicToolWire() async throws {
     guard let vectorData = "{\"name\":\"anthropic_tool_wire\",\"description\":\"Anthropic: tools use input_schema (not parameters), name at top level\",\"stage\":\"wire\",\"provider\":\"anthropic\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"anthropic\"}},\"apiType\":\"chat\",\"model_id\":\"claude-sonnet-4-20250514\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Weather?\"}]}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get weather\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"claude-sonnet-4-20250514\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Weather?\"}]}],\"tools\":[{\"name\":\"get_weather\",\"description\":\"Get weather\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}],\"max_tokens\":4096}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -904,7 +914,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector87WireConformanceToRequestChatAudioMp3() async throws {
+  func testVector88WireConformanceToRequestChatAudioMp3() async throws {
     guard let vectorData = "{\"name\":\"chat_audio_mp3\",\"description\":\"\u{a7}7.1.2 \u{2014} AudioPart with mediaType audio/mpeg MUST map to format 'mp3', not 'mpeg'.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"audio\",\"value\":\"YmFzZTY0ZGF0YQ==\",\"mediaType\":\"audio/mpeg\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_audio\",\"input_audio\":{\"data\":\"YmFzZTY0ZGF0YQ==\",\"format\":\"mp3\"}}]}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -914,7 +924,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector88WireConformanceToRequestChatAudioPart() async throws {
+  func testVector89WireConformanceToRequestChatAudioPart() async throws {
     guard let vectorData = "{\"name\":\"chat_audio_part\",\"description\":\"\u{a7}7.1.2 \u{2014} AudioPart with mediaType audio/wav maps to input_audio with format 'wav'.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"audio\",\"value\":\"YmFzZTY0ZGF0YQ==\",\"mediaType\":\"audio/wav\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"input_audio\",\"input_audio\":{\"data\":\"YmFzZTY0ZGF0YQ==\",\"format\":\"wav\"}}]}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -924,7 +934,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector89WireConformanceToRequestChatImageBase64() async throws {
+  func testVector90WireConformanceToRequestChatImageBase64() async throws {
     guard let vectorData = "{\"name\":\"chat_image_base64\",\"description\":\"Base64 data URI image part preserved as-is in image_url\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Describe this\"},{\"kind\":\"image\",\"value\":\"data:image/png;base64,iVBOR...\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Describe this\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"data:image/png;base64,iVBOR...\"}}]}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -934,7 +944,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector90WireConformanceToRequestChatImagePart() async throws {
+  func testVector91WireConformanceToRequestChatImagePart() async throws {
     guard let vectorData = "{\"name\":\"chat_image_part\",\"description\":\"Image content part converted to OpenAI image_url format\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"What's in this image?\"},{\"kind\":\"image\",\"value\":\"https://example.com/photo.jpg\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What's in this image?\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"https://example.com/photo.jpg\"}}]}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -944,7 +954,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector91WireConformanceToRequestChatMultipartContent() async throws {
+  func testVector92WireConformanceToRequestChatMultipartContent() async throws {
     guard let vectorData = "{\"name\":\"chat_multipart_content\",\"description\":\"\u{a7}7.1.1/\u{a7}7.1.2 \u{2014} Message with TextPart + ImagePart MUST produce an array of typed content blocks.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Describe this image\"},{\"kind\":\"image\",\"value\":\"https://img.png\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Describe this image\"},{\"type\":\"image_url\",\"image_url\":{\"url\":\"https://img.png\"}}]}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -954,7 +964,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector92WireConformanceToRequestChatSimple() async throws {
+  func testVector93WireConformanceToRequestChatSimple() async throws {
     guard let vectorData = "{\"name\":\"chat_simple\",\"description\":\"\u{a7}7.1.7 \u{2014} Two messages (system + user), no tools, no options. Minimal chat request.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"system\",\"content\":[{\"kind\":\"text\",\"value\":\"Be helpful\"}]},{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"system\",\"content\":\"Be helpful\"},{\"role\":\"user\",\"content\":\"Hello\"}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -964,7 +974,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector93WireConformanceToRequestChatSingleTextOptimized() async throws {
+  func testVector94WireConformanceToRequestChatSingleTextOptimized() async throws {
     guard let vectorData = "{\"name\":\"chat_single_text_optimized\",\"description\":\"\u{a7}7.1.1 \u{2014} Message with exactly 1 TextPart MUST produce a plain string content, not an array.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"What is 2+2?\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"What is 2+2?\"}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -974,7 +984,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector94WireConformanceToRequestChatWithOptions() async throws {
+  func testVector95WireConformanceToRequestChatWithOptions() async throws {
     guard let vectorData = "{\"name\":\"chat_with_options\",\"description\":\"\u{a7}7.1.5 \u{2014} All standard ModelOptions mapped to OpenAI parameter names.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{\"temperature\":0.5,\"maxOutputTokens\":100,\"topP\":0.9,\"frequencyPenalty\":0.1,\"presencePenalty\":0.2,\"seed\":42,\"stopSequences\":[\"END\"]},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"temperature\":0.5,\"max_completion_tokens\":100,\"top_p\":0.9,\"frequency_penalty\":0.1,\"presence_penalty\":0.2,\"seed\":42,\"stop\":[\"END\"]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -984,7 +994,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector95WireConformanceToRequestEmbeddingWire() async throws {
+  func testVector96WireConformanceToRequestEmbeddingWire() async throws {
     guard let vectorData = "{\"name\":\"embedding_wire\",\"description\":\"\u{a7}7.2 \u{2014} Embedding request: text extracted from messages, single string input (not array).\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"embedding\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"embedding\",\"model_id\":\"text-embedding-3-small\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello world\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"text-embedding-3-small\",\"input\":\"Hello world\"}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -994,7 +1004,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector96WireConformanceToRequestImageWire() async throws {
+  func testVector97WireConformanceToRequestImageWire() async throws {
     guard let vectorData = "{\"name\":\"image_wire\",\"description\":\"\u{a7}7.3 \u{2014} Image generation request: prompt extracted from last user message.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"image\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"image\",\"model_id\":\"dall-e-3\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"A cat\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"dall-e-3\",\"prompt\":\"A cat\"}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1004,7 +1014,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector97WireConformanceToRequestKindToJsonTypeMapping() async throws {
+  func testVector98WireConformanceToRequestKindToJsonTypeMapping() async throws {
     guard let vectorData = "{\"name\":\"kind_to_json_type_mapping\",\"description\":\"\u{a7}7.1.4 \u{2014} All Property kind values mapped to JSON Schema types: string\u{2192}string, integer\u{2192}integer, float\u{2192}number, boolean\u{2192}boolean, array\u{2192}array, object\u{2192}object.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Test\"}]}],\"tools\":[{\"kind\":\"function\",\"name\":\"test_types\",\"description\":\"Tests all type mappings\",\"parameters\":[{\"name\":\"a_string\",\"kind\":\"string\"},{\"name\":\"an_integer\",\"kind\":\"integer\"},{\"name\":\"a_float\",\"kind\":\"float\"},{\"name\":\"a_boolean\",\"kind\":\"boolean\"},{\"name\":\"an_array\",\"kind\":\"array\",\"items\":{\"kind\":\"string\"}},{\"name\":\"an_object\",\"kind\":\"object\"}]}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Test\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"test_types\",\"description\":\"Tests all type mappings\",\"parameters\":{\"type\":\"object\",\"properties\":{\"a_string\":{\"type\":\"string\"},\"an_integer\":{\"type\":\"integer\"},\"a_float\":{\"type\":\"number\"},\"a_boolean\":{\"type\":\"boolean\"},\"an_array\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"an_object\":{\"type\":\"object\"}}}}}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1014,7 +1024,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector98WireConformanceToRequestOptionsAdditionalProperties() async throws {
+  func testVector99WireConformanceToRequestOptionsAdditionalProperties() async throws {
     guard let vectorData = "{\"name\":\"options_additional_properties\",\"description\":\"\u{a7}7.1.5 \u{2014} additionalProperties from ModelOptions MUST be merged into the request as top-level keys.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{\"additionalProperties\":{\"logprobs\":true}},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"logprobs\":true}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1024,7 +1034,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector99WireConformanceToRequestOptionsMaxCompletionTokens() async throws {
+  func testVector100WireConformanceToRequestOptionsMaxCompletionTokens() async throws {
     guard let vectorData = "{\"name\":\"options_max_completion_tokens\",\"description\":\"\u{a7}7.1.5 \u{2014} maxOutputTokens MUST map to max_completion_tokens, NOT the deprecated max_tokens.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{\"maxOutputTokens\":500},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_completion_tokens\":500}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1034,7 +1044,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector100WireConformanceToRequestOptionsStopSequences() async throws {
+  func testVector101WireConformanceToRequestOptionsStopSequences() async throws {
     guard let vectorData = "{\"name\":\"options_stop_sequences\",\"description\":\"\u{a7}7.1.5 \u{2014} stopSequences MUST map to 'stop' in the OpenAI wire format.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{\"stopSequences\":[\".\",\"!\"]},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"stop\":[\".\",\"!\"]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1044,7 +1054,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector101WireConformanceToRequestResponsesSimple() async throws {
+  func testVector102WireConformanceToRequestResponsesSimple() async throws {
     guard let vectorData = "{\"name\":\"responses_simple\",\"description\":\"Responses API: system becomes instructions, messages become input items\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"responses\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"model_id\":\"gpt-4o\",\"messages\":[{\"role\":\"system\",\"content\":[{\"kind\":\"text\",\"value\":\"Be helpful\"}]},{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o\",\"instructions\":\"Be helpful\",\"input\":[{\"role\":\"user\",\"content\":\"Hello\"}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1054,7 +1064,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector102WireConformanceToRequestResponsesStructuredOutput() async throws {
+  func testVector103WireConformanceToRequestResponsesStructuredOutput() async throws {
     guard let vectorData = "{\"name\":\"responses_structured_output\",\"description\":\"Responses API: structured output uses text.format.json_schema\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"responses\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"model_id\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Give me data\"}]}],\"tools\":[],\"options\":{},\"outputs\":[{\"name\":\"city\",\"kind\":\"string\"},{\"name\":\"temp\",\"kind\":\"integer\"}]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o\",\"input\":[{\"role\":\"user\",\"content\":\"Give me data\"}],\"text\":{\"format\":{\"type\":\"json_schema\",\"name\":\"structured_output\",\"schema\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":[\"string\",\"null\"]},\"temp\":{\"type\":[\"integer\",\"null\"]}},\"required\":[\"city\",\"temp\"],\"additionalProperties\":false},\"strict\":true}}}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1064,7 +1074,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector103WireConformanceToRequestResponsesWithTools() async throws {
+  func testVector104WireConformanceToRequestResponsesWithTools() async throws {
     guard let vectorData = "{\"name\":\"responses_with_tools\",\"description\":\"Responses API: tools use flat format (no nested function key)\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"responses\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"model_id\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Weather?\"}]}],\"tools\":[{\"name\":\"get_weather\",\"kind\":\"function\",\"description\":\"Get weather\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o\",\"input\":[{\"role\":\"user\",\"content\":\"Weather?\"}],\"tools\":[{\"type\":\"function\",\"name\":\"get_weather\",\"description\":\"Get weather\",\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1074,7 +1084,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector104WireConformanceToRequestStructuredOutput() async throws {
+  func testVector105WireConformanceToRequestStructuredOutput() async throws {
     guard let vectorData = "{\"name\":\"structured_output\",\"description\":\"\u{a7}7.1.6 \u{2014} outputs converted to response_format with json_schema, strict=true, additionalProperties=false.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"What is the weather in Paris?\"}]}],\"tools\":[],\"options\":{},\"outputs\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true},{\"name\":\"temp\",\"kind\":\"integer\",\"required\":true}]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the weather in Paris?\"}],\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"structured_output\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"},\"temp\":{\"type\":\"integer\"}},\"required\":[\"city\",\"temp\"],\"additionalProperties\":false}}}}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1084,7 +1094,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector105WireConformanceToRequestStructuredOutputNestedOptional() async throws {
+  func testVector106WireConformanceToRequestStructuredOutputNestedOptional() async throws {
     guard let vectorData = "{\"name\":\"structured_output_nested_optional\",\"description\":\"\u{a7}7.1.4/\u{a7}7.1.6 \u{2014} OpenAI strict mode recursively requires every object property and represents optional fields as nullable.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Choose a visual style.\"}]}],\"tools\":[],\"options\":{},\"outputs\":[{\"name\":\"style\",\"kind\":\"object\",\"required\":true,\"properties\":[{\"name\":\"color\",\"kind\":\"string\",\"required\":true},{\"name\":\"border\",\"kind\":\"string\",\"required\":false}]}]},\"expected\":{\"request_body\":{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"Choose a visual style.\"}],\"response_format\":{\"type\":\"json_schema\",\"json_schema\":{\"name\":\"structured_output\",\"strict\":true,\"schema\":{\"type\":\"object\",\"properties\":{\"style\":{\"type\":\"object\",\"properties\":{\"color\":{\"type\":\"string\"},\"border\":{\"type\":[\"string\",\"null\"]}},\"required\":[\"color\",\"border\"],\"additionalProperties\":false}},\"required\":[\"style\"],\"additionalProperties\":false}}}}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1094,7 +1104,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector106WireConformanceToRequestToolsBindingsStripped() async throws {
+  func testVector107WireConformanceToRequestToolsBindingsStripped() async throws {
     guard let vectorData = "{\"name\":\"tools_bindings_stripped\",\"description\":\"\u{a7}7.1.3 \u{2014} Parameters listed in bindings MUST be stripped from wire tools (properties AND required).\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Get the weather\"}]}],\"tools\":[{\"kind\":\"function\",\"name\":\"get_weather\",\"description\":\"Get weather\",\"parameters\":[{\"name\":\"location\",\"kind\":\"string\",\"required\":true},{\"name\":\"unit\",\"kind\":\"string\",\"required\":true}],\"bindings\":{\"unit\":{\"input\":\"preferred_unit\"}}}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Get the weather\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"description\":\"Get weather\",\"parameters\":{\"type\":\"object\",\"properties\":{\"location\":{\"type\":\"string\"}},\"required\":[\"location\"]}}}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1104,7 +1114,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector107WireConformanceToRequestToolsFunctionWire() async throws {
+  func testVector108WireConformanceToRequestToolsFunctionWire() async throws {
     guard let vectorData = "{\"name\":\"tools_function_wire\",\"description\":\"\u{a7}7.1.3 \u{2014} FunctionTool projected as OpenAI function definition with JSON Schema parameters.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"What is the weather?\"}]}],\"tools\":[{\"kind\":\"function\",\"name\":\"get_weather\",\"description\":\"Get weather\",\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the weather?\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"description\":\"Get weather\",\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}}}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1114,7 +1124,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector108WireConformanceToRequestToolsNullWhenEmpty() async throws {
+  func testVector109WireConformanceToRequestToolsNullWhenEmpty() async throws {
     guard let vectorData = "{\"name\":\"tools_null_when_empty\",\"description\":\"\u{a7}7.1.3 \u{2014} When no tools are defined, the tools key MUST be absent from the request entirely.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Hello\"}]}],\"tools\":[],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {
@@ -1124,7 +1134,7 @@ final class VectorConformanceTests: XCTestCase {
     _ = await VectorRunner.runVector(contract: "WireConformance", operation: "toRequest", vector: vector, sync: false, seam: seam())
   }
 
-  func testVector109WireConformanceToRequestToolsStrictMode() async throws {
+  func testVector110WireConformanceToRequestToolsStrictMode() async throws {
     guard let vectorData = "{\"name\":\"tools_strict_mode\",\"description\":\"\u{a7}7.1.3 \u{2014} FunctionTool with strict=true: strict lives on function def, additionalProperties=false in parameters schema.\",\"stage\":\"wire\",\"provider\":\"openai\",\"targetApi\":\"chat\",\"input\":{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"chat\",\"model_id\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":[{\"kind\":\"text\",\"value\":\"Get the weather\"}]}],\"tools\":[{\"kind\":\"function\",\"name\":\"get_weather\",\"description\":\"Get weather\",\"strict\":true,\"parameters\":[{\"name\":\"city\",\"kind\":\"string\",\"required\":true}]}],\"options\":{},\"outputs\":[]},\"expected\":{\"request_body\":{\"model\":\"gpt-4\",\"messages\":[{\"role\":\"user\",\"content\":\"Get the weather\"}],\"tools\":[{\"type\":\"function\",\"function\":{\"name\":\"get_weather\",\"description\":\"Get weather\",\"strict\":true,\"parameters\":{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"],\"additionalProperties\":false}}}]}},\"operation\":\"toRequest\"}".data(using: .utf8),
       let vector = try JSONSerialization.jsonObject(with: vectorData) as? [String: Any]
     else {

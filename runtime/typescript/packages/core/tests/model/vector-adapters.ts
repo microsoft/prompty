@@ -81,11 +81,23 @@ import { defaultSaveContext } from "../../src/core/loader.js";
 import { TurnOptions } from "../../src/model/index.js";
 import { enrich, mapModel } from "../../src/model/discovery.js";
 import { ModelInfo } from "../../src/model/contracts/models/model-info.js";
+// Drill transport bind: the OpenAI executor checks `connection instanceof
+// ApiKeyConnection` against the built `@prompty/core` package (dist), whose class
+// identity differs from the `../../src` core imported above. The drill agent must
+// therefore be constructed from the dist package so the executor recognizes its
+// key connection. This cross-core seam is a per-runtime roster detail, not an
+// emitter concern.
+import {
+  Agent as DrillAgent,
+  LoadContext as DrillLoadContext,
+  Message as DrillMessage,
+} from "@prompty/core";
 import {
   buildChatArgs as openaiBuildChatArgs,
   buildEmbeddingArgs as openaiBuildEmbeddingArgs,
   buildImageArgs as openaiBuildImageArgs,
   buildResponsesArgs as openaiBuildResponsesArgs,
+  OpenAIExecutor,
   OpenAIProcessor,
   processResponse as openaiProcessResponse,
 } from "@prompty/openai";
@@ -93,6 +105,7 @@ import {
   AnthropicProcessor,
   buildChatArgs as anthropicBuildChatArgs,
 } from "@prompty/anthropic";
+import { CassetteReplayServer } from "./drill-replay.js";
 
 // The pipeline drives renderer/parser lookups through the registry; register the
 // built-ins once so the render/parse adapters exercise the real runtime path.
@@ -1059,6 +1072,249 @@ async function runTurnInvoke(
 }
 
 // ---------------------------------------------------------------------------
+// LiveChatConformance.complete -- the service-drill adapter
+// ---------------------------------------------------------------------------
+//
+// A "drill" is a conformance vector that crosses the REAL Executor transport
+// seam. Unlike the pure conformance vectors that stop at the SDK edge, the drill
+// binds the seam via base-URL redirect -- to a local `CassetteReplayServer`
+// (replay mode) or the real base URL (live mode) -- and asserts three planes:
+//
+//   1. transport -- the seam was reached and returned bytes (executor got a
+//      response, and the replay server captured an inbound request).
+//   2. wire      -- the outbound provider request body matches the cassette's
+//      recorded request body (canonical equality; throw on mismatch).
+//   3. semantic  -- normalized executor output == the vector `expected`. This
+//      plane is asserted by the RUNNER via the registered `normalize`, so the
+//      drill's semantic plane IS a conformance vector over the executor.
+//
+// In live mode the adapter additionally asserts live-semantic == replay-semantic
+// (parity). `requires` is deliberately OMITTED from the drill vector -- the
+// `requires` guard is all-or-nothing and would skip the WHOLE vector when creds
+// are absent, defeating the replay plane. Instead the adapter self-gates the
+// live plane on credential presence and always runs replay.
+//
+// Cassette bytes and the SDK transport binding are consumer-owned "roster" -- by
+// design NOT modeled in TypeSpec/Typra. This is the TypeScript counterpart of
+// the Python runtime's drill adapter in `tests/model/vector_adapters.py`.
+
+const DRILL_REPLAY_API_KEY = "sk-drill-replay-placeholder";
+const DRILL_FINISH_REASONS = new Set([
+  "stop",
+  "length",
+  "tool_calls",
+  "content_filter",
+  "function_call",
+]);
+
+/** Order-insensitive canonical JSON for wire/parity equality checks. */
+function drillCanonical(value: unknown): string {
+  const sort = (node: unknown): unknown => {
+    if (Array.isArray(node)) return node.map(sort);
+    if (node !== null && typeof node === "object") {
+      const src = node as Record<string, unknown>;
+      const out: Record<string, unknown> = {};
+      for (const key of Object.keys(src).sort()) out[key] = sort(src[key]);
+      return out;
+    }
+    return node;
+  };
+  return JSON.stringify(sort(value));
+}
+
+/**
+ * Construct a chat `Agent` bound to a specific transport `endpoint`.
+ *
+ * The drill binds the transport seam via base-URL redirect, so `endpoint` and
+ * `apiKey` are supplied by the caller (a local cassette-replay server in replay
+ * mode, the real base URL + key in live mode) rather than read from the vector
+ * input. When `endpoint` is falsy the connection omits it so the SDK falls back
+ * to the provider's default base URL (live mode without an override).
+ */
+function drillBuildAgent(
+  input: any,
+  opts: { endpoint?: string | null; apiKey?: string | null },
+): DrillAgent {
+  const provider = (input.provider ?? "openai").toLowerCase();
+  const connection: Record<string, unknown> = { kind: "key" };
+  if (opts.apiKey) connection.apiKey = opts.apiKey;
+  if (opts.endpoint) connection.endpoint = opts.endpoint;
+
+  const model: Record<string, unknown> = {
+    id: input.model ?? "gpt-4o-mini",
+    provider,
+    apiType: "chat",
+    connection,
+  };
+  if (input.options) model.options = input.options;
+
+  return DrillAgent.load(
+    { name: "drill-chat-vector", model },
+    new DrillLoadContext(),
+  );
+}
+
+function drillBuildMessages(input: any): DrillMessage[] {
+  return ((input.messages ?? []) as any[]).map(
+    (spec) =>
+      new DrillMessage({
+        role: spec.role ?? "user",
+        parts: [{ kind: "text", value: spec.content ?? "" }],
+      }),
+  );
+}
+
+/**
+ * Drive the real executor with its transport bound to `endpoint`. Returns the
+ * raw provider response. Shared by the replay path (`endpoint` = a
+ * `CassetteReplayServer` base URL) and the live path (`endpoint` = the real
+ * base URL or null for the SDK default).
+ */
+async function drillExecute(
+  input: any,
+  opts: { endpoint?: string | null; apiKey?: string | null },
+): Promise<unknown> {
+  const agent = drillBuildAgent(input, opts);
+  const messages = drillBuildMessages(input);
+  return new OpenAIExecutor().execute(agent, messages);
+}
+
+/** Reduce a raw provider chat response to `{ role, content, finish }`. */
+function drillExtractChatStructure(observed: any): {
+  role: unknown;
+  content: unknown;
+  finish: unknown;
+} {
+  const choices = observed?.choices;
+  if (Array.isArray(choices) && choices.length > 0) {
+    const choice = choices[0];
+    const message = choice?.message;
+    return {
+      role: message?.role,
+      content: message?.content,
+      finish: choice?.finish_reason,
+    };
+  }
+  return {
+    role: observed?.role,
+    content: observed?.content,
+    finish: observed?.stop_reason,
+  };
+}
+
+/** Project a raw chat response onto the canonical structural shape. */
+function drillNormalizeResponse(observed: unknown): {
+  role: unknown;
+  contentNonEmpty: boolean;
+  finishReasonInEnum: boolean;
+} {
+  const { role, content, finish } = drillExtractChatStructure(observed);
+  return {
+    role,
+    contentNonEmpty: typeof content === "string" && content.trim().length > 0,
+    finishReasonInEnum: DRILL_FINISH_REASONS.has(finish as string),
+  };
+}
+
+/**
+ * Live plane is enabled iff a base URL AND an API key resolved from env.
+ * `$env` refs resolve to "" when unset, so this is false in replay-only
+ * (no-creds) runs and true only when the vector's endpoint+apiKey env vars are
+ * both populated.
+ */
+function drillLiveEnabled(input: any): boolean {
+  return Boolean(input.endpoint && input.apiKey);
+}
+
+/**
+ * Run the drill: bind transport, replay the cassette, assert 3 planes. Returns
+ * the raw replay response; the runner then applies `normalize` and compares
+ * against the vector `expected` (the semantic plane).
+ */
+async function drillInvoke(
+  input: any,
+  context: AdapterContext,
+): Promise<unknown> {
+  const vector = (context.vector ?? {}) as Record<string, unknown>;
+  const exchangeRaw = (vector.exchange ?? {}) as Record<string, unknown>;
+  // The runner resolves refs only on `input`; the adapter owns `exchange`
+  // resolution (nested `$env` transport ref + `$json` cassette ref).
+  const exchange = context.resolveInput(exchangeRaw) as Record<string, unknown>;
+
+  const cassette = (exchange.cassette ?? {}) as Record<string, unknown>;
+  const cassetteRequest = (cassette.request ?? {}) as Record<string, unknown>;
+  const cassetteResponse = (cassette.response ?? {}) as Record<string, unknown>;
+  const recordedRequest = cassetteRequest.body;
+  const recordedResponse = cassetteResponse.body;
+  const recordedStatus = Number(cassetteResponse.status ?? 200);
+  if (recordedResponse === undefined) {
+    throw new Error("drill cassette missing response.body");
+  }
+
+  // --- Replay: bind the transport to the local cassette server -------------
+  const server = new CassetteReplayServer(recordedResponse, recordedStatus);
+  let raw: unknown;
+  await server.start();
+  try {
+    raw = await drillExecute(input, {
+      endpoint: server.baseUrl,
+      apiKey: DRILL_REPLAY_API_KEY,
+    });
+
+    // Plane 1: transport -- the seam was reached and a request was captured.
+    const captured = server.lastRequest;
+    if (captured === null) {
+      throw new Error(
+        "drill transport plane: no request reached the replay server",
+      );
+    }
+    if (raw === null || raw === undefined) {
+      throw new Error("drill transport plane: executor returned no response");
+    }
+
+    // Plane 2: wire -- outbound request body matches the cassette request.
+    if (recordedRequest !== undefined) {
+      const observedBody = captured.body;
+      if (drillCanonical(observedBody) !== drillCanonical(recordedRequest)) {
+        throw new Error(
+          "drill wire plane mismatch:\n" +
+            `  observed=${drillCanonical(observedBody)}\n` +
+            `  cassette=${drillCanonical(recordedRequest)}`,
+        );
+      }
+    }
+  } finally {
+    await server.stop();
+  }
+
+  // --- Live parity (self-gated): live-semantic must equal replay-semantic ---
+  if (drillLiveEnabled(input)) {
+    const liveRaw = await drillExecute(input, {
+      endpoint: input.endpoint || null,
+      apiKey: input.apiKey,
+    });
+    if (
+      drillCanonical(drillNormalizeResponse(liveRaw)) !==
+      drillCanonical(drillNormalizeResponse(raw))
+    ) {
+      throw new Error(
+        "drill live/replay parity mismatch:\n" +
+          `  live=${drillCanonical(drillNormalizeResponse(liveRaw))}\n` +
+          `  replay=${drillCanonical(drillNormalizeResponse(raw))}`,
+      );
+    }
+  }
+
+  // Plane 3 (semantic) is asserted by the runner: normalize(raw) == expected.
+  return raw;
+}
+
+/** Registered semantic projection: raw response -> canonical structure. */
+function drillNormalize(observed: unknown, _context: AdapterContext): unknown {
+  return drillNormalizeResponse(observed);
+}
+
+// ---------------------------------------------------------------------------
 // Adapter registry
 // ---------------------------------------------------------------------------
 
@@ -1076,6 +1332,10 @@ export const vectorAdapters = {
   "TurnConformance.replay": { invoke: replayInvoke },
   "DiscoveryConformance.enrich": { invoke: discoveryEnrichInvoke },
   "DiscoveryConformance.mapModel": { invoke: discoveryMapInvoke },
+  "LiveChatConformance.complete": {
+    invoke: drillInvoke,
+    normalize: drillNormalize,
+  },
 };
 
 // Every cross-runtime contract now has a real TypeScript adapter above; there
