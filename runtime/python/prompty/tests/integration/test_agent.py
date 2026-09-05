@@ -6,7 +6,7 @@ import pytest
 
 from prompty.core.pipeline import turn, turn_async
 
-from .conftest import make_foundry_agent, make_openai_agent, skip_foundry, skip_openai
+from .conftest import make_foundry_agent, make_openai_agent, run_foundry, run_openai
 
 _TOOLS = [
     {
@@ -34,7 +34,7 @@ def _weather_fn(city: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-@skip_openai
+@run_openai
 class TestOpenAIAgent:
     def test_tool_call_loop(self):
         agent = make_openai_agent(
@@ -70,7 +70,7 @@ class TestOpenAIAgent:
 # ---------------------------------------------------------------------------
 
 
-@skip_foundry
+@run_foundry
 class TestFoundryAgent:
     def test_tool_call_loop(self):
         agent = make_foundry_agent(

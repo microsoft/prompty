@@ -87,6 +87,77 @@ skip_entra = pytest.mark.skipif(
     reason="AZURE_OPENAI_ENDPOINT or AZURE_OPENAI_CHAT_DEPLOYMENT not set (Entra ID tests)",
 )
 
+# ---------------------------------------------------------------------------
+# Mock-fallback markers
+# ---------------------------------------------------------------------------
+#
+# Value-path tests (chat / embedding / image / streaming / structured / agent)
+# always run: with real credentials they hit the live service, without them an
+# autouse fixture (below) patches the SDK constructors so the same test bodies
+# drive the full executor -> processor pipeline against deterministic mocks.
+#
+# A ``run_*`` marker therefore never skips in mock mode. It only skips in *live*
+# mode when a provider is configured but a specific sub-resource deployment
+# (embedding / image) is not, since a real call needs that deployment name.
+
+_never_skip = pytest.mark.skipif(False, reason="")
+
+run_openai = _never_skip
+run_openai_image = _never_skip
+run_openai_embedding = _never_skip
+run_foundry = _never_skip
+run_foundry_embedding = pytest.mark.skipif(
+    has_foundry and not _AZURE_EMBEDDING_DEPLOYMENT,
+    reason="live Azure OpenAI configured but AZURE_OPENAI_EMBEDDING_DEPLOYMENT not set",
+)
+run_foundry_image = pytest.mark.skipif(
+    has_foundry and not _AZURE_IMAGE_DEPLOYMENT,
+    reason="live Azure OpenAI configured but AZURE_OPENAI_IMAGE_DEPLOYMENT not set",
+)
+run_anthropic = _never_skip
+
+# True when a provider will be served by mocks (its credentials are absent).
+mock_openai = not has_openai
+mock_foundry = not has_foundry
+mock_anthropic = not has_anthropic
+
+
+@pytest.fixture(autouse=True)
+def _mock_absent_services(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Install deterministic mock SDK clients for any provider lacking credentials.
+
+    Executors import the SDK constructor lazily inside ``_resolve_client`` (e.g.
+    ``from openai import OpenAI``), so patching the module attribute here is picked
+    up at call time. Providers whose credentials *are* present are left untouched
+    and continue to exercise the real service.
+    """
+    import openai
+
+    from .mock_clients import MockAnthropicClient, MockOpenAIClient
+
+    if mock_openai:
+        monkeypatch.setenv("OPENAI_API_KEY", _OPENAI_KEY or "mock-openai-key")
+        monkeypatch.setattr(openai, "OpenAI", lambda *a, **k: MockOpenAIClient(is_async=False, b64_images=False))
+        monkeypatch.setattr(openai, "AsyncOpenAI", lambda *a, **k: MockOpenAIClient(is_async=True, b64_images=False))
+    if mock_foundry:
+        monkeypatch.setenv("AZURE_OPENAI_API_KEY", _AZURE_KEY or "mock-azure-key")
+        monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", _AZURE_ENDPOINT or "https://mock.local/")
+        # Azure image generation returns base64 payloads; the foundry image test
+        # decodes them, so its mock must emit b64_json rather than a URL.
+        monkeypatch.setattr(openai, "AzureOpenAI", lambda *a, **k: MockOpenAIClient(is_async=False, b64_images=True))
+        monkeypatch.setattr(
+            openai, "AsyncAzureOpenAI", lambda *a, **k: MockOpenAIClient(is_async=True, b64_images=True)
+        )
+    if mock_anthropic:
+        monkeypatch.setenv("ANTHROPIC_API_KEY", _ANTHROPIC_KEY or "mock-anthropic-key")
+        try:
+            import anthropic
+        except ImportError:
+            anthropic = None
+        if anthropic is not None:
+            monkeypatch.setattr(anthropic, "Anthropic", lambda *a, **k: MockAnthropicClient(is_async=False))
+            monkeypatch.setattr(anthropic, "AsyncAnthropic", lambda *a, **k: MockAnthropicClient(is_async=True))
+
 
 # ---------------------------------------------------------------------------
 # Agent helpers shared across test files
@@ -115,7 +186,7 @@ def make_openai_agent(
 
     connection: dict[str, Any] = {
         "kind": "key",
-        "apiKey": _OPENAI_KEY,
+        "apiKey": _OPENAI_KEY or "mock-openai-key",
     }
     if _OPENAI_BASE_URL:
         connection["endpoint"] = _OPENAI_BASE_URL
@@ -210,8 +281,8 @@ def make_foundry_agent(
             "apiType": api_type,
             "connection": {
                 "kind": "key",
-                "endpoint": _AZURE_ENDPOINT,
-                "apiKey": _AZURE_KEY,
+                "endpoint": _AZURE_ENDPOINT or "https://mock.local/",
+                "apiKey": _AZURE_KEY or "mock-azure-key",
             },
         },
     }
@@ -252,7 +323,7 @@ def make_anthropic_agent(
             "apiType": api_type,
             "connection": {
                 "kind": "key",
-                "apiKey": _ANTHROPIC_KEY,
+                "apiKey": _ANTHROPIC_KEY or "mock-anthropic-key",
             },
         },
     }

@@ -14,8 +14,8 @@ from .conftest import (
     _OPENAI_EMBEDDING_MODEL,
     make_foundry_agent,
     make_openai_agent,
-    skip_foundry_embedding,
-    skip_openai,
+    run_foundry_embedding,
+    run_openai_embedding,
 )
 
 # ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ from .conftest import (
 # ---------------------------------------------------------------------------
 
 
-@skip_openai
+@run_openai_embedding
 class TestOpenAIEmbedding:
     executor = OpenAIExecutor()
     processor = OpenAIProcessor()
@@ -58,7 +58,7 @@ class TestOpenAIEmbedding:
 # ---------------------------------------------------------------------------
 
 
-@skip_foundry_embedding
+@run_foundry_embedding
 class TestFoundryEmbedding:
     executor = FoundryExecutor()
     processor = FoundryProcessor()
