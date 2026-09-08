@@ -12,6 +12,7 @@ final class ModelOptionsTests: XCTestCase {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -31,6 +32,7 @@ final class ModelOptionsTests: XCTestCase {
     XCTAssertEqual((try XCTUnwrap(instance.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(instance.maxOutputTokens)), 2048)
     XCTAssertEqual((try XCTUnwrap(instance.presencePenalty)), 0.3)
+    XCTAssertEqual((try XCTUnwrap(instance.reasoningEffort)), ReasoningEffort(rawValue: "medium"))
     XCTAssertEqual((try XCTUnwrap(instance.seed)), 42)
     XCTAssertEqual((try XCTUnwrap(instance.temperature)), 0.7)
     XCTAssertEqual((try XCTUnwrap(instance.topK)), 40)
@@ -42,6 +44,7 @@ final class ModelOptionsTests: XCTestCase {
     XCTAssertEqual((try XCTUnwrap(reloaded.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(reloaded.maxOutputTokens)), 2048)
     XCTAssertEqual((try XCTUnwrap(reloaded.presencePenalty)), 0.3)
+    XCTAssertEqual((try XCTUnwrap(reloaded.reasoningEffort)), ReasoningEffort(rawValue: "medium"))
     XCTAssertEqual((try XCTUnwrap(reloaded.seed)), 42)
     XCTAssertEqual((try XCTUnwrap(reloaded.temperature)), 0.7)
     XCTAssertEqual((try XCTUnwrap(reloaded.topK)), 40)
@@ -56,6 +59,7 @@ final class ModelOptionsTests: XCTestCase {
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -73,6 +77,7 @@ additionalProperties:
     XCTAssertEqual((try XCTUnwrap(instance.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(instance.maxOutputTokens)), 2048)
     XCTAssertEqual((try XCTUnwrap(instance.presencePenalty)), 0.3)
+    XCTAssertEqual((try XCTUnwrap(instance.reasoningEffort)), ReasoningEffort(rawValue: "medium"))
     XCTAssertEqual((try XCTUnwrap(instance.seed)), 42)
     XCTAssertEqual((try XCTUnwrap(instance.temperature)), 0.7)
     XCTAssertEqual((try XCTUnwrap(instance.topK)), 40)
@@ -84,6 +89,7 @@ additionalProperties:
     XCTAssertEqual((try XCTUnwrap(reloaded.frequencyPenalty)), 0.5)
     XCTAssertEqual((try XCTUnwrap(reloaded.maxOutputTokens)), 2048)
     XCTAssertEqual((try XCTUnwrap(reloaded.presencePenalty)), 0.3)
+    XCTAssertEqual((try XCTUnwrap(reloaded.reasoningEffort)), ReasoningEffort(rawValue: "medium"))
     XCTAssertEqual((try XCTUnwrap(reloaded.seed)), 42)
     XCTAssertEqual((try XCTUnwrap(reloaded.temperature)), 0.7)
     XCTAssertEqual((try XCTUnwrap(reloaded.topK)), 40)

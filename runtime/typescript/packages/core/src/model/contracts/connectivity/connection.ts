@@ -61,9 +61,8 @@ export abstract class Connection {
       data["authenticationMode"] !== undefined &&
       data["authenticationMode"] !== null
     ) {
-      instance.authenticationMode = String(
-        data["authenticationMode"],
-      ) as AuthenticationMode;
+      instance.authenticationMode =
+        String(data["authenticationMode"]) as AuthenticationMode;
     }
     if (
       data["usageDescription"] !== undefined &&

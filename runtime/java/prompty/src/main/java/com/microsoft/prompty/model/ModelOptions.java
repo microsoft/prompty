@@ -13,6 +13,7 @@ public class ModelOptions {
   public Float frequencyPenalty = null;
   public Integer maxOutputTokens = null;
   public Float presencePenalty = null;
+  public String reasoningEffort = null;
   public Integer seed = null;
   public Float temperature = null;
   public Integer topK = null;
@@ -44,6 +45,9 @@ public class ModelOptions {
     }
     if (map.containsKey("presencePenalty") && map.get("presencePenalty") != null) {
       result.presencePenalty = (map.get("presencePenalty") instanceof Number n ? n.floatValue() : Float.parseFloat(String.valueOf(map.get("presencePenalty"))));
+    }
+    if (map.containsKey("reasoningEffort") && map.get("reasoningEffort") != null) {
+      result.reasoningEffort = String.valueOf(map.get("reasoningEffort"));
     }
     if (map.containsKey("seed") && map.get("seed") != null) {
       result.seed = (map.get("seed") instanceof Number n ? n.intValue() : Integer.parseInt(String.valueOf(map.get("seed"))));
@@ -88,6 +92,7 @@ public class ModelOptions {
     if (obj.frequencyPenalty != null) result.put("frequencyPenalty", serializeScalar(obj.frequencyPenalty));
     if (obj.maxOutputTokens != null) result.put("maxOutputTokens", serializeScalar(obj.maxOutputTokens));
     if (obj.presencePenalty != null) result.put("presencePenalty", serializeScalar(obj.presencePenalty));
+    if (obj.reasoningEffort != null) result.put("reasoningEffort", serializeScalar(obj.reasoningEffort));
     if (obj.seed != null) result.put("seed", serializeScalar(obj.seed));
     if (obj.temperature != null) result.put("temperature", serializeScalar(obj.temperature));
     if (obj.topK != null) result.put("topK", serializeScalar(obj.topK));
@@ -116,6 +121,12 @@ public class ModelOptions {
       String wireName = null;
       if (target.equals("openai")) { wireName = "presence_penalty"; }
       if (wireName != null && this.presencePenalty != null) result.put(wireName, serializeScalar(this.presencePenalty));
+    }
+    {
+      String wireName = null;
+      if (target.equals("openai")) { wireName = "reasoning_effort"; }
+      if (target.equals("responses")) { wireName = "reasoning_effort"; }
+      if (wireName != null && this.reasoningEffort != null) result.put(wireName, serializeScalar(this.reasoningEffort));
     }
     {
       String wireName = null;
@@ -178,6 +189,12 @@ public class ModelOptions {
       Map<String, String> m = new LinkedHashMap<>();
       m.put("openai", "presence_penalty");
       wireMap.put("presencePenalty", m);
+    }
+    {
+      Map<String, String> m = new LinkedHashMap<>();
+      m.put("openai", "reasoning_effort");
+      m.put("responses", "reasoning_effort");
+      wireMap.put("reasoningEffort", m);
     }
     {
       Map<String, String> m = new LinkedHashMap<>();

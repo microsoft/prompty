@@ -48,9 +48,8 @@ export class InvocationContextDecision {
       instance.candidateId = String(data["candidateId"]);
     }
     if (data["disposition"] !== undefined && data["disposition"] !== null) {
-      instance.disposition = String(
-        data["disposition"],
-      ) as InvocationContextDisposition;
+      instance.disposition =
+        String(data["disposition"]) as InvocationContextDisposition;
     }
     if (data["reason"] !== undefined && data["reason"] !== null) {
       instance.reason = String(data["reason"]);

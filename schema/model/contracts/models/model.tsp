@@ -6,6 +6,27 @@ using Prompty.Contracts.Connectivity;
 namespace Prompty.Contracts.Models;
 
 alias apiType = "chat" | "embedding" | "image" | "responses" | string;
+
+/**
+ * Reasoning effort levels for frontier/reasoning models. Mirrors the OpenAI
+ * `reasoning_effort` enum. The bare `string` member keeps the set OPEN so
+ * provider-specific or future values pass through untyped rather than erroring.
+ *
+ * Newer reasoning models increasingly gate output quality on this control
+ * rather than scalar sampling (`temperature`/`topP`/`topK`), which several
+ * providers now reject on those models. Executors are responsible for dropping
+ * unsupported sampling params per target model.
+ */
+alias reasoningEffort =
+  | "none"
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "max"
+  | string;
+
 /**
  * Options for configuring the behavior of the AI model.
  */
@@ -21,6 +42,10 @@ model ModelOptions {
   @doc("The presence penalty to apply to the model's output")
   @sample(ModelOptionsPresencePenaltySample)
   presencePenalty?: float32;
+
+  @doc("The reasoning effort level for reasoning-capable models")
+  @sample(ModelOptionsReasoningEffortSample)
+  reasoningEffort?: reasoningEffort;
 
   @doc("A random seed for deterministic output")
   @sample(ModelOptionsSeedSample)

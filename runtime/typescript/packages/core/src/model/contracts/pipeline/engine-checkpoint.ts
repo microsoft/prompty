@@ -173,9 +173,8 @@ export class EngineCheckpoint {
       data["completedModelIterations"] !== undefined &&
       data["completedModelIterations"] !== null
     ) {
-      instance.completedModelIterations = Number(
-        data["completedModelIterations"],
-      );
+      instance.completedModelIterations =
+        Number(data["completedModelIterations"]);
     }
     if (
       data["reconciliationRequired"] !== undefined &&
@@ -220,9 +219,8 @@ export class EngineCheckpoint {
       data["policyAppliedForIteration"] !== undefined &&
       data["policyAppliedForIteration"] !== null
     ) {
-      instance.policyAppliedForIteration = Boolean(
-        data["policyAppliedForIteration"],
-      );
+      instance.policyAppliedForIteration =
+        Boolean(data["policyAppliedForIteration"]);
     }
     if (data["contextState"] !== undefined && data["contextState"] !== null) {
       instance.contextState = InvocationContextState.load(

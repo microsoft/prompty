@@ -17,6 +17,7 @@ public class ModelOptionsConversionTests
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -37,6 +38,7 @@ additionalProperties:
         Assert.Equal(0.5f, instance.FrequencyPenalty);
         Assert.Equal(2048, instance.MaxOutputTokens);
         Assert.Equal(0.3f, instance.PresencePenalty);
+        Assert.Equal("medium", instance.ReasoningEffort);
         Assert.Equal(42, instance.Seed);
         Assert.Equal(0.7f, instance.Temperature);
         Assert.Equal(40, instance.TopK);
@@ -52,6 +54,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -73,6 +76,7 @@ additionalProperties:
         Assert.Equal(0.5f, instance.FrequencyPenalty);
         Assert.Equal(2048, instance.MaxOutputTokens);
         Assert.Equal(0.3f, instance.PresencePenalty);
+        Assert.Equal("medium", instance.ReasoningEffort);
         Assert.Equal(42, instance.Seed);
         Assert.Equal(0.7f, instance.Temperature);
         Assert.Equal(40, instance.TopK);
@@ -89,6 +93,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -116,6 +121,7 @@ additionalProperties:
         Assert.Equal(0.5f, reloaded.FrequencyPenalty);
         Assert.Equal(2048, reloaded.MaxOutputTokens);
         Assert.Equal(0.3f, reloaded.PresencePenalty);
+        Assert.Equal("medium", reloaded.ReasoningEffort);
         Assert.Equal(42, reloaded.Seed);
         Assert.Equal(0.7f, reloaded.Temperature);
         Assert.Equal(40, reloaded.TopK);
@@ -131,6 +137,7 @@ additionalProperties:
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -156,6 +163,7 @@ additionalProperties:
         Assert.Equal(0.5f, reloaded.FrequencyPenalty);
         Assert.Equal(2048, reloaded.MaxOutputTokens);
         Assert.Equal(0.3f, reloaded.PresencePenalty);
+        Assert.Equal("medium", reloaded.ReasoningEffort);
         Assert.Equal(42, reloaded.Seed);
         Assert.Equal(0.7f, reloaded.Temperature);
         Assert.Equal(40, reloaded.TopK);
@@ -171,6 +179,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -202,6 +211,7 @@ additionalProperties:
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40

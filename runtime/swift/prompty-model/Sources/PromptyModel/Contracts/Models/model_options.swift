@@ -3,12 +3,37 @@
 
 import Foundation
 
+public struct ReasoningEffort: RawRepresentable, Equatable, Hashable, Codable {
+  public let rawValue: String
+  public init(rawValue: String) { self.rawValue = rawValue }
+  public static let `none` = ReasoningEffort(rawValue: "none")
+  public static let minimal = ReasoningEffort(rawValue: "minimal")
+  public static let low = ReasoningEffort(rawValue: "low")
+  public static let medium = ReasoningEffort(rawValue: "medium")
+  public static let high = ReasoningEffort(rawValue: "high")
+  public static let xhigh = ReasoningEffort(rawValue: "xhigh")
+  public static let max = ReasoningEffort(rawValue: "max")
+  public static func parse(_ value: String) throws -> ReasoningEffort {
+    switch value {
+    case "none": return .`none`
+    case "minimal": return .minimal
+    case "low": return .low
+    case "medium": return .medium
+    case "high": return .high
+    case "xhigh": return .xhigh
+    case "max": return .max
+    default: return ReasoningEffort(rawValue: value)
+    }
+  }
+}
+
 /// Options for configuring the behavior of the AI model.
 public struct ModelOptions: TypraModel {
   public static let shorthandProperty: String? = nil
   public var frequencyPenalty: Float? = nil
   public var maxOutputTokens: Int32? = nil
   public var presencePenalty: Float? = nil
+  public var reasoningEffort: ReasoningEffort? = nil
   public var seed: Int32? = nil
   public var temperature: Float? = nil
   public var topK: Int32? = nil
@@ -17,10 +42,11 @@ public struct ModelOptions: TypraModel {
   public var allowMultipleToolCalls: Bool? = nil
   public var additionalProperties: [String: Any]? = nil
 
-  public init(frequencyPenalty: Float? = nil, maxOutputTokens: Int32? = nil, presencePenalty: Float? = nil, seed: Int32? = nil, temperature: Float? = nil, topK: Int32? = nil, topP: Float? = nil, stopSequences: [String]? = nil, allowMultipleToolCalls: Bool? = nil, additionalProperties: [String: Any]? = nil) {
+  public init(frequencyPenalty: Float? = nil, maxOutputTokens: Int32? = nil, presencePenalty: Float? = nil, reasoningEffort: ReasoningEffort? = nil, seed: Int32? = nil, temperature: Float? = nil, topK: Int32? = nil, topP: Float? = nil, stopSequences: [String]? = nil, allowMultipleToolCalls: Bool? = nil, additionalProperties: [String: Any]? = nil) {
     self.frequencyPenalty = frequencyPenalty
     self.maxOutputTokens = maxOutputTokens
     self.presencePenalty = presencePenalty
+    self.reasoningEffort = reasoningEffort
     self.seed = seed
     self.temperature = temperature
     self.topK = topK
@@ -41,6 +67,9 @@ public struct ModelOptions: TypraModel {
     }
     if let value = object["presencePenalty"] {
       instance.presencePenalty = try TypraRuntime.float(value, field: "presencePenalty")
+    }
+    if let value = object["reasoningEffort"] {
+      instance.reasoningEffort = try ReasoningEffort.parse(try TypraRuntime.string(value, field: "reasoningEffort"))
     }
     if let value = object["seed"] {
       instance.seed = try TypraRuntime.int32(value, field: "seed")
@@ -76,6 +105,9 @@ public struct ModelOptions: TypraModel {
     }
     if let value = self.presencePenalty {
       result["presencePenalty"] = value
+    }
+    if let value = self.reasoningEffort {
+      result["reasoningEffort"] = value.rawValue
     }
     if let value = self.seed {
       result["seed"] = value
@@ -123,6 +155,13 @@ public struct ModelOptions: TypraModel {
     default: wireNamePresencePenalty = nil
     }
     if let wireKey = wireNamePresencePenalty, let value = self.presencePenalty { result[wireKey] = value }
+    let wireNameReasoningEffort: String?
+    switch provider {
+    case "openai": wireNameReasoningEffort = "reasoning_effort"
+    case "responses": wireNameReasoningEffort = "reasoning_effort"
+    default: wireNameReasoningEffort = nil
+    }
+    if let wireKey = wireNameReasoningEffort, let value = self.reasoningEffort { result[wireKey] = value }
     let wireNameSeed: String?
     switch provider {
     case "openai": wireNameSeed = "seed"
@@ -173,6 +212,7 @@ public struct ModelOptions: TypraModel {
       "frequencyPenalty": ["openai": "frequency_penalty"],
       "maxOutputTokens": ["openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"],
       "presencePenalty": ["openai": "presence_penalty"],
+      "reasoningEffort": ["openai": "reasoning_effort", "responses": "reasoning_effort"],
       "seed": ["openai": "seed"],
       "temperature": ["openai": "temperature", "responses": "temperature", "anthropic": "temperature"],
       "topK": ["openai": "top_k", "anthropic": "top_k"],

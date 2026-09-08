@@ -4,12 +4,15 @@
 
 import { LoadContext, SaveContext } from "../../context";
 
+export type reasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | (string & {});
+
 export class ModelOptions {
   static readonly shorthandProperty: string | undefined = undefined;
 
   frequencyPenalty?: number | undefined;
   maxOutputTokens?: number | undefined;
   presencePenalty?: number | undefined;
+  reasoningEffort?: reasoningEffort | undefined;
   seed?: number | undefined;
   temperature?: number | undefined;
   topK?: number | undefined;
@@ -27,6 +30,9 @@ export class ModelOptions {
     }
     if (init?.presencePenalty !== undefined) {
       this.presencePenalty = init.presencePenalty;
+    }
+    if (init?.reasoningEffort !== undefined) {
+      this.reasoningEffort = init.reasoningEffort;
     }
     if (init?.seed !== undefined) {
       this.seed = init.seed;
@@ -81,6 +87,13 @@ export class ModelOptions {
       data["presencePenalty"] !== null
     ) {
       instance.presencePenalty = Number(data["presencePenalty"]);
+    }
+    if (
+      data["reasoningEffort"] !== undefined &&
+      data["reasoningEffort"] !== null
+    ) {
+      instance.reasoningEffort =
+        String(data["reasoningEffort"]) as reasoningEffort;
     }
     if (data["seed"] !== undefined && data["seed"] !== null) {
       instance.seed = Number(data["seed"]);
@@ -142,6 +155,9 @@ export class ModelOptions {
     if (obj.presencePenalty !== undefined && obj.presencePenalty !== null) {
       result["presencePenalty"] = obj.presencePenalty;
     }
+    if (obj.reasoningEffort !== undefined && obj.reasoningEffort !== null) {
+      result["reasoningEffort"] = obj.reasoningEffort;
+    }
     if (obj.seed !== undefined && obj.seed !== null) {
       result["seed"] = obj.seed;
     }
@@ -187,6 +203,10 @@ export class ModelOptions {
         anthropic: "max_tokens",
       },
       presencePenalty: { openai: "presence_penalty" },
+      reasoningEffort: {
+        openai: "reasoning_effort",
+        responses: "reasoning_effort",
+      },
       seed: { openai: "seed" },
       temperature: {
         openai: "temperature",
@@ -220,6 +240,10 @@ export class ModelOptions {
         anthropic: "max_tokens",
       },
       presencePenalty: { openai: "presence_penalty" },
+      reasoningEffort: {
+        openai: "reasoning_effort",
+        responses: "reasoning_effort",
+      },
       seed: { openai: "seed" },
       temperature: {
         openai: "temperature",

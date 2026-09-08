@@ -12,6 +12,7 @@ def test_load_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -33,6 +34,7 @@ def test_load_json_modeloptions():
     assert instance.frequency_penalty == 0.5
     assert instance.max_output_tokens == 2048
     assert instance.presence_penalty == 0.3
+    assert instance.reasoning_effort == "medium"
     assert instance.seed == 42
     assert instance.temperature == 0.7
     assert instance.top_k == 40
@@ -45,6 +47,7 @@ def test_load_yaml_modeloptions():
     frequencyPenalty: 0.5
     maxOutputTokens: 2048
     presencePenalty: 0.3
+    reasoningEffort: medium
     seed: 42
     temperature: 0.7
     topK: 40
@@ -64,6 +67,7 @@ def test_load_yaml_modeloptions():
     assert instance.frequency_penalty == 0.5
     assert instance.max_output_tokens == 2048
     assert instance.presence_penalty == 0.3
+    assert instance.reasoning_effort == "medium"
     assert instance.seed == 42
     assert instance.temperature == 0.7
     assert instance.top_k == 40
@@ -78,6 +82,7 @@ def test_roundtrip_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -101,6 +106,7 @@ def test_roundtrip_json_modeloptions():
     assert reloaded.frequency_penalty == 0.5
     assert reloaded.max_output_tokens == 2048
     assert reloaded.presence_penalty == 0.3
+    assert reloaded.reasoning_effort == "medium"
     assert reloaded.seed == 42
     assert reloaded.temperature == 0.7
     assert reloaded.top_k == 40
@@ -115,6 +121,7 @@ def test_to_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -145,6 +152,7 @@ def test_to_yaml_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,

@@ -20,6 +20,7 @@ func TestModelOptionsLoadJSON(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -53,6 +54,9 @@ func TestModelOptionsLoadJSON(t *testing.T) {
 	}
 	if instance.PresencePenalty == nil || *instance.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, instance.PresencePenalty)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
 	}
 	if instance.Seed == nil || *instance.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, instance.Seed)
@@ -95,6 +99,7 @@ func TestModelOptionsLoadYAML(t *testing.T) {
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -126,6 +131,9 @@ additionalProperties:
 	}
 	if instance.PresencePenalty == nil || *instance.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, instance.PresencePenalty)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
 	}
 	if instance.Seed == nil || *instance.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, instance.Seed)
@@ -169,6 +177,7 @@ func TestModelOptionsFromJSON(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -197,6 +206,9 @@ func TestModelOptionsFromJSON(t *testing.T) {
 	}
 	if instance.PresencePenalty == nil || *instance.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, instance.PresencePenalty)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
 	}
 	if instance.Seed == nil || *instance.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, instance.Seed)
@@ -239,6 +251,7 @@ func TestModelOptionsFromYAML(t *testing.T) {
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -265,6 +278,9 @@ additionalProperties:
 	}
 	if instance.PresencePenalty == nil || *instance.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, instance.PresencePenalty)
+	}
+	if instance.ReasoningEffort == nil || *instance.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, instance.ReasoningEffort)
 	}
 	if instance.Seed == nil || *instance.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, instance.Seed)
@@ -308,6 +324,7 @@ func TestModelOptionsRoundtrip(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -348,6 +365,9 @@ func TestModelOptionsRoundtrip(t *testing.T) {
 	}
 	if reloaded.PresencePenalty == nil || *reloaded.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, reloaded.PresencePenalty)
+	}
+	if reloaded.ReasoningEffort == nil || *reloaded.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, reloaded.ReasoningEffort)
 	}
 	if reloaded.Seed == nil || *reloaded.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, reloaded.Seed)
@@ -391,6 +411,7 @@ func TestModelOptionsToJSON(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -439,6 +460,9 @@ func TestModelOptionsToJSON(t *testing.T) {
 	if reloaded.PresencePenalty == nil || *reloaded.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, reloaded.PresencePenalty)
 	}
+	if reloaded.ReasoningEffort == nil || *reloaded.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, reloaded.ReasoningEffort)
+	}
 	if reloaded.Seed == nil || *reloaded.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, reloaded.Seed)
 	}
@@ -481,6 +505,7 @@ func TestModelOptionsToYAML(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -528,6 +553,9 @@ func TestModelOptionsToYAML(t *testing.T) {
 	}
 	if reloaded.PresencePenalty == nil || *reloaded.PresencePenalty != 0.3 {
 		t.Errorf(`Expected PresencePenalty to be 0.3, got %v`, reloaded.PresencePenalty)
+	}
+	if reloaded.ReasoningEffort == nil || *reloaded.ReasoningEffort != "medium" {
+		t.Errorf(`Expected ReasoningEffort to be "medium", got %v`, reloaded.ReasoningEffort)
 	}
 	if reloaded.Seed == nil || *reloaded.Seed != 42 {
 		t.Errorf(`Expected Seed to be 42, got %v`, reloaded.Seed)
@@ -578,6 +606,7 @@ func TestModelOptionsToWire(t *testing.T) {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -623,6 +652,12 @@ func TestModelOptionsToWire(t *testing.T) {
 	if _, ok := openaiWire["presencePenalty"]; ok {
 		t.Errorf("Expected openai wire output to omit source field presencePenalty")
 	}
+	if _, ok := openaiWire["reasoning_effort"]; !ok {
+		t.Errorf("Expected openai wire output to include reasoning_effort")
+	}
+	if _, ok := openaiWire["reasoningEffort"]; ok {
+		t.Errorf("Expected openai wire output to omit source field reasoningEffort")
+	}
 	if _, ok := openaiWire["seed"]; !ok {
 		t.Errorf("Expected openai wire output to include seed")
 	}
@@ -667,6 +702,12 @@ func TestModelOptionsToWire(t *testing.T) {
 	}
 	if _, ok := responsesWire["maxOutputTokens"]; ok {
 		t.Errorf("Expected responses wire output to omit source field maxOutputTokens")
+	}
+	if _, ok := responsesWire["reasoning_effort"]; !ok {
+		t.Errorf("Expected responses wire output to include reasoning_effort")
+	}
+	if _, ok := responsesWire["reasoningEffort"]; ok {
+		t.Errorf("Expected responses wire output to omit source field reasoningEffort")
 	}
 	if _, ok := responsesWire["temperature"]; !ok {
 		t.Errorf("Expected responses wire output to include temperature")

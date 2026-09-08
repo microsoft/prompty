@@ -4989,6 +4989,55 @@
                   "isNamedCollection": false
                 },
                 {
+                  "name": "reasoningEffort",
+                  "typeName": {
+                    "namespace": "",
+                    "name": "string"
+                  },
+                  "description": "The reasoning effort level for reasoning-capable models",
+                  "samples": [
+                    {
+                      "sample": {
+                        "reasoningEffort": "medium"
+                      },
+                      "title": "",
+                      "description": ""
+                    }
+                  ],
+                  "knownAs": [
+                    {
+                      "provider": "openai",
+                      "name": "reasoning_effort"
+                    },
+                    {
+                      "provider": "responses",
+                      "name": "reasoning_effort"
+                    }
+                  ],
+                  "defaultFor": [],
+                  "isScalar": true,
+                  "isOptional": true,
+                  "isCollection": false,
+                  "isAny": false,
+                  "isDict": false,
+                  "dictValueType": null,
+                  "defaultValue": "null",
+                  "hasExplicitDefault": false,
+                  "allowedValues": [
+                    "none",
+                    "minimal",
+                    "low",
+                    "medium",
+                    "high",
+                    "xhigh",
+                    "max"
+                  ],
+                  "parseAliases": {},
+                  "enumName": "reasoningEffort",
+                  "isOpenEnum": true,
+                  "isNamedCollection": false
+                },
+                {
                   "name": "seed",
                   "typeName": {
                     "namespace": "",

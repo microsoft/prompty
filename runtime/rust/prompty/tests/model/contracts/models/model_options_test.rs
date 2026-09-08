@@ -12,6 +12,7 @@
 
 use prompty::model::ModelOptions;
 use prompty::model::context::{LoadContext, SaveContext};
+use prompty::model::reasoningEffort;
 
 #[test]
 fn test_model_options_load_json() {
@@ -20,6 +21,7 @@ fn test_model_options_load_json() {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -58,6 +60,14 @@ fn test_model_options_load_json() {
         "Expected presence_penalty to be Some"
     );
     assert_eq!(instance.presence_penalty.as_ref().unwrap(), &0.3);
+    assert!(
+        instance.reasoning_effort.is_some(),
+        "Expected reasoning_effort to be Some"
+    );
+    assert_eq!(
+        instance.reasoning_effort.as_ref().unwrap(),
+        &reasoningEffort::Medium
+    );
     assert!(instance.seed.is_some(), "Expected seed to be Some");
     assert_eq!(instance.seed.as_ref().unwrap(), &42);
     assert!(
@@ -82,6 +92,7 @@ fn test_model_options_load_yaml() {
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -115,6 +126,10 @@ additionalProperties:
         instance.presence_penalty.is_some(),
         "Expected presence_penalty to be Some"
     );
+    assert!(
+        instance.reasoning_effort.is_some(),
+        "Expected reasoning_effort to be Some"
+    );
     assert!(instance.seed.is_some(), "Expected seed to be Some");
     assert!(
         instance.temperature.is_some(),
@@ -135,6 +150,7 @@ fn test_model_options_roundtrip() {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -171,6 +187,7 @@ fn test_model_options_serde_roundtrip() {
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,

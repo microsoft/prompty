@@ -34,9 +34,8 @@ export class InvocationContextState {
     const instance = new InvocationContextState();
 
     if (data["portability"] !== undefined && data["portability"] !== null) {
-      instance.portability = String(
-        data["portability"],
-      ) as InvocationContextPortability;
+      instance.portability =
+        String(data["portability"]) as InvocationContextPortability;
     }
     if (
       data["delegatedState"] !== undefined &&

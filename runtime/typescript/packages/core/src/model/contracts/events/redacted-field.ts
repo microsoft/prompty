@@ -4,8 +4,7 @@
 
 import { LoadContext, SaveContext } from "../../context";
 
-export type RedactionMode =
-  "none" | "redacted" | "hashed" | "summary" | "reference";
+export type RedactionMode = "none" | "redacted" | "hashed" | "summary" | "reference";
 
 export class RedactedField {
   static readonly shorthandProperty: string | undefined = undefined;

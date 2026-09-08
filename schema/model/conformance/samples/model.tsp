@@ -13,6 +13,7 @@ namespace Prompty.Conformance.Samples;
 const ModelOptionsFrequencyPenaltySample = #{ frequencyPenalty: 0.5 };
 const ModelOptionsMaxOutputTokensSample = #{ maxOutputTokens: 2048 };
 const ModelOptionsPresencePenaltySample = #{ presencePenalty: 0.3 };
+const ModelOptionsReasoningEffortSample = #{ reasoningEffort: "medium" };
 const ModelOptionsSeedSample = #{ seed: 42 };
 const ModelOptionsTemperatureSample = #{ temperature: 0.7 };
 const ModelOptionsTopKSample = #{ topK: 40 };

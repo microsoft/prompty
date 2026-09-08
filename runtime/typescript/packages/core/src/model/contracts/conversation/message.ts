@@ -144,23 +144,20 @@ export class Message {
   //#endregion
 
   static assistant(text: string): Message {
-    return new Message({
-      role: "assistant",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message(
+      { role: "assistant", parts: [new TextPart({ value: text })] },
+    );
   }
 
   static system(text: string): Message {
-    return new Message({
-      role: "system",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message(
+      { role: "system", parts: [new TextPart({ value: text })] },
+    );
   }
 
   static user(text: string): Message {
-    return new Message({
-      role: "user",
-      parts: [new TextPart({ value: text })],
-    });
+    return new Message(
+      { role: "user", parts: [new TextPart({ value: text })] },
+    );
   }
 }
