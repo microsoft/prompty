@@ -10,6 +10,7 @@
     "lint:fixtures": "node scripts/lint-fixtures.mjs",
     "verify:typra": "node scripts/verify-typra.mjs",
     "smoke:emit": "node scripts/smoke-emit.mjs",
+    "check:coverage": "node scripts/check-vector-coverage.mjs",
     "build": "npm run lint:fixtures && npm run format:tsp && npm run generate"
   },
   "dependencies": {
