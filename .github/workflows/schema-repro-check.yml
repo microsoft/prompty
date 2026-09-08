@@ -79,7 +79,7 @@ jobs:
       # explicit lockfile error instead of a misattributed diff.
       UV_FROZEN: '1'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # EVERY toolchain below is pinned to an exact version, deliberately.
       # Path triggers can only catch formatter versions pinned by files in the repo.
@@ -101,7 +101,7 @@ jobs:
       # root (added deliberately, changing the toolchain for every Rust and C#
       # developer here), so `dotnet format` no longer needs the ephemeral global.json
       # this job used to write, and the action pins below simply mirror them.
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22.23.2'
 
@@ -136,7 +136,7 @@ jobs:
           components: rustfmt
 
       - name: Set up Go (provides gofmt)
-        uses: actions/setup-go@v7
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           # Pinned via go.mod rather than a literal here: go.mod is the single source
           # of truth for the Go toolchain and is itself a trigger path above, so a
@@ -145,7 +145,7 @@ jobs:
           cache: false
 
       - name: Set up .NET (provides dotnet format)
-        uses: actions/setup-dotnet@v6
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '9.0.317'
 
@@ -154,7 +154,7 @@ jobs:
         run: npm ci
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.0.1
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
       - name: Install Python dev tooling (provides ruff)
         working-directory: runtime/python/prompty

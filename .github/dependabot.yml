@@ -71,6 +71,8 @@ updates:
       actions-version:
         applies-to: version-updates
         patterns: ["*"]
+    cooldown:
+      default-days: 7
 
   # ---------------------------------------------------------------------------
   # v1 line (maintained release branch: v1)
