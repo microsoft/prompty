@@ -25,9 +25,11 @@ from prompty.providers.anthropic.executor import (
     AnthropicExecutor,
     _build_chat_args,
     _build_options,
+    _drop_unsupported_anthropic_params,
     _message_to_wire,
     _output_schema_to_wire,
     _part_to_wire,
+    _reasoning_effort_to_anthropic,
     _tools_to_wire,
 )
 from prompty.providers.anthropic.processor import AnthropicProcessor
@@ -411,6 +413,100 @@ class TestBuildChatArgs:
 # ---------------------------------------------------------------------------
 # Executor tests
 # ---------------------------------------------------------------------------
+
+
+class TestReasoningEffortGuard:
+    """The deprecated-sampling drop is a live-call guard, not a wire mapping.
+
+    ``_build_options`` / ``_build_chat_args`` stay pure renames so the
+    ``anthropic_options`` wire-conformance vector keeps asserting temperature/
+    top_p/top_k. The drop happens only in the executor, filtered against the
+    installed SDK's ``messages.create()`` signature.
+    """
+
+    def test_build_options_keeps_deprecated_sampling(self):
+        agent = _make_agent(options={"temperature": 0.5, "topP": 0.9, "topK": 40})
+        opts = _build_options(agent)
+        assert opts["temperature"] == 0.5
+        assert opts["top_p"] == 0.9
+        assert opts["top_k"] == 40
+
+    def test_drop_removes_deprecated_when_sdk_lacks_them(self):
+        accepted = frozenset(
+            {"model", "messages", "max_tokens", "system", "tools", "output_config", "stop_sequences", "stream"}
+        )
+        args = {"model": "m", "temperature": 0.5, "top_p": 0.9, "top_k": 40, "max_tokens": 10}
+        with patch("prompty.providers.anthropic.executor._anthropic_create_params", return_value=accepted):
+            with pytest.warns(DeprecationWarning):
+                _drop_unsupported_anthropic_params(args)
+        assert "temperature" not in args
+        assert "top_p" not in args
+        assert "top_k" not in args
+        assert args["max_tokens"] == 10
+
+    def test_drop_keeps_when_sdk_accepts(self):
+        accepted = frozenset({"model", "messages", "max_tokens", "temperature", "top_p", "top_k"})
+        args = {"model": "m", "temperature": 0.5, "top_p": 0.9, "top_k": 40}
+        with patch("prompty.providers.anthropic.executor._anthropic_create_params", return_value=accepted):
+            _drop_unsupported_anthropic_params(args)
+        assert args["temperature"] == 0.5
+        assert args["top_p"] == 0.9
+        assert args["top_k"] == 40
+
+    def test_drop_noop_when_signature_unknown(self):
+        args = {"temperature": 0.5}
+        with patch("prompty.providers.anthropic.executor._anthropic_create_params", return_value=None):
+            _drop_unsupported_anthropic_params(args)
+        assert args["temperature"] == 0.5
+
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("medium", "medium"),
+            ("low", "low"),
+            ("high", "high"),
+            ("xhigh", "xhigh"),
+            ("max", "max"),
+            ("minimal", "low"),
+            ("none", None),
+        ],
+    )
+    def test_reasoning_effort_map(self, raw, expected):
+        agent = _make_agent(options={"reasoningEffort": raw})
+        assert _reasoning_effort_to_anthropic(agent) == expected
+
+    def test_build_chat_args_maps_effort_to_output_config(self):
+        agent = _make_agent(options={"reasoningEffort": "high"})
+        args = _build_chat_args(agent, _make_messages())
+        assert args["output_config"]["effort"] == "high"
+
+    def test_build_chat_args_no_effort_when_absent(self):
+        agent = _make_agent(options={"maxOutputTokens": 100})
+        args = _build_chat_args(agent, _make_messages())
+        assert "effort" not in args.get("output_config", {})
+
+    def test_execute_drops_deprecated_params(self):
+        accepted = frozenset(
+            {"model", "messages", "max_tokens", "system", "tools", "output_config", "stop_sequences", "stream"}
+        )
+        mock_client = MagicMock()
+        mock_client.messages.create.return_value = _mock_anthropic_response()
+        register_connection("mock-anthropic", client=mock_client)
+        try:
+            agent = _make_agent(
+                connection={"kind": "reference", "name": "mock-anthropic"},
+                options={"temperature": 0.5, "topP": 0.9, "topK": 40, "maxOutputTokens": 100},
+            )
+            with patch("prompty.providers.anthropic.executor._anthropic_create_params", return_value=accepted):
+                with pytest.warns(DeprecationWarning):
+                    AnthropicExecutor().execute(agent, _make_messages())
+            call_kwargs = mock_client.messages.create.call_args.kwargs
+            assert "temperature" not in call_kwargs
+            assert "top_p" not in call_kwargs
+            assert "top_k" not in call_kwargs
+            assert call_kwargs["max_tokens"] == 100
+        finally:
+            clear_connections()
 
 
 class TestExecutor:
