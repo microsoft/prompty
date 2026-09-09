@@ -53,15 +53,17 @@ export class McpApprovalMode {
       data["alwaysRequireApprovalTools"] !== undefined &&
       data["alwaysRequireApprovalTools"] !== null
     ) {
-      instance.alwaysRequireApprovalTools =
-        (data["alwaysRequireApprovalTools"] as unknown[]).map((v) => String(v));
+      instance.alwaysRequireApprovalTools = (
+        data["alwaysRequireApprovalTools"] as unknown[]
+      ).map((v) => String(v));
     }
     if (
       data["neverRequireApprovalTools"] !== undefined &&
       data["neverRequireApprovalTools"] !== null
     ) {
-      instance.neverRequireApprovalTools =
-        (data["neverRequireApprovalTools"] as unknown[]).map((v) => String(v));
+      instance.neverRequireApprovalTools = (
+        data["neverRequireApprovalTools"] as unknown[]
+      ).map((v) => String(v));
     }
 
     if (context) {

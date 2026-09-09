@@ -4,7 +4,15 @@
 
 import { LoadContext, SaveContext } from "../../context";
 
-export type reasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | "max" | (string & {});
+export type reasoningEffort =
+  | "none"
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | "max"
+  | (string & {});
 
 export class ModelOptions {
   static readonly shorthandProperty: string | undefined = undefined;
@@ -92,8 +100,9 @@ export class ModelOptions {
       data["reasoningEffort"] !== undefined &&
       data["reasoningEffort"] !== null
     ) {
-      instance.reasoningEffort =
-        String(data["reasoningEffort"]) as reasoningEffort;
+      instance.reasoningEffort = String(
+        data["reasoningEffort"],
+      ) as reasoningEffort;
     }
     if (data["seed"] !== undefined && data["seed"] !== null) {
       instance.seed = Number(data["seed"]);

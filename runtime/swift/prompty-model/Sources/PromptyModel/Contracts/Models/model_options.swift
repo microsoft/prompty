@@ -161,7 +161,7 @@ public struct ModelOptions: TypraModel {
     case "responses": wireNameReasoningEffort = "reasoning_effort"
     default: wireNameReasoningEffort = nil
     }
-    if let wireKey = wireNameReasoningEffort, let value = self.reasoningEffort { result[wireKey] = value }
+    if let wireKey = wireNameReasoningEffort, let value = self.reasoningEffort { result[wireKey] = value.rawValue }
     let wireNameSeed: String?
     switch provider {
     case "openai": wireNameSeed = "seed"

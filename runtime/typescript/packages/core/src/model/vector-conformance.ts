@@ -362,8 +362,9 @@ export async function runLoadConformanceConformance(
     const sourceJson = "null";
     const source = JSON.parse(sourceJson) as unknown;
     const actual = await seam.load(source);
-    const expected =
-      JSON.parse('{"model":{"connection":{"kind":"key","endpoint":"hello"}}}');
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"key","endpoint":"hello"}}}',
+    );
     seamConformanceAssert(
       seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
         seamConformanceCanonical(expected),
@@ -567,8 +568,9 @@ export async function runLoadConformanceConformance(
     const sourceJson = "null";
     const source = JSON.parse(sourceJson) as unknown;
     const actual = await seam.load(source);
-    const expected =
-      JSON.parse('{"kind":"prompt","name":"test","model":{"id":"gpt-4o"}}');
+    const expected = JSON.parse(
+      '{"kind":"prompt","name":"test","model":{"id":"gpt-4o"}}',
+    );
     seamConformanceAssert(
       seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
         seamConformanceCanonical(expected),
@@ -609,8 +611,9 @@ export async function runLoadConformanceConformance(
     const sourceJson = "null";
     const source = JSON.parse(sourceJson) as unknown;
     const actual = await seam.load(source);
-    const expected =
-      JSON.parse('{"tools":[{"name":"my_tool","kind":"my_provider"}]}');
+    const expected = JSON.parse(
+      '{"tools":[{"name":"my_tool","kind":"my_provider"}]}',
+    );
     seamConformanceAssert(
       seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
         seamConformanceCanonical(expected),

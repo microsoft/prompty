@@ -19,8 +19,9 @@ export type ProcessorKind = "openai" | "azure";
  * A Record over ProcessorKind forces every slot to be DECLARED (a missing key is a
  * compile error); a null value signals a valid-but-unimplemented variant.
  */
-export type ProcessorProvider =
-  Record<ProcessorKind, Processor | null> & { custom?: Processor | null };
+export type ProcessorProvider = Record<ProcessorKind, Processor | null> & {
+  custom?: Processor | null;
+};
 
 /**
  * Map a "provider" discriminator value to the selected Processor impl — the

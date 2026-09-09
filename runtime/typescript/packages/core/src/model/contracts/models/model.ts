@@ -6,7 +6,8 @@ import { LoadContext, SaveContext } from "../../context";
 import { Connection } from "../../contracts/connectivity/connection";
 import { ModelOptions } from "./model-options";
 
-export type apiType = "chat" | "embedding" | "image" | "responses" | (string & {});
+export type apiType =
+  "chat" | "embedding" | "image" | "responses" | (string & {});
 
 export class Model {
   static readonly shorthandProperty: string | undefined = "id";

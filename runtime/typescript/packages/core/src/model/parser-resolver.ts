@@ -19,8 +19,9 @@ export type ParserKind = "prompty";
  * A Record over ParserKind forces every slot to be DECLARED (a missing key is a
  * compile error); a null value signals a valid-but-unimplemented variant.
  */
-export type ParserProvider =
-  Record<ParserKind, Parser | null> & { custom?: Parser | null };
+export type ParserProvider = Record<ParserKind, Parser | null> & {
+  custom?: Parser | null;
+};
 
 /**
  * Map a "kind" discriminator value to the selected Parser impl — the

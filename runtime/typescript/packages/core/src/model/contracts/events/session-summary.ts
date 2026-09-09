@@ -5,7 +5,8 @@
 import { LoadContext, SaveContext } from "../../context";
 import { TokenUsage } from "../../contracts/models/token-usage";
 
-export type SessionSummaryStatus = "success" | "error" | "cancelled" | "interrupted";
+export type SessionSummaryStatus =
+  "success" | "error" | "cancelled" | "interrupted";
 
 export class SessionSummary {
   static readonly shorthandProperty: string | undefined = undefined;

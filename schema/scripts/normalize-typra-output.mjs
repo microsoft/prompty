@@ -24,6 +24,19 @@ fixSwiftProcessorProviderCollision(
     "ProcessorConformanceTests.swift",
   ),
 );
+fixSwiftReasoningEffortWireValue(
+  join(
+    "..",
+    "runtime",
+    "swift",
+    "prompty-model",
+    "Sources",
+    "PromptyModel",
+    "Contracts",
+    "Models",
+    "model_options.swift",
+  ),
+);
 restoreSwiftPackageResources(join("..", "runtime", "swift", "prompty-model", "Package.swift"));
 
 // Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
@@ -177,6 +190,35 @@ function fixSwiftProcessorProviderCollision(path) {
       "ProcessorResolver.resolve(provider: providerKind, registry: provider())",
     )
     .replaceAll('" + provider)', '" + providerKind)');
+  if (patched !== content) {
+    writeFileSync(path, patched);
+  }
+}
+
+// WORKAROUND (typra 2.1.8 emitter bug): the Swift backend emits the provider
+// wire-mapping (`toWire`) assignment for the `reasoningEffort` option as
+// `result[wireKey] = value`, storing the `ReasoningEffort` RawRepresentable
+// struct itself rather than its backing string. `reasoningEffort` is the only
+// ModelOptions field with a named string-union (alias) type; every other field
+// is a wire-primitive (Int/Double/Bool/[String]) that needs no unwrapping, so
+// only this field is affected. The plain `save()` path correctly emits
+// `value.rawValue`, but the provider `toWire` path does not, so a wire
+// round-trip produces a dict whose `reasoning_effort` value is a struct and the
+// matching `fromWire` -> `load()` throws "Expected string for field
+// reasoningEffort." (Newly exposed by the 2.1.8 wire-conversion tests.) Append
+// `.rawValue` to that single assignment so the wire value is the backing string.
+// Deterministic exact-substring rewrite; unique to this field. Remove once the
+// emitter unwraps RawRepresentable union types in the Swift toWire path (tracked
+// on sethjuarez/typra).
+function fixSwiftReasoningEffortWireValue(path) {
+  if (!existsSync(path)) {
+    return;
+  }
+  const content = readFileSync(path, "utf8");
+  const patched = content.replaceAll(
+    "let value = self.reasoningEffort { result[wireKey] = value }",
+    "let value = self.reasoningEffort { result[wireKey] = value.rawValue }",
+  );
   if (patched !== content) {
     writeFileSync(path, patched);
   }

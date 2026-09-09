@@ -8,9 +8,5 @@ export {
   MustacheFormat,
   CustomFormat,
 } from "./format-config";
-export {
-  ParserConfig,
-  PromptyParser,
-  CustomParser,
-} from "./parser-config";
+export { ParserConfig, PromptyParser, CustomParser } from "./parser-config";
 export { Template } from "./template";

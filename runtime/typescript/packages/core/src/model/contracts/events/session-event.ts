@@ -5,7 +5,14 @@
 import { LoadContext, SaveContext } from "../../context";
 import { RedactionMetadata } from "./redaction-metadata";
 
-export type SessionEventType = "session_start" | "session_end" | "session_warning" | "session_hook_start" | "session_hook_end" | "checkpoint_created" | "trajectory_event";
+export type SessionEventType =
+  | "session_start"
+  | "session_end"
+  | "session_warning"
+  | "session_hook_start"
+  | "session_hook_end"
+  | "checkpoint_created"
+  | "trajectory_event";
 
 export class SessionEvent {
   static readonly shorthandProperty: string | undefined = undefined;
