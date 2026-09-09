@@ -26,6 +26,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # TypeScript 7 (the native/Go port) is not yet supported by our toolchain:
+    # ts-jest@29 requires `typescript >=4.3 <7` and tsup/esbuild crash against
+    # it (`useCaseSensitiveFileNames`). Hold typescript on the 5.x/6.x line until
+    # the toolchain catches up; remove this once ts-jest and tsup support 7.x.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-security:
         applies-to: security-updates
@@ -98,6 +105,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # See the 2.x note above: hold typescript on 5.x/6.x until ts-jest/tsup
+    # support the 7.x native port.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-v1-version:
         applies-to: version-updates
