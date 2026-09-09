@@ -22,7 +22,7 @@ minijinja = "2"
 rand = "0.9"
 regex = "1"
 chrono = "0.4"
-ribboncurls = "0.2"
+ribboncurls = "0.5"
 futures = "0.3"
 
 # OTel (optional)
@@ -40,7 +40,7 @@ otel = ["opentelemetry", "opentelemetry_sdk", "opentelemetry-stdout"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
-serial_test = "3"
+serial_test = "4"
 # Dev-only cycle (allowed by Cargo): the model conformance harness drives the
 # `Processor.processStream` vectors through the real OpenAI stream classifier
 # (`prompty_openai::processor::process_stream`) before reconciling with the
