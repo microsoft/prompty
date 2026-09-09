@@ -99,10 +99,11 @@ function trimTrailingWhitespace(root) {
 // Verified empirically: moving Resources to the test target makes `swift test`
 // fail to compile the main target with "type 'Bundle' has no member 'module'",
 // because SwiftPM only synthesizes `Bundle.module` for a target that owns
-// resources. The emitter exposes no main-target resources option, so this hand
-// re-injection remains load-bearing. Fully removing it requires relocating
-// Discovery + the capabilities resource into a package the emitter does not
-// regenerate (tracked with the Swift split-package work in #487).
+// resources. The emitter exposes no main-target resources option (feature
+// requested upstream in sethjuarez/typra#332), so this hand re-injection remains
+// load-bearing. Fully removing it requires either that emitter option or
+// relocating Discovery + the capabilities resource into a package the emitter
+// does not regenerate (tracked with the Swift split-package work in #487).
 function restoreSwiftPackageResources(packagePath) {
   if (!existsSync(packagePath)) {
     return;
