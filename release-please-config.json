@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separator": "/",
+  "include-component-in-tag": true,
+  "include-v-in-tag": false,
+  "bootstrap-sha": "3c1c0cc27ee429983ee362aa60ac510678da4af9",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "deps", "section": "Dependencies" },
+    { "type": "docs", "section": "Documentation", "hidden": true },
+    { "type": "chore", "section": "Miscellaneous", "hidden": true },
+    { "type": "ci", "section": "Continuous Integration", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "refactor", "section": "Code Refactoring", "hidden": true }
+  ],
+  "packages": {
+    "runtime/python/prompty": {
+      "component": "python",
+      "release-type": "python",
+      "package-name": "prompty",
+      "extra-files": [
+        { "type": "generic", "path": "prompty/_version.py" }
+      ]
+    },
+    "runtime/rust": {
+      "component": "rust",
+      "release-type": "rust"
+    },
+    "runtime/typescript/packages/core": {
+      "component": "typescript",
+      "release-type": "node",
+      "package-name": "@prompty/core"
+    },
+    "runtime/csharp": {
+      "component": "csharp",
+      "release-type": "simple",
+      "extra-files": [
+        { "type": "generic", "path": "Prompty.Core/Prompty.Core.csproj" },
+        { "type": "generic", "path": "Prompty.OpenAI/Prompty.OpenAI.csproj" },
+        { "type": "generic", "path": "Prompty.Foundry/Prompty.Foundry.csproj" },
+        { "type": "generic", "path": "Prompty.Anthropic/Prompty.Anthropic.csproj" }
+      ]
+    },
+    "runtime/java": {
+      "component": "java",
+      "release-type": "simple",
+      "extra-files": [
+        { "type": "generic", "path": "build.gradle.kts" }
+      ]
+    },
+    "runtime/go/prompty": {
+      "component": "go",
+      "release-type": "go"
+    },
+    "runtime/swift/prompty": {
+      "component": "swift",
+      "release-type": "simple"
+    }
+  },
+  "plugins": [
+    "node-workspace"
+  ]
+}
