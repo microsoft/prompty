@@ -136,7 +136,9 @@ function restoreSwiftPackageResources(packagePath) {
 // reproducible without depending on goimports being installed. Only removes a
 // standalone `"fmt"` import line when the file has no `fmt.` reference, so it is
 // a no-op on every file that legitimately uses fmt. Remove once the emitter no
-// longer emits the unused import (tracked on sethjuarez/typra).
+// longer emits the unused import (tracked on sethjuarez/typra#305; appears fixed
+// as of @typra/emitter 2.1.8 — raw output no longer emits the dead import, so
+// this is now a no-op guarding against regression until #305 is confirmed/closed).
 function stripUnusedFmtImport(root) {
   if (!existsSync(root)) {
     return;
@@ -174,7 +176,7 @@ function stripUnusedFmtImport(root) {
 // longer shadows the registry accessor. Deterministic exact-substring rewrites;
 // the `provider:` argument label, the `["provider"]` lookup, and the `provider()`
 // call are all left untouched. Remove once the emitter names the discriminator
-// local distinctly from the registry accessor (tracked on sethjuarez/typra).
+// local distinctly from the registry accessor (tracked on sethjuarez/typra#304).
 function fixSwiftProcessorProviderCollision(path) {
   if (!existsSync(path)) {
     return;
