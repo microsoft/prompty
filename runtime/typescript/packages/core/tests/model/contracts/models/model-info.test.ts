@@ -38,6 +38,16 @@ describe("ModelInfo", () => {
       expect(reloaded.ownedBy).toEqual(instance.ownedBy);
       expect(reloaded.contextWindow).toEqual(instance.contextWindow);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ModelInfo.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
@@ -60,6 +70,43 @@ describe("ModelInfo", () => {
       expect(reloaded.displayName).toEqual(instance.displayName);
       expect(reloaded.ownedBy).toEqual(instance.ownedBy);
       expect(reloaded.contextWindow).toEqual(instance.contextWindow);
+    });
+  });
+
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "id": "gpt-4o",\n  "displayName": "GPT-4o",\n  "ownedBy": "openai",\n  "contextWindow": 128000,\n  "inputModalities": [\n    "text",\n    "image"\n  ],\n  "outputModalities": [\n    "text"\n  ],\n  "additionalProperties": {\n    "supportsStreaming": true\n  }\n}`;
+      const instance = ModelInfo.fromJson(json);
+      const openaiWire = instance.toWire("openai");
+      expect(Object.keys(openaiWire).includes("id")).toBe(true);
+      expect(Object.keys(openaiWire).includes("owned_by")).toBe(true);
+      expect(Object.keys(openaiWire).includes("ownedBy")).toBe(false);
+      const openaiRestored = ModelInfo.fromWire("openai", openaiWire);
+      expect(Object.keys(openaiRestored.toWire("openai")).sort()).toEqual(
+        Object.keys(openaiWire).sort(),
+      );
+      const anthropicWire = instance.toWire("anthropic");
+      expect(Object.keys(anthropicWire).includes("id")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("display_name")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("displayName")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("context_length")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("contextWindow")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("input_modalities")).toBe(
+        true,
+      );
+      expect(Object.keys(anthropicWire).includes("inputModalities")).toBe(
+        false,
+      );
+      expect(Object.keys(anthropicWire).includes("output_modalities")).toBe(
+        true,
+      );
+      expect(Object.keys(anthropicWire).includes("outputModalities")).toBe(
+        false,
+      );
+      const anthropicRestored = ModelInfo.fromWire("anthropic", anthropicWire);
+      expect(Object.keys(anthropicRestored.toWire("anthropic")).sort()).toEqual(
+        Object.keys(anthropicWire).sort(),
+      );
     });
   });
 

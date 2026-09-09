@@ -32,6 +32,16 @@ describe("Message", () => {
       const reloaded = Message.fromJson(output);
       expect(reloaded.role).toEqual(instance.role);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Message.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

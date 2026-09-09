@@ -93,3 +93,12 @@ fn test_memory_store_serde_roundtrip() {
     let reparsed: MemoryStore = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_memory_store_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        MemoryStore::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

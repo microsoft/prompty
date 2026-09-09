@@ -201,6 +201,12 @@ enumValues:
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Property.FromJson("{"));
+    }
+
+    [Fact]
     public void LoadJsonFromBoolean()
     {
         // alternate representation as boolean

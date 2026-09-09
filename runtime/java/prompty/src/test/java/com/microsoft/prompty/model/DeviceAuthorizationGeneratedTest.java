@@ -65,7 +65,6 @@ final class DeviceAuthorizationGeneratedTest {
     assertTrue(foundryWire.containsKey("expires_in"), "Expected foundry wire output to include expires_in");
     assertTrue(!foundryWire.containsKey("expiresIn"), "Expected foundry wire output to omit expiresIn");
     assertTrue(foundryWire.containsKey("interval"), "Expected foundry wire output to include interval");
-    assertTrue(foundryWire.containsKey("message"), "Expected foundry wire output to include message");
     DeviceAuthorization foundryRestored = DeviceAuthorization.fromWire("foundry", foundryWire);
     assertEquals(foundryWire.keySet(), foundryRestored.toWire("foundry").keySet(), "Expected foundry FromWire round-trip to reproduce the wire keys");
   }

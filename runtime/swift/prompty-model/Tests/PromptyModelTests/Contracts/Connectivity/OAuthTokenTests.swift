@@ -35,4 +35,25 @@ scope: "https://cognitiveservices.azure.com/.default offline_access"
     XCTAssertEqual((try XCTUnwrap(reloaded.scope)), "https://cognitiveservices.azure.com/.default offline_access")
   }
 
+
+  func testWireConversion() throws {
+    let json = """
+{
+  "refreshToken": "0.AXoAoffline-refresh-token-value",
+  "scope": "https://cognitiveservices.azure.com/.default offline_access"
+}
+"""
+    let instance = try OAuthToken.fromJSON(json)
+    let foundryWire = try instance.toWire("foundry")
+    XCTAssertNotNil(foundryWire["refresh_token"])
+    XCTAssertNil(foundryWire["refreshToken"])
+    XCTAssertNotNil(foundryWire["scope"])
+    let foundryRestored = try OAuthToken.fromWire("foundry", foundryWire)
+    XCTAssertEqual(Set(try foundryRestored.toWire("foundry").keys), Set(foundryWire.keys))
+  }
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try OAuthToken.fromJSON("{"))
+  }
+
 }

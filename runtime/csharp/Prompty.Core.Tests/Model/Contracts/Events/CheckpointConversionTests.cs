@@ -162,4 +162,10 @@ createdAt: "2026-06-09T20:00:00Z"
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Checkpoint.FromJson("{"));
+    }
 }

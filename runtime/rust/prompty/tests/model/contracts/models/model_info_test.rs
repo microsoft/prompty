@@ -167,3 +167,118 @@ fn test_model_info_serde_roundtrip() {
     let reparsed: ModelInfo = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_model_info_wire_conversion() {
+    let json = r####"
+{
+  "id": "gpt-4o",
+  "displayName": "GPT-4o",
+  "ownedBy": "openai",
+  "contextWindow": 128000,
+  "inputModalities": [
+    "text",
+    "image"
+  ],
+  "outputModalities": [
+    "text"
+  ],
+  "additionalProperties": {
+    "supportsStreaming": true
+  }
+}
+"####;
+    let ctx = LoadContext::default();
+    let instance = ModelInfo::from_json(json, &ctx).expect("load should succeed");
+    let openai_wire = instance.to_wire("openai");
+    let openai_obj = openai_wire.as_object().expect("to_wire returns an object");
+    assert!(
+        openai_obj.contains_key("id"),
+        "Expected openai wire output to include id"
+    );
+    assert!(
+        openai_obj.contains_key("owned_by"),
+        "Expected openai wire output to include owned_by"
+    );
+    assert!(
+        !openai_obj.contains_key("ownedBy"),
+        "Expected openai wire output to omit ownedBy"
+    );
+    let openai_restored = ModelInfo::from_wire("openai", &openai_wire, &ctx);
+    let openai_round = openai_restored.to_wire("openai");
+    let mut openai_expected: Vec<&String> = openai_obj.keys().collect();
+    let mut openai_actual: Vec<&String> = openai_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    openai_expected.sort();
+    openai_actual.sort();
+    assert_eq!(
+        openai_expected, openai_actual,
+        "Expected openai round-trip to preserve wire keys"
+    );
+    let anthropic_wire = instance.to_wire("anthropic");
+    let anthropic_obj = anthropic_wire
+        .as_object()
+        .expect("to_wire returns an object");
+    assert!(
+        anthropic_obj.contains_key("id"),
+        "Expected anthropic wire output to include id"
+    );
+    assert!(
+        anthropic_obj.contains_key("display_name"),
+        "Expected anthropic wire output to include display_name"
+    );
+    assert!(
+        !anthropic_obj.contains_key("displayName"),
+        "Expected anthropic wire output to omit displayName"
+    );
+    assert!(
+        anthropic_obj.contains_key("context_length"),
+        "Expected anthropic wire output to include context_length"
+    );
+    assert!(
+        !anthropic_obj.contains_key("contextWindow"),
+        "Expected anthropic wire output to omit contextWindow"
+    );
+    assert!(
+        anthropic_obj.contains_key("input_modalities"),
+        "Expected anthropic wire output to include input_modalities"
+    );
+    assert!(
+        !anthropic_obj.contains_key("inputModalities"),
+        "Expected anthropic wire output to omit inputModalities"
+    );
+    assert!(
+        anthropic_obj.contains_key("output_modalities"),
+        "Expected anthropic wire output to include output_modalities"
+    );
+    assert!(
+        !anthropic_obj.contains_key("outputModalities"),
+        "Expected anthropic wire output to omit outputModalities"
+    );
+    let anthropic_restored = ModelInfo::from_wire("anthropic", &anthropic_wire, &ctx);
+    let anthropic_round = anthropic_restored.to_wire("anthropic");
+    let mut anthropic_expected: Vec<&String> = anthropic_obj.keys().collect();
+    let mut anthropic_actual: Vec<&String> = anthropic_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    anthropic_expected.sort();
+    anthropic_actual.sort();
+    assert_eq!(
+        anthropic_expected, anthropic_actual,
+        "Expected anthropic round-trip to preserve wire keys"
+    );
+}
+
+#[test]
+fn test_model_info_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        ModelInfo::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

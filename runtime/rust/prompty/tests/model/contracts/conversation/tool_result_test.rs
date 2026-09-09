@@ -153,6 +153,15 @@ fn test_tool_result_serde_roundtrip() {
 }
 
 #[test]
+fn test_tool_result_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        ToolResult::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_tool_result_factory_text() {
     let instance = ToolResult::text("test".to_string());
 }

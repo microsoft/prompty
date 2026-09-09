@@ -32,6 +32,16 @@ describe("CustomParser", () => {
       const reloaded = CustomParser.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        CustomParser.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

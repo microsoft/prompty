@@ -124,6 +124,12 @@ input: input-variable
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Binding.FromJson("{"));
+    }
+
+    [Fact]
     public void LoadJsonFromString()
     {
         // alternate representation as string

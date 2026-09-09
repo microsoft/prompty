@@ -92,6 +92,15 @@ fn test_model_roundtrip() {
 }
 
 #[test]
+fn test_model_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Model::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_model_from_model() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();

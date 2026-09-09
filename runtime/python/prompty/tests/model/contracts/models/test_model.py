@@ -138,6 +138,16 @@ def test_to_yaml_model():
     assert isinstance(parsed, dict)
 
 
+def test_load_model_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        Model.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"
+
+
 def test_load_model_from_str():
     instance = Model.load("example")
     assert instance is not None

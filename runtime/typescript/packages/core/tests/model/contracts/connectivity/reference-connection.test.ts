@@ -36,6 +36,16 @@ describe("ReferenceConnection", () => {
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.target).toEqual(instance.target);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ReferenceConnection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

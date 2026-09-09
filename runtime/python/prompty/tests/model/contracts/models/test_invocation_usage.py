@@ -88,3 +88,44 @@ def test_to_yaml_invocationusage():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_to_wire_invocationusage():
+    """Test that to_wire()/from_wire() apply provider wire field names."""
+    json_data = r"""
+    {
+      "inputTokens": 150,
+      "outputTokens": 42,
+      "totalTokens": 192
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = InvocationUsage.load(data)
+    openai_wire = instance.to_wire("openai")
+    assert "prompt_tokens" in openai_wire
+    assert "inputTokens" not in openai_wire
+    assert "completion_tokens" in openai_wire
+    assert "outputTokens" not in openai_wire
+    assert "total_tokens" in openai_wire
+    assert "totalTokens" not in openai_wire
+    openai_restored = InvocationUsage.from_wire("openai", openai_wire)
+    openai_round = openai_restored.to_wire("openai")
+    assert set(openai_round.keys()) == set(openai_wire.keys())
+    anthropic_wire = instance.to_wire("anthropic")
+    assert "input_tokens" in anthropic_wire
+    assert "inputTokens" not in anthropic_wire
+    assert "output_tokens" in anthropic_wire
+    assert "outputTokens" not in anthropic_wire
+    anthropic_restored = InvocationUsage.from_wire("anthropic", anthropic_wire)
+    anthropic_round = anthropic_restored.to_wire("anthropic")
+    assert set(anthropic_round.keys()) == set(anthropic_wire.keys())
+
+
+def test_load_invocationusage_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        InvocationUsage.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

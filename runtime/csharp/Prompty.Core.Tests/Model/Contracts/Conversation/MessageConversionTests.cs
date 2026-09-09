@@ -156,6 +156,12 @@ metadata:
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Message.FromJson("{"));
+    }
+
+    [Fact]
     public void FactoryAssistant()
     {
         var instance = Message.Assistant("test");

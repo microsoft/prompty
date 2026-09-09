@@ -104,3 +104,41 @@ def test_to_yaml_deviceauthorization():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_to_wire_deviceauthorization():
+    """Test that to_wire()/from_wire() apply provider wire field names."""
+    json_data = r"""
+    {
+      "deviceCode": "sample",
+      "userCode": "sample",
+      "verificationUri": "sample",
+      "expiresIn": 1,
+      "interval": 1
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = DeviceAuthorization.load(data)
+    foundry_wire = instance.to_wire("foundry")
+    assert "device_code" in foundry_wire
+    assert "deviceCode" not in foundry_wire
+    assert "user_code" in foundry_wire
+    assert "userCode" not in foundry_wire
+    assert "verification_uri" in foundry_wire
+    assert "verificationUri" not in foundry_wire
+    assert "expires_in" in foundry_wire
+    assert "expiresIn" not in foundry_wire
+    assert "interval" in foundry_wire
+    foundry_restored = DeviceAuthorization.from_wire("foundry", foundry_wire)
+    foundry_round = foundry_restored.to_wire("foundry")
+    assert set(foundry_round.keys()) == set(foundry_wire.keys())
+
+
+def test_load_deviceauthorization_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        DeviceAuthorization.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

@@ -34,6 +34,16 @@ describe("OpenApiTool", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.specification).toEqual(instance.specification);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        OpenApiTool.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -89,6 +89,15 @@ fn test_property_roundtrip() {
 }
 
 #[test]
+fn test_property_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Property::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_property_from_input() {
     let value = serde_json::json!(false);
     let ctx = LoadContext::default();

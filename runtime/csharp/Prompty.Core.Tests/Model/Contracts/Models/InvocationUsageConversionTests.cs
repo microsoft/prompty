@@ -132,4 +132,47 @@ totalTokens: 192
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void WireConversion()
+    {
+            string jsonData = """
+    {
+      "inputTokens": 150,
+      "outputTokens": 42,
+      "totalTokens": 192
+    }
+    """;
+
+        var instance = InvocationUsage.FromJson(jsonData);
+        Assert.NotNull(instance);
+
+        var openaiWire = instance.ToWire("openai");
+        Assert.Contains("prompt_tokens", openaiWire.Keys);
+        Assert.DoesNotContain("inputTokens", openaiWire.Keys);
+        Assert.Contains("completion_tokens", openaiWire.Keys);
+        Assert.DoesNotContain("outputTokens", openaiWire.Keys);
+        Assert.Contains("total_tokens", openaiWire.Keys);
+        Assert.DoesNotContain("totalTokens", openaiWire.Keys);
+        var openaiRestored = InvocationUsage.FromWire("openai", openaiWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(openaiWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(openaiRestored.ToWire("openai").Keys));
+
+        var anthropicWire = instance.ToWire("anthropic");
+        Assert.Contains("input_tokens", anthropicWire.Keys);
+        Assert.DoesNotContain("inputTokens", anthropicWire.Keys);
+        Assert.Contains("output_tokens", anthropicWire.Keys);
+        Assert.DoesNotContain("outputTokens", anthropicWire.Keys);
+        var anthropicRestored = InvocationUsage.FromWire("anthropic", anthropicWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(anthropicWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(anthropicRestored.ToWire("anthropic").Keys));
+    }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => InvocationUsage.FromJson("{"));
+    }
 }

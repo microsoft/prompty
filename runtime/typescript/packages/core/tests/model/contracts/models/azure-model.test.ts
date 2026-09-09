@@ -32,6 +32,16 @@ describe("AzureModel", () => {
       const reloaded = AzureModel.fromJson(output);
       expect(reloaded.provider).toEqual(instance.provider);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        AzureModel.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -31,6 +31,16 @@ describe("ObjectProperty", () => {
       const reloaded = ObjectProperty.fromJson(output);
       expect(reloaded).toBeDefined();
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ObjectProperty.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

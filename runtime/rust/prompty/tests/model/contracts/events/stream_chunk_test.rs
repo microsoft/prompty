@@ -58,3 +58,12 @@ fn test_stream_chunk_roundtrip() {
     let result = StreamChunk::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
 }
+
+#[test]
+fn test_stream_chunk_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        StreamChunk::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

@@ -32,6 +32,16 @@ describe("ThinkingChunk", () => {
       const reloaded = ThinkingChunk.fromJson(output);
       expect(reloaded.value).toEqual(instance.value);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ThinkingChunk.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

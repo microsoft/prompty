@@ -53,4 +53,9 @@ usageDescription: This will allow the agent to respond to an email on your behal
     }
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try Connection.fromJSON("{"))
+  }
+
 }

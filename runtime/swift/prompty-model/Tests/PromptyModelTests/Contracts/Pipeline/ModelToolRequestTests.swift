@@ -35,4 +35,9 @@ name: get_weather
     XCTAssertEqual(reloaded.name, "get_weather")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ModelToolRequest.fromJSON("{"))
+  }
+
 }

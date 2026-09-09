@@ -162,4 +162,10 @@ spanId: span_tool_001
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => TurnEvent.FromJson("{"));
+    }
 }

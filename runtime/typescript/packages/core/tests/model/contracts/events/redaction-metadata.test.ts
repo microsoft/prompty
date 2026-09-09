@@ -34,6 +34,16 @@ describe("RedactionMetadata", () => {
       expect(reloaded.sanitized).toEqual(instance.sanitized);
       expect(reloaded.policy).toEqual(instance.policy);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        RedactionMetadata.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -130,3 +130,99 @@ fn test_token_usage_serde_roundtrip() {
     let reparsed: TokenUsage = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_token_usage_wire_conversion() {
+    let json = r####"
+{
+  "promptTokens": 150,
+  "completionTokens": 42,
+  "totalTokens": 192
+}
+"####;
+    let ctx = LoadContext::default();
+    let instance = TokenUsage::from_json(json, &ctx).expect("load should succeed");
+    let openai_wire = instance.to_wire("openai");
+    let openai_obj = openai_wire.as_object().expect("to_wire returns an object");
+    assert!(
+        openai_obj.contains_key("prompt_tokens"),
+        "Expected openai wire output to include prompt_tokens"
+    );
+    assert!(
+        !openai_obj.contains_key("promptTokens"),
+        "Expected openai wire output to omit promptTokens"
+    );
+    assert!(
+        openai_obj.contains_key("completion_tokens"),
+        "Expected openai wire output to include completion_tokens"
+    );
+    assert!(
+        !openai_obj.contains_key("completionTokens"),
+        "Expected openai wire output to omit completionTokens"
+    );
+    assert!(
+        openai_obj.contains_key("total_tokens"),
+        "Expected openai wire output to include total_tokens"
+    );
+    assert!(
+        !openai_obj.contains_key("totalTokens"),
+        "Expected openai wire output to omit totalTokens"
+    );
+    let openai_restored = TokenUsage::from_wire("openai", &openai_wire, &ctx);
+    let openai_round = openai_restored.to_wire("openai");
+    let mut openai_expected: Vec<&String> = openai_obj.keys().collect();
+    let mut openai_actual: Vec<&String> = openai_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    openai_expected.sort();
+    openai_actual.sort();
+    assert_eq!(
+        openai_expected, openai_actual,
+        "Expected openai round-trip to preserve wire keys"
+    );
+    let anthropic_wire = instance.to_wire("anthropic");
+    let anthropic_obj = anthropic_wire
+        .as_object()
+        .expect("to_wire returns an object");
+    assert!(
+        anthropic_obj.contains_key("input_tokens"),
+        "Expected anthropic wire output to include input_tokens"
+    );
+    assert!(
+        !anthropic_obj.contains_key("promptTokens"),
+        "Expected anthropic wire output to omit promptTokens"
+    );
+    assert!(
+        anthropic_obj.contains_key("output_tokens"),
+        "Expected anthropic wire output to include output_tokens"
+    );
+    assert!(
+        !anthropic_obj.contains_key("completionTokens"),
+        "Expected anthropic wire output to omit completionTokens"
+    );
+    let anthropic_restored = TokenUsage::from_wire("anthropic", &anthropic_wire, &ctx);
+    let anthropic_round = anthropic_restored.to_wire("anthropic");
+    let mut anthropic_expected: Vec<&String> = anthropic_obj.keys().collect();
+    let mut anthropic_actual: Vec<&String> = anthropic_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    anthropic_expected.sort();
+    anthropic_actual.sort();
+    assert_eq!(
+        anthropic_expected, anthropic_actual,
+        "Expected anthropic round-trip to preserve wire keys"
+    );
+}
+
+#[test]
+fn test_token_usage_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        TokenUsage::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

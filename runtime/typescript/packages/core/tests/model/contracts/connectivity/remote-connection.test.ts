@@ -38,6 +38,16 @@ describe("RemoteConnection", () => {
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        RemoteConnection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

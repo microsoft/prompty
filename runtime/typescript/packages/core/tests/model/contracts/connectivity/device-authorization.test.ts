@@ -40,6 +40,16 @@ describe("DeviceAuthorization", () => {
       expect(reloaded.expiresIn).toEqual(instance.expiresIn);
       expect(reloaded.interval).toEqual(instance.interval);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        DeviceAuthorization.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
@@ -64,6 +74,30 @@ describe("DeviceAuthorization", () => {
       expect(reloaded.verificationUri).toEqual(instance.verificationUri);
       expect(reloaded.expiresIn).toEqual(instance.expiresIn);
       expect(reloaded.interval).toEqual(instance.interval);
+    });
+  });
+
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "deviceCode": "sample",\n  "userCode": "sample",\n  "verificationUri": "sample",\n  "expiresIn": 1,\n  "interval": 1\n}`;
+      const instance = DeviceAuthorization.fromJson(json);
+      const foundryWire = instance.toWire("foundry");
+      expect(Object.keys(foundryWire).includes("device_code")).toBe(true);
+      expect(Object.keys(foundryWire).includes("deviceCode")).toBe(false);
+      expect(Object.keys(foundryWire).includes("user_code")).toBe(true);
+      expect(Object.keys(foundryWire).includes("userCode")).toBe(false);
+      expect(Object.keys(foundryWire).includes("verification_uri")).toBe(true);
+      expect(Object.keys(foundryWire).includes("verificationUri")).toBe(false);
+      expect(Object.keys(foundryWire).includes("expires_in")).toBe(true);
+      expect(Object.keys(foundryWire).includes("expiresIn")).toBe(false);
+      expect(Object.keys(foundryWire).includes("interval")).toBe(true);
+      const foundryRestored = DeviceAuthorization.fromWire(
+        "foundry",
+        foundryWire,
+      );
+      expect(Object.keys(foundryRestored.toWire("foundry")).sort()).toEqual(
+        Object.keys(foundryWire).sort(),
+      );
     });
   });
 

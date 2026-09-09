@@ -34,6 +34,16 @@ describe("ResumeContext", () => {
         instance.lastJournalSequence,
       );
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ResumeContext.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

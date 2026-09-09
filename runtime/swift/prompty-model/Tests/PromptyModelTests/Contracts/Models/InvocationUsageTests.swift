@@ -41,4 +41,36 @@ totalTokens: 192
     XCTAssertEqual(reloaded.totalTokens, 192)
   }
 
+
+  func testWireConversion() throws {
+    let json = """
+{
+  "inputTokens": 150,
+  "outputTokens": 42,
+  "totalTokens": 192
+}
+"""
+    let instance = try InvocationUsage.fromJSON(json)
+    let openaiWire = try instance.toWire("openai")
+    XCTAssertNotNil(openaiWire["prompt_tokens"])
+    XCTAssertNil(openaiWire["inputTokens"])
+    XCTAssertNotNil(openaiWire["completion_tokens"])
+    XCTAssertNil(openaiWire["outputTokens"])
+    XCTAssertNotNil(openaiWire["total_tokens"])
+    XCTAssertNil(openaiWire["totalTokens"])
+    let openaiRestored = try InvocationUsage.fromWire("openai", openaiWire)
+    XCTAssertEqual(Set(try openaiRestored.toWire("openai").keys), Set(openaiWire.keys))
+    let anthropicWire = try instance.toWire("anthropic")
+    XCTAssertNotNil(anthropicWire["input_tokens"])
+    XCTAssertNil(anthropicWire["inputTokens"])
+    XCTAssertNotNil(anthropicWire["output_tokens"])
+    XCTAssertNil(anthropicWire["outputTokens"])
+    let anthropicRestored = try InvocationUsage.fromWire("anthropic", anthropicWire)
+    XCTAssertEqual(Set(try anthropicRestored.toWire("anthropic").keys), Set(anthropicWire.keys))
+  }
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try InvocationUsage.fromJSON("{"))
+  }
+
 }

@@ -34,6 +34,16 @@ describe("Binding", () => {
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.input).toEqual(instance.input);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Binding.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

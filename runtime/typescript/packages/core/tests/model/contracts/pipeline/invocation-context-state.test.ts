@@ -31,6 +31,16 @@ describe("InvocationContextState", () => {
       const reloaded = InvocationContextState.fromJson(output);
       expect(reloaded).toBeDefined();
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        InvocationContextState.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

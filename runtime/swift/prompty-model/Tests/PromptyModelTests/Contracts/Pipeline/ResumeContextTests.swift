@@ -72,4 +72,9 @@ checkpoint:
     XCTAssertEqual(reloaded.checkpoint.lastSequence, 1)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ResumeContext.fromJSON("{"))
+  }
+
 }

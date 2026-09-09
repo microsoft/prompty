@@ -36,6 +36,16 @@ describe("InvocationUsage", () => {
       expect(reloaded.outputTokens).toEqual(instance.outputTokens);
       expect(reloaded.totalTokens).toEqual(instance.totalTokens);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        InvocationUsage.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
@@ -56,6 +66,36 @@ describe("InvocationUsage", () => {
       expect(reloaded.inputTokens).toEqual(instance.inputTokens);
       expect(reloaded.outputTokens).toEqual(instance.outputTokens);
       expect(reloaded.totalTokens).toEqual(instance.totalTokens);
+    });
+  });
+
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "inputTokens": 150,\n  "outputTokens": 42,\n  "totalTokens": 192\n}`;
+      const instance = InvocationUsage.fromJson(json);
+      const openaiWire = instance.toWire("openai");
+      expect(Object.keys(openaiWire).includes("prompt_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("inputTokens")).toBe(false);
+      expect(Object.keys(openaiWire).includes("completion_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("outputTokens")).toBe(false);
+      expect(Object.keys(openaiWire).includes("total_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("totalTokens")).toBe(false);
+      const openaiRestored = InvocationUsage.fromWire("openai", openaiWire);
+      expect(Object.keys(openaiRestored.toWire("openai")).sort()).toEqual(
+        Object.keys(openaiWire).sort(),
+      );
+      const anthropicWire = instance.toWire("anthropic");
+      expect(Object.keys(anthropicWire).includes("input_tokens")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("inputTokens")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("output_tokens")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("outputTokens")).toBe(false);
+      const anthropicRestored = InvocationUsage.fromWire(
+        "anthropic",
+        anthropicWire,
+      );
+      expect(Object.keys(anthropicRestored.toWire("anthropic")).sort()).toEqual(
+        Object.keys(anthropicWire).sort(),
+      );
     });
   });
 

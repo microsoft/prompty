@@ -29,4 +29,9 @@ kind: session
     XCTAssertEqual(reloaded.kind, ReplayRecordKind.session)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ReplayJournalRecord.fromJSON("{"))
+  }
+
 }

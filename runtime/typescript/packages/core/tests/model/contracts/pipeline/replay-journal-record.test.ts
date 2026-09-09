@@ -32,6 +32,16 @@ describe("ReplayJournalRecord", () => {
       const reloaded = ReplayJournalRecord.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ReplayJournalRecord.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

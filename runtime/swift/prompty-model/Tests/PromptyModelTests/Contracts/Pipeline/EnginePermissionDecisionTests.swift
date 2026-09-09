@@ -29,4 +29,9 @@ approved: true
     XCTAssertEqual(reloaded.approved, true)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try EnginePermissionDecision.fromJSON("{"))
+  }
+
 }

@@ -34,6 +34,16 @@ describe("StreamFailure", () => {
       expect(reloaded.outcome).toEqual(instance.outcome);
       expect(reloaded.message).toEqual(instance.message);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        StreamFailure.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

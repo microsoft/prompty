@@ -41,4 +41,9 @@ id: resp_abc123
     XCTAssertEqual(reloaded.id, "resp_abc123")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try DelegatedStateReference.fromJSON("{"))
+  }
+
 }

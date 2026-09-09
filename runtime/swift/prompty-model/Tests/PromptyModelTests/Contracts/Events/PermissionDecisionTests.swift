@@ -53,4 +53,9 @@ reason: user_approved
     XCTAssertEqual((try XCTUnwrap(reloaded.reason)), "user_approved")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try PermissionDecision.fromJSON("{"))
+  }
+
 }

@@ -69,3 +69,12 @@ fn test_tool_roundtrip() {
     let result = Tool::from_json(json, &load_ctx);
     assert!(result.is_ok(), "Failed to load: {:?}", result.err());
 }
+
+#[test]
+fn test_tool_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Tool::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

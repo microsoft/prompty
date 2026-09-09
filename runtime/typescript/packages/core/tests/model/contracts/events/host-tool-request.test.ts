@@ -38,6 +38,16 @@ describe("HostToolRequest", () => {
       expect(reloaded.toolName).toEqual(instance.toolName);
       expect(reloaded.workingDirectory).toEqual(instance.workingDirectory);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        HostToolRequest.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

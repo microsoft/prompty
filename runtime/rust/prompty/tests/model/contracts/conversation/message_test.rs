@@ -132,6 +132,15 @@ fn test_message_serde_roundtrip() {
 }
 
 #[test]
+fn test_message_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Message::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_message_factory_assistant() {
     let instance = Message::assistant("test".to_string());
 }

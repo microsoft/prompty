@@ -42,6 +42,16 @@ describe("Checkpoint", () => {
       expect(reloaded.title).toEqual(instance.title);
       expect(reloaded.createdAt).toEqual(instance.createdAt);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Checkpoint.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -210,6 +210,16 @@ describe("Agent", () => {
       expect(reloaded.description).toEqual(instance.description);
       expect(reloaded.instructions).toEqual(instance.instructions);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Agent.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

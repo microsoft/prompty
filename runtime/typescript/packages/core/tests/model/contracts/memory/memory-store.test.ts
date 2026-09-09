@@ -31,6 +31,16 @@ describe("MemoryStore", () => {
       const reloaded = MemoryStore.fromJson(output);
       expect(reloaded).toBeDefined();
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        MemoryStore.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

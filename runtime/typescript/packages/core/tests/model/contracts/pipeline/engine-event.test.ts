@@ -40,6 +40,16 @@ describe("EngineEvent", () => {
       expect(reloaded.turnId).toEqual(instance.turnId);
       expect(reloaded.runId).toEqual(instance.runId);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        EngineEvent.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

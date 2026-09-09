@@ -36,6 +36,16 @@ describe("ToolCall", () => {
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.arguments).toEqual(instance.arguments);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ToolCall.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

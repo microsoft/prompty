@@ -1498,4 +1498,9 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(try (try XCTUnwrap(reloaded.template)).parser.save()["kind"] as? String, "prompty")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try Agent.fromJSON("{"))
+  }
+
 }

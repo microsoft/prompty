@@ -35,4 +35,9 @@ message: "SSE stream error: connection reset"
     XCTAssertEqual(reloaded.message, "SSE stream error: connection reset")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try StreamFailure.fromJSON("{"))
+  }
+
 }

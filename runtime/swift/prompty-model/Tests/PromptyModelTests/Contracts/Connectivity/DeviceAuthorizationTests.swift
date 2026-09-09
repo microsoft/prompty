@@ -53,4 +53,34 @@ interval: 1
     XCTAssertEqual(reloaded.interval, 1)
   }
 
+
+  func testWireConversion() throws {
+    let json = """
+{
+  "deviceCode": "sample",
+  "userCode": "sample",
+  "verificationUri": "sample",
+  "expiresIn": 1,
+  "interval": 1
+}
+"""
+    let instance = try DeviceAuthorization.fromJSON(json)
+    let foundryWire = try instance.toWire("foundry")
+    XCTAssertNotNil(foundryWire["device_code"])
+    XCTAssertNil(foundryWire["deviceCode"])
+    XCTAssertNotNil(foundryWire["user_code"])
+    XCTAssertNil(foundryWire["userCode"])
+    XCTAssertNotNil(foundryWire["verification_uri"])
+    XCTAssertNil(foundryWire["verificationUri"])
+    XCTAssertNotNil(foundryWire["expires_in"])
+    XCTAssertNil(foundryWire["expiresIn"])
+    XCTAssertNotNil(foundryWire["interval"])
+    let foundryRestored = try DeviceAuthorization.fromWire("foundry", foundryWire)
+    XCTAssertEqual(Set(try foundryRestored.toWire("foundry").keys), Set(foundryWire.keys))
+  }
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try DeviceAuthorization.fromJSON("{"))
+  }
+
 }

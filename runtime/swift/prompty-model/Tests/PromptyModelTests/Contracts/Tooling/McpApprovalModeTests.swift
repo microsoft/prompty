@@ -52,4 +52,9 @@ neverRequireApprovalTools:
     XCTAssertEqual(instance.kind, McpApprovalModeKind.never)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try McpApprovalMode.fromJSON("{"))
+  }
+
 }

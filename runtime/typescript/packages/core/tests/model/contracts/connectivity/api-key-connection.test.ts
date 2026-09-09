@@ -37,6 +37,16 @@ describe("ApiKeyConnection", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.endpoint).toEqual(instance.endpoint);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ApiKeyConnection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

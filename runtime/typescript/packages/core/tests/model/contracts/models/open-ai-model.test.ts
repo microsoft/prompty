@@ -32,6 +32,16 @@ describe("OpenAIModel", () => {
       const reloaded = OpenAIModel.fromJson(output);
       expect(reloaded.provider).toEqual(instance.provider);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        OpenAIModel.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

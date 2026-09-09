@@ -117,6 +117,16 @@ def test_to_yaml_toolresult():
     assert isinstance(parsed, dict)
 
 
+def test_load_toolresult_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        ToolResult.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"
+
+
 def test_factory_text_toolresult():
     """Test that text() factory creates a valid instance."""
     instance = ToolResult.text("test")

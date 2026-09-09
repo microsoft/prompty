@@ -38,6 +38,16 @@ describe("ToolResult", () => {
       expect(reloaded.errorMessage).toEqual(instance.errorMessage);
       expect(reloaded.durationMs).toEqual(instance.durationMs);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ToolResult.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

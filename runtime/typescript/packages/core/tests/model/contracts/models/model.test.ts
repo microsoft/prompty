@@ -36,6 +36,16 @@ describe("Model", () => {
       expect(reloaded.provider).toEqual(instance.provider);
       expect(reloaded.apiType).toEqual(instance.apiType);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Model.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

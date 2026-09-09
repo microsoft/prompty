@@ -34,6 +34,16 @@ describe("FormatConfig", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.strict).toEqual(instance.strict);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        FormatConfig.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

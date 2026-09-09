@@ -3642,3 +3642,12 @@ fn test_agent_serde_roundtrip_7() {
         "keyed collection loaded from a MAP must re-serialize to the canonical name-keyed map"
     );
 }
+
+#[test]
+fn test_agent_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Agent::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

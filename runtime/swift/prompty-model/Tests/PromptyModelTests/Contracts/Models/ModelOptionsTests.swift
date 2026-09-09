@@ -99,4 +99,77 @@ additionalProperties:
     XCTAssertNotNil(reloaded.additionalProperties)
   }
 
+
+  func testWireConversion() throws {
+    let json = """
+{
+  "frequencyPenalty": 0.5,
+  "maxOutputTokens": 2048,
+  "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
+  "seed": 42,
+  "temperature": 0.7,
+  "topK": 40,
+  "topP": 0.9,
+  "stopSequences": [
+    "\\n",
+    "###"
+  ],
+  "allowMultipleToolCalls": true,
+  "additionalProperties": {
+    "customProperty": "value",
+    "anotherProperty": "anotherValue"
+  }
+}
+"""
+    let instance = try ModelOptions.fromJSON(json)
+    let openaiWire = try instance.toWire("openai")
+    XCTAssertNotNil(openaiWire["frequency_penalty"])
+    XCTAssertNil(openaiWire["frequencyPenalty"])
+    XCTAssertNotNil(openaiWire["max_completion_tokens"])
+    XCTAssertNil(openaiWire["maxOutputTokens"])
+    XCTAssertNotNil(openaiWire["presence_penalty"])
+    XCTAssertNil(openaiWire["presencePenalty"])
+    XCTAssertNotNil(openaiWire["reasoning_effort"])
+    XCTAssertNil(openaiWire["reasoningEffort"])
+    XCTAssertNotNil(openaiWire["seed"])
+    XCTAssertNotNil(openaiWire["temperature"])
+    XCTAssertNotNil(openaiWire["top_k"])
+    XCTAssertNil(openaiWire["topK"])
+    XCTAssertNotNil(openaiWire["top_p"])
+    XCTAssertNil(openaiWire["topP"])
+    XCTAssertNotNil(openaiWire["stop"])
+    XCTAssertNil(openaiWire["stopSequences"])
+    XCTAssertNotNil(openaiWire["parallel_tool_calls"])
+    XCTAssertNil(openaiWire["allowMultipleToolCalls"])
+    let openaiRestored = try ModelOptions.fromWire("openai", openaiWire)
+    XCTAssertEqual(Set(try openaiRestored.toWire("openai").keys), Set(openaiWire.keys))
+    let responsesWire = try instance.toWire("responses")
+    XCTAssertNotNil(responsesWire["max_output_tokens"])
+    XCTAssertNil(responsesWire["maxOutputTokens"])
+    XCTAssertNotNil(responsesWire["reasoning_effort"])
+    XCTAssertNil(responsesWire["reasoningEffort"])
+    XCTAssertNotNil(responsesWire["temperature"])
+    XCTAssertNotNil(responsesWire["top_p"])
+    XCTAssertNil(responsesWire["topP"])
+    let responsesRestored = try ModelOptions.fromWire("responses", responsesWire)
+    XCTAssertEqual(Set(try responsesRestored.toWire("responses").keys), Set(responsesWire.keys))
+    let anthropicWire = try instance.toWire("anthropic")
+    XCTAssertNotNil(anthropicWire["max_tokens"])
+    XCTAssertNil(anthropicWire["maxOutputTokens"])
+    XCTAssertNotNil(anthropicWire["temperature"])
+    XCTAssertNotNil(anthropicWire["top_k"])
+    XCTAssertNil(anthropicWire["topK"])
+    XCTAssertNotNil(anthropicWire["top_p"])
+    XCTAssertNil(anthropicWire["topP"])
+    XCTAssertNotNil(anthropicWire["stop_sequences"])
+    XCTAssertNil(anthropicWire["stopSequences"])
+    let anthropicRestored = try ModelOptions.fromWire("anthropic", anthropicWire)
+    XCTAssertEqual(Set(try anthropicRestored.toWire("anthropic").keys), Set(anthropicWire.keys))
+  }
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ModelOptions.fromJSON("{"))
+  }
+
 }

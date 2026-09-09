@@ -40,6 +40,16 @@ describe("FoundryConnection", () => {
       expect(reloaded.name).toEqual(instance.name);
       expect(reloaded.connectionType).toEqual(instance.connectionType);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        FoundryConnection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

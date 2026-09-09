@@ -42,6 +42,16 @@ describe("SessionEvent", () => {
       expect(reloaded.parentId).toEqual(instance.parentId);
       expect(reloaded.spanId).toEqual(instance.spanId);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        SessionEvent.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

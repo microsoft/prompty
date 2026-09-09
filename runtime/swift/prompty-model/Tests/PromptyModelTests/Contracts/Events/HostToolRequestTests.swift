@@ -47,4 +47,9 @@ workingDirectory: /workspace/project
     XCTAssertEqual((try XCTUnwrap(reloaded.workingDirectory)), "/workspace/project")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try HostToolRequest.fromJSON("{"))
+  }
+
 }

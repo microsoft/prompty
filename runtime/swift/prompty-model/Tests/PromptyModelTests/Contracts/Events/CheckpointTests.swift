@@ -59,4 +59,9 @@ createdAt: "2026-06-09T20:00:00Z"
     XCTAssertEqual((try XCTUnwrap(reloaded.createdAt)), "2026-06-09T20:00:00Z")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try Checkpoint.fromJSON("{"))
+  }
+
 }

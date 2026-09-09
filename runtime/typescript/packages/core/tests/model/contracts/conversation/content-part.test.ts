@@ -20,6 +20,16 @@ describe("ContentPart", () => {
       const reloaded = ContentPart.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ContentPart.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -141,3 +141,12 @@ fn test_session_event_serde_roundtrip() {
         serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_session_event_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        SessionEvent::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

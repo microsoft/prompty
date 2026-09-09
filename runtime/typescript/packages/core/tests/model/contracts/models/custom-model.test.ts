@@ -32,6 +32,16 @@ describe("CustomModel", () => {
       const reloaded = CustomModel.fromJson(output);
       expect(reloaded.provider).toEqual(instance.provider);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        CustomModel.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
