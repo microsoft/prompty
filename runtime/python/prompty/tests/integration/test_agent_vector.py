@@ -65,9 +65,7 @@ class _ToolRecorder:
         return "72°F sunny"
 
     def convert_temperature(self, value: float, from_unit: str, to_unit: str) -> str:
-        self.calls.append(
-            ("convert_temperature", {"value": value, "from_unit": from_unit, "to_unit": to_unit})
-        )
+        self.calls.append(("convert_temperature", {"value": value, "from_unit": from_unit, "to_unit": to_unit}))
         celsius = (float(value) - 32.0) * 5.0 / 9.0
         return f"{celsius:.1f}°C"
 

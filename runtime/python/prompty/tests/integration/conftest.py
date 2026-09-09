@@ -423,9 +423,7 @@ def make_entra_agent(
 # the live provider path.
 
 # repo root: tests/integration -> tests -> prompty -> python -> runtime -> root
-_VECTORS_JSON = (
-    Path(__file__).resolve().parents[5] / "schema" / "tsp-output" / ".typra-generated" / "vectors.json"
-)
+_VECTORS_JSON = Path(__file__).resolve().parents[5] / "schema" / "tsp-output" / ".typra-generated" / "vectors.json"
 
 
 @cache
