@@ -534,12 +534,6 @@ class TestFoundryExecutor:
         finally:
             clear_connections()
 
-    def test_azure_executor_backward_compat(self):
-        """AzureExecutor import still works and is the same class as FoundryExecutor."""
-        from prompty.providers.azure.executor import AzureExecutor
-
-        assert AzureExecutor is FoundryExecutor
-
 
 # ---------------------------------------------------------------------------
 # Structured Output (outputs → response_format)

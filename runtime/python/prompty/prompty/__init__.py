@@ -139,8 +139,6 @@ __all__ = [
     "bind_tools",
     "tool",
     # Backward-compat aliases
-    "AzureExecutor",
-    "AzureProcessor",
     "PromptAgent",
     "AgentDefinition",
     # Model discovery
@@ -280,7 +278,5 @@ from .tracing.tracer import (
 )
 
 # Backward-compat aliases (will be removed in a future version)
-AzureExecutor = FoundryExecutor
-AzureProcessor = FoundryProcessor
 PromptAgent = Agent
 AgentDefinition = Agent

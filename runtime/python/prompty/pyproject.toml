@@ -96,7 +96,7 @@ ignore = ["E501"]
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 markers = [
-  "integration: tests that hit real OpenAI / Azure OpenAI endpoints (deselected by default)",
+  "integration: tests that hit real OpenAI / Azure OpenAI (Foundry) endpoints (deselected by default)",
 ]
 addopts = "-m 'not integration'"
 

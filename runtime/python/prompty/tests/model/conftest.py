@@ -91,13 +91,13 @@ def processor_provider():
     resolve to a total seam rather than a missing attachment.
     """
     from prompty.model._processor_resolver import new_processor_provider
-    from prompty.providers.azure.processor import AzureProcessor
+    from prompty.providers.foundry.processor import FoundryProcessor
     from prompty.providers.openai.processor import OpenAIProcessor
 
     return new_processor_provider(
         {
             "openai": OpenAIProcessor(),
-            "azure": AzureProcessor(),
+            "azure": FoundryProcessor(),
             "custom": _PassthroughProcessor(),
         }
     )

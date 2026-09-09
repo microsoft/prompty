@@ -162,12 +162,6 @@ class TestFoundryProcessor:
         assert isinstance(result, list)
         assert result[0].name == "search"
 
-    def test_azure_processor_backward_compat(self):
-        """AzureProcessor import still works and is the same class as FoundryProcessor."""
-        from prompty.providers.azure.processor import AzureProcessor
-
-        assert AzureProcessor is FoundryProcessor
-
 
 # ---------------------------------------------------------------------------
 # ToolCall dataclass
