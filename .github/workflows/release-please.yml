@@ -5,10 +5,19 @@ name: release-please
 # (prompty-python.yml, prompty-rust.yml, prompty-ts-release.yml, prompty-csharp.yml)
 # trigger on those tags and do the actual package publishing.
 #
-# IMPORTANT: `token` must be a GitHub App installation token or a PAT — NOT the
-# default GITHUB_TOKEN. Tags created with GITHUB_TOKEN do not trigger the
-# tag-listening publish workflows (GitHub's recursive-workflow guard). Provide a
-# token via the RELEASE_PLEASE_TOKEN secret so the publish workflows fire.
+# IMPORTANT: the token used by release-please must NOT be the default
+# GITHUB_TOKEN, for two reasons:
+#   1. The microsoft org forbids GitHub Actions from creating/approving PRs, so
+#      the Actions bot cannot open the Release PR.
+#   2. Tags created with GITHUB_TOKEN do not trigger the tag-listening publish
+#      workflows (GitHub's recursive-workflow guard).
+# A GitHub App installation token (App identity, not the Actions bot) solves
+# both: it may create PRs and its tag pushes fire the publish workflows.
+#
+# Setup: create a GitHub App with Contents: read/write + Pull requests:
+# read/write, install it on this repo, then add repo secrets RELEASE_APP_ID and
+# RELEASE_APP_PRIVATE_KEY. Until those exist the workflow falls back to
+# RELEASE_PLEASE_TOKEN (a PAT) and finally github.token (which cannot open PRs).
 
 on:
   push:
@@ -24,8 +33,20 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
+      # Mint a GitHub App installation token when RELEASE_APP_ID /
+      # RELEASE_APP_PRIVATE_KEY are configured. continue-on-error keeps the job
+      # alive (falling back to a PAT / github.token) if the App secrets are
+      # absent, so merging this change never hard-breaks the pipeline.
+      - name: Mint GitHub App token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          token: ${{ steps.app-token.outputs.token || secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
