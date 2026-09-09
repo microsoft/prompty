@@ -172,11 +172,11 @@ def _discover(group: str, key: str) -> Any:
             return _cache[cache_key]
 
     eps = importlib.metadata.entry_points(group=group, name=key)
-    ep_list = list(eps) if not isinstance(eps, list) else eps
-    if not ep_list:
+    first = next(iter(eps), None)
+    if first is None:
         raise InvokerError(group, key)
 
-    loaded = _instantiate(ep_list[0].load())
+    loaded = _instantiate(first.load())
     with _lock:
         _cache[cache_key] = loaded
     return loaded

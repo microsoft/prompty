@@ -12,6 +12,81 @@ via OIDC (no secrets needed).
 | Python | [PyPI](https://pypi.org/project/prompty/) | `python/{version}` | `prompty-python.yml` |
 | TypeScript | [npm](https://www.npmjs.com/package/@prompty/core) | `typescript/{version}` | `prompty-ts-release.yml` |
 
+Those tags are now produced automatically by **release-please** (see below). The
+manual tag-and-push steps later in this document remain as a break-glass path.
+
+## Automated releases (release-please)
+
+Prompty ships **seven runtimes independently** via
+[release-please](https://github.com/googleapis/release-please). There is no shared
+version number — `python/2.1.0` and `rust/2.0.3` can coexist. Config lives in
+`release-please-config.json` + `.release-please-manifest.json` at the repo root, and
+the driver is `.github/workflows/release-please.yml`.
+
+> **VS Code extension** (`vscode/`) is intentionally **not** managed by
+> release-please — it uses the Marketplace pre-release channel (`vscode/2.0.0-pre.N`)
+> and keeps its own pipeline.
+
+### Flow
+
+```
+conventional commit on main
+        │
+        ▼
+release-please.yml  ── opens/updates one "Release PR" per runtime with changes
+        │              (title: "chore(<runtime>): release <ver>")
+        ▼
+merge the Release PR  ── bumps version files, writes CHANGELOG, pushes a tag
+        │                like `python/2.1.0`
+        ▼
+prompty-<runtime>.yml ── existing publish workflow triggers on the tag and publishes
+```
+
+release-please **only opens PRs and cuts tags**; nothing publishes until a human
+merges a Release PR. Commits route to a runtime by the **paths they touch**; add a
+scope when ambiguous (`feat(python):`, `fix(rust):`). Only `feat`, `fix`, `perf`,
+`revert`, `deps` trigger releases; `feat!:` / `BREAKING CHANGE:` bumps major.
+
+### Components
+
+| Component  | Path                               | release-type | Version source                                       | Publish |
+| ---------- | ---------------------------------- | ------------ | ---------------------------------------------------- | ------- |
+| `python`   | `runtime/python/prompty`           | `python`     | `prompty/_version.py` (`# x-release-please-version`) | ✅ PyPI  |
+| `rust`     | `runtime/rust`                     | `rust`       | all workspace `Cargo.toml` (native)                  | ✅ crates|
+| `typescript` | `runtime/typescript/packages/core` | `node`     | all `packages/*/package.json` (`node-workspace`)     | ✅ npm   |
+| `csharp`   | `runtime/csharp`                   | `simple`     | 4 `*.csproj` `<Version>` (annotated)                 | ✅ NuGet |
+| `java`     | `runtime/java`                     | `simple`     | `build.gradle.kts` `version` (annotated)             | check only |
+| `go`       | `runtime/go/prompty`               | `go`         | git tag only                                         | check only |
+| `swift`    | `runtime/swift/prompty`            | `simple`     | git tag only                                         | check only |
+
+Tag format (`separator:"/"`, `include-component-in-tag:true`, `include-v-in-tag:false`)
+reproduces the existing `python/2.1.0` tags exactly — **no publish workflow changed**.
+
+### Graduating beta → 2.0.0
+
+All runtimes were on `2.0.0-beta.N`. The manifest is seeded at each runtime's last
+beta with **no prerelease mode**, so the first Release PR graduates each runtime to a
+clean **`2.0.0`** stable release; normal `2.0.1` / `2.1.0` / `3.0.0` bumps follow.
+
+### One-time setup before enabling on `main`
+
+1. **`RELEASE_PLEASE_TOKEN` secret (required for auto-publish).** The workflow falls
+   back to `GITHUB_TOKEN`, but tags cut with `GITHUB_TOKEN` **do not trigger** the
+   tag-listening publish workflows. Provide a **GitHub App installation token** (or
+   fine-grained PAT) with `contents:write` + `pull_requests:write` as
+   `RELEASE_PLEASE_TOKEN`.
+2. **`bootstrap-sha`** in the config is pinned to the adoption commit so the first run
+   doesn't replay old history.
+
+### Verify on the first Release PR (before merging)
+
+- **typescript** — confirm all four `packages/*/package.json` versions **and** their
+  `^@prompty/core` ranges bump (`node-workspace`); if a sibling is missed, register it
+  as its own package in the config.
+- **rust** — confirm all workspace members + `path`/`version` deps bump together.
+- **csharp / java** — confirm the annotated `<Version>` / `version =` lines rewrite.
+- **python** — Release PR sets `_version.py` to `2.0.0`; the built wheel is `prompty-2.0.0`.
+
 ## Pre-flight checklist (MUST DO before every release)
 
 Run these **exact** steps locally before pushing tags. They mirror CI.

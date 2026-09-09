@@ -17,7 +17,10 @@ missing, so they are safe to include in CI without secrets.
 
 from __future__ import annotations
 
+import json
 import os
+from functools import cache
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -46,7 +49,7 @@ _OPENAI_KEY = os.environ.get("OPENAI_API_KEY", "")
 _OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "")  # optional: proxy via Azure
 _OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")  # override default chat model
 _OPENAI_EMBEDDING_MODEL = os.environ.get("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
-_OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "dall-e-2")
+_OPENAI_IMAGE_MODEL = os.environ.get("OPENAI_IMAGE_MODEL", "gpt-image-1")
 _AZURE_KEY = os.environ.get("AZURE_OPENAI_API_KEY", "")
 _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
 _AZURE_CHAT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "")
@@ -405,3 +408,60 @@ def make_entra_agent(
     if metadata is not None:
         data["metadata"] = metadata
     return Agent.load(data)
+
+
+# ---------------------------------------------------------------------------
+# Conformance vector access
+# ---------------------------------------------------------------------------
+#
+# Live agent-loop tests are anchored to the SAME canonical @vector corpus the
+# deterministic model-conformance suite replays (schema/tsp-output/
+# .typra-generated/vectors.json, emitted by Typra from the TypeSpec sources).
+# The live test reuses a vector's scenario — its messages, tools, and derived
+# tool-dispatch order — but swaps the scripted model double for a real provider,
+# so one Typra-governed definition validates both the deterministic engine and
+# the live provider path.
+
+# repo root: tests/integration -> tests -> prompty -> python -> runtime -> root
+_VECTORS_JSON = Path(__file__).resolve().parents[5] / "schema" / "tsp-output" / ".typra-generated" / "vectors.json"
+
+
+@cache
+def _load_vectors_corpus() -> tuple[dict[str, Any], ...]:
+    if not _VECTORS_JSON.exists():
+        raise FileNotFoundError(
+            f"Conformance vector corpus not found at {_VECTORS_JSON}. "
+            "Regenerate it via the Typra emitter (schema build)."
+        )
+    with open(_VECTORS_JSON, encoding="utf-8") as handle:
+        return tuple(json.load(handle).get("vectors", []))
+
+
+def load_turn_vector(name: str) -> dict[str, Any]:
+    """Return the ``TurnConformance.run`` vector named ``name`` from the corpus.
+
+    Raises ``KeyError`` if no such vector exists so a renamed or removed vector
+    fails loudly rather than silently skipping live coverage.
+    """
+    for entry in _load_vectors_corpus():
+        if (
+            entry.get("contract") == "TurnConformance"
+            and entry.get("operation") == "run"
+            and isinstance(entry.get("vector"), dict)
+            and entry["vector"].get("name") == name
+        ):
+            return entry["vector"]
+    raise KeyError(f"TurnConformance.run vector '{name}' not found in {_VECTORS_JSON}")
+
+
+def turn_vector_tool_order(vector: dict[str, Any]) -> list[str]:
+    """Derive the expected ordered tool-dispatch sequence from a run vector.
+
+    Reads each scripted turn's ``expected_tool_calls`` in order — this is the
+    dependency chain the live provider must reproduce.
+    """
+    order: list[str] = []
+    for step in vector.get("sequence", []):
+        for call in step.get("expected_tool_calls") or []:
+            order.append(call["name"])
+    return order
