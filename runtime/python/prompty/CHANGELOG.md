@@ -2,7 +2,7 @@
 
 All notable changes to the Prompty Python runtime will be documented here.
 
-## [2.0.0-alpha.5] — Unreleased
+## [Unreleased]
 
 ### Added
 - §8.8 Structured Result Casting: `StructuredResult` dict subclass and `cast()` function for zero-copy typed deserialization (dataclass, Pydantic, TypedDict)
