@@ -24,43 +24,6 @@
       "extra-files": [
         { "type": "generic", "path": "prompty/_version.py" }
       ]
-    },
-    "runtime/rust": {
-      "component": "rust",
-      "release-type": "rust"
-    },
-    "runtime/typescript/packages/core": {
-      "component": "typescript",
-      "release-type": "node",
-      "package-name": "@prompty/core"
-    },
-    "runtime/csharp": {
-      "component": "csharp",
-      "release-type": "simple",
-      "extra-files": [
-        { "type": "generic", "path": "Prompty.Core/Prompty.Core.csproj" },
-        { "type": "generic", "path": "Prompty.OpenAI/Prompty.OpenAI.csproj" },
-        { "type": "generic", "path": "Prompty.Foundry/Prompty.Foundry.csproj" },
-        { "type": "generic", "path": "Prompty.Anthropic/Prompty.Anthropic.csproj" }
-      ]
-    },
-    "runtime/java": {
-      "component": "java",
-      "release-type": "simple",
-      "extra-files": [
-        { "type": "generic", "path": "build.gradle.kts" }
-      ]
-    },
-    "runtime/go/prompty": {
-      "component": "go",
-      "release-type": "go"
-    },
-    "runtime/swift/prompty": {
-      "component": "swift",
-      "release-type": "simple"
     }
-  },
-  "plugins": [
-    "node-workspace"
-  ]
+  }
 }
