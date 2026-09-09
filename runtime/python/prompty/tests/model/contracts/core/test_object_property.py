@@ -101,3 +101,13 @@ def test_to_yaml_objectproperty():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_load_objectproperty_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        ObjectProperty.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

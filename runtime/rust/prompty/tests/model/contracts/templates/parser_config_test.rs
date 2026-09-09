@@ -65,6 +65,15 @@ fn test_parser_config_roundtrip() {
 }
 
 #[test]
+fn test_parser_config_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        ParserConfig::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_parser_config_from_parser() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();

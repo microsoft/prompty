@@ -35,4 +35,9 @@ text: sample
     XCTAssertEqual(reloaded.text, "sample")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try RenderSegment.fromJSON("{"))
+  }
+
 }

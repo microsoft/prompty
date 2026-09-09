@@ -188,6 +188,12 @@ options:
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Model.FromJson("{"));
+    }
+
+    [Fact]
     public void LoadJsonFromString()
     {
         // alternate representation as string

@@ -53,4 +53,9 @@ durationMs: 12500
     XCTAssertEqual((try XCTUnwrap(reloaded.durationMs)), 12500)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try SessionSummary.fromJSON("{"))
+  }
+
 }

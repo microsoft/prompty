@@ -12,6 +12,7 @@ def test_load_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -33,6 +34,7 @@ def test_load_json_modeloptions():
     assert instance.frequency_penalty == 0.5
     assert instance.max_output_tokens == 2048
     assert instance.presence_penalty == 0.3
+    assert instance.reasoning_effort == "medium"
     assert instance.seed == 42
     assert instance.temperature == 0.7
     assert instance.top_k == 40
@@ -45,6 +47,7 @@ def test_load_yaml_modeloptions():
     frequencyPenalty: 0.5
     maxOutputTokens: 2048
     presencePenalty: 0.3
+    reasoningEffort: medium
     seed: 42
     temperature: 0.7
     topK: 40
@@ -64,6 +67,7 @@ def test_load_yaml_modeloptions():
     assert instance.frequency_penalty == 0.5
     assert instance.max_output_tokens == 2048
     assert instance.presence_penalty == 0.3
+    assert instance.reasoning_effort == "medium"
     assert instance.seed == 42
     assert instance.temperature == 0.7
     assert instance.top_k == 40
@@ -78,6 +82,7 @@ def test_roundtrip_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -101,6 +106,7 @@ def test_roundtrip_json_modeloptions():
     assert reloaded.frequency_penalty == 0.5
     assert reloaded.max_output_tokens == 2048
     assert reloaded.presence_penalty == 0.3
+    assert reloaded.reasoning_effort == "medium"
     assert reloaded.seed == 42
     assert reloaded.temperature == 0.7
     assert reloaded.top_k == 40
@@ -115,6 +121,7 @@ def test_to_json_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -145,6 +152,7 @@ def test_to_yaml_modeloptions():
       "frequencyPenalty": 0.5,
       "maxOutputTokens": 2048,
       "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
       "seed": 42,
       "temperature": 0.7,
       "topK": 40,
@@ -166,3 +174,86 @@ def test_to_yaml_modeloptions():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_to_wire_modeloptions():
+    """Test that to_wire()/from_wire() apply provider wire field names."""
+    json_data = r"""
+    {
+      "frequencyPenalty": 0.5,
+      "maxOutputTokens": 2048,
+      "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
+      "seed": 42,
+      "temperature": 0.7,
+      "topK": 40,
+      "topP": 0.9,
+      "stopSequences": [
+        "\n",
+        "###"
+      ],
+      "allowMultipleToolCalls": true,
+      "additionalProperties": {
+        "customProperty": "value",
+        "anotherProperty": "anotherValue"
+      }
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = ModelOptions.load(data)
+    openai_wire = instance.to_wire("openai")
+    assert "frequency_penalty" in openai_wire
+    assert "frequencyPenalty" not in openai_wire
+    assert "max_completion_tokens" in openai_wire
+    assert "maxOutputTokens" not in openai_wire
+    assert "presence_penalty" in openai_wire
+    assert "presencePenalty" not in openai_wire
+    assert "reasoning_effort" in openai_wire
+    assert "reasoningEffort" not in openai_wire
+    assert "seed" in openai_wire
+    assert "temperature" in openai_wire
+    assert "top_k" in openai_wire
+    assert "topK" not in openai_wire
+    assert "top_p" in openai_wire
+    assert "topP" not in openai_wire
+    assert "stop" in openai_wire
+    assert "stopSequences" not in openai_wire
+    assert "parallel_tool_calls" in openai_wire
+    assert "allowMultipleToolCalls" not in openai_wire
+    openai_restored = ModelOptions.from_wire("openai", openai_wire)
+    openai_round = openai_restored.to_wire("openai")
+    assert set(openai_round.keys()) == set(openai_wire.keys())
+    responses_wire = instance.to_wire("responses")
+    assert "max_output_tokens" in responses_wire
+    assert "maxOutputTokens" not in responses_wire
+    assert "reasoning_effort" in responses_wire
+    assert "reasoningEffort" not in responses_wire
+    assert "temperature" in responses_wire
+    assert "top_p" in responses_wire
+    assert "topP" not in responses_wire
+    responses_restored = ModelOptions.from_wire("responses", responses_wire)
+    responses_round = responses_restored.to_wire("responses")
+    assert set(responses_round.keys()) == set(responses_wire.keys())
+    anthropic_wire = instance.to_wire("anthropic")
+    assert "max_tokens" in anthropic_wire
+    assert "maxOutputTokens" not in anthropic_wire
+    assert "temperature" in anthropic_wire
+    assert "top_k" in anthropic_wire
+    assert "topK" not in anthropic_wire
+    assert "top_p" in anthropic_wire
+    assert "topP" not in anthropic_wire
+    assert "stop_sequences" in anthropic_wire
+    assert "stopSequences" not in anthropic_wire
+    anthropic_restored = ModelOptions.from_wire("anthropic", anthropic_wire)
+    anthropic_round = anthropic_restored.to_wire("anthropic")
+    assert set(anthropic_round.keys()) == set(anthropic_wire.keys())
+
+
+def test_load_modeloptions_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        ModelOptions.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

@@ -13,6 +13,7 @@ final class ModelOptionsGeneratedTest {
         "frequencyPenalty": 0.5,
         "maxOutputTokens": 2048,
         "presencePenalty": 0.3,
+        "reasoningEffort": "medium",
         "seed": 42,
         "temperature": 0.7,
         "topK": 40,
@@ -32,6 +33,7 @@ final class ModelOptionsGeneratedTest {
     assertEquals(0.5, instance1.frequencyPenalty, "Expected frequencyPenalty");
     assertEquals(2048, instance1.maxOutputTokens, "Expected maxOutputTokens");
     assertEquals(0.3, instance1.presencePenalty, "Expected presencePenalty");
+    assertEquals("medium", instance1.reasoningEffort, "Expected reasoningEffort");
     assertEquals(42, instance1.seed, "Expected seed");
     assertEquals(0.7, instance1.temperature, "Expected temperature");
     assertEquals(40, instance1.topK, "Expected topK");
@@ -47,6 +49,7 @@ final class ModelOptionsGeneratedTest {
     assertEquals(0.5, fromYaml1.frequencyPenalty, "Expected frequencyPenalty");
     assertEquals(2048, fromYaml1.maxOutputTokens, "Expected maxOutputTokens");
     assertEquals(0.3, fromYaml1.presencePenalty, "Expected presencePenalty");
+    assertEquals("medium", fromYaml1.reasoningEffort, "Expected reasoningEffort");
     assertEquals(42, fromYaml1.seed, "Expected seed");
     assertEquals(0.7, fromYaml1.temperature, "Expected temperature");
     assertEquals(40, fromYaml1.topK, "Expected topK");
@@ -61,6 +64,7 @@ final class ModelOptionsGeneratedTest {
     assertEquals(0.5, reloaded1.frequencyPenalty, "Expected frequencyPenalty");
     assertEquals(2048, reloaded1.maxOutputTokens, "Expected maxOutputTokens");
     assertEquals(0.3, reloaded1.presencePenalty, "Expected presencePenalty");
+    assertEquals("medium", reloaded1.reasoningEffort, "Expected reasoningEffort");
     assertEquals(42, reloaded1.seed, "Expected seed");
     assertEquals(0.7, reloaded1.temperature, "Expected temperature");
     assertEquals(40, reloaded1.topK, "Expected topK");
@@ -89,7 +93,7 @@ final class ModelOptionsGeneratedTest {
     assertEquals(yamlParsedExpected, yamlValue, "YAML should decode named and unicode escapes");
     assertThrows(() -> TypraYaml.parse("value: \"\\x\""), "YAML should reject unknown escapes");
 
-    ModelOptions wireInstance = ModelOptions.fromJson("{\n  \"frequencyPenalty\": 0.5,\n  \"maxOutputTokens\": 2048,\n  \"presencePenalty\": 0.3,\n  \"seed\": 42,\n  \"temperature\": 0.7,\n  \"topK\": 40,\n  \"topP\": 0.9,\n  \"stopSequences\": [\n    \"\\n\",\n    \"###\"\n  ],\n  \"allowMultipleToolCalls\": true,\n  \"additionalProperties\": {\n    \"customProperty\": \"value\",\n    \"anotherProperty\": \"anotherValue\"\n  }\n}");
+    ModelOptions wireInstance = ModelOptions.fromJson("{\n  \"frequencyPenalty\": 0.5,\n  \"maxOutputTokens\": 2048,\n  \"presencePenalty\": 0.3,\n  \"reasoningEffort\": \"medium\",\n  \"seed\": 42,\n  \"temperature\": 0.7,\n  \"topK\": 40,\n  \"topP\": 0.9,\n  \"stopSequences\": [\n    \"\\n\",\n    \"###\"\n  ],\n  \"allowMultipleToolCalls\": true,\n  \"additionalProperties\": {\n    \"customProperty\": \"value\",\n    \"anotherProperty\": \"anotherValue\"\n  }\n}");
     java.util.Map<String, Object> openaiWire = wireInstance.toWire("openai");
     assertTrue(openaiWire.containsKey("frequency_penalty"), "Expected openai wire output to include frequency_penalty");
     assertTrue(!openaiWire.containsKey("frequencyPenalty"), "Expected openai wire output to omit frequencyPenalty");
@@ -97,6 +101,8 @@ final class ModelOptionsGeneratedTest {
     assertTrue(!openaiWire.containsKey("maxOutputTokens"), "Expected openai wire output to omit maxOutputTokens");
     assertTrue(openaiWire.containsKey("presence_penalty"), "Expected openai wire output to include presence_penalty");
     assertTrue(!openaiWire.containsKey("presencePenalty"), "Expected openai wire output to omit presencePenalty");
+    assertTrue(openaiWire.containsKey("reasoning_effort"), "Expected openai wire output to include reasoning_effort");
+    assertTrue(!openaiWire.containsKey("reasoningEffort"), "Expected openai wire output to omit reasoningEffort");
     assertTrue(openaiWire.containsKey("seed"), "Expected openai wire output to include seed");
     assertTrue(openaiWire.containsKey("temperature"), "Expected openai wire output to include temperature");
     assertTrue(openaiWire.containsKey("top_k"), "Expected openai wire output to include top_k");
@@ -112,6 +118,8 @@ final class ModelOptionsGeneratedTest {
     java.util.Map<String, Object> responsesWire = wireInstance.toWire("responses");
     assertTrue(responsesWire.containsKey("max_output_tokens"), "Expected responses wire output to include max_output_tokens");
     assertTrue(!responsesWire.containsKey("maxOutputTokens"), "Expected responses wire output to omit maxOutputTokens");
+    assertTrue(responsesWire.containsKey("reasoning_effort"), "Expected responses wire output to include reasoning_effort");
+    assertTrue(!responsesWire.containsKey("reasoningEffort"), "Expected responses wire output to omit reasoningEffort");
     assertTrue(responsesWire.containsKey("temperature"), "Expected responses wire output to include temperature");
     assertTrue(responsesWire.containsKey("top_p"), "Expected responses wire output to include top_p");
     assertTrue(!responsesWire.containsKey("topP"), "Expected responses wire output to omit topP");

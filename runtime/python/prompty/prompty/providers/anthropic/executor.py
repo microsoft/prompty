@@ -12,6 +12,9 @@ Registered as ``anthropic`` in ``prompty.executors``.
 
 from __future__ import annotations
 
+import functools
+import inspect
+import warnings
 from typing import Any
 
 from ...core.connections import get_connection
@@ -141,6 +144,89 @@ def _build_options(agent: Agent) -> dict[str, Any]:
                 result[k] = v
 
     return result
+
+
+# Anthropic sampling params deprecated/removed for models after Claude Opus 4.6.
+_ANTHROPIC_DEPRECATED_SAMPLING = ("temperature", "top_k", "top_p")
+
+# output_config.effort values accepted by anthropic >= 1.4.
+_ANTHROPIC_EFFORT_VALUES = frozenset({"low", "medium", "high", "xhigh", "max"})
+
+# reasoningEffort (our enum) → Anthropic output_config.effort.
+# ``none`` disables effort; ``minimal`` clamps up to the lowest supported level.
+_ANTHROPIC_EFFORT_MAP: dict[str, str | None] = {
+    "none": None,
+    "minimal": "low",
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "xhigh": "xhigh",
+    "max": "max",
+}
+
+
+@functools.lru_cache(maxsize=1)
+def _anthropic_create_params() -> frozenset[str] | None:
+    """Named params accepted by the installed ``messages.create()``.
+
+    Returns ``None`` when the signature can't be introspected or accepts
+    arbitrary ``**kwargs`` (in which case filtering would be unsafe).
+    """
+    try:
+        from anthropic.resources.messages import Messages
+
+        sig = inspect.signature(Messages.create)
+    except Exception:
+        return None
+    for p in sig.parameters.values():
+        if p.kind is inspect.Parameter.VAR_KEYWORD:
+            return None
+    return frozenset(sig.parameters)
+
+
+def _drop_unsupported_anthropic_params(result: dict[str, Any]) -> None:
+    """Remove wire params the installed SDK's ``create()`` won't accept, in place.
+
+    Applied on the final request args in the live execute path (not in the pure
+    ``_build_options`` mapper) so wire-conformance vectors keep asserting the
+    deterministic ``@@knownAs`` rename. ``temperature``/``top_k``/``top_p`` were
+    removed from ``messages.create()`` for models after Claude Opus 4.6; the
+    replacement control is ``reasoningEffort`` → ``output_config.effort``.
+    """
+    accepted = _anthropic_create_params()
+    if accepted is None:
+        return
+    for key in list(result):
+        if key not in accepted:
+            if key in _ANTHROPIC_DEPRECATED_SAMPLING:
+                warnings.warn(
+                    f"Anthropic no longer accepts '{key}' (deprecated for models after "
+                    f"Claude Opus 4.6); dropping it. Use reasoningEffort instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+            result.pop(key, None)
+
+
+def _reasoning_effort_to_anthropic(agent: Agent) -> str | None:
+    """Translate our ``reasoningEffort`` to an Anthropic ``output_config.effort`` value."""
+    opts = agent.model.options
+    raw = getattr(opts, "reasoning_effort", None) if opts is not None else None
+    if not raw:
+        return None
+    key = str(raw).lower()
+    mapped = _ANTHROPIC_EFFORT_MAP.get(key, key)
+    if mapped is None:
+        return None
+    if mapped not in _ANTHROPIC_EFFORT_VALUES:
+        warnings.warn(
+            f"reasoningEffort '{raw}' is not supported by Anthropic output_config.effort "
+            f"({sorted(_ANTHROPIC_EFFORT_VALUES)}); dropping it.",
+            UserWarning,
+            stacklevel=3,
+        )
+        return None
+    return mapped
 
 
 # Kind → JSON Schema type mapping
@@ -327,7 +413,10 @@ def _build_chat_args(agent: Agent, messages: list[Message]) -> dict[str, Any]:
     if tools:
         args["tools"] = tools
 
-    output_config = _output_schema_to_wire(agent)
+    output_config = _output_schema_to_wire(agent) or {}
+    effort = _reasoning_effort_to_anthropic(agent)
+    if effort is not None:
+        output_config = {**output_config, "effort": effort}
     if output_config:
         args["output_config"] = output_config
 
@@ -376,6 +465,7 @@ class AnthropicExecutor:
 
     def _execute_chat(self, client: Any, agent: Agent, data: Any) -> Any:
         args = _build_chat_args(agent, data)
+        _drop_unsupported_anthropic_params(args)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
             and agent.model.options.additional_properties
@@ -391,6 +481,7 @@ class AnthropicExecutor:
 
     async def _execute_chat_async(self, client: Any, agent: Agent, data: Any) -> Any:
         args = _build_chat_args(agent, data)
+        _drop_unsupported_anthropic_params(args)
         is_streaming = args.pop("stream", False) or (
             agent.model.options
             and agent.model.options.additional_properties

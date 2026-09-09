@@ -139,6 +139,12 @@ options:
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => FormatConfig.FromJson("{"));
+    }
+
+    [Fact]
     public void LoadJsonFromString()
     {
         // alternate representation as string

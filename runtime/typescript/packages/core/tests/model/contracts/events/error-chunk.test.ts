@@ -32,6 +32,16 @@ describe("ErrorChunk", () => {
       const reloaded = ErrorChunk.fromJson(output);
       expect(reloaded.message).toEqual(instance.message);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ErrorChunk.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

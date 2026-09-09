@@ -36,6 +36,16 @@ describe("ModelReconciliationState", () => {
       expect(reloaded.invocationId).toEqual(instance.invocationId);
       expect(reloaded.message).toEqual(instance.message);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ModelReconciliationState.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

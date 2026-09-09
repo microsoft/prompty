@@ -40,6 +40,16 @@ describe("PermissionDecision", () => {
       expect(reloaded.approved).toEqual(instance.approved);
       expect(reloaded.reason).toEqual(instance.reason);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        PermissionDecision.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

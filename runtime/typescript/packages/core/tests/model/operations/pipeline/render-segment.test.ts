@@ -34,6 +34,16 @@ describe("RenderSegment", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.text).toEqual(instance.text);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        RenderSegment.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

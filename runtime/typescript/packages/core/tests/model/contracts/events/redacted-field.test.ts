@@ -36,6 +36,16 @@ describe("RedactedField", () => {
       expect(reloaded.mode).toEqual(instance.mode);
       expect(reloaded.reason).toEqual(instance.reason);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        RedactedField.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

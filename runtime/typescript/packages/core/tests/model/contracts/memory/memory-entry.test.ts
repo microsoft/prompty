@@ -36,6 +36,16 @@ describe("MemoryEntry", () => {
       expect(reloaded.category).toEqual(instance.category);
       expect(reloaded.createdAt).toEqual(instance.createdAt);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        MemoryEntry.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

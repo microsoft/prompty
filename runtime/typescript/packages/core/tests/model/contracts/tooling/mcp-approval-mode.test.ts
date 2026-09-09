@@ -32,6 +32,16 @@ describe("McpApprovalMode", () => {
       const reloaded = McpApprovalMode.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        McpApprovalMode.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

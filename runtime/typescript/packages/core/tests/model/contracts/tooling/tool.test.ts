@@ -24,6 +24,16 @@ describe("Tool", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.description).toEqual(instance.description);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Tool.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

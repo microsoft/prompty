@@ -19,12 +19,13 @@ describe("ModelOptions", () => {
 
   describe("JSON serialization", () => {
     it("should load from JSON - example 1", () => {
-      const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
+      const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "reasoningEffort": "medium",\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
       const instance = ModelOptions.fromJson(json);
       expect(instance).toBeDefined();
       expect(instance.frequencyPenalty).toEqual(0.5);
       expect(instance.maxOutputTokens).toEqual(2048);
       expect(instance.presencePenalty).toEqual(0.3);
+      expect(instance.reasoningEffort).toEqual("medium");
       expect(instance.seed).toEqual(42);
       expect(instance.temperature).toEqual(0.7);
       expect(instance.topK).toEqual(40);
@@ -33,13 +34,14 @@ describe("ModelOptions", () => {
     });
 
     it("should round-trip JSON - example 1", () => {
-      const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
+      const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "reasoningEffort": "medium",\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
       const instance = ModelOptions.fromJson(json);
       const output = instance.toJson();
       const reloaded = ModelOptions.fromJson(output);
       expect(reloaded.frequencyPenalty).toEqual(instance.frequencyPenalty);
       expect(reloaded.maxOutputTokens).toEqual(instance.maxOutputTokens);
       expect(reloaded.presencePenalty).toEqual(instance.presencePenalty);
+      expect(reloaded.reasoningEffort).toEqual(instance.reasoningEffort);
       expect(reloaded.seed).toEqual(instance.seed);
       expect(reloaded.temperature).toEqual(instance.temperature);
       expect(reloaded.topK).toEqual(instance.topK);
@@ -48,16 +50,27 @@ describe("ModelOptions", () => {
         instance.allowMultipleToolCalls,
       );
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ModelOptions.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
     it("should load from YAML - example 1", () => {
-      const yaml = `frequencyPenalty: 0.5\nmaxOutputTokens: 2048\npresencePenalty: 0.3\nseed: 42\ntemperature: 0.7\ntopK: 40\ntopP: 0.9\nstopSequences:\n  - "\\n"\n  - "###"\nallowMultipleToolCalls: true\nadditionalProperties:\n  customProperty: value\n  anotherProperty: anotherValue\n`;
+      const yaml = `frequencyPenalty: 0.5\nmaxOutputTokens: 2048\npresencePenalty: 0.3\nreasoningEffort: medium\nseed: 42\ntemperature: 0.7\ntopK: 40\ntopP: 0.9\nstopSequences:\n  - "\\n"\n  - "###"\nallowMultipleToolCalls: true\nadditionalProperties:\n  customProperty: value\n  anotherProperty: anotherValue\n`;
       const instance = ModelOptions.fromYaml(yaml);
       expect(instance).toBeDefined();
       expect(instance.frequencyPenalty).toEqual(0.5);
       expect(instance.maxOutputTokens).toEqual(2048);
       expect(instance.presencePenalty).toEqual(0.3);
+      expect(instance.reasoningEffort).toEqual("medium");
       expect(instance.seed).toEqual(42);
       expect(instance.temperature).toEqual(0.7);
       expect(instance.topK).toEqual(40);
@@ -66,13 +79,14 @@ describe("ModelOptions", () => {
     });
 
     it("should round-trip YAML - example 1", () => {
-      const yaml = `frequencyPenalty: 0.5\nmaxOutputTokens: 2048\npresencePenalty: 0.3\nseed: 42\ntemperature: 0.7\ntopK: 40\ntopP: 0.9\nstopSequences:\n  - "\\n"\n  - "###"\nallowMultipleToolCalls: true\nadditionalProperties:\n  customProperty: value\n  anotherProperty: anotherValue\n`;
+      const yaml = `frequencyPenalty: 0.5\nmaxOutputTokens: 2048\npresencePenalty: 0.3\nreasoningEffort: medium\nseed: 42\ntemperature: 0.7\ntopK: 40\ntopP: 0.9\nstopSequences:\n  - "\\n"\n  - "###"\nallowMultipleToolCalls: true\nadditionalProperties:\n  customProperty: value\n  anotherProperty: anotherValue\n`;
       const instance = ModelOptions.fromYaml(yaml);
       const output = instance.toYaml();
       const reloaded = ModelOptions.fromYaml(output);
       expect(reloaded.frequencyPenalty).toEqual(instance.frequencyPenalty);
       expect(reloaded.maxOutputTokens).toEqual(instance.maxOutputTokens);
       expect(reloaded.presencePenalty).toEqual(instance.presencePenalty);
+      expect(reloaded.reasoningEffort).toEqual(instance.reasoningEffort);
       expect(reloaded.seed).toEqual(instance.seed);
       expect(reloaded.temperature).toEqual(instance.temperature);
       expect(reloaded.topK).toEqual(instance.topK);
@@ -83,10 +97,88 @@ describe("ModelOptions", () => {
     });
   });
 
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "reasoningEffort": "medium",\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`;
+      const instance = ModelOptions.fromJson(json);
+      const openaiWire = instance.toWire("openai");
+      expect(Object.keys(openaiWire).includes("frequency_penalty")).toBe(true);
+      expect(Object.keys(openaiWire).includes("frequencyPenalty")).toBe(false);
+      expect(Object.keys(openaiWire).includes("max_completion_tokens")).toBe(
+        true,
+      );
+      expect(Object.keys(openaiWire).includes("maxOutputTokens")).toBe(false);
+      expect(Object.keys(openaiWire).includes("presence_penalty")).toBe(true);
+      expect(Object.keys(openaiWire).includes("presencePenalty")).toBe(false);
+      expect(Object.keys(openaiWire).includes("reasoning_effort")).toBe(true);
+      expect(Object.keys(openaiWire).includes("reasoningEffort")).toBe(false);
+      expect(Object.keys(openaiWire).includes("seed")).toBe(true);
+      expect(Object.keys(openaiWire).includes("temperature")).toBe(true);
+      expect(Object.keys(openaiWire).includes("top_k")).toBe(true);
+      expect(Object.keys(openaiWire).includes("topK")).toBe(false);
+      expect(Object.keys(openaiWire).includes("top_p")).toBe(true);
+      expect(Object.keys(openaiWire).includes("topP")).toBe(false);
+      expect(Object.keys(openaiWire).includes("stop")).toBe(true);
+      expect(Object.keys(openaiWire).includes("stopSequences")).toBe(false);
+      expect(Object.keys(openaiWire).includes("parallel_tool_calls")).toBe(
+        true,
+      );
+      expect(Object.keys(openaiWire).includes("allowMultipleToolCalls")).toBe(
+        false,
+      );
+      const openaiRestored = ModelOptions.fromWire("openai", openaiWire);
+      expect(Object.keys(openaiRestored.toWire("openai")).sort()).toEqual(
+        Object.keys(openaiWire).sort(),
+      );
+      const responsesWire = instance.toWire("responses");
+      expect(Object.keys(responsesWire).includes("max_output_tokens")).toBe(
+        true,
+      );
+      expect(Object.keys(responsesWire).includes("maxOutputTokens")).toBe(
+        false,
+      );
+      expect(Object.keys(responsesWire).includes("reasoning_effort")).toBe(
+        true,
+      );
+      expect(Object.keys(responsesWire).includes("reasoningEffort")).toBe(
+        false,
+      );
+      expect(Object.keys(responsesWire).includes("temperature")).toBe(true);
+      expect(Object.keys(responsesWire).includes("top_p")).toBe(true);
+      expect(Object.keys(responsesWire).includes("topP")).toBe(false);
+      const responsesRestored = ModelOptions.fromWire(
+        "responses",
+        responsesWire,
+      );
+      expect(Object.keys(responsesRestored.toWire("responses")).sort()).toEqual(
+        Object.keys(responsesWire).sort(),
+      );
+      const anthropicWire = instance.toWire("anthropic");
+      expect(Object.keys(anthropicWire).includes("max_tokens")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("maxOutputTokens")).toBe(
+        false,
+      );
+      expect(Object.keys(anthropicWire).includes("temperature")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("top_k")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("topK")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("top_p")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("topP")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("stop_sequences")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("stopSequences")).toBe(false);
+      const anthropicRestored = ModelOptions.fromWire(
+        "anthropic",
+        anthropicWire,
+      );
+      expect(Object.keys(anthropicRestored.toWire("anthropic")).sort()).toEqual(
+        Object.keys(anthropicWire).sort(),
+      );
+    });
+  });
+
   describe("load and save", () => {
     it("should load from dictionary", () => {
       const data = JSON.parse(
-        `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`,
+        `{\n  "frequencyPenalty": 0.5,\n  "maxOutputTokens": 2048,\n  "presencePenalty": 0.3,\n  "reasoningEffort": "medium",\n  "seed": 42,\n  "temperature": 0.7,\n  "topK": 40,\n  "topP": 0.9,\n  "stopSequences": [\n    "\\n",\n    "###"\n  ],\n  "allowMultipleToolCalls": true,\n  "additionalProperties": {\n    "customProperty": "value",\n    "anotherProperty": "anotherValue"\n  }\n}`,
       ) as Record<string, unknown>;
       const instance = ModelOptions.load(data);
       expect(instance).toBeDefined();

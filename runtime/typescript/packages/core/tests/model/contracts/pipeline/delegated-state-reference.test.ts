@@ -36,6 +36,16 @@ describe("DelegatedStateReference", () => {
       expect(reloaded.kind).toEqual(instance.kind);
       expect(reloaded.id).toEqual(instance.id);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        DelegatedStateReference.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -76,4 +76,49 @@ additionalProperties:
     XCTAssertNotNil(reloaded.additionalProperties)
   }
 
+
+  func testWireConversion() throws {
+    let json = """
+{
+  "id": "gpt-4o",
+  "displayName": "GPT-4o",
+  "ownedBy": "openai",
+  "contextWindow": 128000,
+  "inputModalities": [
+    "text",
+    "image"
+  ],
+  "outputModalities": [
+    "text"
+  ],
+  "additionalProperties": {
+    "supportsStreaming": true
+  }
+}
+"""
+    let instance = try ModelInfo.fromJSON(json)
+    let openaiWire = try instance.toWire("openai")
+    XCTAssertNotNil(openaiWire["id"])
+    XCTAssertNotNil(openaiWire["owned_by"])
+    XCTAssertNil(openaiWire["ownedBy"])
+    let openaiRestored = try ModelInfo.fromWire("openai", openaiWire)
+    XCTAssertEqual(Set(try openaiRestored.toWire("openai").keys), Set(openaiWire.keys))
+    let anthropicWire = try instance.toWire("anthropic")
+    XCTAssertNotNil(anthropicWire["id"])
+    XCTAssertNotNil(anthropicWire["display_name"])
+    XCTAssertNil(anthropicWire["displayName"])
+    XCTAssertNotNil(anthropicWire["context_length"])
+    XCTAssertNil(anthropicWire["contextWindow"])
+    XCTAssertNotNil(anthropicWire["input_modalities"])
+    XCTAssertNil(anthropicWire["inputModalities"])
+    XCTAssertNotNil(anthropicWire["output_modalities"])
+    XCTAssertNil(anthropicWire["outputModalities"])
+    let anthropicRestored = try ModelInfo.fromWire("anthropic", anthropicWire)
+    XCTAssertEqual(Set(try anthropicRestored.toWire("anthropic").keys), Set(anthropicWire.keys))
+  }
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ModelInfo.fromJSON("{"))
+  }
+
 }

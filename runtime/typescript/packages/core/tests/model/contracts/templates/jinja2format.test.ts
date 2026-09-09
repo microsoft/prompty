@@ -32,6 +32,16 @@ describe("Jinja2Format", () => {
       const reloaded = Jinja2Format.fromJson(output);
       expect(reloaded.kind).toEqual(instance.kind);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Jinja2Format.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

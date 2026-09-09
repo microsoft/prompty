@@ -82,6 +82,16 @@ def test_to_yaml_binding():
     assert isinstance(parsed, dict)
 
 
+def test_load_binding_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        Binding.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"
+
+
 def test_load_binding_from_str():
     instance = Binding.load("example")
     assert instance is not None

@@ -26,11 +26,13 @@ namespace Prompty;
 @@knownAs(ModelOptions.stopSequences, "openai", "stop");
 @@knownAs(ModelOptions.seed, "openai", "seed");
 @@knownAs(ModelOptions.allowMultipleToolCalls, "openai", "parallel_tool_calls");
+@@knownAs(ModelOptions.reasoningEffort, "openai", "reasoning_effort");
 
 // ModelOptions → OpenAI Responses API parameter names
 @@knownAs(ModelOptions.temperature, "responses", "temperature");
 @@knownAs(ModelOptions.maxOutputTokens, "responses", "max_output_tokens");
 @@knownAs(ModelOptions.topP, "responses", "top_p");
+@@knownAs(ModelOptions.reasoningEffort, "responses", "reasoning_effort");
 
 // TokenUsage → OpenAI usage field names
 @@knownAs(TokenUsage.promptTokens, "openai", "prompt_tokens");

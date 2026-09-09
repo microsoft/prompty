@@ -42,6 +42,16 @@ describe("OAuthConnection", () => {
       expect(reloaded.clientSecret).toEqual(instance.clientSecret);
       expect(reloaded.tokenUrl).toEqual(instance.tokenUrl);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        OAuthConnection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

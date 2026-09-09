@@ -12,6 +12,110 @@
 
 use super::super::super::context::{LoadContext, SaveContext};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum reasoningEffort {
+    None,
+    Minimal,
+    Low,
+    Medium,
+    High,
+    Xhigh,
+    Max,
+    /// Unknown variant (open enum — accepts any string).
+    Other(String),
+}
+
+impl Default for reasoningEffort {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+impl std::fmt::Display for reasoningEffort {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::None => write!(f, "none"),
+            Self::Minimal => write!(f, "minimal"),
+            Self::Low => write!(f, "low"),
+            Self::Medium => write!(f, "medium"),
+            Self::High => write!(f, "high"),
+            Self::Xhigh => write!(f, "xhigh"),
+            Self::Max => write!(f, "max"),
+            Self::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl reasoningEffort {
+    pub fn from_str_opt(s: &str) -> Option<Self> {
+        match s {
+            "none" => Some(Self::None),
+            "minimal" => Some(Self::Minimal),
+            "low" => Some(Self::Low),
+            "medium" => Some(Self::Medium),
+            "high" => Some(Self::High),
+            "xhigh" => Some(Self::Xhigh),
+            "max" => Some(Self::Max),
+            other => Some(Self::Other(other.to_string())),
+        }
+    }
+
+    pub fn from_str_ignore_case_opt(s: &str) -> Option<Self> {
+        if s.eq_ignore_ascii_case("none") {
+            return Some(Self::None);
+        }
+        if s.eq_ignore_ascii_case("minimal") {
+            return Some(Self::Minimal);
+        }
+        if s.eq_ignore_ascii_case("low") {
+            return Some(Self::Low);
+        }
+        if s.eq_ignore_ascii_case("medium") {
+            return Some(Self::Medium);
+        }
+        if s.eq_ignore_ascii_case("high") {
+            return Some(Self::High);
+        }
+        if s.eq_ignore_ascii_case("xhigh") {
+            return Some(Self::Xhigh);
+        }
+        if s.eq_ignore_ascii_case("max") {
+            return Some(Self::Max);
+        }
+        Some(Self::Other(s.to_string()))
+    }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::None => "none",
+            Self::Minimal => "minimal",
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+            Self::Xhigh => "xhigh",
+            Self::Max => "max",
+            Self::Other(s) => s.as_str(),
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for reasoningEffort {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for reasoningEffort {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = <String as serde::Deserialize>::deserialize(deserializer)?;
+        Self::from_str_opt(&s).ok_or_else(|| {
+            serde::de::Error::custom(format!("invalid reasoningEffort value: {}", s))
+        })
+    }
+}
+
 /// Options for configuring the behavior of the AI model.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct ModelOptions {
@@ -21,6 +125,8 @@ pub struct ModelOptions {
     pub max_output_tokens: Option<i32>,
     /// The presence penalty to apply to the model's output
     pub presence_penalty: Option<f32>,
+    /// The reasoning effort level for reasoning-capable models
+    pub reasoning_effort: Option<reasoningEffort>,
     /// A random seed for deterministic output
     pub seed: Option<i32>,
     /// The temperature to use for sampling
@@ -92,6 +198,10 @@ impl ModelOptions {
                 .get("presencePenalty")
                 .and_then(|v| v.as_f64())
                 .map(|v| v as f32),
+            reasoning_effort: value
+                .get("reasoningEffort")
+                .and_then(|v| v.as_str())
+                .and_then(|s| reasoningEffort::from_str_opt(s)),
             seed: value.get("seed").and_then(|v| v.as_i64()).map(|v| v as i32),
             temperature: value
                 .get("temperature")
@@ -147,6 +257,12 @@ impl ModelOptions {
                 serde_json::Number::from_f64(*val as f64)
                     .map(serde_json::Value::Number)
                     .unwrap_or(serde_json::Value::Null),
+            );
+        }
+        if let Some(val) = self.reasoning_effort.as_ref() {
+            result.insert(
+                "reasoningEffort".to_string(),
+                serde_json::Value::String(val.to_string()),
             );
         }
         if let Some(val) = self.seed.as_ref() {
@@ -231,6 +347,13 @@ impl ModelOptions {
                     std::collections::HashMap::from([("openai", "presence_penalty")]),
                 ),
                 (
+                    "reasoningEffort",
+                    std::collections::HashMap::from([
+                        ("openai", "reasoning_effort"),
+                        ("responses", "reasoning_effort"),
+                    ]),
+                ),
+                (
                     "seed",
                     std::collections::HashMap::from([("openai", "seed")]),
                 ),
@@ -297,6 +420,13 @@ impl ModelOptions {
                 (
                     "presencePenalty",
                     std::collections::HashMap::from([("openai", "presence_penalty")]),
+                ),
+                (
+                    "reasoningEffort",
+                    std::collections::HashMap::from([
+                        ("openai", "reasoning_effort"),
+                        ("responses", "reasoning_effort"),
+                    ]),
                 ),
                 (
                     "seed",

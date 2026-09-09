@@ -26,6 +26,16 @@ describe("Connection", () => {
       expect(reloaded.authenticationMode).toEqual(instance.authenticationMode);
       expect(reloaded.usageDescription).toEqual(instance.usageDescription);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Connection.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

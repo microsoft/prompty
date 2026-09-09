@@ -35,4 +35,9 @@ policy: default-v1
     XCTAssertEqual((try XCTUnwrap(reloaded.policy)), "default-v1")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try RedactionMetadata.fromJSON("{"))
+  }
+
 }

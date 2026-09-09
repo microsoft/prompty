@@ -34,6 +34,16 @@ describe("FilePart", () => {
       expect(reloaded.source).toEqual(instance.source);
       expect(reloaded.mediaType).toEqual(instance.mediaType);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        FilePart.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

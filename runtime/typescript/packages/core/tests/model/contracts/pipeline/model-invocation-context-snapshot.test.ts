@@ -38,6 +38,16 @@ describe("ModelInvocationContextSnapshot", () => {
       expect(reloaded.turnId).toEqual(instance.turnId);
       expect(reloaded.invocationId).toEqual(instance.invocationId);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ModelInvocationContextSnapshot.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

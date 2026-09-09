@@ -31,6 +31,16 @@ describe("ModelInvocationResponse", () => {
       const reloaded = ModelInvocationResponse.fromJson(output);
       expect(reloaded).toBeDefined();
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        ModelInvocationResponse.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

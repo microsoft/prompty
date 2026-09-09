@@ -113,3 +113,52 @@ fn test_o_auth_token_serde_roundtrip() {
     let reparsed: OAuthToken = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_o_auth_token_wire_conversion() {
+    let json = r####"
+{
+  "refreshToken": "0.AXoAoffline-refresh-token-value",
+  "scope": "https://cognitiveservices.azure.com/.default offline_access"
+}
+"####;
+    let ctx = LoadContext::default();
+    let instance = OAuthToken::from_json(json, &ctx).expect("load should succeed");
+    let foundry_wire = instance.to_wire("foundry");
+    let foundry_obj = foundry_wire.as_object().expect("to_wire returns an object");
+    assert!(
+        foundry_obj.contains_key("refresh_token"),
+        "Expected foundry wire output to include refresh_token"
+    );
+    assert!(
+        !foundry_obj.contains_key("refreshToken"),
+        "Expected foundry wire output to omit refreshToken"
+    );
+    assert!(
+        foundry_obj.contains_key("scope"),
+        "Expected foundry wire output to include scope"
+    );
+    let foundry_restored = OAuthToken::from_wire("foundry", &foundry_wire, &ctx);
+    let foundry_round = foundry_restored.to_wire("foundry");
+    let mut foundry_expected: Vec<&String> = foundry_obj.keys().collect();
+    let mut foundry_actual: Vec<&String> = foundry_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    foundry_expected.sort();
+    foundry_actual.sort();
+    assert_eq!(
+        foundry_expected, foundry_actual,
+        "Expected foundry round-trip to preserve wire keys"
+    );
+}
+
+#[test]
+fn test_o_auth_token_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        OAuthToken::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

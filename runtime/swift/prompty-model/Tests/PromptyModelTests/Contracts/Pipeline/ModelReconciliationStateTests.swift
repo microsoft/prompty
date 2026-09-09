@@ -55,4 +55,9 @@ request:
     XCTAssertEqual(reloaded.message, "provider connection dropped after request was sent")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try ModelReconciliationState.fromJSON("{"))
+  }
+
 }

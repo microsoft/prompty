@@ -65,4 +65,9 @@ errorKind: timeout
     XCTAssertEqual((try XCTUnwrap(reloaded.errorKind)), "timeout")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try HostToolResult.fromJSON("{"))
+  }
+
 }

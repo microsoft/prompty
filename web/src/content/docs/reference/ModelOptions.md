@@ -23,6 +23,7 @@ classDiagram
         +float32 frequencyPenalty
         +int32 maxOutputTokens
         +float32 presencePenalty
+        +string reasoningEffort
         +int32 seed
         +float32 temperature
         +int32 topK
@@ -39,6 +40,7 @@ classDiagram
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -60,6 +62,7 @@ additionalProperties:
 | frequencyPenalty | float32 | The frequency penalty to apply to the model's output |
 | maxOutputTokens | int32 | The maximum number of tokens to generate in the output |
 | presencePenalty | float32 | The presence penalty to apply to the model's output |
+| reasoningEffort | string | The reasoning effort level for reasoning-capable models |
 | seed | int32 | A random seed for deterministic output |
 | temperature | float32 | The temperature to use for sampling |
 | topK | int32 | The top-K sampling value |

@@ -220,7 +220,7 @@ class FoundryExecutor(_BaseExecutor):
 
     def _build_async_client_from_entra(self, conn: FoundryConnection, agent: Agent) -> Any:
         """Build an async AsyncAzureOpenAI client using Entra ID (DefaultAzureCredential)."""
-        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+        from azure.identity.aio import DefaultAzureCredential, get_bearer_token_provider
         from openai import AsyncOpenAI
 
         credential = DefaultAzureCredential()

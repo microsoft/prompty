@@ -143,3 +143,57 @@ def test_to_yaml_modelinfo():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_to_wire_modelinfo():
+    """Test that to_wire()/from_wire() apply provider wire field names."""
+    json_data = r"""
+    {
+      "id": "gpt-4o",
+      "displayName": "GPT-4o",
+      "ownedBy": "openai",
+      "contextWindow": 128000,
+      "inputModalities": [
+        "text",
+        "image"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "additionalProperties": {
+        "supportsStreaming": true
+      }
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = ModelInfo.load(data)
+    openai_wire = instance.to_wire("openai")
+    assert "id" in openai_wire
+    assert "owned_by" in openai_wire
+    assert "ownedBy" not in openai_wire
+    openai_restored = ModelInfo.from_wire("openai", openai_wire)
+    openai_round = openai_restored.to_wire("openai")
+    assert set(openai_round.keys()) == set(openai_wire.keys())
+    anthropic_wire = instance.to_wire("anthropic")
+    assert "id" in anthropic_wire
+    assert "display_name" in anthropic_wire
+    assert "displayName" not in anthropic_wire
+    assert "context_length" in anthropic_wire
+    assert "contextWindow" not in anthropic_wire
+    assert "input_modalities" in anthropic_wire
+    assert "inputModalities" not in anthropic_wire
+    assert "output_modalities" in anthropic_wire
+    assert "outputModalities" not in anthropic_wire
+    anthropic_restored = ModelInfo.from_wire("anthropic", anthropic_wire)
+    anthropic_round = anthropic_restored.to_wire("anthropic")
+    assert set(anthropic_round.keys()) == set(anthropic_wire.keys())
+
+
+def test_load_modelinfo_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        ModelInfo.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

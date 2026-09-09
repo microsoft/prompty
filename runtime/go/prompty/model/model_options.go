@@ -10,12 +10,26 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// reasoningEffort represents the allowed values for reasoningEffort.
+type reasoningEffort string
+
+const (
+	reasoningEffortNone    reasoningEffort = "none"
+	reasoningEffortMinimal reasoningEffort = "minimal"
+	reasoningEffortLow     reasoningEffort = "low"
+	reasoningEffortMedium  reasoningEffort = "medium"
+	reasoningEffortHigh    reasoningEffort = "high"
+	reasoningEffortXhigh   reasoningEffort = "xhigh"
+	reasoningEffortMax     reasoningEffort = "max"
+)
+
 // ModelOptions represents Options for configuring the behavior of the AI model.
 
 type ModelOptions struct {
 	FrequencyPenalty       *float32               `json:"frequencyPenalty,omitempty" yaml:"frequencyPenalty,omitempty"`
 	MaxOutputTokens        *int32                 `json:"maxOutputTokens,omitempty" yaml:"maxOutputTokens,omitempty"`
 	PresencePenalty        *float32               `json:"presencePenalty,omitempty" yaml:"presencePenalty,omitempty"`
+	ReasoningEffort        *reasoningEffort       `json:"reasoningEffort,omitempty" yaml:"reasoningEffort,omitempty"`
 	Seed                   *int32                 `json:"seed,omitempty" yaml:"seed,omitempty"`
 	Temperature            *float32               `json:"temperature,omitempty" yaml:"temperature,omitempty"`
 	TopK                   *int32                 `json:"topK,omitempty" yaml:"topK,omitempty"`
@@ -76,6 +90,10 @@ func LoadModelOptions(data interface{}, ctx *LoadContext) (ModelOptions, error) 
 				v = float32(n)
 			}
 			result.PresencePenalty = &v
+		}
+		if val, ok := m["reasoningEffort"]; ok && val != nil {
+			v := reasoningEffort(val.(string))
+			result.ReasoningEffort = &v
 		}
 		if val, ok := m["seed"]; ok && val != nil { // Handle various numeric types from JSON/YAML/roundtrip
 			var v int32
@@ -174,6 +192,9 @@ func (obj ModelOptions) Save(ctx *SaveContext) map[string]interface{} {
 	if obj.PresencePenalty != nil {
 		result["presencePenalty"] = *obj.PresencePenalty
 	}
+	if obj.ReasoningEffort != nil {
+		result["reasoningEffort"] = string(*obj.ReasoningEffort)
+	}
 	if obj.Seed != nil {
 		result["seed"] = *obj.Seed
 	}
@@ -207,6 +228,7 @@ func (obj *ModelOptions) ToWire(provider string) map[string]interface{} {
 		"frequencyPenalty":       {"openai": "frequency_penalty"},
 		"maxOutputTokens":        {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
 		"presencePenalty":        {"openai": "presence_penalty"},
+		"reasoningEffort":        {"openai": "reasoning_effort", "responses": "reasoning_effort"},
 		"seed":                   {"openai": "seed"},
 		"temperature":            {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
 		"topK":                   {"openai": "top_k", "anthropic": "top_k"},
@@ -230,6 +252,7 @@ func ModelOptionsFromWire(provider string, data map[string]interface{}, ctx *Loa
 		"frequencyPenalty":       {"openai": "frequency_penalty"},
 		"maxOutputTokens":        {"openai": "max_completion_tokens", "responses": "max_output_tokens", "anthropic": "max_tokens"},
 		"presencePenalty":        {"openai": "presence_penalty"},
+		"reasoningEffort":        {"openai": "reasoning_effort", "responses": "reasoning_effort"},
 		"seed":                   {"openai": "seed"},
 		"temperature":            {"openai": "temperature", "responses": "temperature", "anthropic": "temperature"},
 		"topK":                   {"openai": "top_k", "anthropic": "top_k"},

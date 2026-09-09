@@ -146,6 +146,16 @@ def test_to_yaml_property():
     assert isinstance(parsed, dict)
 
 
+def test_load_property_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        Property.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"
+
+
 def test_load_property_from_bool():
     instance = Property.load(False)
     assert instance is not None

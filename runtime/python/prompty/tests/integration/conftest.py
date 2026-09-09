@@ -52,14 +52,19 @@ _AZURE_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
 _AZURE_CHAT_DEPLOYMENT = os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT", "")
 _AZURE_EMBEDDING_DEPLOYMENT = os.environ.get("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "")
 _AZURE_IMAGE_DEPLOYMENT = os.environ.get("AZURE_OPENAI_IMAGE_DEPLOYMENT", "")
+_FOUNDRY_PROJECT_ENDPOINT = os.environ.get("FOUNDRY_PROJECT_ENDPOINT", "")  # for keyless deployment listing
 _ANTHROPIC_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 _DIRECT_OPENAI_KEY = os.environ.get("DIRECT_OPENAI_API_KEY", "")
 _DIRECT_OPENAI_MODEL = os.environ.get("DIRECT_OPENAI_MODEL", "gpt-4o-mini")
 
 has_openai = bool(_OPENAI_KEY)
-has_azure = bool(_AZURE_KEY and _AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)
-has_foundry = has_azure  # Foundry uses Azure OpenAI credentials
+has_foundry_key = bool(_AZURE_KEY and _AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)
+has_azure = has_foundry_key  # backward-compat alias (key-auth Azure)
 has_entra = bool(_AZURE_ENDPOINT and _AZURE_CHAT_DEPLOYMENT)  # Entra ID: endpoint + deployment, no API key needed
+# Live Azure is reachable via EITHER key auth or Entra (az login). When no key is
+# present, the Foundry vectors run keyless through DefaultAzureCredential so `az
+# login` alone drives them.
+has_foundry = has_foundry_key or has_entra
 has_anthropic = bool(_ANTHROPIC_KEY)
 has_direct_openai = bool(_DIRECT_OPENAI_KEY)
 
@@ -273,17 +278,35 @@ def make_foundry_agent(
     if deployment is None:
         deployment = _AZURE_CHAT_DEPLOYMENT
 
+    # Keyless Entra (az login) when no API key is configured; key auth otherwise.
+    # With no live Azure creds at all, fall back to a dummy key so the autouse
+    # mock fixture (which patches AzureOpenAI) can serve deterministic responses.
+    connection: dict[str, Any]
+    if _AZURE_KEY:
+        connection = {
+            "kind": "key",
+            "endpoint": _AZURE_ENDPOINT or "https://mock.local/",
+            "apiKey": _AZURE_KEY,
+        }
+    elif has_entra:
+        connection = {
+            "kind": "foundry",
+            "endpoint": _AZURE_ENDPOINT,
+        }
+    else:
+        connection = {
+            "kind": "key",
+            "endpoint": _AZURE_ENDPOINT or "https://mock.local/",
+            "apiKey": "mock-azure-key",
+        }
+
     data: dict[str, Any] = {
         "name": "integration-test-foundry",
         "model": {
             "id": deployment,
             "provider": "foundry",
             "apiType": api_type,
-            "connection": {
-                "kind": "key",
-                "endpoint": _AZURE_ENDPOINT or "https://mock.local/",
-                "apiKey": _AZURE_KEY or "mock-azure-key",
-            },
+            "connection": connection,
         },
     }
     if options:

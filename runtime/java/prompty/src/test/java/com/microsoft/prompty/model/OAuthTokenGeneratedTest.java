@@ -44,12 +44,6 @@ final class OAuthTokenGeneratedTest {
 
     OAuthToken wireInstance = OAuthToken.fromJson("{\n  \"refreshToken\": \"0.AXoAoffline-refresh-token-value\",\n  \"scope\": \"https://cognitiveservices.azure.com/.default offline_access\"\n}");
     java.util.Map<String, Object> foundryWire = wireInstance.toWire("foundry");
-    assertTrue(foundryWire.containsKey("access_token"), "Expected foundry wire output to include access_token");
-    assertTrue(!foundryWire.containsKey("accessToken"), "Expected foundry wire output to omit accessToken");
-    assertTrue(foundryWire.containsKey("token_type"), "Expected foundry wire output to include token_type");
-    assertTrue(!foundryWire.containsKey("tokenType"), "Expected foundry wire output to omit tokenType");
-    assertTrue(foundryWire.containsKey("expires_in"), "Expected foundry wire output to include expires_in");
-    assertTrue(!foundryWire.containsKey("expiresIn"), "Expected foundry wire output to omit expiresIn");
     assertTrue(foundryWire.containsKey("refresh_token"), "Expected foundry wire output to include refresh_token");
     assertTrue(!foundryWire.containsKey("refreshToken"), "Expected foundry wire output to omit refreshToken");
     assertTrue(foundryWire.containsKey("scope"), "Expected foundry wire output to include scope");

@@ -132,4 +132,10 @@ usageDescription: This will allow the agent to respond to an email on your behal
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => Connection.FromJson("{"));
+    }
 }

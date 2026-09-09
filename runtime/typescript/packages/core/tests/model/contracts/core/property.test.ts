@@ -46,6 +46,16 @@ describe("Property", () => {
       expect(reloaded.default).toEqual(instance.default);
       expect(reloaded.example).toEqual(instance.example);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        Property.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

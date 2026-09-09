@@ -34,8 +34,8 @@ Changelog = "https://github.com/microsoft/prompty/releases"
 jinja2 = ["jinja2"]
 mustache = ["chevron"]
 openai = ["openai"]
-foundry = ["openai", "azure-identity"]
-azure = ["openai", "azure-identity"]
+foundry = ["openai", "azure-identity", "aiohttp"]
+azure = ["openai", "azure-identity", "aiohttp"]
 anthropic = ["anthropic"]
 otel = ["opentelemetry-api>=1.20"]
 all = [
@@ -43,6 +43,7 @@ all = [
   "chevron",
   "openai",
   "azure-identity",
+  "aiohttp",
   "anthropic",
   "opentelemetry-api>=1.20",
 ]

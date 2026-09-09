@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -151,7 +152,10 @@ class TestOpenAIListModels:
         conn = _make_connection("sk-mykey")
         openai_list_models(conn)
 
-        mock_openai_cls.assert_called_once_with(api_key="sk-mykey")
+        call_kwargs = mock_openai_cls.call_args.kwargs
+        assert call_kwargs["api_key"] == "sk-mykey"
+        # Client defaults to the public endpoint (honoring OPENAI_BASE_URL).
+        assert call_kwargs["base_url"] == (os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1")
 
     @patch("openai.OpenAI")
     def test_list_models_empty_response(self, mock_openai_cls: MagicMock) -> None:

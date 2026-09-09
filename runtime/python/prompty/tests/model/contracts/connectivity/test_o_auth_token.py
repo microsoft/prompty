@@ -80,3 +80,32 @@ def test_to_yaml_oauthtoken():
     assert yaml_output is not None
     parsed = yaml.safe_load(yaml_output)
     assert isinstance(parsed, dict)
+
+
+def test_to_wire_oauthtoken():
+    """Test that to_wire()/from_wire() apply provider wire field names."""
+    json_data = r"""
+    {
+      "refreshToken": "0.AXoAoffline-refresh-token-value",
+      "scope": "https://cognitiveservices.azure.com/.default offline_access"
+    }
+    """
+    data = json.loads(json_data, strict=False)
+    instance = OAuthToken.load(data)
+    foundry_wire = instance.to_wire("foundry")
+    assert "refresh_token" in foundry_wire
+    assert "refreshToken" not in foundry_wire
+    assert "scope" in foundry_wire
+    foundry_restored = OAuthToken.from_wire("foundry", foundry_wire)
+    foundry_round = foundry_restored.to_wire("foundry")
+    assert set(foundry_round.keys()) == set(foundry_wire.keys())
+
+
+def test_load_oauthtoken_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        OAuthToken.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"

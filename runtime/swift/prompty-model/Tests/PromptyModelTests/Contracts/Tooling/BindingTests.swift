@@ -40,4 +40,9 @@ input: input-variable
     XCTAssertEqual(instance.input, "example")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try Binding.fromJSON("{"))
+  }
+
 }

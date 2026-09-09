@@ -53,4 +53,9 @@ promptRequest: Allow shell to run tests?
     XCTAssertEqual((try XCTUnwrap(reloaded.promptRequest)), "Allow shell to run tests?")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try PermissionRequest.fromJSON("{"))
+  }
+
 }

@@ -68,6 +68,15 @@ fn test_format_config_roundtrip() {
 }
 
 #[test]
+fn test_format_config_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        FormatConfig::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_format_config_from_format() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();

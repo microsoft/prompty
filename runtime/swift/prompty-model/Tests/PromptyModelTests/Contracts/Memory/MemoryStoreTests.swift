@@ -29,4 +29,9 @@ entries: []
     XCTAssertEqual(reloaded.entries.count, 0)
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try MemoryStore.fromJSON("{"))
+  }
+
 }

@@ -6,9 +6,11 @@
 ##########################################
 
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Literal
 
 from ..._context import LoadContext, SaveContext
+
+reasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh", "max"] | str
 
 
 @dataclass
@@ -23,6 +25,8 @@ class ModelOptions:
         The maximum number of tokens to generate in the output
     presence_penalty : Optional[float]
         The presence penalty to apply to the model's output
+    reasoning_effort : Optional[str]
+        The reasoning effort level for reasoning-capable models
     seed : Optional[int]
         A random seed for deterministic output
     temperature : Optional[float]
@@ -44,6 +48,7 @@ class ModelOptions:
     frequency_penalty: float | None = None
     max_output_tokens: int | None = None
     presence_penalty: float | None = None
+    reasoning_effort: reasoningEffort | None = None
     seed: int | None = None
     temperature: float | None = None
     top_k: int | None = None
@@ -79,6 +84,8 @@ class ModelOptions:
             instance.max_output_tokens = data["maxOutputTokens"]
         if data is not None and "presencePenalty" in data:
             instance.presence_penalty = data["presencePenalty"]
+        if data is not None and "reasoningEffort" in data:
+            instance.reasoning_effort = data["reasoningEffort"]
         if data is not None and "seed" in data:
             instance.seed = data["seed"]
         if data is not None and "temperature" in data:
@@ -117,6 +124,8 @@ class ModelOptions:
             result["maxOutputTokens"] = obj.max_output_tokens
         if obj.presence_penalty is not None:
             result["presencePenalty"] = obj.presence_penalty
+        if obj.reasoning_effort is not None:
+            result["reasoningEffort"] = obj.reasoning_effort
         if obj.seed is not None:
             result["seed"] = obj.seed
         if obj.temperature is not None:
@@ -154,6 +163,10 @@ class ModelOptions:
                 "anthropic": "max_tokens",
             },
             "presencePenalty": {"openai": "presence_penalty"},
+            "reasoningEffort": {
+                "openai": "reasoning_effort",
+                "responses": "reasoning_effort",
+            },
             "seed": {"openai": "seed"},
             "temperature": {
                 "openai": "temperature",
@@ -190,6 +203,10 @@ class ModelOptions:
                 "anthropic": "max_tokens",
             },
             "presencePenalty": {"openai": "presence_penalty"},
+            "reasoningEffort": {
+                "openai": "reasoning_effort",
+                "responses": "reasoning_effort",
+            },
             "seed": {"openai": "seed"},
             "temperature": {
                 "openai": "temperature",

@@ -34,6 +34,16 @@ describe("InvocationContextDecision", () => {
       expect(reloaded.candidateId).toEqual(instance.candidateId);
       expect(reloaded.reason).toEqual(instance.reason);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        InvocationContextDecision.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

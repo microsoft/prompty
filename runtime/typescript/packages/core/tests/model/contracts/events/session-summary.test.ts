@@ -40,6 +40,16 @@ describe("SessionSummary", () => {
       expect(reloaded.checkpoints).toEqual(instance.checkpoints);
       expect(reloaded.durationMs).toEqual(instance.durationMs);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        SessionSummary.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

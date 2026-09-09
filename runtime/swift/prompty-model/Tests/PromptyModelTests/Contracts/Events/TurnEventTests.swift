@@ -59,4 +59,9 @@ spanId: span_tool_001
     XCTAssertEqual((try XCTUnwrap(reloaded.spanId)), "span_tool_001")
   }
 
+  // Invalid-input test (malformed JSON must be rejected, issue #328 class)
+  func testFromJSONInvalid() throws {
+    XCTAssertThrowsError(try TurnEvent.fromJSON("{"))
+  }
+
 }

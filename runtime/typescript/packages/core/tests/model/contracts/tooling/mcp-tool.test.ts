@@ -38,6 +38,16 @@ describe("McpTool", () => {
       expect(reloaded.serverName).toEqual(instance.serverName);
       expect(reloaded.serverDescription).toEqual(instance.serverDescription);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        McpTool.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

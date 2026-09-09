@@ -10,6 +10,8 @@ Also provides shared wire-format helpers used by the Azure executor.
 
 from __future__ import annotations
 
+import re
+import warnings
 from typing import Any
 
 from ..._version import VERSION
@@ -275,6 +277,56 @@ def _build_options(agent: Agent) -> dict[str, Any]:
     return opts
 
 
+# Sampling params that OpenAI reasoning models (o-series, GPT-5 family) reject.
+_OPENAI_REASONING_UNSUPPORTED = (
+    "temperature",
+    "top_p",
+    "top_k",
+    "frequency_penalty",
+    "presence_penalty",
+)
+
+
+def _is_reasoning_model(model_id: str) -> bool:
+    """Best-effort detection of OpenAI reasoning models.
+
+    Reasoning models (o1/o3/o4/o5..., GPT-5 family) reject scalar sampling params
+    and use ``reasoning_effort`` instead. Detection is name-based, so custom Azure
+    deployment names that don't follow OpenAI's convention won't be recognized.
+    """
+    name = (model_id or "").lower().lstrip("./")
+    if re.match(r"^o[1-9]", name):
+        return True
+    if name.startswith("gpt-5"):
+        return True
+    return False
+
+
+def _apply_openai_reasoning_guard(model_id: str, opts: dict[str, Any]) -> None:
+    """Drop params incompatible with the target model class, in place.
+
+    - Reasoning models: drop scalar sampling params (with a ``DeprecationWarning``).
+    - Non-reasoning models: drop ``reasoning_effort`` (only valid on reasoning models).
+
+    This is a live-call capability guard, applied in the executor arg builders
+    just before the SDK call -- not in the pure ``to_wire`` option mappers. The
+    generated wire mapping stays deterministic (rename-only) so wire-conformance
+    vectors reflect the contract, while the guard shapes the actual request.
+    """
+    if _is_reasoning_model(model_id):
+        for key in _OPENAI_REASONING_UNSUPPORTED:
+            if key in opts:
+                warnings.warn(
+                    f"OpenAI reasoning model '{model_id}' does not support '{key}'; "
+                    f"dropping it. Use reasoningEffort instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+                opts.pop(key, None)
+    else:
+        opts.pop("reasoning_effort", None)
+
+
 # ---------------------------------------------------------------------------
 # Responses API wire format helpers
 # ---------------------------------------------------------------------------
@@ -485,6 +537,7 @@ class _BaseExecutor:
             "messages": wire_messages,
             **_build_options(agent),
         }
+        _apply_openai_reasoning_guard(agent.model.id, args)
 
         tools = _tools_to_wire(agent)
         if tools:
@@ -581,6 +634,7 @@ class _BaseExecutor:
 
         # Model options (Responses-specific mapping)
         args.update(_build_responses_options(agent))
+        _apply_openai_reasoning_guard(agent.model.id, args)
 
         # Tools (flat format)
         tools = _responses_tools_to_wire(agent)
@@ -765,6 +819,8 @@ class OpenAIExecutor(_BaseExecutor):
 
     def _client_kwargs(self, agent: Agent) -> dict[str, Any]:
         """Extract client constructor kwargs from an ApiKeyConnection."""
+        import os
+
         kwargs: dict[str, Any] = {}
         conn = agent.model.connection
         if conn and isinstance(conn, ApiKeyConnection):
@@ -778,4 +834,10 @@ class OpenAIExecutor(_BaseExecutor):
                 f"Connection kind '{kind}' is not supported by the OpenAI executor. "
                 f"Use 'key' for API key auth or 'reference' with register_connection() for pre-configured clients."
             )
+        # Some openai SDK builds do not fall back to the public API host when
+        # no base_url is configured, which surfaces as an APIConnectionError
+        # ("Request URL is missing an 'http://' or 'https://' protocol").
+        # Default to the public endpoint, still honoring OPENAI_BASE_URL.
+        if "base_url" not in kwargs:
+            kwargs["base_url"] = os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1"
         return kwargs

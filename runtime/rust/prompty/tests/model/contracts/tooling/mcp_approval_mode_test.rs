@@ -119,6 +119,15 @@ fn test_mcp_approval_mode_serde_roundtrip() {
 }
 
 #[test]
+fn test_mcp_approval_mode_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        McpApprovalMode::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_mcp_approval_mode_from_kind() {
     let value = serde_json::json!("never");
     let ctx = LoadContext::default();

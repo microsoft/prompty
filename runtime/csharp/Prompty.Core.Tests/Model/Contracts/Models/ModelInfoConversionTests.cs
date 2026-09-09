@@ -193,4 +193,60 @@ additionalProperties:
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void WireConversion()
+    {
+            string jsonData = """
+    {
+      "id": "gpt-4o",
+      "displayName": "GPT-4o",
+      "ownedBy": "openai",
+      "contextWindow": 128000,
+      "inputModalities": [
+        "text",
+        "image"
+      ],
+      "outputModalities": [
+        "text"
+      ],
+      "additionalProperties": {
+        "supportsStreaming": true
+      }
+    }
+    """;
+
+        var instance = ModelInfo.FromJson(jsonData);
+        Assert.NotNull(instance);
+
+        var openaiWire = instance.ToWire("openai");
+        Assert.Contains("id", openaiWire.Keys);
+        Assert.Contains("owned_by", openaiWire.Keys);
+        Assert.DoesNotContain("ownedBy", openaiWire.Keys);
+        var openaiRestored = ModelInfo.FromWire("openai", openaiWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(openaiWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(openaiRestored.ToWire("openai").Keys));
+
+        var anthropicWire = instance.ToWire("anthropic");
+        Assert.Contains("id", anthropicWire.Keys);
+        Assert.Contains("display_name", anthropicWire.Keys);
+        Assert.DoesNotContain("displayName", anthropicWire.Keys);
+        Assert.Contains("context_length", anthropicWire.Keys);
+        Assert.DoesNotContain("contextWindow", anthropicWire.Keys);
+        Assert.Contains("input_modalities", anthropicWire.Keys);
+        Assert.DoesNotContain("inputModalities", anthropicWire.Keys);
+        Assert.Contains("output_modalities", anthropicWire.Keys);
+        Assert.DoesNotContain("outputModalities", anthropicWire.Keys);
+        var anthropicRestored = ModelInfo.FromWire("anthropic", anthropicWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(anthropicWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(anthropicRestored.ToWire("anthropic").Keys));
+    }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => ModelInfo.FromJson("{"));
+    }
 }

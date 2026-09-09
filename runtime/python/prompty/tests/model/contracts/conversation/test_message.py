@@ -115,6 +115,16 @@ def test_to_yaml_message():
     assert isinstance(parsed, dict)
 
 
+def test_load_message_invalid():
+    """load must reject invalid input instead of silently defaulting."""
+    raised = False
+    try:
+        Message.load(object())
+    except ValueError:
+        raised = True
+    assert raised, "Expected invalid input to be rejected"
+
+
 def test_factory_assistant_message():
     """Test that assistant() factory creates a valid instance."""
     instance = Message.assistant("test")

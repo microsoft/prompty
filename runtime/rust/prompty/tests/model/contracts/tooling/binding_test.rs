@@ -101,6 +101,15 @@ fn test_binding_serde_roundtrip() {
 }
 
 #[test]
+fn test_binding_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Binding::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}
+
+#[test]
 fn test_binding_from_string() {
     let value = serde_json::json!("example");
     let ctx = LoadContext::default();

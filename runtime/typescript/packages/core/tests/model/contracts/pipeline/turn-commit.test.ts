@@ -34,6 +34,16 @@ describe("TurnCommit", () => {
       expect(reloaded.sessionId).toEqual(instance.sessionId);
       expect(reloaded.turnId).toEqual(instance.turnId);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        TurnCommit.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

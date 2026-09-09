@@ -152,4 +152,10 @@ reason: user_approved
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => PermissionDecision.FromJson("{"));
+    }
 }

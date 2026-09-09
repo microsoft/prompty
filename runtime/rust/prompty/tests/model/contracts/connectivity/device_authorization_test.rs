@@ -118,3 +118,79 @@ fn test_device_authorization_serde_roundtrip() {
         serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_device_authorization_wire_conversion() {
+    let json = r####"
+{
+  "deviceCode": "sample",
+  "userCode": "sample",
+  "verificationUri": "sample",
+  "expiresIn": 1,
+  "interval": 1
+}
+"####;
+    let ctx = LoadContext::default();
+    let instance = DeviceAuthorization::from_json(json, &ctx).expect("load should succeed");
+    let foundry_wire = instance.to_wire("foundry");
+    let foundry_obj = foundry_wire.as_object().expect("to_wire returns an object");
+    assert!(
+        foundry_obj.contains_key("device_code"),
+        "Expected foundry wire output to include device_code"
+    );
+    assert!(
+        !foundry_obj.contains_key("deviceCode"),
+        "Expected foundry wire output to omit deviceCode"
+    );
+    assert!(
+        foundry_obj.contains_key("user_code"),
+        "Expected foundry wire output to include user_code"
+    );
+    assert!(
+        !foundry_obj.contains_key("userCode"),
+        "Expected foundry wire output to omit userCode"
+    );
+    assert!(
+        foundry_obj.contains_key("verification_uri"),
+        "Expected foundry wire output to include verification_uri"
+    );
+    assert!(
+        !foundry_obj.contains_key("verificationUri"),
+        "Expected foundry wire output to omit verificationUri"
+    );
+    assert!(
+        foundry_obj.contains_key("expires_in"),
+        "Expected foundry wire output to include expires_in"
+    );
+    assert!(
+        !foundry_obj.contains_key("expiresIn"),
+        "Expected foundry wire output to omit expiresIn"
+    );
+    assert!(
+        foundry_obj.contains_key("interval"),
+        "Expected foundry wire output to include interval"
+    );
+    let foundry_restored = DeviceAuthorization::from_wire("foundry", &foundry_wire, &ctx);
+    let foundry_round = foundry_restored.to_wire("foundry");
+    let mut foundry_expected: Vec<&String> = foundry_obj.keys().collect();
+    let mut foundry_actual: Vec<&String> = foundry_round
+        .as_object()
+        .expect("to_wire returns an object")
+        .keys()
+        .collect();
+    foundry_expected.sort();
+    foundry_actual.sort();
+    assert_eq!(
+        foundry_expected, foundry_actual,
+        "Expected foundry round-trip to preserve wire keys"
+    );
+}
+
+#[test]
+fn test_device_authorization_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        DeviceAuthorization::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

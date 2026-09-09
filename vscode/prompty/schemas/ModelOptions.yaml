@@ -13,6 +13,24 @@ properties:
   presencePenalty:
     type: number
     description: The presence penalty to apply to the model's output
+  reasoningEffort:
+    anyOf:
+      - type: string
+        const: none
+      - type: string
+        const: minimal
+      - type: string
+        const: low
+      - type: string
+        const: medium
+      - type: string
+        const: high
+      - type: string
+        const: xhigh
+      - type: string
+        const: max
+      - type: string
+    description: The reasoning effort level for reasoning-capable models
   seed:
     type: integer
     minimum: -2147483648

@@ -68,12 +68,16 @@ _KNOWN_MODELS: dict[str, dict[str, Any]] = {
 
 def _build_client_kwargs(connection: Connection) -> dict[str, Any]:
     """Extract kwargs for ``OpenAI(...)`` from a connection."""
+    import os
+
     kwargs: dict[str, Any] = {}
     if isinstance(connection, ApiKeyConnection):
         if connection.api_key:
             kwargs["api_key"] = connection.api_key
         if connection.endpoint:
             kwargs["base_url"] = connection.endpoint
+    if "base_url" not in kwargs:
+        kwargs["base_url"] = os.environ.get("OPENAI_BASE_URL") or "https://api.openai.com/v1"
     return kwargs
 
 

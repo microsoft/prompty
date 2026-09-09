@@ -152,4 +152,42 @@ interval: 1
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void WireConversion()
+    {
+            string jsonData = """
+    {
+      "deviceCode": "sample",
+      "userCode": "sample",
+      "verificationUri": "sample",
+      "expiresIn": 1,
+      "interval": 1
+    }
+    """;
+
+        var instance = DeviceAuthorization.FromJson(jsonData);
+        Assert.NotNull(instance);
+
+        var foundryWire = instance.ToWire("foundry");
+        Assert.Contains("device_code", foundryWire.Keys);
+        Assert.DoesNotContain("deviceCode", foundryWire.Keys);
+        Assert.Contains("user_code", foundryWire.Keys);
+        Assert.DoesNotContain("userCode", foundryWire.Keys);
+        Assert.Contains("verification_uri", foundryWire.Keys);
+        Assert.DoesNotContain("verificationUri", foundryWire.Keys);
+        Assert.Contains("expires_in", foundryWire.Keys);
+        Assert.DoesNotContain("expiresIn", foundryWire.Keys);
+        Assert.Contains("interval", foundryWire.Keys);
+        var foundryRestored = DeviceAuthorization.FromWire("foundry", foundryWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(foundryWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(foundryRestored.ToWire("foundry").Keys));
+    }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => DeviceAuthorization.FromJson("{"));
+    }
 }

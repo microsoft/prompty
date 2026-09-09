@@ -46,6 +46,11 @@ public partial class ModelOptions
     public float? PresencePenalty { get; set; }
 
     /// <summary>
+    /// The reasoning effort level for reasoning-capable models
+    /// </summary>
+    public string? ReasoningEffort { get; set; }
+
+    /// <summary>
     /// A random seed for deterministic output
     /// </summary>
     public int? Seed { get; set; }
@@ -116,6 +121,11 @@ public partial class ModelOptions
         if (data.TryGetValue("presencePenalty", out var presencePenaltyValue) && presencePenaltyValue is not null)
         {
             instance.PresencePenalty = Convert.ToSingle(presencePenaltyValue);
+        }
+
+        if (data.TryGetValue("reasoningEffort", out var reasoningEffortValue) && reasoningEffortValue is not null)
+        {
+            instance.ReasoningEffort = reasoningEffortValue.ToString()!;
         }
 
         if (data.TryGetValue("seed", out var seedValue) && seedValue is not null)
@@ -200,6 +210,12 @@ public partial class ModelOptions
         }
 
 
+        if (obj.ReasoningEffort is not null)
+        {
+            result["reasoningEffort"] = obj.ReasoningEffort;
+        }
+
+
         if (obj.Seed is not null)
         {
             result["seed"] = obj.Seed;
@@ -264,6 +280,7 @@ public partial class ModelOptions
             ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
             ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["responses"] = "max_output_tokens", ["anthropic"] = "max_tokens" },
             ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["reasoningEffort"] = new Dictionary<string, string> { ["openai"] = "reasoning_effort", ["responses"] = "reasoning_effort" },
             ["seed"] = new Dictionary<string, string> { ["openai"] = "seed" },
             ["temperature"] = new Dictionary<string, string> { ["openai"] = "temperature", ["responses"] = "temperature", ["anthropic"] = "temperature" },
             ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },
@@ -293,6 +310,7 @@ public partial class ModelOptions
             ["frequencyPenalty"] = new Dictionary<string, string> { ["openai"] = "frequency_penalty" },
             ["maxOutputTokens"] = new Dictionary<string, string> { ["openai"] = "max_completion_tokens", ["responses"] = "max_output_tokens", ["anthropic"] = "max_tokens" },
             ["presencePenalty"] = new Dictionary<string, string> { ["openai"] = "presence_penalty" },
+            ["reasoningEffort"] = new Dictionary<string, string> { ["openai"] = "reasoning_effort", ["responses"] = "reasoning_effort" },
             ["seed"] = new Dictionary<string, string> { ["openai"] = "seed" },
             ["temperature"] = new Dictionary<string, string> { ["openai"] = "temperature", ["responses"] = "temperature", ["anthropic"] = "temperature" },
             ["topK"] = new Dictionary<string, string> { ["openai"] = "top_k", ["anthropic"] = "top_k" },

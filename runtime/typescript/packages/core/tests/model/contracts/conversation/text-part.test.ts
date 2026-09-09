@@ -32,6 +32,16 @@ describe("TextPart", () => {
       const reloaded = TextPart.fromJson(output);
       expect(reloaded.value).toEqual(instance.value);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        TextPart.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

@@ -122,4 +122,33 @@ scope: "https://cognitiveservices.azure.com/.default offline_access"
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
     }
+
+    [Fact]
+    public void WireConversion()
+    {
+            string jsonData = """
+    {
+      "refreshToken": "0.AXoAoffline-refresh-token-value",
+      "scope": "https://cognitiveservices.azure.com/.default offline_access"
+    }
+    """;
+
+        var instance = OAuthToken.FromJson(jsonData);
+        Assert.NotNull(instance);
+
+        var foundryWire = instance.ToWire("foundry");
+        Assert.Contains("refresh_token", foundryWire.Keys);
+        Assert.DoesNotContain("refreshToken", foundryWire.Keys);
+        Assert.Contains("scope", foundryWire.Keys);
+        var foundryRestored = OAuthToken.FromWire("foundry", foundryWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(foundryWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(foundryRestored.ToWire("foundry").Keys));
+    }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => OAuthToken.FromJson("{"));
+    }
 }

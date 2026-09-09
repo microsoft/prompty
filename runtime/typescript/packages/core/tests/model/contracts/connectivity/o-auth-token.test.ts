@@ -38,6 +38,16 @@ describe("OAuthToken", () => {
       expect(reloaded.refreshToken).toEqual(instance.refreshToken);
       expect(reloaded.scope).toEqual(instance.scope);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        OAuthToken.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
@@ -60,6 +70,21 @@ describe("OAuthToken", () => {
       const reloaded = OAuthToken.fromYaml(output);
       expect(reloaded.refreshToken).toEqual(instance.refreshToken);
       expect(reloaded.scope).toEqual(instance.scope);
+    });
+  });
+
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "refreshToken": "0.AXoAoffline-refresh-token-value",\n  "scope": "https://cognitiveservices.azure.com/.default offline_access"\n}`;
+      const instance = OAuthToken.fromJson(json);
+      const foundryWire = instance.toWire("foundry");
+      expect(Object.keys(foundryWire).includes("refresh_token")).toBe(true);
+      expect(Object.keys(foundryWire).includes("refreshToken")).toBe(false);
+      expect(Object.keys(foundryWire).includes("scope")).toBe(true);
+      const foundryRestored = OAuthToken.fromWire("foundry", foundryWire);
+      expect(Object.keys(foundryRestored.toWire("foundry")).sort()).toEqual(
+        Object.keys(foundryWire).sort(),
+      );
     });
   });
 

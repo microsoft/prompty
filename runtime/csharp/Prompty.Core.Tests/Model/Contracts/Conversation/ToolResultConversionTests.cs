@@ -161,6 +161,12 @@ durationMs: 42
     }
 
     [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => ToolResult.FromJson("{"));
+    }
+
+    [Fact]
     public void FactoryText()
     {
         var instance = ToolResult.Text("test");

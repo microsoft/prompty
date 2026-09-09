@@ -111,3 +111,12 @@ fn test_template_serde_roundtrip() {
     let reparsed: Template = serde_json::from_value(value).expect("serde should re-deserialize");
     assert_eq!(instance, reparsed, "serde round-trip must be stable");
 }
+
+#[test]
+fn test_template_from_json_invalid() {
+    let ctx = LoadContext::default();
+    assert!(
+        Template::from_json("{", &ctx).is_err(),
+        "malformed JSON must be rejected instead of silently defaulting"
+    );
+}

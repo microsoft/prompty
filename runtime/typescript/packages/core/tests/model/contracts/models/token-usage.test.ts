@@ -36,6 +36,16 @@ describe("TokenUsage", () => {
       expect(reloaded.completionTokens).toEqual(instance.completionTokens);
       expect(reloaded.totalTokens).toEqual(instance.totalTokens);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        TokenUsage.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {
@@ -56,6 +66,35 @@ describe("TokenUsage", () => {
       expect(reloaded.promptTokens).toEqual(instance.promptTokens);
       expect(reloaded.completionTokens).toEqual(instance.completionTokens);
       expect(reloaded.totalTokens).toEqual(instance.totalTokens);
+    });
+  });
+
+  describe("wire conversion", () => {
+    it("should apply provider wire field names", () => {
+      const json = `{\n  "promptTokens": 150,\n  "completionTokens": 42,\n  "totalTokens": 192\n}`;
+      const instance = TokenUsage.fromJson(json);
+      const openaiWire = instance.toWire("openai");
+      expect(Object.keys(openaiWire).includes("prompt_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("promptTokens")).toBe(false);
+      expect(Object.keys(openaiWire).includes("completion_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("completionTokens")).toBe(false);
+      expect(Object.keys(openaiWire).includes("total_tokens")).toBe(true);
+      expect(Object.keys(openaiWire).includes("totalTokens")).toBe(false);
+      const openaiRestored = TokenUsage.fromWire("openai", openaiWire);
+      expect(Object.keys(openaiRestored.toWire("openai")).sort()).toEqual(
+        Object.keys(openaiWire).sort(),
+      );
+      const anthropicWire = instance.toWire("anthropic");
+      expect(Object.keys(anthropicWire).includes("input_tokens")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("promptTokens")).toBe(false);
+      expect(Object.keys(anthropicWire).includes("output_tokens")).toBe(true);
+      expect(Object.keys(anthropicWire).includes("completionTokens")).toBe(
+        false,
+      );
+      const anthropicRestored = TokenUsage.fromWire("anthropic", anthropicWire);
+      expect(Object.keys(anthropicRestored.toWire("anthropic")).sort()).toEqual(
+        Object.keys(anthropicWire).sort(),
+      );
     });
   });
 

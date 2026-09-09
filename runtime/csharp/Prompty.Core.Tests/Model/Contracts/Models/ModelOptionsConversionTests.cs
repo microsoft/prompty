@@ -17,6 +17,7 @@ public class ModelOptionsConversionTests
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -37,6 +38,7 @@ additionalProperties:
         Assert.Equal(0.5f, instance.FrequencyPenalty);
         Assert.Equal(2048, instance.MaxOutputTokens);
         Assert.Equal(0.3f, instance.PresencePenalty);
+        Assert.Equal("medium", instance.ReasoningEffort);
         Assert.Equal(42, instance.Seed);
         Assert.Equal(0.7f, instance.Temperature);
         Assert.Equal(40, instance.TopK);
@@ -52,6 +54,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -73,6 +76,7 @@ additionalProperties:
         Assert.Equal(0.5f, instance.FrequencyPenalty);
         Assert.Equal(2048, instance.MaxOutputTokens);
         Assert.Equal(0.3f, instance.PresencePenalty);
+        Assert.Equal("medium", instance.ReasoningEffort);
         Assert.Equal(42, instance.Seed);
         Assert.Equal(0.7f, instance.Temperature);
         Assert.Equal(40, instance.TopK);
@@ -89,6 +93,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -116,6 +121,7 @@ additionalProperties:
         Assert.Equal(0.5f, reloaded.FrequencyPenalty);
         Assert.Equal(2048, reloaded.MaxOutputTokens);
         Assert.Equal(0.3f, reloaded.PresencePenalty);
+        Assert.Equal("medium", reloaded.ReasoningEffort);
         Assert.Equal(42, reloaded.Seed);
         Assert.Equal(0.7f, reloaded.Temperature);
         Assert.Equal(40, reloaded.TopK);
@@ -131,6 +137,7 @@ additionalProperties:
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -156,6 +163,7 @@ additionalProperties:
         Assert.Equal(0.5f, reloaded.FrequencyPenalty);
         Assert.Equal(2048, reloaded.MaxOutputTokens);
         Assert.Equal(0.3f, reloaded.PresencePenalty);
+        Assert.Equal("medium", reloaded.ReasoningEffort);
         Assert.Equal(42, reloaded.Seed);
         Assert.Equal(0.7f, reloaded.Temperature);
         Assert.Equal(40, reloaded.TopK);
@@ -171,6 +179,7 @@ additionalProperties:
   "frequencyPenalty": 0.5,
   "maxOutputTokens": 2048,
   "presencePenalty": 0.3,
+  "reasoningEffort": "medium",
   "seed": 42,
   "temperature": 0.7,
   "topK": 40,
@@ -202,6 +211,7 @@ additionalProperties:
 frequencyPenalty: 0.5
 maxOutputTokens: 2048
 presencePenalty: 0.3
+reasoningEffort: medium
 seed: 42
 temperature: 0.7
 topK: 40
@@ -223,5 +233,92 @@ additionalProperties:
         var deserializer = new YamlDotNet.Serialization.DeserializerBuilder().Build();
         var parsed = deserializer.Deserialize<object>(yaml);
         Assert.NotNull(parsed);
+    }
+
+    [Fact]
+    public void WireConversion()
+    {
+            string jsonData = """
+    {
+      "frequencyPenalty": 0.5,
+      "maxOutputTokens": 2048,
+      "presencePenalty": 0.3,
+      "reasoningEffort": "medium",
+      "seed": 42,
+      "temperature": 0.7,
+      "topK": 40,
+      "topP": 0.9,
+      "stopSequences": [
+        "\n",
+        "###"
+      ],
+      "allowMultipleToolCalls": true,
+      "additionalProperties": {
+        "customProperty": "value",
+        "anotherProperty": "anotherValue"
+      }
+    }
+    """;
+
+        var instance = ModelOptions.FromJson(jsonData);
+        Assert.NotNull(instance);
+
+        var openaiWire = instance.ToWire("openai");
+        Assert.Contains("frequency_penalty", openaiWire.Keys);
+        Assert.DoesNotContain("frequencyPenalty", openaiWire.Keys);
+        Assert.Contains("max_completion_tokens", openaiWire.Keys);
+        Assert.DoesNotContain("maxOutputTokens", openaiWire.Keys);
+        Assert.Contains("presence_penalty", openaiWire.Keys);
+        Assert.DoesNotContain("presencePenalty", openaiWire.Keys);
+        Assert.Contains("reasoning_effort", openaiWire.Keys);
+        Assert.DoesNotContain("reasoningEffort", openaiWire.Keys);
+        Assert.Contains("seed", openaiWire.Keys);
+        Assert.Contains("temperature", openaiWire.Keys);
+        Assert.Contains("top_k", openaiWire.Keys);
+        Assert.DoesNotContain("topK", openaiWire.Keys);
+        Assert.Contains("top_p", openaiWire.Keys);
+        Assert.DoesNotContain("topP", openaiWire.Keys);
+        Assert.Contains("stop", openaiWire.Keys);
+        Assert.DoesNotContain("stopSequences", openaiWire.Keys);
+        Assert.Contains("parallel_tool_calls", openaiWire.Keys);
+        Assert.DoesNotContain("allowMultipleToolCalls", openaiWire.Keys);
+        var openaiRestored = ModelOptions.FromWire("openai", openaiWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(openaiWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(openaiRestored.ToWire("openai").Keys));
+
+        var responsesWire = instance.ToWire("responses");
+        Assert.Contains("max_output_tokens", responsesWire.Keys);
+        Assert.DoesNotContain("maxOutputTokens", responsesWire.Keys);
+        Assert.Contains("reasoning_effort", responsesWire.Keys);
+        Assert.DoesNotContain("reasoningEffort", responsesWire.Keys);
+        Assert.Contains("temperature", responsesWire.Keys);
+        Assert.Contains("top_p", responsesWire.Keys);
+        Assert.DoesNotContain("topP", responsesWire.Keys);
+        var responsesRestored = ModelOptions.FromWire("responses", responsesWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(responsesWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(responsesRestored.ToWire("responses").Keys));
+
+        var anthropicWire = instance.ToWire("anthropic");
+        Assert.Contains("max_tokens", anthropicWire.Keys);
+        Assert.DoesNotContain("maxOutputTokens", anthropicWire.Keys);
+        Assert.Contains("temperature", anthropicWire.Keys);
+        Assert.Contains("top_k", anthropicWire.Keys);
+        Assert.DoesNotContain("topK", anthropicWire.Keys);
+        Assert.Contains("top_p", anthropicWire.Keys);
+        Assert.DoesNotContain("topP", anthropicWire.Keys);
+        Assert.Contains("stop_sequences", anthropicWire.Keys);
+        Assert.DoesNotContain("stopSequences", anthropicWire.Keys);
+        var anthropicRestored = ModelOptions.FromWire("anthropic", anthropicWire);
+        Assert.Equal(
+            new System.Collections.Generic.SortedSet<string>(anthropicWire.Keys),
+            new System.Collections.Generic.SortedSet<string>(anthropicRestored.ToWire("anthropic").Keys));
+    }
+
+    [Fact]
+    public void RejectsMalformedJson()
+    {
+        Assert.ThrowsAny<System.Exception>(() => ModelOptions.FromJson("{"));
     }
 }

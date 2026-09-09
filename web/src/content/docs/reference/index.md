@@ -116,6 +116,7 @@ classDiagram
         +float32 frequencyPenalty
         +int32 maxOutputTokens
         +float32 presencePenalty
+        +string reasoningEffort
         +int32 seed
         +float32 temperature
         +int32 topK

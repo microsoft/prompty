@@ -32,6 +32,16 @@ describe("EnginePermissionDecision", () => {
       const reloaded = EnginePermissionDecision.fromJson(output);
       expect(reloaded.approved).toEqual(instance.approved);
     });
+
+    it("should reject malformed JSON", () => {
+      let threw = false;
+      try {
+        EnginePermissionDecision.fromJson("{");
+      } catch {
+        threw = true;
+      }
+      expect(threw).toBe(true);
+    });
   });
 
   describe("YAML serialization", () => {

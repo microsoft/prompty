@@ -24,6 +24,19 @@ fixSwiftProcessorProviderCollision(
     "ProcessorConformanceTests.swift",
   ),
 );
+fixSwiftReasoningEffortWireValue(
+  join(
+    "..",
+    "runtime",
+    "swift",
+    "prompty-model",
+    "Sources",
+    "PromptyModel",
+    "Contracts",
+    "Models",
+    "model_options.swift",
+  ),
+);
 restoreSwiftPackageResources(join("..", "runtime", "swift", "prompty-model", "Package.swift"));
 
 // Note: the dead `if ctx == nil { ctx = NewLoadContext() }` guard in leaf Go
@@ -86,10 +99,11 @@ function trimTrailingWhitespace(root) {
 // Verified empirically: moving Resources to the test target makes `swift test`
 // fail to compile the main target with "type 'Bundle' has no member 'module'",
 // because SwiftPM only synthesizes `Bundle.module` for a target that owns
-// resources. The emitter exposes no main-target resources option, so this hand
-// re-injection remains load-bearing. Fully removing it requires relocating
-// Discovery + the capabilities resource into a package the emitter does not
-// regenerate (tracked with the Swift split-package work in #487).
+// resources. The emitter exposes no main-target resources option (feature
+// requested upstream in sethjuarez/typra#332), so this hand re-injection remains
+// load-bearing. Fully removing it requires either that emitter option or
+// relocating Discovery + the capabilities resource into a package the emitter
+// does not regenerate (tracked with the Swift split-package work in #487).
 function restoreSwiftPackageResources(packagePath) {
   if (!existsSync(packagePath)) {
     return;
@@ -123,7 +137,9 @@ function restoreSwiftPackageResources(packagePath) {
 // reproducible without depending on goimports being installed. Only removes a
 // standalone `"fmt"` import line when the file has no `fmt.` reference, so it is
 // a no-op on every file that legitimately uses fmt. Remove once the emitter no
-// longer emits the unused import (tracked on sethjuarez/typra).
+// longer emits the unused import (tracked on sethjuarez/typra#305; appears fixed
+// as of @typra/emitter 2.1.8 — raw output no longer emits the dead import, so
+// this is now a no-op guarding against regression until #305 is confirmed/closed).
 function stripUnusedFmtImport(root) {
   if (!existsSync(root)) {
     return;
@@ -161,7 +177,7 @@ function stripUnusedFmtImport(root) {
 // longer shadows the registry accessor. Deterministic exact-substring rewrites;
 // the `provider:` argument label, the `["provider"]` lookup, and the `provider()`
 // call are all left untouched. Remove once the emitter names the discriminator
-// local distinctly from the registry accessor (tracked on sethjuarez/typra).
+// local distinctly from the registry accessor (tracked on sethjuarez/typra#304).
 function fixSwiftProcessorProviderCollision(path) {
   if (!existsSync(path)) {
     return;
@@ -177,6 +193,35 @@ function fixSwiftProcessorProviderCollision(path) {
       "ProcessorResolver.resolve(provider: providerKind, registry: provider())",
     )
     .replaceAll('" + provider)', '" + providerKind)');
+  if (patched !== content) {
+    writeFileSync(path, patched);
+  }
+}
+
+// WORKAROUND (typra 2.1.8 emitter bug): the Swift backend emits the provider
+// wire-mapping (`toWire`) assignment for the `reasoningEffort` option as
+// `result[wireKey] = value`, storing the `ReasoningEffort` RawRepresentable
+// struct itself rather than its backing string. `reasoningEffort` is the only
+// ModelOptions field with a named string-union (alias) type; every other field
+// is a wire-primitive (Int/Double/Bool/[String]) that needs no unwrapping, so
+// only this field is affected. The plain `save()` path correctly emits
+// `value.rawValue`, but the provider `toWire` path does not, so a wire
+// round-trip produces a dict whose `reasoning_effort` value is a struct and the
+// matching `fromWire` -> `load()` throws "Expected string for field
+// reasoningEffort." (Newly exposed by the 2.1.8 wire-conversion tests.) Append
+// `.rawValue` to that single assignment so the wire value is the backing string.
+// Deterministic exact-substring rewrite; unique to this field. Remove once the
+// emitter unwraps RawRepresentable union types in the Swift toWire path (tracked
+// on sethjuarez/typra#331).
+function fixSwiftReasoningEffortWireValue(path) {
+  if (!existsSync(path)) {
+    return;
+  }
+  const content = readFileSync(path, "utf8");
+  const patched = content.replaceAll(
+    "let value = self.reasoningEffort { result[wireKey] = value }",
+    "let value = self.reasoningEffort { result[wireKey] = value.rawValue }",
+  );
   if (patched !== content) {
     writeFileSync(path, patched);
   }
