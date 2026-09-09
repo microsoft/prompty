@@ -10,15 +10,15 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.34.4",
-    "astro": "^5.16.1",
-    "sass": "^1.89.1",
-    "sharp": "^0.32.5",
-    "starlight-auto-sidebar": "^0.1.2",
-    "starlight-contributor-list": "^0.3.0"
+    "@astrojs/starlight": "^0.42.0",
+    "astro": "^7.3.1",
+    "sass": "^1.104.0",
+    "sharp": "^0.35.4",
+    "starlight-auto-sidebar": "^0.4.1",
+    "starlight-contributor-list": "^0.4.0"
   },
   "devDependencies": {
-    "starlight-links-validator": "^0.17.1",
-    "vite-plugin-devtools-json": "^0.2.0"
+    "starlight-links-validator": "^0.26.0",
+    "vite-plugin-devtools-json": "^1.1.0"
   }
 }
