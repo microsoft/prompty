@@ -209,7 +209,7 @@ function fixSwiftProcessorProviderCollision(path) {
 // `.rawValue` to that single assignment so the wire value is the backing string.
 // Deterministic exact-substring rewrite; unique to this field. Remove once the
 // emitter unwraps RawRepresentable union types in the Swift toWire path (tracked
-// on sethjuarez/typra).
+// on sethjuarez/typra#331).
 function fixSwiftReasoningEffortWireValue(path) {
   if (!existsSync(path)) {
     return;
