@@ -59,6 +59,15 @@ updates:
     directory: "/runtime/rust"
     schedule:
       interval: "weekly"
+    # rand 0.10 is a breaking API change: it drops the `Rng::random()` /
+    # `random_range()` methods our code relies on (e.g. `rng.random()`,
+    # `rng.random_range(..)` in prompty and prompty-foundry), so the workspace
+    # fails to compile (`no method named `random` found for struct `ThreadRng``).
+    # Hold rand on 0.9 until the Rust source is migrated to the 0.10 API; remove
+    # this ignore as part of that migration.
+    ignore:
+      - dependency-name: "rand"
+        update-types: ["version-update:semver-major"]
     groups:
       cargo-security:
         applies-to: security-updates
