@@ -19,12 +19,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Linux has no Xcode, so install a pinned standalone Swift toolchain.
       - name: Install Swift toolchain (Linux)
         if: runner.os == 'Linux'
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a # v2.4.0
         with:
           swift-version: '6.0'
 
@@ -35,7 +35,7 @@ jobs:
       # compiler and SDK stay in lockstep. See issue #474 (toolchain pinning).
       - name: Select Xcode (macOS)
         if: runner.os == 'macOS'
-        uses: maxim-lobanov/setup-xcode@v1
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
         with:
           xcode-version: latest-stable
 
