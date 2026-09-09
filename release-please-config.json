@@ -3,7 +3,7 @@
   "separator": "/",
   "include-component-in-tag": true,
   "include-v-in-tag": false,
-  "bootstrap-sha": "3c1c0cc27ee429983ee362aa60ac510678da4af9",
+  "bootstrap-sha": "bc477ead",
   "changelog-sections": [
     { "type": "feat", "section": "Features" },
     { "type": "fix", "section": "Bug Fixes" },
