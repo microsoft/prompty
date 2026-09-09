@@ -71,6 +71,14 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    # swift-actions/setup-swift v3 is broken on Linux: its Swiftly-based install
+    # fails GPG signature verification (`gpg: Can't check signature: No public
+    # key` -> `/usr/bin/gpg failed with exit code 2`). Upstream bug, still open:
+    # https://github.com/swift-actions/setup-swift/issues/798
+    # Hold at v2 until it's fixed; remove this once v3 installs cleanly.
+    ignore:
+      - dependency-name: "swift-actions/setup-swift"
+        update-types: ["version-update:semver-major"]
     groups:
       actions-security:
         applies-to: security-updates
