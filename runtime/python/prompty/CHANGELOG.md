@@ -2,6 +2,13 @@
 
 All notable changes to the Prompty Python runtime will be documented here.
 
+## [2.0.1](https://github.com/microsoft/prompty/compare/python/2.0.0...python-2.0.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **python:** exempt strict-mode nonce from numeric coercion ([#520](https://github.com/microsoft/prompty/issues/520)) ([#541](https://github.com/microsoft/prompty/issues/541)) ([089167c](https://github.com/microsoft/prompty/commit/089167cf168a896ac4b2d57c8c16afe5d34c1d9f))
+
 ## [2.0.0](https://github.com/microsoft/prompty/compare/python-2.0.0-beta.3...python-2.0.0) (2026-09-10)
 
 
