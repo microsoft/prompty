@@ -1,5 +1,5 @@
 {
-  "runtime/python/prompty": "2.0.0-beta.3",
+  "runtime/python/prompty": "2.0.0",
   "runtime/rust": "2.0.0-beta.4",
   "runtime/typescript/packages/core": "2.0.0-beta.5",
   "runtime/csharp": "2.0.0-beta.4",
