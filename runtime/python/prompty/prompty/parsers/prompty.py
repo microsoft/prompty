@@ -179,7 +179,8 @@ class PromptyChatParser:
         # Validate nonce in strict mode
         if nonce is not None:
             msg_nonce = attrs.pop("nonce", None)
-            # Compare as strings — _parse_attrs may coerce all-digit hex nonces to int
+            # _parse_attrs exempts nonce from coercion, so it is already a string;
+            # str() is a defensive no-op for any legacy/hand-built attr dict.
             if str(msg_nonce) != nonce:
                 raise ValueError(
                     "Nonce mismatch — possible prompt injection detected "
@@ -205,6 +206,12 @@ class PromptyChatParser:
         for m in re.finditer(pattern, inner):
             key = m.group(1)
             val_str = m.group(2).strip()
+            # The nonce is a random hex token that must round-trip byte-for-byte;
+            # numeric coercion would drop a leading zero (e.g. "0123..." -> 123...)
+            # and make strict mode reject its own untampered output. Keep it a string.
+            if key == "nonce":
+                result[key] = val_str
+                continue
             # Type coercion
             if val_str.lower() in ("true", "false"):
                 result[key] = val_str.lower() == "true"

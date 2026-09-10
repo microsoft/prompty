@@ -152,6 +152,68 @@ class TestPreRender:
 
 
 # ---------------------------------------------------------------------------
+# Nonce coercion regression (issue #520) — Python was the laggard; Java/Swift
+# already fixed this. The strict-mode sanitization nonce is random hex from
+# secrets.token_hex, so it is NOT vector-governed (vectors are deterministic) —
+# it is pinned by these runtime-local tests. ~1 in 1,200 generated nonces is
+# all-digits-with-leading-zero and used to be int-coerced, dropping the zero and
+# making strict mode reject its own untampered output as a prompt injection.
+# ---------------------------------------------------------------------------
+
+
+class TestNonceCoercion:
+    # 16 hex chars (valid token_hex(8) outputs) crafted to hit each coercion mode.
+    NUMERIC_LOOKING_NONCES = [
+        "0123456789012345",  # leading zero stripped by int()
+        "0419856025378190",  # leading zero stripped by int()
+        "1234567890123456",  # parses cleanly as int
+        "9789350921772800",  # parses as int (large)
+        "0663512342083e99",  # scientific notation -> float
+        "00000000000000e1",  # leading zeros plus exponent
+        "45e12345678901ab",  # trailing hex letters block numeric parsing
+        "abcdef0123456789",  # leading hex letter blocks numeric parsing
+    ]
+
+    def setup_method(self):
+        self.parser = PromptyChatParser()
+        self.agent = _make_agent()
+
+    def test_nonce_preserved_as_string_in_parse_attrs(self):
+        for nonce in self.NUMERIC_LOOKING_NONCES:
+            attrs = self.parser._parse_attrs(f'[nonce="{nonce}"]')
+            assert attrs["nonce"] == nonce
+            assert isinstance(attrs["nonce"], str)
+
+    def test_strict_parse_accepts_numeric_looking_nonces(self):
+        for nonce in self.NUMERIC_LOOKING_NONCES:
+            rendered = f'system[nonce="{nonce}"]:\nYou are helpful.\n\nuser[nonce="{nonce}"]:\nHello.'
+            messages = self.parser.parse(self.agent, rendered, nonce=nonce)
+            assert len(messages) == 2
+            assert messages[0].role == "system"
+            assert messages[1].role == "user"
+
+    def test_mismatched_numeric_nonce_still_rejected(self):
+        rendered = 'system[nonce="0123456789012345"]:\nHi'
+        with pytest.raises(ValueError, match="Nonce mismatch"):
+            self.parser.parse(self.agent, rendered, nonce="0123456789012346")
+
+    def test_non_nonce_attributes_still_coerced(self):
+        attrs = self.parser._parse_attrs('[nonce="0123456789012345",index=1,ratio=0.5,active=true,name="Alice"]')
+        assert attrs["nonce"] == "0123456789012345"
+        assert attrs["index"] == 1
+        assert attrs["ratio"] == 0.5
+        assert attrs["active"] is True
+        assert attrs["name"] == "Alice"
+
+    def test_generated_nonces_always_validate(self):
+        for _ in range(20_000):
+            sanitized, context = self.parser.pre_render("system:\nHi\n\nuser:\nHello")
+            nonce = context["nonce"]
+            attrs = self.parser._parse_attrs(f'[nonce="{nonce}"]')
+            assert attrs["nonce"] == nonce
+
+
+# ---------------------------------------------------------------------------
 # ReDoS regression (issue #446) — performance, not vector-expressible
 # ---------------------------------------------------------------------------
 
