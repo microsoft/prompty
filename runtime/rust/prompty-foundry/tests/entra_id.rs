@@ -1,10 +1,10 @@
-//! Integration tests for Entra ID (keyless / DefaultAzureCredential) auth.
+//! Integration tests for Entra ID (keyless / DeveloperToolsCredential) auth.
 //!
 //! These tests verify that the Foundry executor can authenticate via
-//! `DefaultAzureCredential` when no API key is provided. They require:
+//! `DeveloperToolsCredential` when no API key is provided. They require:
 //!   - `AZURE_OPENAI_ENDPOINT`
 //!   - `AZURE_OPENAI_CHAT_DEPLOYMENT`
-//!   - `AZURE_TENANT_ID` (so DefaultAzureCredential picks the right tenant)
+//!   - `AZURE_TENANT_ID` (so local Azure developer tools pick the right tenant)
 //!   - A valid Azure identity (e.g. Azure CLI login, managed identity, etc.)
 //!
 //! Run with:
@@ -116,7 +116,7 @@ fn build_foundry_chat_agent(question: &str, options: Value) -> Agent {
 // Tests
 // ---------------------------------------------------------------------------
 
-/// Verify that `DefaultAzureCredential` can acquire a token for the
+/// Verify that `DeveloperToolsCredential` can acquire a token for the
 /// Azure Cognitive Services scope.
 #[tokio::test]
 #[ignore]
@@ -125,13 +125,13 @@ async fn test_entra_id_token_acquisition() {
     skip_if_no_env!("AZURE_OPENAI_ENDPOINT");
 
     use azure_core::credentials::TokenCredential;
-    use azure_identity::DefaultAzureCredential;
+    use azure_identity::DeveloperToolsCredential;
 
     let credential =
-        DefaultAzureCredential::new().expect("DefaultAzureCredential should be created");
+        DeveloperToolsCredential::new(None).expect("DeveloperToolsCredential should be created");
 
     let token = credential
-        .get_token(&["https://cognitiveservices.azure.com/.default"])
+        .get_token(&["https://cognitiveservices.azure.com/.default"], None)
         .await
         .expect("Should acquire Entra ID token for Cognitive Services scope");
 
@@ -286,11 +286,9 @@ async fn test_entra_id_agent_tool_calling() {
                 "name": "get_weather",
                 "kind": "function",
                 "description": "Get the current weather for a city",
-                "parameters": {
-                    "properties": [
-                        { "name": "city", "kind": "string", "description": "The city name", "required": true }
-                    ]
-                },
+                "parameters": [
+                    { "name": "city", "kind": "string", "description": "The city name", "required": true }
+                ],
             }
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",

@@ -2803,7 +2803,7 @@ async fn conversation_failure_occurs_after_the_tool_result_is_durable() {
         checkpoint
             .pending_tool_requests
             .as_ref()
-            .map_or(true, |requests| requests.is_empty())
+            .is_none_or(|requests| requests.is_empty())
             && checkpoint.pending_model_response.is_some()
             && checkpoint
                 .completed_tool_results
@@ -2967,7 +2967,7 @@ async fn conversation_port_formats_a_complete_ordered_tool_batch_once() {
                 checkpoint
                     .pending_tool_requests
                     .as_ref()
-                    .map_or(true, |requests| requests.is_empty())
+                    .is_none_or(|requests| requests.is_empty())
                     && checkpoint.pending_model_response.is_some()
                     && checkpoint
                         .completed_tool_results

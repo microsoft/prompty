@@ -264,11 +264,9 @@ async fn test_azure_agent_tool_calling() {
                 "name": "get_weather",
                 "kind": "function",
                 "description": "Get the current weather for a city",
-                "parameters": {
-                    "properties": [
-                        { "name": "city", "kind": "string", "description": "The city name", "required": true }
-                    ]
-                },
+                "parameters": [
+                    { "name": "city", "kind": "string", "description": "The city name", "required": true }
+                ],
             }
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",
@@ -357,9 +355,14 @@ async fn test_foundry_list_deployments_with_cli_token() {
         "apiKey": token,
     });
 
-    let models = prompty_foundry::list_models_async(&connection)
-        .await
-        .expect("foundry deployment listing should succeed");
+    let models = match prompty_foundry::list_models_async(&connection).await {
+        Ok(models) => models,
+        Err(error) if error.to_string().contains("Token tenant") => {
+            eprintln!("Skipping: Azure CLI token tenant does not match FOUNDRY_PROJECT_ENDPOINT");
+            return;
+        }
+        Err(error) => panic!("foundry deployment listing should succeed: {error}"),
+    };
 
     assert!(!models.is_empty(), "expected at least one deployment");
     let first = &models[0];

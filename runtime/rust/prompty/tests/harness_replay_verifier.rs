@@ -22,7 +22,7 @@ fn reference_replay_verifier_passes_identical_records() {
     });
 
     assert_eq!(result.status, ReplayVerificationStatus::Passed);
-    assert!(result.mismatches.as_ref().map_or(true, |m| m.is_empty()));
+    assert!(result.mismatches.as_ref().is_none_or(|m| m.is_empty()));
     assert_eq!(result.expected_count, 1);
     assert_eq!(result.actual_count, 1);
 }

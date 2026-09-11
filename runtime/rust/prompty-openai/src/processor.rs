@@ -881,7 +881,7 @@ mod tests {
             state
                 .delegated_state
                 .as_ref()
-                .map_or(true, |state| state.is_empty())
+                .is_none_or(|state| state.is_empty())
         );
         let assistant_messages = result.assistant_messages.as_ref().unwrap();
         assert_eq!(assistant_messages.len(), 1);

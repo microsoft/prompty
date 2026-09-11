@@ -313,7 +313,7 @@ fn get_string_vec(obj: &Value, keys: &[&str]) -> Option<Vec<String>> {
 /// Prefers a caller-supplied token on the connection (`apiKey`/`api_key`/
 /// `bearerToken`/`bearer_token`) so hosts that already hold an interactive
 /// Entra token (e.g. browser OAuth/PKCE) can list deployments without the
-/// ambient `DefaultAzureCredential`. Falls back to [`get_ai_token`] when no
+/// ambient `DeveloperToolsCredential`. Falls back to [`get_ai_token`] when no
 /// caller token is present.
 async fn resolve_foundry_token(connection: &Value) -> Result<String, InvokerError> {
     match connection_bearer_token(connection) {
@@ -325,13 +325,13 @@ async fn resolve_foundry_token(connection: &Value) -> Result<String, InvokerErro
 #[cfg(feature = "entra_id")]
 async fn get_ai_token() -> Result<String, InvokerError> {
     use azure_core::credentials::TokenCredential;
-    use azure_identity::DefaultAzureCredential;
+    use azure_identity::DeveloperToolsCredential;
 
-    let credential = DefaultAzureCredential::new().map_err(|e| {
-        InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into())
+    let credential = DeveloperToolsCredential::new(None).map_err(|e| {
+        InvokerError::Execute(format!("Failed to create DeveloperToolsCredential: {e}").into())
     })?;
     let token = credential
-        .get_token(&["https://ai.azure.com/.default"])
+        .get_token(&["https://ai.azure.com/.default"], None)
         .await
         .map_err(|e| {
             InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into())

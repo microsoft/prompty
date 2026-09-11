@@ -238,9 +238,8 @@ async fn test_embedding() {
 async fn test_image_generation() {
     setup();
     skip_if_no_env!("OPENAI_API_KEY");
-    skip_if_no_env!("OPENAI_IMAGE_MODEL");
 
-    let image_model = std::env::var("OPENAI_IMAGE_MODEL").unwrap_or_else(|_| "dall-e-2".into());
+    let image_model = std::env::var("OPENAI_IMAGE_MODEL").unwrap_or_else(|_| "gpt-image-1".into());
 
     let data = json!({
         "name": "integration-image",
@@ -269,27 +268,25 @@ async fn test_image_generation() {
         .await
         .expect("image generation should succeed");
 
-    // Result is typically a URL string or object with url field
+    // GPT image models return base64-encoded image data.
     let text = match result {
         Value::String(ref s) => s.clone(),
         Value::Object(ref obj) => obj
-            .get("url")
+            .get("b64_json")
+            .or_else(|| obj.get("url"))
             .and_then(|u| u.as_str())
             .unwrap_or("")
             .to_string(),
-        Value::Array(ref arr) if !arr.is_empty() => {
-            // Could be [{ url: "..." }]
-            arr[0]
-                .as_object()
-                .and_then(|o| o.get("url"))
-                .and_then(|u| u.as_str())
-                .unwrap_or("")
-                .to_string()
-        }
+        Value::Array(ref arr) if !arr.is_empty() => arr[0]
+            .as_object()
+            .and_then(|o| o.get("b64_json").or_else(|| o.get("url")))
+            .and_then(|u| u.as_str())
+            .unwrap_or("")
+            .to_string(),
         other => format!("{other:?}"),
     };
     assert!(!text.is_empty(), "image result should not be empty");
-    eprintln!("Image result: {text}");
+    eprintln!("Image result length: {}", text.len());
 }
 
 #[tokio::test]
@@ -383,11 +380,9 @@ async fn test_agent_tool_calling() {
                 "name": "get_weather",
                 "kind": "function",
                 "description": "Get the current weather for a city",
-                "parameters": {
-                    "properties": [
-                        { "name": "city", "kind": "string", "description": "The city name", "required": true }
-                    ]
-                },
+                "parameters": [
+                    { "name": "city", "kind": "string", "description": "The city name", "required": true }
+                ],
             }
         ],
         "instructions": "system:\nYou are a helpful assistant with weather tools. Use the get_weather tool when asked about weather. Be brief.\nuser:\nWhat is the weather in Seattle?",

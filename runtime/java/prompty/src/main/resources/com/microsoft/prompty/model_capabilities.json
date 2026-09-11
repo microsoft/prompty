@@ -46,6 +46,11 @@
         "outputModalities": []
       },
       {
+        "prefix": "gpt-image-1",
+        "inputModalities": ["text", "image"],
+        "outputModalities": ["image"]
+      },
+      {
         "prefix": "dall-e-3",
         "inputModalities": ["text"],
         "outputModalities": ["image"]

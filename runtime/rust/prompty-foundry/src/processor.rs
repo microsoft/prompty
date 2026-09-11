@@ -138,7 +138,7 @@ mod tests {
             state
                 .delegated_state
                 .as_ref()
-                .map_or(true, |state| state.is_empty())
+                .is_none_or(|state| state.is_empty())
         );
     }
 }

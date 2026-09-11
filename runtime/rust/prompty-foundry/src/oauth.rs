@@ -9,7 +9,7 @@
 //!
 //! These complement the non-interactive auth already in [`crate::executor`]
 //! (`api-key` header, `AZURE_INFERENCE_CREDENTIAL` bearer, and
-//! `DefaultAzureCredential`/Entra ID via `get_entra_token`). `DefaultAzureCredential`
+//! `DeveloperToolsCredential`/Entra ID via `get_entra_token`). `DeveloperToolsCredential`
 //! does not perform interactive browser sign-in, which is what this module adds.
 //!
 //! # Boundary (mirrors the `MemoryPort` data-vs-behavior split)
