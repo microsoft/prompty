@@ -41,20 +41,20 @@ version number — `python/2.1.0` and `rust/2.0.3` can coexist. Config lives in
 conventional commit on main
         │
         ▼
-maintainer runs `release-please manifest-pr`  ── opens/updates one "Release PR"
+maintainer runs `release-please release-pr`   ── opens/updates one "Release PR"
         │   (locally, as themselves)              per runtime with changes
         ▼                                          (title: "chore(<runtime>): release <ver>")
 merge the Release PR  ── bumps version files, writes CHANGELOG
         │
         ▼
-maintainer runs `release-please manifest-release`  ── pushes a tag like `python/2.1.0`
+maintainer runs `release-please github-release` ── pushes a tag like `python/2.1.0`
         │                                              + creates the GitHub Release
         ▼
 prompty-<runtime>.yml ── existing publish workflow triggers on the tag and publishes
 ```
 
 release-please **only opens PRs and cuts tags**; nothing publishes until a human
-merges a Release PR *and* runs `manifest-release`. Commits route to a runtime by the
+merges a Release PR *and* runs `github-release`. Commits route to a runtime by the
 **paths they touch**; add a scope when ambiguous (`feat(python):`, `fix(rust):`).
 Only `feat`, `fix`, `perf`, `revert`, `deps` trigger releases; `feat!:` /
 `BREAKING CHANGE:` bumps major.
@@ -71,7 +71,7 @@ Only `feat`, `fix`, `perf`, `revert`, `deps` trigger releases; `feat!:` /
 | `go`       | `runtime/go/prompty`               | `go`         | git tag only                                         | check only |
 | `swift`    | `runtime/swift/prompty`            | `simple`     | git tag only                                         | check only |
 
-Tag format (`separator:"/"`, `include-component-in-tag:true`, `include-v-in-tag:false`)
+Tag format (`tag-separator:"/"`, `include-component-in-tag:true`, `include-v-in-tag:false`)
 reproduces the existing `python/2.1.0` tags exactly — **no publish workflow changed**.
 
 ### Graduating beta → 2.0.0
@@ -85,14 +85,25 @@ clean **`2.0.0`** stable release; normal `2.0.1` / `2.1.0` / `3.0.0` bumps follo
 Run from a clone where `gh auth status` shows **you** authenticated with `repo` +
 `workflow` scopes. The `$(gh auth token)` below passes your identity to the CLI.
 
-> **CRITICAL:** always pass `--config-file` **and** `--manifest-file`. Without them
-> release-please ignores `release-please-config.json` and falls back to its default
-> `-` tag separator, producing a bad tag like `python-2.0.0` (hyphen) that the
-> publish workflow ignores. The config sets `separator:"/"` →  `python/2.0.0`.
+> **CRITICAL — tag separator.** The publish workflows trigger on slash tags
+> (`python/2.*`), so the release **must** be tagged `python/2.0.0`, not the
+> release-please default `python-2.0.0` (hyphen). Two things control this, and
+> **both** are required:
+>
+> 1. `release-please-config.json` sets **`"tag-separator": "/"`**. This is the real
+>    knob. The schema field is `tag-separator`; a top-level `separator` key is
+>    **silently ignored** (root `additionalProperties` drops it), leaving the
+>    separator `undefined` → default `-`. This exact typo shipped once and produced
+>    `python-2.0.0` / `python-2.0.1` despite the flags below. Verify with
+>    `release-please debug-config … | grep tagSeparator` — it must print `'/'`, not
+>    `undefined`.
+> 2. Always pass `--config-file` **and** `--manifest-file`. Without them
+>    release-please never loads `release-please-config.json` at all and falls back
+>    to every default (including the `-` separator).
 
 ```bash
 # 1. Open / update the Release PR (safe to re-run; add --dry-run to preview)
-npx --yes release-please@16 manifest-pr \
+npx --yes release-please@16 release-pr \
   --token="$(gh auth token)" --repo-url=microsoft/prompty --target-branch=main \
   --config-file=release-please-config.json \
   --manifest-file=.release-please-manifest.json
@@ -100,13 +111,13 @@ npx --yes release-please@16 manifest-pr \
 # 2. Merge the Release PR on GitHub (all publish checks must be green).
 
 # 3. Cut the tag + GitHub Release, which triggers the publish workflow
-npx --yes release-please@16 manifest-release \
+npx --yes release-please@16 github-release \
   --token="$(gh auth token)" --repo-url=microsoft/prompty --target-branch=main \
   --config-file=release-please-config.json \
   --manifest-file=.release-please-manifest.json
 ```
 
-If `manifest-release` ever produces the wrong tag, remediate deterministically:
+If `github-release` ever produces the wrong tag, remediate deterministically:
 
 ```bash
 # delete the bad release + tag, recreate the correct one at the merge commit
