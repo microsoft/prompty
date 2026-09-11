@@ -208,7 +208,7 @@ pub fn build_embedding_args(agent: &Agent, messages: &[Message]) -> Value {
 pub fn build_image_args(agent: &Agent, messages: &[Message]) -> Value {
     let model_id = prompty::model_access::model_id(&agent.model);
     let model = if model_id.is_empty() {
-        "dall-e-3".to_string()
+        "gpt-image-1".to_string()
     } else {
         model_id.to_string()
     };

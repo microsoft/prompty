@@ -357,17 +357,17 @@ async fn get_auth_header(agent: &Agent) -> Result<(&'static str, String), Invoke
 #[cfg(feature = "entra_id")]
 const FOUNDRY_TOKEN_SCOPE: &str = "https://ai.azure.com/.default";
 
-/// Get a bearer token via DefaultAzureCredential (requires `entra_id` feature).
+/// Get a bearer token via DeveloperToolsCredential (requires `entra_id` feature).
 #[cfg(feature = "entra_id")]
 async fn get_entra_token() -> Result<(&'static str, String), InvokerError> {
     use azure_core::credentials::TokenCredential;
-    use azure_identity::DefaultAzureCredential;
+    use azure_identity::DeveloperToolsCredential;
 
-    let credential = DefaultAzureCredential::new().map_err(|e| {
-        InvokerError::Execute(format!("Failed to create DefaultAzureCredential: {e}").into())
+    let credential = DeveloperToolsCredential::new(None).map_err(|e| {
+        InvokerError::Execute(format!("Failed to create DeveloperToolsCredential: {e}").into())
     })?;
     let token = credential
-        .get_token(&[FOUNDRY_TOKEN_SCOPE])
+        .get_token(&[FOUNDRY_TOKEN_SCOPE], None)
         .await
         .map_err(|e| {
             InvokerError::Execute(format!("Failed to acquire Entra ID token: {e}").into())
@@ -767,6 +767,7 @@ mod tests {
 
     #[tokio::test]
     #[serial]
+    #[cfg(not(feature = "entra_id"))]
     async fn test_auth_header_foundry_no_key_no_entra() {
         prompty::connections::clear_connections();
         // Remove env var to ensure no fallback
@@ -780,10 +781,8 @@ mod tests {
                 "endpoint": "https://resource.services.ai.azure.com/api/projects/proj"
             }
         }));
-
         let result = get_auth_header(&agent).await;
-        // Without entra_id feature: should error (can't get token)
-        // With entra_id feature: would attempt DefaultAzureCredential (would also fail in CI)
+        // Without entra_id feature: should error (can't get token).
         assert!(result.is_err());
     }
 }

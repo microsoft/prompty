@@ -14,6 +14,12 @@ What it does:
     3. Commits the version bump
     4. Creates a git tag: rust/{version}
     5. Pushes commit + tag to origin (triggers CI publish)
+
+Preferred release flow:
+    Open a PR containing the version bump, add the `release: rust` label, and
+    merge it. The prompty Rust publish workflow creates the rust/{version} tag
+    from the merged commit and publishes the crates. This script remains useful
+    for manual tag-driven releases.
 """
 
 from __future__ import annotations
@@ -29,6 +35,14 @@ REPO_ROOT = ROOT.parent.parent
 TAG_PREFIX = "rust/"
 
 CRATES = ["prompty", "prompty-openai", "prompty-anthropic", "prompty-foundry"]
+
+
+def configure_output_encoding() -> None:
+    """Prefer UTF-8 for release status output on Windows consoles."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
 
 
 def get_current_version() -> str:
@@ -73,6 +87,8 @@ def run(cmd: str) -> None:
 
 
 def main() -> None:
+    configure_output_encoding()
+
     parser = argparse.ArgumentParser(description="Release the prompty Rust crates")
     parser.add_argument("--bump", choices=["patch", "minor", "major"], default="patch")
     parser.add_argument("--version", dest="explicit_version", help="Explicit version (e.g., 2.0.0)")

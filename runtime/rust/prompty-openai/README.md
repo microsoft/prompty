@@ -21,7 +21,7 @@ let result = turn(&agent, Some(&inputs), None).await?;
 |-----------|-----|-------------|
 | `chat` | Chat Completions | Text generation and tool calling |
 | `embedding` | Embeddings | Vector embeddings |
-| `image` | Images | DALL-E image generation |
+| `image` | Images | GPT image generation |
 
 ## Connection
 

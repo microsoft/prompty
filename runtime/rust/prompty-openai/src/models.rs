@@ -342,9 +342,13 @@ mod tests {
     }
 
     #[test]
-    fn test_shared_dataset_lookup_dalle3() {
-        let caps = prompty::discovery::lookup("openai", "dall-e-3").unwrap();
+    fn test_shared_dataset_lookup_gpt_image() {
+        let caps = prompty::discovery::lookup("openai", "gpt-image-1").unwrap();
         assert!(caps.context_window.is_none());
+        assert_eq!(
+            caps.input_modalities.as_deref(),
+            Some(["text".to_string(), "image".to_string()].as_slice())
+        );
         assert_eq!(
             caps.output_modalities.as_deref(),
             Some(["image".to_string()].as_slice())

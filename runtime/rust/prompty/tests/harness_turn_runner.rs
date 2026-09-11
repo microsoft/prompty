@@ -661,7 +661,7 @@ async fn reference_turn_runner_preserves_zero_iteration_behavior() {
         result
             .checkpoints
             .as_ref()
-            .map_or(true, |checkpoints| checkpoints.is_empty())
+            .is_none_or(|checkpoints| checkpoints.is_empty())
     );
     assert_eq!(*calls.lock().unwrap(), 0);
     assert_eq!(
