@@ -13,7 +13,7 @@
 		"vscode": "^1.98.0"
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.124.0",
+		"@anthropic-ai/sdk": "^0.125.0",
 		"@azure/ai-projects": "^2.6.0",
 		"@azure/identity": "^4.13.2",
 		"@prompty/anthropic": "^2.0.0-beta.5",
@@ -23,11 +23,11 @@
 		"@types/js-yaml": "^4.0.9",
 		"glob": "^13.0.6",
 		"js-yaml": "^5.4.1",
-		"openai": "^7.10.0",
+		"openai": "^7.15.0",
 		"vscode-languageclient": "^10.1.1"
 	},
 	"devDependencies": {
-		"@types/vscode": "^1.136.0",
+		"@types/vscode": "^1.137.0",
 		"@vscode/test-electron": "^3.1.0",
 		"prettier": "^3.9.6",
 		"rimraf": "^6.1.3",
