@@ -8,11 +8,11 @@ requires-python = ">=3.9"
 
 license = { text = "MIT" }
 dependencies = [
-    "pyyaml>=6.0.1",
-    "jinja2>=3.1.4",
-    "python-dotenv>=1.0.1",
-    "click>=8.1.7",
-    "aiofiles>=24.1.0",
+    "pyyaml>=6.0.3",
+    "jinja2>=3.1.6",
+    "python-dotenv>=1.2.3",
+    "click>=8.5.0",
+    "aiofiles>=25.1.0",
     "chevron>=0.14.0",
 ]
 
@@ -63,7 +63,7 @@ asyncio_default_fixture_loop_scope = "function"
 show_missing = true
 
 [build-system]
-requires = ["flit_core >=3.11,<5"]
+requires = ["flit_core >=4.0.2,<5"]
 build-backend = "flit_core.buildapi"
 
 [project.scripts]
