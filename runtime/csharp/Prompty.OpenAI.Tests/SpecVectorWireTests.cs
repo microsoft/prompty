@@ -156,13 +156,6 @@ public class SpecVectorWireTests
 
             var name = vec.GetProperty("name").GetString()!;
 
-            // Skip vectors that require features not yet implemented in C#
-            if (name is "chat_audio_part" or "chat_audio_mp3")
-                continue; // AudioPart not handled in WireFormat.BuildContentParts
-
-            if (name == "options_additional_properties")
-                continue; // AdditionalProperties passthrough not implemented in BuildOptions
-
             yield return [name, input, vec.GetProperty("expected").GetProperty("request_body")];
         }
     }
