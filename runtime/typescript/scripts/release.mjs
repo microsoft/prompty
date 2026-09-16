@@ -12,7 +12,7 @@
  * What it does:
  *   1. Bumps version in all package.json files (linked)
  *   2. Commits the version bump
- *   3. Creates a git tag: prompty-ts-v{version}
+ *   3. Creates a git tag: typescript/{version}
  *   4. Pushes commit + tag to origin (triggers CI publish)
  */
 

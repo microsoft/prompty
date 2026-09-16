@@ -1,7 +1,7 @@
 {
   "runtime/python/prompty": "2.0.2",
   "runtime/rust": "2.0.1",
-  "runtime/typescript/packages/core": "2.0.0-beta.5",
+  "runtime/typescript/packages/core": "2.0.0",
   "runtime/csharp": "2.0.0",
   "runtime/java": "2.0.0-beta.4",
   "runtime/go/prompty": "2.0.0-beta.4",

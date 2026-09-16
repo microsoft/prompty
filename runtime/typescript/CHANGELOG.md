@@ -2,7 +2,7 @@
 
 All notable changes to the Prompty TypeScript runtime will be documented here.
 
-## [2.0.0-alpha.5] — Unreleased
+## [2.0.0] — 2026-09-16
 
 ### Added
 - §8.8 Structured Result Casting: `StructuredResult` type with `cast<T>()` function and optional Zod-style validators
@@ -21,3 +21,4 @@ All notable changes to the Prompty TypeScript runtime will be documented here.
 ### Fixed
 - Output guardrail now checks all result types, not just strings
 - Dead code cleanup in pipeline.ts (removed 3 unused functions, 6 unused imports)
+- Package metadata now aligns all internal `@prompty/*` dependency ranges with the stable 2.0.0 release

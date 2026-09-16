@@ -1,6 +1,6 @@
 {
   "name": "@prompty/foundry",
-  "version": "2.0.0-beta.5",
+  "version": "2.0.0",
   "description": "Microsoft Foundry provider for Prompty — executor and processor for Azure AI Foundry",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -46,19 +46,19 @@
     "node": ">=18.0.0"
   },
   "peerDependencies": {
-    "@prompty/core": "^2.0.0-beta.4",
-    "@prompty/openai": "^2.0.0-beta.4"
+    "@prompty/core": "^2.0.0",
+    "@prompty/openai": "^2.0.0"
   },
   "dependencies": {
     "@azure/ai-projects": "^2.6.0",
     "@azure/identity": "^4.13.2",
-    "@prompty/core": "^2.0.0-beta.4",
-    "@prompty/openai": "^2.0.0-beta.4",
+    "@prompty/core": "^2.0.0",
+    "@prompty/openai": "^2.0.0",
     "openai": "^7.10.0"
   },
   "devDependencies": {
-    "@prompty/core": "^2.0.0-beta.5",
-    "@prompty/openai": "^2.0.0-beta.5",
+    "@prompty/core": "^2.0.0",
+    "@prompty/openai": "^2.0.0",
     "@types/node": "^26.4.1",
     "dotenv": "^17.4.2",
     "tsup": "^8.4.0",
