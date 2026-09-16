@@ -12,16 +12,16 @@ executes these files. Every `.prompty` file becomes a typed
 
 ```bash
 # Core + Jinja2 renderer + OpenAI provider
-pip install prompty[jinja2,openai]
+uv pip install "prompty[jinja2,openai]"
 
 # Core + Microsoft Foundry provider
-pip install prompty[jinja2,foundry]
+uv pip install "prompty[jinja2,foundry]"
 
 # Core + Anthropic provider
-pip install prompty[jinja2,anthropic]
+uv pip install "prompty[jinja2,anthropic]"
 
 # Everything (all renderers, providers, OpenTelemetry)
-pip install prompty[all]
+uv pip install "prompty[all]"
 ```
 
 ### Extras
