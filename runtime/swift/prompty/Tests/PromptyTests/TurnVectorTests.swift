@@ -57,7 +57,7 @@ final class TurnVectorTests: XCTestCase {
   /// by the shared engine, not by this adapter.
   private static func driveTurn(input: Any?) async throws -> [String: Any] {
     let flags = input as? [String: Any] ?? [:]
-    let messages = flags["messages"] as? [[String: Any]] ?? []
+    let messages = try turnMessagesWithMemory(flags)
     let scriptedRaw = flags["model"] as? [[String: Any]] ?? []
     let toolOutputs = flags["toolOutputs"] as? [String: Any] ?? [:]
     let denyTools = Set(flags["denyTools"] as? [String] ?? [])
@@ -106,7 +106,22 @@ final class TurnVectorTests: XCTestCase {
       "toolResults": result.toolResults.count,
       "toolResultOrder": result.toolResultOrder,
       "eventKinds": result.events,
+      "providerMessages": messages,
     ]
+  }
+
+  private static func turnMessagesWithMemory(_ flags: [String: Any]) throws -> [[String: Any]] {
+    var messages: [[String: Any]] = []
+    if let memory = flags["memory"] as? [String: Any] {
+      let store = try MemoryStore.load(memory["store"] ?? ["entries": []])
+      let core = store.entries.filter { $0.category == .core }
+      let systemPrompt = core.isEmpty ? "" : "## Memory\n" + core.map { "- \($0.content)\n" }.joined()
+      if !systemPrompt.isEmpty {
+        messages.append(["role": "system", "content": systemPrompt])
+      }
+    }
+    messages.append(contentsOf: flags["messages"] as? [[String: Any]] ?? [])
+    return messages
   }
 
   // MARK: - Projection

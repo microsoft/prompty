@@ -38,29 +38,37 @@ import { stringify as yamlStringify } from "yaml";
 import {
   Agent,
   AllowAllPermissionResolver,
+  Binding,
   CollectingEventSink,
   DenyAllPermissionResolver,
   FormatConfig,
+  FoundryConnection,
   FunctionHostToolExecutor,
   FunctionTool,
-  Binding,
-  Model,
-  ModelOptions,
+  MemoryEntry,
+  MemoryStore,
   HostToolRequest,
   InMemoryCheckpointStore,
   JsonlEventJournalWriter,
   LoadContext,
   Message,
+  Model,
+  ModelOptions,
   ParserConfig,
   Property,
   ReferenceTurnRunner,
   RunTurnRequest,
   Template,
   TurnModelResponse,
+  clearMemory,
+  formatForSystemPrompt,
+  formatRecallResults,
   load,
+  recall,
   registerParser,
   registerRenderer,
   renderSegments,
+  remember,
   validateInputs,
   MustacheRenderer,
   NunjucksRenderer,
@@ -68,6 +76,7 @@ import {
   runAgentLoop,
   totalMessages,
   runTurnEngine,
+  updateMemory,
   SUMMARY_PREFIX,
   type AgentToolCall,
   type ModelResponse,
@@ -86,13 +95,16 @@ import {
   buildEmbeddingArgs as openaiBuildEmbeddingArgs,
   buildImageArgs as openaiBuildImageArgs,
   buildResponsesArgs as openaiBuildResponsesArgs,
+  OpenAIExecutor,
   OpenAIProcessor,
   processResponse as openaiProcessResponse,
 } from "@prompty/openai";
 import {
+  AnthropicExecutor,
   AnthropicProcessor,
   buildChatArgs as anthropicBuildChatArgs,
 } from "@prompty/anthropic";
+import { AzureExecutor, FoundryExecutor } from "@prompty/foundry";
 
 // The pipeline drives renderer/parser lookups through the registry; register the
 // built-ins once so the render/parse adapters exercise the real runtime path.
@@ -242,7 +254,10 @@ function project(observed: any, expected: any): any {
 }
 
 function projectNormalize(observed: unknown, context: AdapterContext): unknown {
-  return project(observed, context.vector.expected);
+  return project(
+    observed,
+    context.vector.expected ?? context.vector.expectedError,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -714,6 +729,96 @@ function discoveryMapInvoke(
 }
 
 // ---------------------------------------------------------------------------
+// MemoryConformance.operate
+// ---------------------------------------------------------------------------
+
+function memoryResult(
+  result: ReturnType<typeof recall>[number],
+): Record<string, unknown> {
+  return {
+    content: result.entry.content,
+    category: result.entry.category,
+    score: Number.isInteger(result.score)
+      ? Math.trunc(result.score)
+      : result.score,
+    keyword_matches: result.keywordMatches,
+  };
+}
+
+function memoryOperateInvoke(input: any, _context: AdapterContext): unknown {
+  const operation = String(input.operation ?? "");
+  const store = MemoryStore.load(input.store ?? { entries: [] });
+
+  switch (operation) {
+    case "recall":
+      return {
+        results: recall(
+          store,
+          String(input.query ?? ""),
+          Number(input.limit ?? 0),
+        ).map(memoryResult),
+      };
+    case "remember": {
+      remember(
+        store,
+        MemoryEntry.load(input.entry),
+        Number(input.max_entries ?? 0),
+      );
+      return { store: store.save() };
+    }
+    case "clear": {
+      const removed = clearMemory(store, input.category);
+      return { removed, store: store.save() };
+    }
+    case "update": {
+      try {
+        updateMemory(
+          store,
+          Number(input.index ?? 0),
+          MemoryEntry.load(input.entry),
+        );
+      } catch (error) {
+        const vectorError = new Error(
+          error instanceof Error ? error.message : String(error),
+        ) as Error & {
+          typraVector?: Record<string, unknown>;
+        };
+        vectorError.typraVector = { kind: "index_out_of_range" };
+        throw vectorError;
+      }
+      return { store: store.save() };
+    }
+    case "format": {
+      const results = recall(
+        store,
+        String(input.query ?? ""),
+        Number(input.limit ?? 0),
+      );
+      return {
+        system_prompt: formatForSystemPrompt(store),
+        recall_results: formatRecallResults(results),
+      };
+    }
+    case "snapshot": {
+      remember(
+        store,
+        MemoryEntry.load(input.entry),
+        Number(input.max_entries ?? 0),
+      );
+      const reloaded = MemoryStore.load(store.save());
+      const recalled = recall(
+        reloaded,
+        String(input.query ?? ""),
+        Number(input.limit ?? 0),
+      ).map((result) => result.entry.content);
+      return { store: reloaded.save(), recalled };
+    }
+    default:
+      throw new Error(`Unsupported memory operation: ${operation}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Processor.processStream — provider stream classification + reconciliation
 // ---------------------------------------------------------------------------
 
@@ -926,11 +1031,7 @@ async function runInvoke(
   // Annotation passthrough — cross-runtime notes that are not TS behavioral
   // observations. Echo them so canonical equality holds without fabricating
   // engine output.
-  for (const annotation of [
-    "notes",
-    "summary_contains",
-    "rust_expected_error",
-  ]) {
+  for (const annotation of ["notes", "summary_contains"]) {
     if (annotation in expected) observed[annotation] = expected[annotation];
   }
 
@@ -1012,7 +1113,7 @@ async function runTurnInvoke(
   _context: AdapterContext,
 ): Promise<Record<string, unknown>> {
   const flags = input;
-  const messages = (flags.messages ?? []) as Record<string, unknown>[];
+  const messages = turnMessagesWithMemory(flags);
   const scripted = (flags.model ?? []) as any[];
   const toolOutputs = flags.toolOutputs ?? {};
   const denyTools = new Set<string>(flags.denyTools ?? []);
@@ -1055,7 +1156,103 @@ async function runTurnInvoke(
     toolResults: result.toolResults.length,
     toolResultOrder: result.toolResultOrder,
     eventKinds: result.events,
+    providerMessages: messages,
   };
+}
+
+function turnMessagesWithMemory(flags: any): Record<string, unknown>[] {
+  const messages = (flags.messages ?? []) as Record<string, unknown>[];
+  if (!flags.memory || typeof flags.memory !== "object") {
+    return messages;
+  }
+  const store = MemoryStore.load(flags.memory.store ?? { entries: [] });
+  const systemPrompt = formatForSystemPrompt(store);
+  if (!systemPrompt) {
+    return messages;
+  }
+  return [{ role: "system", content: systemPrompt }, ...messages];
+}
+
+// ---------------------------------------------------------------------------
+// LiveProviderConformance.invoke — capability-gated live provider acceptance
+// ---------------------------------------------------------------------------
+
+function envPresent(...names: string[]): boolean {
+  return names.every((name) => {
+    const value = (process.env[name] ?? "").trim();
+    const lowered = value.toLowerCase();
+    return (
+      value.length > 0 &&
+      !lowered.startsWith("sk-test") &&
+      !lowered.startsWith("test") &&
+      !lowered.startsWith("dummy") &&
+      !lowered.startsWith("your_") &&
+      !lowered.startsWith("<")
+    );
+  });
+}
+
+function liveAgent(input: any): Agent {
+  const provider = String(input.provider ?? "openai");
+  const connection =
+    provider === "foundry" && !input.apiKey
+      ? new FoundryConnection({ endpoint: input.endpoint })
+      : undefined;
+  return new Agent({
+    kind: "prompt",
+    name: "live-provider-vector",
+    model: new Model({
+      id: input.model,
+      provider,
+      apiType: input.apiType ?? "chat",
+      connection,
+      options: new ModelOptions(input.options ?? {}),
+    }),
+  });
+}
+
+function liveMessages(input: any): Message[] {
+  return (input.messages ?? []).map(
+    (message: any) =>
+      new Message({
+        role: message.role ?? "user",
+        parts: [{ kind: "text", value: message.content ?? "" }],
+      }),
+  );
+}
+
+async function liveProviderInvoke(input: any): Promise<unknown> {
+  const agent = liveAgent(input);
+  const messages = liveMessages(input);
+  const provider = String(input.provider ?? "openai");
+  if (provider === "anthropic") {
+    return new AnthropicExecutor().execute(agent, messages);
+  }
+  if (provider === "foundry" || provider === "azure") {
+    if (input.apiKey) {
+      return new AzureExecutor().execute(agent, messages);
+    }
+    return new FoundryExecutor().execute(agent, messages);
+  }
+  return new OpenAIExecutor().execute(agent, messages);
+}
+
+function liveProviderNormalize(
+  observed: any,
+  context: AdapterContext,
+): unknown {
+  let content: unknown = "";
+  if (Array.isArray(observed?.choices) && observed.choices.length > 0) {
+    content = observed.choices[0]?.message?.content ?? "";
+  } else if (Array.isArray(observed?.content)) {
+    content = observed.content.map((part: any) => part?.text ?? "").join("");
+  } else {
+    content = observed?.content ?? "";
+  }
+  return project(
+    { accepted: true, contentNonEmpty: String(content).trim().length > 0 },
+    context.vector.expected,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1076,6 +1273,14 @@ export const vectorAdapters = {
   "TurnConformance.replay": { invoke: replayInvoke },
   "DiscoveryConformance.enrich": { invoke: discoveryEnrichInvoke },
   "DiscoveryConformance.mapModel": { invoke: discoveryMapInvoke },
+  "MemoryConformance.operate": {
+    invoke: memoryOperateInvoke,
+    normalize: projectNormalize,
+  },
+  "LiveProviderConformance.invoke": {
+    invoke: liveProviderInvoke,
+    normalize: liveProviderNormalize,
+  },
 };
 
 // Every cross-runtime contract now has a real TypeScript adapter above; there
@@ -1085,3 +1290,23 @@ export const vectorAdapters = {
 export const vectorWaivers: Record<string, string> = {};
 
 export const vectorDoubles: Record<string, unknown> = {};
+
+export const vectorCapabilities: Record<
+  string,
+  (_context: AdapterContext) => boolean
+> = {
+  "provider:openai": () => envPresent("OPENAI_API_KEY"),
+  "provider:anthropic": () => envPresent("ANTHROPIC_API_KEY"),
+  "provider:foundry-key": () =>
+    envPresent(
+      "AZURE_OPENAI_ENDPOINT",
+      "AZURE_OPENAI_API_KEY",
+      "AZURE_OPENAI_CHAT_DEPLOYMENT",
+    ),
+  "provider:foundry-entra": () =>
+    envPresent(
+      "FOUNDRY_PROJECT_ENDPOINT",
+      "FOUNDRY_MODEL",
+      "AZURE_INFERENCE_CREDENTIAL",
+    ),
+};

@@ -1,13 +1,14 @@
 ---
 title: Implementation
 description: >
-  Language-specific guides for using Prompty in Python, TypeScript, and C#.
+  Language-specific guides for using Prompty runtimes.
 sidebar:
   order: 1
 ---
 
 Prompty has runtime implementations in multiple languages. Each follows the
-same pipeline architecture but uses language-native patterns and package managers.
+same pipeline architecture, uses generated model types from the in-repository
+schema, and is validated by shared conformance vectors for observable behavior.
 
 | Language | Status | Package |
 |----------|--------|---------|
@@ -15,12 +16,22 @@ same pipeline architecture but uses language-native patterns and package manager
 | [**TypeScript**](/implementation/typescript/) | ✅ Stable (alpha) | `@prompty/core` on npm |
 | [**C#**](/implementation/csharp/) | ✅ Alpha | `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` on NuGet |
 | [**Rust**](/implementation/rust/) | ✅ Alpha | `prompty`, `prompty-openai`, `prompty-foundry`, `prompty-anthropic` on crates.io |
+| **Java** | ✅ Alpha | Java runtime packages |
+| **Go** | ✅ Alpha | Go module under `runtime/go/prompty` |
+| **Swift** | ✅ Alpha | `Prompty`, `PromptyOpenAI`, `PromptyFoundry`, `PromptyAnthropic` SwiftPM packages |
 
 ## Choosing a Runtime
 
-All runtimes share the same `.prompty` file format — a prompt written for one
-runtime works with any other. The differences are in installation, API style,
-and available providers.
+All runtimes share the same `.prompty` file format and generated model contract
+— a prompt written for one runtime should load and prepare the same way in any
+other runtime. The differences are in installation, API style, host integration,
+and provider packages.
+
+Canonical vectors cover load, render, parse, provider wire contracts, response
+processing, agent/tool behavior, memory behavior, memory context injection, and
+live provider acceptance when environment variables are present. Missing live
+provider credentials skip those checks; present credentials plus provider
+rejection fail them.
 
 ### Python
 
@@ -53,11 +64,11 @@ and available providers.
 
 ## Provider Packages
 
-| Provider | Python | TypeScript | C# | Rust |
-|---|---|---|---|---|
-| OpenAI | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` | `prompty-openai` |
-| Microsoft Foundry | `prompty[foundry]` | `@prompty/foundry` | `Prompty.Foundry` | `prompty-foundry` |
-| Anthropic | `prompty[anthropic]` | `@prompty/anthropic` | `Prompty.Anthropic` | `prompty-anthropic` |
+| Provider | Python | TypeScript | C# | Rust | Swift |
+|---|---|---|---|---|---|
+| OpenAI | `prompty[openai]` | `@prompty/openai` | `Prompty.OpenAI` | `prompty-openai` | `PromptyOpenAI` |
+| Microsoft Foundry | `prompty[foundry]` | `@prompty/foundry` | `Prompty.Foundry` | `prompty-foundry` | `PromptyFoundry` |
+| Anthropic | `prompty[anthropic]` | `@prompty/anthropic` | `Prompty.Anthropic` | `prompty-anthropic` | `PromptyAnthropic` |
 
 Provider feature coverage is not identical in every runtime. For model/deployment
 discovery support, see [Discover Available Models](/how-to/model-discovery/).

@@ -77,11 +77,9 @@ model ArrayProperty extends Property {
 
   @doc("The type of items contained in the array")
   @sample(toItemsSample)
-  items: Property | Named<
-    Property,
-    "Name of the property",
-    #{ name: "my-property" }
-  >;
+  items:
+    | Property
+    | Named<Property, "Name of the property", #{ name: "my-property" }>;
 }
 
 /**
@@ -118,8 +116,6 @@ model UnionProperty extends Property {
   anyOf?: Property[];
 }
 
-alias Properties = Record<Property> | Named<
-  Property,
-  "Name of the property",
-  #{ name: "my-input" }
->[]; // need to support input aliasing => | Record<string | numeric | boolean>;
+alias Properties =
+  | Record<Property>
+  | Named<Property, "Name of the property", #{ name: "my-input" }>[]; // need to support input aliasing => | Record<string | numeric | boolean>;

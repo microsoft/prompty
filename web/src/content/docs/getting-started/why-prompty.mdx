@@ -77,8 +77,8 @@ OpenAI, Azure, or any provider. Process the response into your desired format.
 
 ### One file, any language
 
-The same `.prompty` file works across **Python**, **TypeScript**, **C#**, and
-**Rust** runtimes. Your prompt engineers write once; your application teams
+The same `.prompty` file works across **Python**, **TypeScript**, **C#**,
+**Rust**, **Java**, **Go**, and **Swift** runtimes. Your prompt engineers write once; your application teams
 consume in whatever language their service uses.
 
 ## How Prompty Compares
@@ -87,7 +87,7 @@ consume in whatever language their service uses.
 | ------------------ | -------------------- | --------------------------- | ------------------------------------ |
 | **Prompt format**  | Strings in code      | Templates in code           | Dedicated `.prompty` file            |
 | **Model config**   | Constructor args     | Chain config                | YAML frontmatter                     |
-| **Portability**    | Single language      | Single language             | Python, TypeScript, C#, Rust         |
+| **Portability**    | Single language      | Single language             | Python, TypeScript, C#, Rust, Java, Go, Swift |
 | **Testability**    | Mock entire client   | Mock chain                  | Mock at any pipeline stage           |
 | **Version control**| Diff code changes    | Diff code changes           | Diff prompt files directly           |
 | **IDE support**    | Code editor          | Code editor                 | VS Code extension with live preview  |
@@ -103,7 +103,7 @@ consume in whatever language their service uses.
 **Prompty is a good fit when:**
 
 - ✅ You want prompts treated as **first-class assets** — versioned, reviewed, and tested independently
-- ✅ Your team works across **Python, TypeScript, C#**, and **Rust** and needs a shared format
+- ✅ Your team works across multiple Prompty runtimes and needs a shared format
 - ✅ You want to **test prompts in isolation** without mocking entire LLM clients
 - ✅ You need **built-in tracing and observability** across the prompt lifecycle
 - ✅ You want a **standard your team can adopt** without committing to a full framework

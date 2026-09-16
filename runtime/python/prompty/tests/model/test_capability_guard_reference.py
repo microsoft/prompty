@@ -110,6 +110,8 @@ class TestProviderPredicates:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         assert va._cap_provider_openai(_context()) is False
         monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+        assert va._cap_provider_openai(_context()) is False
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-live-test")
         assert va._cap_provider_openai(_context()) is True
 
     def test_anthropic_absent_then_present(self, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -8,10 +8,11 @@
     "format:rust": "cargo fmt --all --manifest-path ../runtime/rust/prompty/Cargo.toml",
     "generate": "npx tsp compile model/main.tsp --config tspconfig.yaml && node scripts/normalize-typra-output.mjs && npm run format:rust",
     "lint:fixtures": "node scripts/lint-fixtures.mjs",
+    "lint:vector-metadata": "node scripts/lint-vector-metadata.mjs",
     "verify:typra": "node scripts/verify-typra.mjs",
     "smoke:emit": "node scripts/smoke-emit.mjs",
     "check:coverage": "node scripts/check-vector-coverage.mjs",
-    "build": "npm run lint:fixtures && npm run format:tsp && npm run generate"
+    "build": "npm run lint:fixtures && npm run lint:vector-metadata && npm run format:tsp && npm run generate && npm run lint:vector-metadata"
   },
   "dependencies": {
     "@typespec/compiler": "^1.16.0",

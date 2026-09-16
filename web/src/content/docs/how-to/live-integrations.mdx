@@ -12,6 +12,13 @@ Prompty’s unit tests mock provider SDKs. Live integration tests use real endpo
 to catch wire-format and authentication issues that mocks can miss, such as unsupported
 empty `stop` arrays, deployment/model differences, and SDK response-shape differences.
 
+The shared live-provider conformance vectors use the same rule in every runtime:
+missing environment variables or tenant-compatible identity skip the vector, while
+present capability plus provider rejection is a failure. The vectors assert
+structural acceptance (`accepted: true` and non-empty content) rather than
+provider-specific wording, so runtimes can verify live wire compatibility without
+making brittle assertions about model output.
+
 <Aside type="caution">
   Live tests call paid services. Use test resources, set conservative model options,
   and never commit `.env` files.

@@ -106,11 +106,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -289,10 +291,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveProviderConformance.cs",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "LoadConformance.cs",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "MemoryConformance.cs",
           "protocol": true
         },
         {
@@ -2094,6 +2110,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "LiveProviderConformance.cs",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -2104,6 +2140,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "MemoryConformance.cs",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -2433,7 +2489,9 @@
         "EventSink.cs",
         "Executor.cs",
         "HostToolExecutor.cs",
+        "LiveProviderConformance.cs",
         "LoadConformance.cs",
+        "MemoryConformance.cs",
         "ModelLister.cs",
         "Parser.cs",
         "PermissionResolver.cs",
@@ -2645,11 +2703,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -2828,10 +2888,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "live_provider_conformance.go",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "load_conformance.go",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "memory_conformance.go",
           "protocol": true
         },
         {
@@ -4633,6 +4707,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "live_provider_conformance.go",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -4643,6 +4737,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "memory_conformance.go",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -5017,10 +5131,12 @@
         "invocation_context_state.go",
         "invocation_usage.go",
         "invoker_error.go",
+        "live_provider_conformance.go",
         "llm_complete_payload.go",
         "llm_start_payload.go",
         "load_conformance.go",
         "mcp_approval_mode.go",
+        "memory_conformance.go",
         "memory_entry.go",
         "memory_store.go",
         "message.go",
@@ -5184,11 +5300,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -5367,10 +5485,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveProviderConformance.java",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "LoadConformance.java",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "MemoryConformance.java",
           "protocol": true
         },
         {
@@ -7172,6 +7304,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "LiveProviderConformance.java",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -7182,6 +7334,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "MemoryConformance.java",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -7556,10 +7728,12 @@
         "InvocationContextState.java",
         "InvocationUsage.java",
         "InvokerError.java",
+        "LiveProviderConformance.java",
         "LlmCompletePayload.java",
         "LlmStartPayload.java",
         "LoadConformance.java",
         "McpApprovalMode.java",
+        "MemoryConformance.java",
         "MemoryEntry.java",
         "MemoryStore.java",
         "Message.java",
@@ -7722,11 +7896,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -7905,10 +8081,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "LiveProviderConformance",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "LoadConformance",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "MemoryConformance",
           "protocol": true
         },
         {
@@ -9710,6 +9900,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "LiveProviderConformance",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -9720,6 +9930,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "MemoryConformance",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -10094,10 +10324,12 @@
         "InvocationContextState",
         "InvocationUsage",
         "InvokerError",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -10261,11 +10493,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -10444,10 +10678,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._LiveProviderConformance",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "._LoadConformance",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "._MemoryConformance",
           "protocol": true
         },
         {
@@ -12249,6 +12497,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "._LiveProviderConformance",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -12259,6 +12527,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "._MemoryConformance",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -12588,7 +12876,9 @@
         "._EventSink",
         "._Executor",
         "._HostToolExecutor",
+        "._LiveProviderConformance",
         "._LoadConformance",
+        "._MemoryConformance",
         "._ModelLister",
         "._Parser",
         "._PermissionResolver",
@@ -12677,11 +12967,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -12860,10 +13152,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "live_provider_conformance",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "load_conformance",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "memory_conformance",
           "protocol": true
         },
         {
@@ -14665,6 +14971,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "live_provider_conformance",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -14675,6 +15001,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "memory_conformance",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -15006,7 +15352,9 @@
         "event_sink",
         "executor",
         "host_tool_executor",
+        "live_provider_conformance",
         "load_conformance",
+        "memory_conformance",
         "model_lister",
         "operations",
         "parser",
@@ -15095,11 +15443,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -15278,10 +15628,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/live_provider_conformance.swift",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "Sources/PromptyModel/load_conformance.swift",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "Sources/PromptyModel/memory_conformance.swift",
           "protocol": true
         },
         {
@@ -17083,6 +17447,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "Sources/PromptyModel/live_provider_conformance.swift",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -17093,6 +17477,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "Sources/PromptyModel/memory_conformance.swift",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -17536,7 +17940,9 @@
         "Sources/PromptyModel/event_sink.swift",
         "Sources/PromptyModel/executor.swift",
         "Sources/PromptyModel/host_tool_executor.swift",
+        "Sources/PromptyModel/live_provider_conformance.swift",
         "Sources/PromptyModel/load_conformance.swift",
+        "Sources/PromptyModel/memory_conformance.swift",
         "Sources/PromptyModel/model_lister.swift",
         "Sources/PromptyModel/operations/render_segment.swift",
         "Sources/PromptyModel/parser.swift",
@@ -17634,11 +18040,13 @@
         "InvocationUsage",
         "InvokerError",
         "Jinja2Format",
+        "LiveProviderConformance",
         "LlmCompletePayload",
         "LlmStartPayload",
         "LoadConformance",
         "McpApprovalMode",
         "McpTool",
+        "MemoryConformance",
         "MemoryEntry",
         "MemoryStore",
         "Message",
@@ -17817,10 +18225,24 @@
           "protocol": true
         },
         {
+          "name": "LiveProviderConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./live-provider-conformance",
+          "protocol": true
+        },
+        {
           "name": "LoadConformance",
           "kind": "type",
           "group": "",
           "source": "./load-conformance",
+          "protocol": true
+        },
+        {
+          "name": "MemoryConformance",
+          "kind": "type",
+          "group": "",
+          "source": "./memory-conformance",
           "protocol": true
         },
         {
@@ -19622,6 +20044,26 @@
           ]
         },
         {
+          "name": "LiveProviderConformance",
+          "group": "",
+          "symbol": "LiveProviderConformance",
+          "source": "./live-provider-conformance",
+          "methods": [
+            {
+              "name": "invoke",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
           "name": "LoadConformance",
           "group": "",
           "symbol": "LoadConformance",
@@ -19632,6 +20074,26 @@
               "returns": "Agent",
               "params": {
                 "source": "unknown"
+              },
+              "optional": false,
+              "sync": false,
+              "runtimeCancellable": false,
+              "atomic": false,
+              "nonFatal": false
+            }
+          ]
+        },
+        {
+          "name": "MemoryConformance",
+          "group": "",
+          "symbol": "MemoryConformance",
+          "source": "./memory-conformance",
+          "methods": [
+            {
+              "name": "operate",
+              "returns": "unknown",
+              "params": {
+                "input": "unknown"
               },
               "optional": false,
               "sync": false,
@@ -20075,7 +20537,9 @@
         "./event-sink",
         "./executor",
         "./host-tool-executor",
+        "./live-provider-conformance",
         "./load-conformance",
+        "./memory-conformance",
         "./model-lister",
         "./operations/render-segment",
         "./parser",

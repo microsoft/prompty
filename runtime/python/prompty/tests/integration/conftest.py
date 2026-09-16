@@ -26,7 +26,20 @@ from typing import Any
 import pytest
 from dotenv import load_dotenv
 
-# Load .env from the package root (runtime/python/prompty/.env)
+
+def _repo_root() -> Path:
+    """Find the repository root from the integration test directory."""
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / ".git").exists() or (parent / "schema").is_dir():
+            return parent
+    return here.parents[4]
+
+
+# Load root .env first so repo-level live provider credentials are available.
+# Then load the package-local .env for backwards compatibility without
+# overriding values that were already supplied by the root file or environment.
+load_dotenv(_repo_root() / ".env")
 load_dotenv()
 
 # ---------------------------------------------------------------------------

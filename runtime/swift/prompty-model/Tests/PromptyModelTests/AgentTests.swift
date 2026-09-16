@@ -71,14 +71,14 @@ final class AgentTests: XCTestCase {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -94,7 +94,7 @@ final class AgentTests: XCTestCase {
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -154,14 +154,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -177,7 +177,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -255,14 +255,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -278,7 +278,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -338,14 +338,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -361,7 +361,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -441,14 +441,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -464,7 +464,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -524,14 +524,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -547,7 +547,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -626,14 +626,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -649,7 +649,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -709,14 +709,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -732,7 +732,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -814,14 +814,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -837,7 +837,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -897,14 +897,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -920,7 +920,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1001,14 +1001,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1024,7 +1024,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1084,14 +1084,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1107,7 +1107,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1190,14 +1190,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1213,7 +1213,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1273,14 +1273,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1296,7 +1296,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1378,14 +1378,14 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+  "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 }
 """
     let instance = try Agent.fromJSON(json)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1401,7 +1401,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)
@@ -1461,14 +1461,14 @@ tools:
 template:
   format: mustache
   parser: prompty
-instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+instructions: "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
 
 """
     let instance = try Agent.fromYAML(yaml)
     XCTAssertEqual(instance.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(instance.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(instance.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(instance.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(instance.metadata)
     XCTAssertEqual((try XCTUnwrap(instance.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(instance.outputs)).count, 1)
@@ -1484,7 +1484,7 @@ instructions: "system:\\nYou are an AI assistant who helps people find informati
     XCTAssertEqual(reloaded.name, "basic-prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.displayName)), "Basic Prompt")
     XCTAssertEqual((try XCTUnwrap(reloaded.description)), "A basic prompt that uses the GPT-3 chat API to answer questions")
-    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
+    XCTAssertEqual((try XCTUnwrap(reloaded.instructions)), "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}")
     XCTAssertNotNil(reloaded.metadata)
     XCTAssertEqual((try XCTUnwrap(reloaded.inputs)).count, 3)
     XCTAssertEqual((try XCTUnwrap(reloaded.outputs)).count, 1)

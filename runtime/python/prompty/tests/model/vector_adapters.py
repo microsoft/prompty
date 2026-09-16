@@ -76,7 +76,27 @@ from prompty.core.turn_engine import (
     run_turn as _run_turn,
 )
 from prompty.core.types import AudioPart, ContentPart, ImagePart, Message, TextPart
+from prompty.memory import (
+    clear_memory as _memory_clear,
+)
+from prompty.memory import (
+    format_for_system_prompt as _memory_format_for_system_prompt,
+)
+from prompty.memory import (
+    format_recall_results as _memory_format_recall_results,
+)
+from prompty.memory import (
+    recall as _memory_recall,
+)
+from prompty.memory import (
+    remember as _memory_remember,
+)
+from prompty.memory import (
+    update_memory as _memory_update,
+)
 from prompty.model import Agent, HostToolRequest, ModelInfo, TurnOptions
+from prompty.model import MemoryEntry as _MemoryEntry
+from prompty.model import MemoryStore as _MemoryStore
 from prompty.providers.anthropic.executor import _build_chat_args as _anthropic_build_chat_args
 from prompty.providers.discovery import enrich as _discovery_enrich
 from prompty.providers.discovery import map_model as _discovery_map_model
@@ -132,7 +152,7 @@ def _project(observed: Any, expected: Any) -> Any:
 
 
 def _project_normalize(observed: Any, context: dict) -> Any:
-    return _project(observed, context["vector"]["expected"])
+    return _project(observed, context["vector"].get("expected", context["vector"].get("expectedError")))
 
 
 # ---------------------------------------------------------------------------
@@ -566,6 +586,68 @@ def _discovery_map_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[
 
 
 # ---------------------------------------------------------------------------
+# MemoryConformance.operate -- deterministic memory behavior
+# ---------------------------------------------------------------------------
+
+
+def _memory_result(result) -> dict[str, Any]:
+    score = int(result.score) if result.score.is_integer() else result.score
+    return {
+        "content": result.entry.content,
+        "category": result.entry.category,
+        "score": score,
+        "keyword_matches": result.keyword_matches,
+    }
+
+
+def _memory_operate_invoke(resolved_input: Any, _context: dict[str, Any]) -> dict[str, Any]:
+    """Drive the host-neutral memory behavior through the Python runtime."""
+    flags = resolved_input
+    operation = flags.get("operation")
+    store = _MemoryStore.load(flags.get("store") or {"entries": []})
+
+    if operation == "recall":
+        results = _memory_recall(store, flags.get("query", ""), int(flags.get("limit") or 0))
+        return {"results": [_memory_result(result) for result in results]}
+
+    if operation == "remember":
+        entry = _MemoryEntry.load(flags["entry"])
+        _memory_remember(store, entry, int(flags.get("max_entries") or 0))
+        return {"store": store.save()}
+
+    if operation == "clear":
+        removed = _memory_clear(store, flags.get("category"))
+        return {"removed": removed, "store": store.save()}
+
+    if operation == "update":
+        try:
+            _memory_update(store, int(flags.get("index") or 0), _MemoryEntry.load(flags["entry"]))
+        except IndexError as error:
+            error.typra_vector = {"kind": "index_out_of_range"}  # type: ignore[attr-defined]
+            raise
+        return {"store": store.save()}
+
+    if operation == "format":
+        results = _memory_recall(store, flags.get("query", ""), int(flags.get("limit") or 0))
+        return {
+            "system_prompt": _memory_format_for_system_prompt(store),
+            "recall_results": _memory_format_recall_results(results),
+        }
+
+    if operation == "snapshot":
+        entry = _MemoryEntry.load(flags["entry"])
+        _memory_remember(store, entry, int(flags.get("max_entries") or 0))
+        reloaded = _MemoryStore.load(store.save())
+        results = _memory_recall(reloaded, flags.get("query", ""), int(flags.get("limit") or 0))
+        return {
+            "store": reloaded.save(),
+            "recalled": [result.entry.content for result in results],
+        }
+
+    raise ValueError(f"Unsupported memory operation: {operation}")
+
+
+# ---------------------------------------------------------------------------
 # TurnConformance.run -- provider-agnostic agent loop
 # ---------------------------------------------------------------------------
 
@@ -746,7 +828,7 @@ def _run_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, Any]:
     # Annotation passthrough -- cross-runtime notes that are not Python behavioral
     # observations. Echo them so canonical equality holds without fabricating
     # engine output.
-    for annotation in ("notes", "summary_contains", "rust_expected_error"):
+    for annotation in ("notes", "summary_contains"):
         if annotation in expected:
             observed[annotation] = expected[annotation]
 
@@ -810,7 +892,7 @@ def _run_turn_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, 
     in :func:`prompty.core.turn_engine.run_turn`.
     """
     flags = resolved_input
-    messages = list(flags.get("messages") or [])
+    messages = _turn_messages_with_memory(flags)
     scripted = list(flags.get("model") or [])
     tool_outputs = flags.get("toolOutputs") or {}
     deny_tools = set(flags.get("denyTools") or [])
@@ -849,8 +931,21 @@ def _run_turn_invoke(resolved_input: Any, context: dict[str, Any]) -> dict[str, 
         "toolResults": len(result.tool_results),
         "toolResultOrder": result.tool_result_order,
         "eventKinds": result.events,
+        "providerMessages": messages,
     }
     return observed
+
+
+def _turn_messages_with_memory(flags: dict[str, Any]) -> list[dict[str, Any]]:
+    messages = list(flags.get("messages") or [])
+    memory = flags.get("memory")
+    if not isinstance(memory, dict):
+        return messages
+    store = _MemoryStore.load(memory.get("store") or {"entries": []})
+    system_prompt = _memory_format_for_system_prompt(store)
+    if not system_prompt:
+        return messages
+    return [{"role": "system", "content": system_prompt}, *messages]
 
 
 # ---------------------------------------------------------------------------
@@ -901,20 +996,34 @@ _ANTHROPIC_STOP_REASONS = {"end_turn": "stop", "max_tokens": "length", "tool_use
 
 def _cap_provider_openai(context: dict) -> bool:
     """Capability ``provider:openai`` -- an OpenAI API key is present."""
-    return bool(os.environ.get("OPENAI_API_KEY"))
+    return _env_present("OPENAI_API_KEY")
 
 
 def _cap_provider_anthropic(context: dict) -> bool:
     """Capability ``provider:anthropic`` -- an Anthropic API key is present."""
-    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+    return _env_present("ANTHROPIC_API_KEY")
 
 
 def _cap_provider_azure(context: dict) -> bool:
-    """Capability ``provider:azure`` / ``provider:foundry`` -- Azure key auth is present."""
+    """Capability ``provider:azure`` / ``provider:foundry-key`` -- Azure key auth is present."""
     return bool(
-        os.environ.get("AZURE_OPENAI_API_KEY")
-        and os.environ.get("AZURE_OPENAI_ENDPOINT")
-        and os.environ.get("AZURE_OPENAI_CHAT_DEPLOYMENT")
+        _env_present("AZURE_OPENAI_API_KEY")
+        and _env_present("AZURE_OPENAI_ENDPOINT")
+        and _env_present("AZURE_OPENAI_CHAT_DEPLOYMENT")
+    )
+
+
+def _env_present(name: str) -> bool:
+    value = os.environ.get(name, "").strip()
+    if not value:
+        return False
+    lowered = value.lower()
+    return not (
+        lowered.startswith("sk-test")
+        or lowered.startswith("test")
+        or lowered.startswith("dummy")
+        or lowered.startswith("your_")
+        or lowered.startswith("<")
     )
 
 
@@ -940,7 +1049,10 @@ def _cap_entra_foundry_project(context: dict) -> bool:
     except Exception:  # noqa: BLE001 -- azure-identity is optional
         return False
 
-    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
+    if not os.environ.get("FOUNDRY_MODEL"):
+        return False
+
+    endpoint = os.environ.get("FOUNDRY_PROJECT_ENDPOINT") or os.environ.get("AZURE_OPENAI_ENDPOINT", "")
     resolve = context.get("resolveInput")
     vector = context.get("vector") or {}
     raw_input = vector.get("input")
@@ -1077,11 +1189,24 @@ def _live_chat_invoke(resolved_input: dict, context: dict) -> Any:
 def _live_chat_normalize(observed: Any, context: dict) -> dict:
     """Project a raw chat response onto the canonical structural shape."""
     role, content, finish = _extract_chat_structure(observed)
-    return {
+    observed_shape = {
+        "accepted": True,
         "role": role,
         "contentNonEmpty": bool(content and str(content).strip()),
         "finishReasonInEnum": finish in _FINISH_REASONS,
     }
+    expected = context["vector"].get(
+        "expected",
+        context["vector"].get(
+            "expectedError",
+            {
+                "role": role,
+                "contentNonEmpty": True,
+                "finishReasonInEnum": True,
+            },
+        ),
+    )
+    return _project(observed_shape, expected)
 
 
 # ---------------------------------------------------------------------------
@@ -1096,7 +1221,8 @@ VECTOR_ADAPTERS: dict[str, Any] = {
     "DiscoveryConformance.enrich": {"invoke": _discovery_enrich_invoke},
     "DiscoveryConformance.mapModel": {"invoke": _discovery_map_invoke},
     "TurnConformance.replay": {"invoke": _replay_invoke},
-    "LiveChatConformance.complete": {"invoke": _live_chat_invoke, "normalize": _live_chat_normalize},
+    "MemoryConformance.operate": {"invoke": _memory_operate_invoke, "normalize": _project_normalize},
+    "LiveProviderConformance.invoke": {"invoke": _live_chat_invoke, "normalize": _live_chat_normalize},
 }
 
 # Contracts introduced/tightened by Typra 0.12.0 that the Python runtime does not
@@ -1117,6 +1243,8 @@ VECTOR_CAPABILITIES: dict[str, Any] = {
     "provider:anthropic": _cap_provider_anthropic,
     "provider:azure": _cap_provider_azure,
     "provider:foundry": _cap_provider_azure,
+    "provider:foundry-key": _cap_provider_azure,
+    "provider:foundry-entra": _cap_entra_foundry_project,
     "entra:foundry-project": _cap_entra_foundry_project,
     "var:live-enabled": _cap_var_live_enabled,
 }

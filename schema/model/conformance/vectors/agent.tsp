@@ -3555,7 +3555,6 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
         "result": "Here's your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
         "iterations": 2,
         "total_messages": 8,
@@ -3565,6 +3564,171 @@ const AgentVectors = """
           "get_news"
         ],
         "notes": "With parallel_tool_calls=true, all 3 tool calls may execute concurrently. Regardless of execution order, tool result messages must be appended in the same order as the original tool_calls array. The total is 8 messages: system + user + assistant(3 tool_calls) + 3 tool results + final assistant."
+      }
+    },
+    {
+      "name": "parallel_tools_with_tool_error",
+      "description": "§13.6 Parallel Tools + tool error — 3 parallel tool calls, one tool returns an error result. All result messages are appended in the original tool_calls order.",
+      "stage": "agent",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant with access to weather, time, and service-status tools."
+          },
+          {
+            "role": "user",
+            "content": "Give me the weather in Paris, service status, and the time in Tokyo."
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_weather",
+            "kind": "function",
+            "description": "Get the current weather for a city",
+            "parameters": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          },
+          {
+            "name": "get_service_status",
+            "kind": "function",
+            "description": "Get service status",
+            "parameters": []
+          },
+          {
+            "name": "get_time",
+            "kind": "function",
+            "description": "Get the current time in a city",
+            "parameters": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        ],
+        "tool_functions": {
+          "get_weather": "returns weather string",
+          "get_service_status": "raises RuntimeError",
+          "get_time": "returns current time string"
+        },
+        "parallel_tool_calls": true
+      },
+      "sequence": [
+        {
+          "turn": 1,
+          "llm_response": {
+            "id": "chatcmpl-parallel-error-001",
+            "object": "chat.completion",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_pe_weather",
+                      "type": "function",
+                      "function": {
+                        "name": "get_weather",
+                        "arguments": "{\\"city\\": \\"Paris\\"}"
+                      }
+                    },
+                    {
+                      "id": "call_pe_status",
+                      "type": "function",
+                      "function": {
+                        "name": "get_service_status",
+                        "arguments": "{}"
+                      }
+                    },
+                    {
+                      "id": "call_pe_time",
+                      "type": "function",
+                      "function": {
+                        "name": "get_time",
+                        "arguments": "{\\"city\\": \\"Tokyo\\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ]
+          },
+          "expected_tool_calls": [
+            {
+              "id": "call_pe_weather",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Paris"
+              }
+            },
+            {
+              "id": "call_pe_status",
+              "name": "get_service_status",
+              "arguments": {}
+            },
+            {
+              "id": "call_pe_time",
+              "name": "get_time",
+              "arguments": {
+                "city": "Tokyo"
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool_call_id": "call_pe_weather",
+              "result": "72°F sunny"
+            },
+            {
+              "tool_call_id": "call_pe_status",
+              "result": "Error calling 'get_service_status': RuntimeError: Service unavailable"
+            },
+            {
+              "tool_call_id": "call_pe_time",
+              "result": "3:45 PM JST"
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "llm_response": {
+            "id": "chatcmpl-parallel-error-002",
+            "object": "chat.completion",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.",
+                  "tool_calls": null
+                },
+                "finish_reason": "stop"
+              }
+            ]
+          },
+          "expected_tool_calls": null
+        }
+      ],
+      "expected": {
+        "result": "Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.",
+        "iterations": 2,
+        "total_messages": 8,
+        "tool_execution_order": [
+          "get_weather",
+          "get_service_status",
+          "get_time"
+        ],
+        "notes": "A tool error is represented as that tool's result content, not by reordering or dropping the slot. Runtimes may execute effects concurrently or sequentially, but provider-visible tool result messages remain aligned to the original tool_calls array."
       }
     },
     {
@@ -3737,7 +3901,6 @@ const AgentVectors = """
         }
       ],
       "expected": {
-        "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
         "result": "Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
         "iterations": 2,
         "total_messages": 8,

@@ -3,8 +3,10 @@
 A Swift implementation of the Prompty runtime: load a `.prompty` file, render it,
 turn it into messages, call a model, and read the result back.
 
-The Rust runtime is the behavioral reference for this port, and both are checked
-against the same cross-runtime vectors in [`spec/vectors`](../../spec/vectors).
+Swift is checked against the same cross-runtime vectors generated from
+[`schema`](../../schema). The vectors own observable behavior across runtimes;
+Swift keeps an idiomatic SwiftPM implementation for loading, rendering, parsing,
+provider execution, response processing, agent loops, and conformance tests.
 
 ## Layout
 
@@ -16,7 +18,7 @@ Two SwiftPM packages live here, and the split is deliberate.
 | `prompty`       | `Prompty`      | Loader, renderers, parser, registry, harness | Yes                |
 | `prompty`       | `PromptyOpenAI`| The OpenAI executor and processor           | Yes                |
 | `prompty`       | `PromptyAnthropic`| The Anthropic executor, processor, and model discovery | Yes     |
-| `prompty`       | `PromptyFoundry`| Foundry (Azure-family) model discovery      | Yes                |
+| `prompty`       | `PromptyFoundry`| Foundry/Azure-family executor, processor, registration, and model discovery | Yes |
 
 `prompty-model` is emitted from the TypeSpec definitions in [`schema`](../../schema)
 by the Typra emitter. **Never edit anything under `prompty-model/Sources` by hand.**
@@ -184,17 +186,19 @@ regressed patch fails the suite rather than the runtime.
 
 ## Conformance
 
-`Tests/PromptyTests` runs the shared vectors from [`spec/vectors`](../../spec/vectors)
-— loading, rendering, parsing, provider wire format, response processing, and
-harness replay — plus Swift-specific regression tests for defects the vectors
-cannot express, such as Windows line endings.
+`Tests/PromptyTests` runs the shared vectors generated from
+[`schema`](../../schema): loading, rendering, parsing, provider wire format,
+response processing, discovery/enrichment, agent behavior, memory behavior, and
+live provider acceptance. Swift-specific regression tests cover defects the
+vectors cannot express, such as Windows line endings.
 
 ### Coverage against the shared vectors
 
-This port is **not parity-complete**. Nine of the ten shared vector files are
-exercised, and two of those run only their OpenAI subset. The remaining file —
-the durable turn engine — describes surface area this runtime does not yet
-implement. That is a deliberate scoping decision, not an oversight.
+Swift exercises the runtime-level vectors that apply to the Swift package,
+including OpenAI, Anthropic, and Foundry/Azure-family provider behavior.
+Provider-specific live vectors skip when required credentials or tenant-compatible
+identity are absent, and fail when credentials are present but the provider
+rejects Prompty's wire contract.
 
 | Vector file                             |   Cases | Status                                |
 | --------------------------------------- | ------: | ------------------------------------- |
@@ -207,7 +211,8 @@ implement. That is a deliberate scoping decision, not an oversight.
 | `discovery/discovery_vectors.json`      |       7 | Run — OpenAI, Anthropic, and Foundry  |
 | `discovery/enrichment_vectors.json`     |       9 | Run                                   |
 | `agent/agent_vectors.json`              |      28 | Run — basic loop and all extensions   |
-| `engine/turn_vectors.json`              |       5 | **Not wired** — engine incomplete     |
+| `memory/memory_vectors.json`            |       — | Run — deterministic memory behavior   |
+| `live-provider/live_provider_vectors.json` |    — | Run — capability-gated live providers |
 
 The Anthropic provider is now complete: `PromptyAnthropic` ships a wire executor
 (`AnthropicWire` + `AnthropicExecutor`) and response processor
@@ -222,7 +227,7 @@ Model discovery (the `discovery` and `enrichment` stages) is fully implemented.
 `Discovery.enrich` in the core `Prompty` module applies the vendored
 `model_capabilities.json` dataset (fill-only-missing, longest-prefix match). A
 `DatasetDriftTests` guard keeps the vendored copy identical to the canonical
-`spec/data/model_capabilities.json`.
+`schema/data/model_capabilities.json`.
 
 The agent stage (`agent/agent_vectors.json`) is fully implemented. `AgentLoop`
 provides `Pipeline.turn`, the model→tool→model loop the `agent` vectors are
@@ -234,17 +239,6 @@ executor/processor, asserting the same lenient contract Python and TypeScript
 use (final result, error type and reason, denied/executed tools, and a subset
 match on emitted event types with a terminal `done`/`cancelled`).
 
-The `turn` engine stage stays intentionally out of scope, matching Python and
-TypeScript: the durable journal engine with checkpointing and delegated provider
-state remains Rust-only. Swift implements the same agent surface those runtimes
-do, so it is at parity with them — the engine gap below is shared, not
-Swift-specific.
-
-The turn engine is the substantive gap. `ReferenceTurnRunner` already implements
-the iteration loop, permission mediation, host tool execution, and checkpointing,
-so three of the five engine vectors (`final_output`, `ordered_tool_round`,
-`permission_denial_is_model_visible`) describe behavior that exists but is not
-yet asserted against the shared file. The remaining two — `delegated_provider_state`
-and `cancel_before_context` — need delegated provider state and cancellation,
-which this port does not provide. Wiring the engine vectors and closing those two
-capabilities is follow-up work tracked separately from this PR.
+Durable turn-engine behavior with checkpointing and delegated provider state
+remains Rust-specific infrastructure. Swift implements the portable agent and
+memory surfaces shared by Python, TypeScript, C#, Java, Go, and Rust.

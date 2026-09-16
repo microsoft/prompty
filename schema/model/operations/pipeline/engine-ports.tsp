@@ -28,7 +28,10 @@ interface EngineDurabilityPort {
 
   @doc("Atomically append semantic engine events and persist the checkpoint that reflects them")
   @effect(#{ atomic: true })
-  appendWithCheckpoint(events: EngineEvent[], checkpoint: EngineCheckpoint): void;
+  appendWithCheckpoint(
+    events: EngineEvent[],
+    checkpoint: EngineCheckpoint,
+  ): void;
 }
 
 /** Runs non-fatal host effects after a turn is durably committed. */

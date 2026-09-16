@@ -124,6 +124,19 @@ export {
   PORTABILITY_DELEGATED,
   reconcileStream,
   type StreamReconciliation,
+  addMemory,
+  clearMemory,
+  coreMemories,
+  evictToCap,
+  formatForSystemPrompt,
+  formatRecallResults,
+  recall,
+  remember,
+  removeMemory,
+  updateContent,
+  updateMemory,
+  type MemoryPort,
+  type ScoredMemory,
 } from "./core/index.js";
 
 // ---------------------------------------------------------------------------
@@ -208,6 +221,8 @@ export {
   OAuthConnection,
   LoadContext,
   SaveContext,
+  MemoryEntry,
+  MemoryStore,
   Tool,
   FunctionTool,
   CustomTool,

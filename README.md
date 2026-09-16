@@ -6,7 +6,7 @@
 
 > **⚠️ v2 Alpha** — This is the v2 branch of Prompty, currently in alpha. The API, file format, and tooling are under active development and may change. Feedback welcome via [Issues](https://github.com/microsoft/prompty/issues).
 
-Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code, Python, or TypeScript.
+Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code or a language runtime that shares Prompty's generated model and conformance vectors.
 
 <p align="center">
   <img src="img/prompty-flow.svg" alt="Prompty flow: .prompty file → Runtime → LLM Provider" width="700">
@@ -158,6 +158,22 @@ Every execution generates a `.tracy` trace file. Click to inspect the full pipel
 
 ## Runtimes
 
+Prompty runtimes are kept aligned by shared, generated model types and canonical
+cross-runtime conformance vectors. The vectors own observable behavior — load,
+render, parse, provider wire shape, response processing, agent/tool behavior,
+memory behavior, and live provider acceptance when credentials are available —
+while each runtime keeps its own idiomatic implementation.
+
+| Runtime | Packages |
+|---|---|
+| Python | `prompty` |
+| TypeScript | `@prompty/core`, `@prompty/openai`, `@prompty/foundry`, `@prompty/anthropic` |
+| Rust | `prompty`, `prompty-openai`, `prompty-foundry`, `prompty-anthropic` |
+| C# | `Prompty.Core`, `Prompty.OpenAI`, `Prompty.Foundry`, `Prompty.Anthropic` |
+| Java | `com.microsoft.prompty` packages |
+| Go | `github.com/microsoft/prompty/runtime/go/prompty` |
+| Swift | `Prompty`, `PromptyOpenAI`, `PromptyFoundry`, `PromptyAnthropic` |
+
 ### Python
 
 ```bash
@@ -206,6 +222,13 @@ const result = await run(agent, messages);
 ```
 
 See [runtime/typescript/packages/core/README.md](runtime/typescript/packages/core/README.md) for full API docs.
+
+### Rust, C#, Java, Go, and Swift
+
+The additional runtimes use the same `.prompty` assets and generated model
+contracts, with runtime-specific package managers and provider registration.
+See the language folders under [`runtime/`](runtime/) for package-specific APIs,
+test commands, and live-provider setup.
 
 ## `.prompty` File Format
 

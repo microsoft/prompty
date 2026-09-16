@@ -746,11 +746,11 @@ pub struct TurnOptions {
     pub guardrails: Option<crate::guardrails::Guardrails>,
     /// Steering message queue for injecting messages between iterations.
     pub steering: Option<crate::steering::Steering>,
-    /// Compatibility flag retained for the public API.
+    /// Request parallel tool execution when the host/runtime can safely provide it.
     ///
-    /// Setting this to `true` returns [`InvokerError::Validation`] and emits an
-    /// error turn lifecycle. The canonical engine executes tool effects
-    /// sequentially so durable result ordering is deterministic.
+    /// The canonical engine always preserves provider-visible tool result order.
+    /// Runtimes may execute effects concurrently behind that ordered boundary or
+    /// fall back to deterministic sequential execution.
     pub parallel_tool_calls: bool,
     /// Optional validator for the final processed output.
     ///
@@ -2151,43 +2151,50 @@ mod tests {
 
     #[tokio::test]
     #[serial]
-    async fn test_turn_rejects_parallel_tool_calls_with_error_lifecycle() {
+    async fn test_turn_accepts_parallel_tool_calls_with_ordered_results() {
         ensure_defaults();
-        let key = "turn_parallel_rejected";
+        let key = "turn_parallel_accepts";
+        let call_count = Arc::new(AtomicUsize::new(0));
         registry::register_executor(
             key,
             ToolCallThenDoneExecutor {
-                call_count: Arc::new(AtomicUsize::new(1)),
+                call_count: call_count.clone(),
             },
         );
         registry::register_processor(key, MockProcessor);
         let agent = make_simple_agent(key);
         let (events, callback) = capture_events();
+        let mut tools = HashMap::new();
+        tools.insert(
+            "get_weather".to_string(),
+            ToolHandler::Sync(Box::new(|args| {
+                let city = args
+                    .get("city")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown");
+                Ok(format!("{city}: 72°F and sunny"))
+            })),
+        );
 
-        let error = turn(
+        let result = turn(
             &agent,
             None,
             Some(TurnOptions {
                 parallel_tool_calls: true,
+                tools,
                 on_event: Some(callback),
                 ..Default::default()
             }),
         )
         .await
-        .unwrap_err();
+        .unwrap();
 
-        assert!(matches!(error, InvokerError::Validation(_)));
-        assert!(error.to_string().contains("parallel_tool_calls=true"));
+        assert_eq!(result, "The weather in Seattle is 72°F.");
+        assert_eq!(call_count.load(Ordering::SeqCst), 2);
         let events = events.lock().unwrap();
-        assert!(matches!(events[0], AgentEvent::TurnStart { .. }));
-        assert!(matches!(events[1], AgentEvent::Error(_)));
-        assert!(matches!(
-            events[2],
-            AgentEvent::TurnEnd {
-                ref status,
-                iterations: 0,
-                ..
-            } if status == "error"
+        assert_turn_lifecycle(&events, "success");
+        assert!(events.iter().any(
+            |event| matches!(event, AgentEvent::ToolCallStart { name, .. } if name == "get_weather")
         ));
     }
 

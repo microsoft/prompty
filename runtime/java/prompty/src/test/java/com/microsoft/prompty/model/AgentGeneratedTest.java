@@ -72,14 +72,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance1 = Agent.fromJson(jsonData1);
     assertEquals("basic-prompt", instance1.name, "Expected name");
     assertEquals("Basic Prompt", instance1.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance1.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance1.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance1.instructions, "Expected instructions");
     assertEquals(3, instance1.inputs.size(), "Expected inputs size");
     Property instance1Inputs0Entry = instance1.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", instance1Inputs0Entry.name, "Expected inputs.firstName name");
@@ -108,7 +108,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml1.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml1.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml1.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml1.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml1.instructions, "Expected instructions");
     assertEquals(3, fromYaml1.inputs.size(), "Expected inputs size");
     Property fromYaml1Inputs0Entry = fromYaml1.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", fromYaml1Inputs0Entry.name, "Expected inputs.firstName name");
@@ -136,7 +136,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded1.name, "Expected name");
     assertEquals("Basic Prompt", reloaded1.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded1.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded1.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded1.instructions, "Expected instructions");
     assertEquals(3, reloaded1.inputs.size(), "Expected inputs size");
     Property reloaded1Inputs0Entry = reloaded1.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", reloaded1Inputs0Entry.name, "Expected inputs.firstName name");
@@ -225,14 +225,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance2 = Agent.fromJson(jsonData2);
     assertEquals("basic-prompt", instance2.name, "Expected name");
     assertEquals("Basic Prompt", instance2.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance2.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance2.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance2.instructions, "Expected instructions");
     assertEquals(3, instance2.inputs.size(), "Expected inputs size");
     Property instance2Inputs0Entry = instance2.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", instance2Inputs0Entry.name, "Expected inputs.firstName name");
@@ -263,7 +263,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml2.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml2.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml2.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml2.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml2.instructions, "Expected instructions");
     assertEquals(3, fromYaml2.inputs.size(), "Expected inputs size");
     Property fromYaml2Inputs0Entry = fromYaml2.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", fromYaml2Inputs0Entry.name, "Expected inputs.firstName name");
@@ -293,7 +293,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded2.name, "Expected name");
     assertEquals("Basic Prompt", reloaded2.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded2.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded2.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded2.instructions, "Expected instructions");
     assertEquals(3, reloaded2.inputs.size(), "Expected inputs size");
     Property reloaded2Inputs0Entry = reloaded2.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", reloaded2Inputs0Entry.name, "Expected inputs.firstName name");
@@ -386,14 +386,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance3 = Agent.fromJson(jsonData3);
     assertEquals("basic-prompt", instance3.name, "Expected name");
     assertEquals("Basic Prompt", instance3.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance3.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance3.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance3.instructions, "Expected instructions");
     assertEquals(3, instance3.inputs.size(), "Expected inputs size");
     Property instance3Inputs0Entry = instance3.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", instance3Inputs0Entry.name, "Expected inputs.firstName name");
@@ -421,7 +421,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml3.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml3.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml3.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml3.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml3.instructions, "Expected instructions");
     assertEquals(3, fromYaml3.inputs.size(), "Expected inputs size");
     Property fromYaml3Inputs0Entry = fromYaml3.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", fromYaml3Inputs0Entry.name, "Expected inputs.firstName name");
@@ -448,7 +448,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded3.name, "Expected name");
     assertEquals("Basic Prompt", reloaded3.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded3.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded3.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded3.instructions, "Expected instructions");
     assertEquals(3, reloaded3.inputs.size(), "Expected inputs size");
     Property reloaded3Inputs0Entry = reloaded3.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", reloaded3Inputs0Entry.name, "Expected inputs.firstName name");
@@ -537,14 +537,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance4 = Agent.fromJson(jsonData4);
     assertEquals("basic-prompt", instance4.name, "Expected name");
     assertEquals("Basic Prompt", instance4.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance4.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance4.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance4.instructions, "Expected instructions");
     assertEquals(3, instance4.inputs.size(), "Expected inputs size");
     Property instance4Inputs0Entry = instance4.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", instance4Inputs0Entry.name, "Expected inputs.firstName name");
@@ -574,7 +574,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml4.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml4.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml4.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml4.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml4.instructions, "Expected instructions");
     assertEquals(3, fromYaml4.inputs.size(), "Expected inputs size");
     Property fromYaml4Inputs0Entry = fromYaml4.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", fromYaml4Inputs0Entry.name, "Expected inputs.firstName name");
@@ -603,7 +603,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded4.name, "Expected name");
     assertEquals("Basic Prompt", reloaded4.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded4.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded4.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded4.instructions, "Expected instructions");
     assertEquals(3, reloaded4.inputs.size(), "Expected inputs size");
     Property reloaded4Inputs0Entry = reloaded4.inputs.stream().filter(item -> "firstName".equals(item.name)).findFirst().orElseThrow(() -> new AssertionError("Expected inputs.firstName entry"));
     assertEquals("firstName", reloaded4Inputs0Entry.name, "Expected inputs.firstName name");
@@ -697,14 +697,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance5 = Agent.fromJson(jsonData5);
     assertEquals("basic-prompt", instance5.name, "Expected name");
     assertEquals("Basic Prompt", instance5.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance5.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance5.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance5.instructions, "Expected instructions");
     assertEquals(3, instance5.inputs.size(), "Expected inputs size");
     assertEquals("firstName", instance5.inputs.get(0).name, "Expected instance5.inputs.get(0).name");
     assertEquals("string", instance5.inputs.get(0).kind, "Expected instance5.inputs.get(0).kind");
@@ -730,7 +730,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml5.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml5.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml5.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml5.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml5.instructions, "Expected instructions");
     assertEquals(3, fromYaml5.inputs.size(), "Expected inputs size");
     assertEquals("firstName", fromYaml5.inputs.get(0).name, "Expected fromYaml5.inputs.get(0).name");
     assertEquals("string", fromYaml5.inputs.get(0).kind, "Expected fromYaml5.inputs.get(0).kind");
@@ -755,7 +755,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded5.name, "Expected name");
     assertEquals("Basic Prompt", reloaded5.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded5.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded5.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded5.instructions, "Expected instructions");
     assertEquals(3, reloaded5.inputs.size(), "Expected inputs size");
     assertEquals("firstName", reloaded5.inputs.get(0).name, "Expected reloaded5.inputs.get(0).name");
     assertEquals("string", reloaded5.inputs.get(0).kind, "Expected reloaded5.inputs.get(0).kind");
@@ -844,14 +844,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance6 = Agent.fromJson(jsonData6);
     assertEquals("basic-prompt", instance6.name, "Expected name");
     assertEquals("Basic Prompt", instance6.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance6.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance6.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance6.instructions, "Expected instructions");
     assertEquals(3, instance6.inputs.size(), "Expected inputs size");
     assertEquals("firstName", instance6.inputs.get(0).name, "Expected instance6.inputs.get(0).name");
     assertEquals("string", instance6.inputs.get(0).kind, "Expected instance6.inputs.get(0).kind");
@@ -879,7 +879,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml6.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml6.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml6.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml6.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml6.instructions, "Expected instructions");
     assertEquals(3, fromYaml6.inputs.size(), "Expected inputs size");
     assertEquals("firstName", fromYaml6.inputs.get(0).name, "Expected fromYaml6.inputs.get(0).name");
     assertEquals("string", fromYaml6.inputs.get(0).kind, "Expected fromYaml6.inputs.get(0).kind");
@@ -906,7 +906,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded6.name, "Expected name");
     assertEquals("Basic Prompt", reloaded6.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded6.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded6.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded6.instructions, "Expected instructions");
     assertEquals(3, reloaded6.inputs.size(), "Expected inputs size");
     assertEquals("firstName", reloaded6.inputs.get(0).name, "Expected reloaded6.inputs.get(0).name");
     assertEquals("string", reloaded6.inputs.get(0).kind, "Expected reloaded6.inputs.get(0).kind");
@@ -999,14 +999,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance7 = Agent.fromJson(jsonData7);
     assertEquals("basic-prompt", instance7.name, "Expected name");
     assertEquals("Basic Prompt", instance7.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance7.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance7.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance7.instructions, "Expected instructions");
     assertEquals(3, instance7.inputs.size(), "Expected inputs size");
     assertEquals("firstName", instance7.inputs.get(0).name, "Expected instance7.inputs.get(0).name");
     assertEquals("string", instance7.inputs.get(0).kind, "Expected instance7.inputs.get(0).kind");
@@ -1031,7 +1031,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml7.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml7.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml7.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml7.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml7.instructions, "Expected instructions");
     assertEquals(3, fromYaml7.inputs.size(), "Expected inputs size");
     assertEquals("firstName", fromYaml7.inputs.get(0).name, "Expected fromYaml7.inputs.get(0).name");
     assertEquals("string", fromYaml7.inputs.get(0).kind, "Expected fromYaml7.inputs.get(0).kind");
@@ -1055,7 +1055,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded7.name, "Expected name");
     assertEquals("Basic Prompt", reloaded7.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded7.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded7.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded7.instructions, "Expected instructions");
     assertEquals(3, reloaded7.inputs.size(), "Expected inputs size");
     assertEquals("firstName", reloaded7.inputs.get(0).name, "Expected reloaded7.inputs.get(0).name");
     assertEquals("string", reloaded7.inputs.get(0).kind, "Expected reloaded7.inputs.get(0).kind");
@@ -1144,14 +1144,14 @@ final class AgentGeneratedTest {
           "format": "mustache",
           "parser": "prompty"
         },
-        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
+        "instructions": "system:\\nYou are an AI assistant who helps people find information.\\nAs the assistant, you answer questions briefly, succinctly,\\nand in a personable manner using markdown and even add some\\npersonal flair with appropriate emojis.\\n# Customer\\nYou are helping {{firstName}} {{lastName}} to find answers to\\ntheir questions. Use their name to address them in your responses.\\nuser:\\n{{question}}"
       }
       """;
     Agent instance8 = Agent.fromJson(jsonData8);
     assertEquals("basic-prompt", instance8.name, "Expected name");
     assertEquals("Basic Prompt", instance8.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", instance8.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance8.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", instance8.instructions, "Expected instructions");
     assertEquals(3, instance8.inputs.size(), "Expected inputs size");
     assertEquals("firstName", instance8.inputs.get(0).name, "Expected instance8.inputs.get(0).name");
     assertEquals("string", instance8.inputs.get(0).kind, "Expected instance8.inputs.get(0).kind");
@@ -1178,7 +1178,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", fromYaml8.name, "Expected name");
     assertEquals("Basic Prompt", fromYaml8.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", fromYaml8.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml8.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", fromYaml8.instructions, "Expected instructions");
     assertEquals(3, fromYaml8.inputs.size(), "Expected inputs size");
     assertEquals("firstName", fromYaml8.inputs.get(0).name, "Expected fromYaml8.inputs.get(0).name");
     assertEquals("string", fromYaml8.inputs.get(0).kind, "Expected fromYaml8.inputs.get(0).kind");
@@ -1204,7 +1204,7 @@ final class AgentGeneratedTest {
     assertEquals("basic-prompt", reloaded8.name, "Expected name");
     assertEquals("Basic Prompt", reloaded8.displayName, "Expected displayName");
     assertEquals("A basic prompt that uses the GPT-3 chat API to answer questions", reloaded8.description, "Expected description");
-    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded8.instructions, "Expected instructions");
+    assertEquals("system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", reloaded8.instructions, "Expected instructions");
     assertEquals(3, reloaded8.inputs.size(), "Expected inputs size");
     assertEquals("firstName", reloaded8.inputs.get(0).name, "Expected reloaded8.inputs.get(0).name");
     assertEquals("string", reloaded8.inputs.get(0).kind, "Expected reloaded8.inputs.get(0).kind");

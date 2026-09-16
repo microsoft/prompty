@@ -11,6 +11,9 @@ import (
 	"strings"
 
 	prompty "prompty/model"
+	"prompty/providers/anthropic"
+	"prompty/providers/foundry"
+	"prompty/providers/openai"
 )
 
 // Adapter binds a Typra vector operation to runtime code.
@@ -30,6 +33,19 @@ type Context struct {
 	BaseDir   string
 }
 
+type vectorPayloadError struct {
+	message string
+	payload any
+}
+
+func (e vectorPayloadError) Error() string {
+	return e.message
+}
+
+func (e vectorPayloadError) TypraVector() any {
+	return e.payload
+}
+
 // VectorAdapters registers genuinely wired conformance adapters.
 var VectorAdapters = map[string]Adapter{
 	"DiscoveryConformance.enrich": {
@@ -45,6 +61,10 @@ var VectorAdapters = map[string]Adapter{
 		Invoke: func(input any, ctx Context) (any, error) {
 			return prompty.MapModel(input, ctx.Provider).Save(prompty.NewSaveContext()), nil
 		},
+	},
+	"MemoryConformance.operate": {
+		Invoke:    memoryOperate,
+		Normalize: projectNormalize,
 	},
 	// WireConformance.toRequest -- map canonical agent + messages into a
 	// provider-specific request body via the real wire builders.
@@ -75,6 +95,10 @@ var VectorAdapters = map[string]Adapter{
 	"TurnConformance.replay": {
 		Invoke: replayInvoke,
 	},
+	"LiveProviderConformance.invoke": {
+		Invoke:    liveProviderInvoke,
+		Normalize: projectNormalize,
+	},
 }
 
 // VectorWaivers records explicit, honest conformance gaps. Empty: every gap is
@@ -83,6 +107,122 @@ var VectorWaivers = map[string]string{}
 
 // VectorDoubles is reserved for deterministic test doubles.
 var VectorDoubles = map[string]any{}
+
+// VectorCapabilities declares capability/credential probes for vectors with
+// `requires`. Missing credentials skip before an adapter can make a network
+// call; present credentials mean the live provider must accept the request.
+var VectorCapabilities = map[string]func(Context) bool{
+	"provider:openai":    func(Context) bool { return envPresent("OPENAI_API_KEY") },
+	"provider:anthropic": func(Context) bool { return envPresent("ANTHROPIC_API_KEY") },
+	"provider:foundry-key": func(Context) bool {
+		return envPresent("AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_CHAT_DEPLOYMENT")
+	},
+	"provider:foundry-entra": func(Context) bool {
+		return envPresent("FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_MODEL", foundry.AccessTokenEnv)
+	},
+}
+
+func envPresent(names ...string) bool {
+	for _, name := range names {
+		value := strings.TrimSpace(os.Getenv(name))
+		lowered := strings.ToLower(value)
+		if value == "" ||
+			strings.HasPrefix(lowered, "sk-test") ||
+			strings.HasPrefix(lowered, "test") ||
+			strings.HasPrefix(lowered, "dummy") ||
+			strings.HasPrefix(lowered, "your_") ||
+			strings.HasPrefix(lowered, "<") {
+			return false
+		}
+	}
+	return true
+}
+
+func liveProviderInvoke(input any, _ Context) (any, error) {
+	flags, _ := input.(map[string]any)
+	agent, err := liveProviderAgent(flags)
+	if err != nil {
+		return nil, err
+	}
+	messages, err := liveProviderMessages(flags)
+	if err != nil {
+		return nil, err
+	}
+
+	provider := strings.ToLower(strOr(flags["provider"], "openai"))
+	var raw any
+	var processed any
+	switch provider {
+	case "anthropic":
+		raw, err = (anthropic.Executor{}).Execute(agent, messages)
+		if err == nil {
+			processed, err = (anthropic.Processor{}).Process(agent, raw)
+		}
+	case "foundry", "azure":
+		raw, err = (foundry.Executor{}).Execute(agent, messages)
+		if err == nil {
+			processed, err = (foundry.Processor{}).Process(agent, raw)
+		}
+	default:
+		raw, err = (openai.Executor{}).Execute(agent, messages)
+		if err == nil {
+			processed, err = (openai.Processor{}).Process(agent, raw)
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{
+		"accepted":        true,
+		"contentNonEmpty": strings.TrimSpace(fmt.Sprint(processed)) != "",
+	}, nil
+}
+
+func liveProviderAgent(flags map[string]any) (prompty.Agent, error) {
+	provider := strOr(flags["provider"], "openai")
+	apiKey := strOr(flags["apiKey"], "")
+	connection := map[string]any{
+		"kind":     "key",
+		"endpoint": strOr(flags["endpoint"], ""),
+		"apiKey":   apiKey,
+	}
+	if provider == "foundry" && apiKey == "" {
+		connection = map[string]any{
+			"kind":     "foundry",
+			"endpoint": strOr(flags["endpoint"], ""),
+		}
+	}
+	return prompty.LoadAgent(map[string]any{
+		"kind": "prompt",
+		"name": "live-provider-vector",
+		"model": map[string]any{
+			"id":         strOr(flags["model"], ""),
+			"provider":   provider,
+			"apiType":    strOr(flags["apiType"], "chat"),
+			"connection": connection,
+			"options":    flags["options"],
+		},
+	}, prompty.NewLoadContext())
+}
+
+func liveProviderMessages(flags map[string]any) ([]prompty.Message, error) {
+	raw := toAnySlice(flags["messages"])
+	messages := make([]prompty.Message, 0, len(raw))
+	for _, item := range raw {
+		spec, _ := item.(map[string]any)
+		message, err := prompty.LoadMessage(map[string]any{
+			"role": strOr(spec["role"], "user"),
+			"parts": []any{
+				map[string]any{"kind": "text", "value": strOr(spec["content"], "")},
+			},
+		}, prompty.NewLoadContext())
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
+	}
+	return messages, nil
+}
 
 func toStringSlice(value any) []string {
 	switch typed := value.(type) {
@@ -104,7 +244,11 @@ func toStringSlice(value any) []string {
 }
 
 func projectNormalize(observed any, ctx Context) any {
-	return project(observed, ctx.Vector["expected"])
+	expected, ok := ctx.Vector["expected"]
+	if !ok {
+		expected = ctx.Vector["expectedError"]
+	}
+	return project(observed, expected)
 }
 
 func project(observed any, expected any) any {
@@ -132,6 +276,106 @@ func project(observed any, expected any) any {
 	}
 
 	return observed
+}
+
+func memoryOperate(input any, _ Context) (any, error) {
+	flags := input.(map[string]any)
+	storeInput := flags["store"]
+	if storeInput == nil {
+		storeInput = map[string]any{"entries": []any{}}
+	}
+	store, err := prompty.LoadMemoryStore(storeInput, prompty.NewLoadContext())
+	if err != nil {
+		return nil, err
+	}
+
+	switch fmt.Sprint(flags["operation"]) {
+	case "recall":
+		results := prompty.Recall(store, fmt.Sprint(flags["query"]), intFrom(flags["limit"]))
+		return map[string]any{"results": memoryResults(results)}, nil
+	case "remember":
+		entry, err := prompty.LoadMemoryEntry(flags["entry"], prompty.NewLoadContext())
+		if err != nil {
+			return nil, err
+		}
+		prompty.Remember(&store, entry, intFrom(flags["max_entries"]))
+		return map[string]any{"store": store.Save(prompty.NewSaveContext())}, nil
+	case "clear":
+		var category *prompty.MemoryCategory
+		if raw, ok := flags["category"].(string); ok && raw != "" {
+			cat := prompty.MemoryCategory(raw)
+			category = &cat
+		}
+		removed := prompty.ClearMemory(&store, category)
+		return map[string]any{"removed": removed, "store": store.Save(prompty.NewSaveContext())}, nil
+	case "update":
+		entry, err := prompty.LoadMemoryEntry(flags["entry"], prompty.NewLoadContext())
+		if err != nil {
+			return nil, err
+		}
+		if err := prompty.UpdateMemory(&store, intFrom(flags["index"]), entry); err != nil {
+			return nil, vectorPayloadError{message: err.Error(), payload: map[string]any{"kind": "index_out_of_range"}}
+		}
+		return map[string]any{"store": store.Save(prompty.NewSaveContext())}, nil
+	case "format":
+		results := prompty.Recall(store, fmt.Sprint(flags["query"]), intFrom(flags["limit"]))
+		return map[string]any{
+			"system_prompt":  prompty.FormatForSystemPrompt(store),
+			"recall_results": prompty.FormatRecallResults(results),
+		}, nil
+	case "snapshot":
+		entry, err := prompty.LoadMemoryEntry(flags["entry"], prompty.NewLoadContext())
+		if err != nil {
+			return nil, err
+		}
+		prompty.Remember(&store, entry, intFrom(flags["max_entries"]))
+		saved := store.Save(prompty.NewSaveContext())
+		reloaded, err := prompty.LoadMemoryStore(saved, prompty.NewLoadContext())
+		if err != nil {
+			return nil, err
+		}
+		results := prompty.Recall(reloaded, fmt.Sprint(flags["query"]), intFrom(flags["limit"]))
+		recalled := make([]string, len(results))
+		for i, result := range results {
+			recalled[i] = result.Entry.Content
+		}
+		return map[string]any{"store": reloaded.Save(prompty.NewSaveContext()), "recalled": recalled}, nil
+	default:
+		return nil, fmt.Errorf("unsupported memory operation: %v", flags["operation"])
+	}
+}
+
+func memoryResults(results []prompty.ScoredMemory) []any {
+	out := make([]any, len(results))
+	for i, result := range results {
+		score := any(result.Score)
+		if math.Trunc(result.Score) == result.Score {
+			score = int(result.Score)
+		}
+		out[i] = map[string]any{
+			"content":         result.Entry.Content,
+			"category":        string(result.Entry.Category),
+			"score":           score,
+			"keyword_matches": result.KeywordMatches,
+		}
+	}
+	return out
+}
+
+func intFrom(value any) int {
+	switch typed := value.(type) {
+	case int:
+		return typed
+	case int64:
+		return int(typed)
+	case float64:
+		return int(typed)
+	case json.Number:
+		parsed, _ := typed.Int64()
+		return int(parsed)
+	default:
+		return 0
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -812,7 +1056,7 @@ func runInvoke(input any, ctx Context) (any, error) {
 	// Annotation passthrough -- cross-runtime notes that are not Go behavioral
 	// observations. Echo them so canonical equality holds without fabricating
 	// engine output.
-	for _, annotation := range []string{"notes", "summary_contains", "rust_expected_error"} {
+	for _, annotation := range []string{"notes", "summary_contains"} {
 		if value, ok := expected[annotation]; ok {
 			observed[annotation] = value
 		}
@@ -874,7 +1118,10 @@ func runNormalize(observed any, ctx Context) any {
 
 func runTurnInvoke(input any, ctx Context) (any, error) {
 	flags, _ := input.(map[string]any)
-	messages := toAnySlice(flags["messages"])
+	messages, err := turnMessagesWithMemory(flags)
+	if err != nil {
+		return nil, err
+	}
 	scripted := toAnySlice(flags["model"])
 	toolOutputs, _ := flags["toolOutputs"].(map[string]any)
 	denyTools := map[string]bool{}
@@ -930,7 +1177,29 @@ func runTurnInvoke(input any, ctx Context) (any, error) {
 		"toolResults":            len(result.ToolResults),
 		"toolResultOrder":        stringsToAny(result.ToolResultOrder),
 		"eventKinds":             stringsToAny(result.Events),
+		"providerMessages":       messages,
 	}, nil
+}
+
+func turnMessagesWithMemory(flags map[string]any) ([]any, error) {
+	messages := toAnySlice(flags["messages"])
+	memory, ok := flags["memory"].(map[string]any)
+	if !ok {
+		return messages, nil
+	}
+	storeData := memory["store"]
+	if storeData == nil {
+		storeData = map[string]any{"entries": []any{}}
+	}
+	store, err := prompty.LoadMemoryStore(storeData, prompty.NewLoadContext())
+	if err != nil {
+		return nil, err
+	}
+	systemPrompt := prompty.FormatForSystemPrompt(store)
+	if systemPrompt == "" {
+		return messages, nil
+	}
+	return append([]any{map[string]any{"role": "system", "content": systemPrompt}}, messages...), nil
 }
 
 // ---------------------------------------------------------------------------

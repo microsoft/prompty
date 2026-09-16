@@ -8,13 +8,13 @@ using Prompty.Core;
 
 namespace Prompty.Core.Conformance;
 
-public sealed class VectorAdapter(Func<JsonNode?, VectorContext, JsonNode?> invoke, Func<JsonNode?, VectorContext, JsonNode?>? normalize = null)
+public sealed class VectorAdapter(Func<JsonNode?, VectorContext, object?> invoke, Func<JsonNode?, VectorContext, JsonNode?>? normalize = null)
 {
-    private readonly Func<JsonNode?, VectorContext, JsonNode?> invoke = invoke;
+    private readonly Func<JsonNode?, VectorContext, object?> invoke = invoke;
 
     public Func<JsonNode?, VectorContext, JsonNode?>? Normalize { get; } = normalize;
 
-    public JsonNode? Invoke(JsonNode? input, VectorContext ctx) => invoke(input, ctx);
+    public object? Invoke(JsonNode? input, VectorContext ctx) => invoke(input, ctx);
 }
 
 public sealed class VectorContext
@@ -72,11 +72,44 @@ public static partial class VectorAdapters
         ["TurnConformance.runTurn"] = new(RunTurnInvoke, ProjectNormalize),
         ["TurnConformance.replay"] = new(ReplayInvoke),
         ["WireConformance.toRequest"] = new(WireInvoke, AlignNormalize),
+        ["MemoryConformance.operate"] = new(MemoryInvoke, ProjectNormalize),
+        ["LiveProviderConformance.invoke"] = new(LiveProviderInvoke, LiveProviderNormalize),
     };
 
     public static IReadOnlyDictionary<string, string> Waivers() => new Dictionary<string, string>();
 
+    public static IReadOnlyDictionary<string, Func<VectorContext, bool>> Capabilities() => new Dictionary<string, Func<VectorContext, bool>>
+    {
+        ["provider:openai"] = _ => EnvPresent("OPENAI_API_KEY"),
+        ["provider:anthropic"] = _ => EnvPresent("ANTHROPIC_API_KEY"),
+        ["provider:foundry-key"] = _ => EnvPresent(
+            "AZURE_OPENAI_ENDPOINT",
+            "AZURE_OPENAI_API_KEY",
+            "AZURE_OPENAI_CHAT_DEPLOYMENT"),
+        ["provider:foundry-entra"] = _ => EnvPresent(
+            "FOUNDRY_PROJECT_ENDPOINT",
+            "FOUNDRY_MODEL",
+            "AZURE_INFERENCE_CREDENTIAL"),
+    };
+
     public static JsonNode? Doubles() => null;
+
+    private static bool EnvPresent(params string[] names) =>
+        names.All(name =>
+        {
+            var value = Environment.GetEnvironmentVariable(name)?.Trim();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var lowered = value.ToLowerInvariant();
+            return !lowered.StartsWith("sk-test", StringComparison.Ordinal)
+                && !lowered.StartsWith("test", StringComparison.Ordinal)
+                && !lowered.StartsWith("dummy", StringComparison.Ordinal)
+                && !lowered.StartsWith("your_", StringComparison.Ordinal)
+                && !lowered.StartsWith("<", StringComparison.Ordinal);
+        });
 
     // -----------------------------------------------------------------------
     // Paths
@@ -132,6 +165,99 @@ public static partial class VectorAdapters
     }
 
     private static JsonNode? ProjectNormalize(JsonNode? observed, VectorContext ctx) =>
+        Project(observed, ctx.Vector["expected"]);
+
+    private static async Task<JsonNode?> LiveProviderInvoke(JsonNode? input, VectorContext ctx)
+    {
+        var flags = ToObjectDictionary(input as JsonObject ?? new JsonObject());
+        var agent = LiveProviderAgent(flags);
+        var messages = LiveProviderMessages(flags);
+        var provider = (flags.GetValueOrDefault("provider") as string ?? "openai").ToLowerInvariant();
+
+        object raw;
+        object processed;
+        if (provider == "anthropic")
+        {
+            raw = await new Anthropic.AnthropicExecutor().ExecuteAsync(agent, messages).ConfigureAwait(false);
+            processed = await new Anthropic.AnthropicProcessor().ProcessAsync(agent, raw).ConfigureAwait(false);
+        }
+        else if (provider is "foundry" or "azure")
+        {
+            raw = await new Foundry.FoundryExecutor().ExecuteAsync(agent, messages).ConfigureAwait(false);
+            processed = await new Foundry.FoundryProcessor().ProcessAsync(agent, raw).ConfigureAwait(false);
+        }
+        else
+        {
+            raw = await new OpenAI.OpenAIExecutor().ExecuteAsync(agent, messages).ConfigureAwait(false);
+            processed = await new OpenAI.OpenAIProcessor().ProcessAsync(agent, raw).ConfigureAwait(false);
+        }
+
+        return ToJsonNode(new Dictionary<string, object?>
+        {
+            ["accepted"] = true,
+            ["contentNonEmpty"] = !string.IsNullOrWhiteSpace(processed?.ToString()),
+        });
+    }
+
+    private static Agent LiveProviderAgent(Dictionary<string, object?> flags)
+    {
+        var provider = flags.GetValueOrDefault("provider") as string ?? "openai";
+        var apiKey = flags.GetValueOrDefault("apiKey") as string;
+        var endpoint = flags.GetValueOrDefault("endpoint") as string;
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            apiKey = provider switch
+            {
+                "anthropic" => Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY"),
+                "foundry" or "azure" => Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"),
+                _ => Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
+            };
+        }
+
+        if (string.IsNullOrWhiteSpace(endpoint) && provider is "foundry" or "azure")
+        {
+            endpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        }
+
+        Dictionary<string, object?> connection = provider == "foundry" && string.IsNullOrWhiteSpace(apiKey)
+            ? new() { ["kind"] = "foundry", ["endpoint"] = endpoint }
+            : new() { ["kind"] = "key", ["endpoint"] = endpoint, ["apiKey"] = apiKey };
+        var model = new Dictionary<string, object?>
+        {
+            ["id"] = flags.GetValueOrDefault("model") as string,
+            ["provider"] = provider,
+            ["apiType"] = flags.GetValueOrDefault("apiType") as string ?? "chat",
+            ["connection"] = connection,
+            ["options"] = flags.GetValueOrDefault("options"),
+        };
+        return Agent.Load(new Dictionary<string, object?>
+        {
+            ["kind"] = "prompt",
+            ["name"] = "live-provider-vector",
+            ["model"] = model,
+        });
+    }
+
+    private static List<Message> LiveProviderMessages(Dictionary<string, object?> flags)
+    {
+        var messages = new List<Message>();
+        if (flags.GetValueOrDefault("messages") is List<object?> rawMessages)
+        {
+            foreach (var raw in rawMessages.OfType<Dictionary<string, object?>>())
+            {
+                messages.Add(new Message
+                {
+                    Role = Enum.TryParse<Role>(raw.GetValueOrDefault("role") as string, ignoreCase: true, out var role)
+                        ? role
+                        : Role.User,
+                    Parts = [new TextPart { Value = raw.GetValueOrDefault("content") as string ?? string.Empty }],
+                });
+            }
+        }
+        return messages;
+    }
+
+    private static JsonNode? LiveProviderNormalize(JsonNode? observed, VectorContext ctx) =>
         Project(observed, ctx.Vector["expected"]);
 
     /// <summary>
@@ -398,6 +524,112 @@ public static partial class VectorAdapters
     }
 
     // -----------------------------------------------------------------------
+    // MemoryConformance.operate
+    // -----------------------------------------------------------------------
+
+    private static JsonNode? MemoryInvoke(JsonNode? rawInput, VectorContext ctx)
+    {
+        var input = rawInput as JsonObject ?? new JsonObject();
+        var operation = (input["operation"] as JsonValue)?.GetValue<string>() ?? string.Empty;
+        var store = MemoryStore.Load(ToObjectDictionary(input["store"] as JsonObject ?? new JsonObject()));
+
+        return operation switch
+        {
+            "recall" => new JsonObject
+            {
+                ["results"] = ToJsonNode(Memory.Recall(store, (input["query"] as JsonValue)?.GetValue<string>() ?? string.Empty, IntValue(input["limit"]))
+                    .Select(ScoredMemoryToDictionary).ToList()),
+            },
+            "remember" => RememberMemory(input, store),
+            "clear" => ClearMemory(input, store),
+            "update" => UpdateMemory(input, store),
+            "format" => FormatMemory(input, store),
+            "snapshot" => SnapshotMemory(input, store),
+            _ => throw new InvalidOperationException($"Unsupported memory operation: {operation}"),
+        };
+    }
+
+    private static JsonNode? RememberMemory(JsonObject input, MemoryStore store)
+    {
+        Memory.Remember(store, MemoryEntry.Load(ToObjectDictionary(input["entry"] as JsonObject ?? new JsonObject())), IntValue(input["max_entries"]));
+        return new JsonObject { ["store"] = ToJsonNode(store.Save()) };
+    }
+
+    private static JsonNode? ClearMemory(JsonObject input, MemoryStore store)
+    {
+        MemoryCategory? category = input["category"] is JsonValue raw ? MemoryCategoryParser.Parse(raw.GetValue<string>()) : null;
+        var removed = Memory.Clear(store, category);
+        return new JsonObject { ["removed"] = removed, ["store"] = ToJsonNode(store.Save()) };
+    }
+
+    private static JsonNode? UpdateMemory(JsonObject input, MemoryStore store)
+    {
+        try
+        {
+            Memory.Update(
+                store,
+                IntValue(input["index"]),
+                MemoryEntry.Load(ToObjectDictionary(input["entry"] as JsonObject ?? new JsonObject())));
+        }
+        catch (ArgumentOutOfRangeException exc)
+        {
+            throw new VectorException(exc.Message, new JsonObject { ["kind"] = "index_out_of_range" });
+        }
+        return new JsonObject { ["store"] = ToJsonNode(store.Save()) };
+    }
+
+    private static JsonNode? FormatMemory(JsonObject input, MemoryStore store)
+    {
+        var results = Memory.Recall(store, (input["query"] as JsonValue)?.GetValue<string>() ?? string.Empty, IntValue(input["limit"]));
+        return new JsonObject
+        {
+            ["system_prompt"] = Memory.FormatForSystemPrompt(store),
+            ["recall_results"] = Memory.FormatRecallResults(results),
+        };
+    }
+
+    private static JsonNode? SnapshotMemory(JsonObject input, MemoryStore store)
+    {
+        Memory.Remember(store, MemoryEntry.Load(ToObjectDictionary(input["entry"] as JsonObject ?? new JsonObject())), IntValue(input["max_entries"]));
+        var reloaded = MemoryStore.Load(store.Save());
+        var recalled = Memory.Recall(reloaded, (input["query"] as JsonValue)?.GetValue<string>() ?? string.Empty, IntValue(input["limit"]))
+            .Select(result => result.Entry.Content)
+            .ToList();
+        return new JsonObject
+        {
+            ["store"] = ToJsonNode(reloaded.Save()),
+            ["recalled"] = ToJsonNode(recalled),
+        };
+    }
+
+    private static Dictionary<string, object?> ScoredMemoryToDictionary(ScoredMemory result)
+    {
+        var truncated = Math.Truncate(result.Score);
+        object score = Math.Abs(result.Score - truncated) < 1e-9 ? (long)truncated : result.Score;
+        return new Dictionary<string, object?>
+        {
+            ["content"] = result.Entry.Content,
+            ["category"] = MemoryCategoryParser.ToValue(result.Entry.Category),
+            ["score"] = score,
+            ["keyword_matches"] = result.KeywordMatches,
+        };
+    }
+
+    private static int IntValue(JsonNode? node)
+    {
+        if (node is JsonValue value)
+        {
+            if (value.TryGetValue<int>(out var intValue))
+                return intValue;
+            if (value.TryGetValue<long>(out var longValue))
+                return (int)longValue;
+            if (value.TryGetValue<double>(out var doubleValue))
+                return (int)doubleValue;
+        }
+        return 0;
+    }
+
+    // -----------------------------------------------------------------------
     // TurnConformance.run — provider-agnostic agent loop (AgentLoopEngine)
     // -----------------------------------------------------------------------
 
@@ -496,7 +728,7 @@ public static partial class VectorAdapters
         // Annotation passthrough — cross-runtime notes that are not C# behavioral
         // observations. Echo them so canonical equality holds without fabricating
         // engine output.
-        foreach (var annotation in new[] { "notes", "summary_contains", "rust_expected_error" })
+        foreach (var annotation in new[] { "notes", "summary_contains" })
             if (expected.ContainsKey(annotation))
                 observed[annotation] = expected[annotation]?.DeepClone();
 
@@ -704,10 +936,7 @@ public static partial class VectorAdapters
         _ = ctx;
         var flags = inputNode as JsonObject ?? new JsonObject();
 
-        var messages = new List<JsonObject>();
-        if (flags["messages"] is JsonArray msgs)
-            foreach (var m in msgs)
-                messages.Add((JsonObject)(m ?? new JsonObject()).DeepClone());
+        var messages = TurnMessagesWithMemory(flags);
 
         var scripted = flags["model"] as JsonArray ?? new JsonArray();
         var toolOutputs = flags["toolOutputs"] as JsonObject ?? new JsonObject();
@@ -768,7 +997,27 @@ public static partial class VectorAdapters
             ["toolResults"] = result.ToolResults.Count,
             ["toolResultOrder"] = ToStringArray(result.ToolResultOrder),
             ["eventKinds"] = ToStringArray(result.Events),
+            ["providerMessages"] = ToJsonArray(messages),
         };
+    }
+
+    private static List<JsonObject> TurnMessagesWithMemory(JsonObject flags)
+    {
+        var messages = new List<JsonObject>();
+        if (flags["memory"] is JsonObject memory)
+        {
+            var storeData = memory["store"] as JsonObject ?? new JsonObject { ["entries"] = new JsonArray() };
+            var store = MemoryStore.Load(ToObjectDictionary(storeData));
+            var systemPrompt = Memory.FormatForSystemPrompt(store);
+            if (!string.IsNullOrEmpty(systemPrompt))
+            {
+                messages.Add(new JsonObject { ["role"] = "system", ["content"] = systemPrompt });
+            }
+        }
+        if (flags["messages"] is JsonArray msgs)
+            foreach (var m in msgs)
+                messages.Add((JsonObject)(m ?? new JsonObject()).DeepClone());
+        return messages;
     }
 
     // -----------------------------------------------------------------------

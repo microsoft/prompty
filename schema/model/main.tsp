@@ -82,6 +82,8 @@ import "./conformance/seams/load-conformance.tsp";
 import "./conformance/seams/wire-conformance.tsp";
 import "./conformance/seams/discovery-conformance.tsp";
 import "./conformance/seams/turn-conformance.tsp";
+import "./conformance/seams/memory-conformance.tsp";
+import "./conformance/seams/live-provider-conformance.tsp";
 
 // Behavior vectors (conformance evidence attached to callable operations)
 import "./conformance/vectors/render.tsp";
@@ -101,6 +103,8 @@ import "./conformance/vectors/discovery.tsp";
 import "./conformance/vectors/enrichment.tsp";
 import "./conformance/vectors/turn.tsp";
 import "./conformance/vectors/replay.tsp";
+import "./conformance/vectors/memory.tsp";
+import "./conformance/vectors/live-provider.tsp";
 // Streaming-failure classification + reconciliation vectors, bound to
 // Processor.processStream (a real @optionalOperation). Promoted from the standalone
 // spec/vectors/process/stream_failure_vectors.json into the typra vector system so

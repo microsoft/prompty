@@ -1204,7 +1204,7 @@ pub(super) async fn turn_with_engine_request(
         context_budget,
         guardrails,
         steering,
-        parallel_tool_calls,
+        parallel_tool_calls: _parallel_tool_calls,
         validator,
         max_llm_retries,
         compaction,
@@ -1227,25 +1227,6 @@ pub(super) async fn turn_with_engine_request(
     request.inputs = inputs.clone();
     span.emit("inputs", &inputs);
     let events = LiveEvents::new(on_event);
-
-    if parallel_tool_calls {
-        let message = "parallel_tool_calls=true is not supported by the canonical Rust engine; \
-                       tool effects execute sequentially for deterministic durable ordering"
-            .to_string();
-        events.emit(AgentEvent::TurnStart {
-            agent: Some(agent.name.clone()),
-            max_iterations,
-        });
-        events.emit(AgentEvent::Error(message.clone()));
-        events.emit(AgentEvent::TurnEnd {
-            status: "error".to_string(),
-            iterations: 0,
-            response: Value::Null,
-        });
-        span.emit("error", &json!(message));
-        span.end();
-        return Err(InvokerError::Validation(message));
-    }
 
     #[cfg(test)]
     LIVE_ENGINE_RUNS.fetch_add(1, Ordering::SeqCst);

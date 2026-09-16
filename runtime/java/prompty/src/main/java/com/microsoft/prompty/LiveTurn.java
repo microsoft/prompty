@@ -88,20 +88,6 @@ final class LiveTurn {
       request.inputs = inputs;
       span.emit("inputs", inputs);
 
-      if (opts.parallelToolCalls()) {
-        // The engine commits one effect at a time so a resumed turn replays tool results in the
-        // order they were journaled. Running them concurrently would make that order depend on
-        // scheduling, which is exactly what durability cannot tolerate.
-        String message =
-            "parallel_tool_calls=true is not supported by the canonical engine; tool effects "
-                + "execute sequentially for deterministic durable ordering";
-        events.emit(new AgentEvent.TurnStart(agent.name, opts.maxIterations()));
-        events.emit(new AgentEvent.Error(message));
-        events.emit(new AgentEvent.TurnEnd("error", 0, null));
-        span.emit("error", message);
-        throw InvokerException.validation(message);
-      }
-
       String provider = Pipeline.provider(agent);
       boolean streaming = Pipeline.isStreaming(agent);
       boolean agentMode =
