@@ -3,9 +3,9 @@
  * Version bump and tag script for @prompty/* packages.
  *
  * Usage:
- *   npm run release                    # patch: 2.0.0-alpha.1 → 2.0.0-alpha.2
- *   npm run release -- --bump minor    # minor: 2.0.0-alpha.2 → 2.1.0-alpha.1
- *   npm run release -- --bump major    # major: 2.1.0-alpha.1 → 3.0.0-alpha.1
+ *   npm run release                    # patch: 2.0.0 → 2.0.1
+ *   npm run release -- --bump minor    # minor: 2.0.0 → 2.1.0
+ *   npm run release -- --bump major    # major: 2.0.0 → 3.0.0
  *   npm run release -- --version 2.0.0 # explicit version (exits prerelease)
  *   npm run release -- --dry-run       # show what would happen without doing it
  *

@@ -2,9 +2,9 @@
 """Version bump and tag script for the Prompty C# NuGet packages.
 
 Usage:
-    python scripts/release.py                    # patch: 2.0.0-alpha.8 → 2.0.0-alpha.9
-    python scripts/release.py --bump minor       # minor: 2.0.0-alpha.8 → 2.1.0-alpha.1
-    python scripts/release.py --bump major       # major: 2.0.0-alpha.8 → 3.0.0-alpha.1
+    python scripts/release.py                    # patch: 2.0.0 → 2.0.1
+    python scripts/release.py --bump minor       # minor: 2.0.0 → 2.1.0
+    python scripts/release.py --bump major       # major: 2.0.0 → 3.0.0
     python scripts/release.py --version 2.0.0    # explicit version (exits prerelease)
     python scripts/release.py --dry-run          # show what would happen without doing it
 
@@ -40,7 +40,7 @@ def get_current_version() -> str:
 
 
 def bump_version(current: str, bump: str) -> str:
-    # Semver prerelease: 2.0.0-alpha.8
+    # Semver prerelease suffix handling.
     pre_match = re.match(r"^(\d+)\.(\d+)\.(\d+)-([a-z]+)\.(\d+)$", current)
     stable_match = re.match(r"^(\d+)\.(\d+)\.(\d+)$", current)
 

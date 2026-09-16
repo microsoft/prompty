@@ -4,7 +4,10 @@
 [![npm](https://img.shields.io/npm/v/@prompty/core?label=typescript)](https://www.npmjs.com/package/@prompty/core)
 [![VS Code](https://img.shields.io/visual-studio-marketplace/v/ms-toolsai.prompty?label=vs%20code)](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty)
 
-> **⚠️ v2 Alpha** — This is the v2 branch of Prompty, currently in alpha. The API, file format, and tooling are under active development and may change. Feedback welcome via [Issues](https://github.com/microsoft/prompty/issues).
+> **Prompty v2** — Prompty v2 packages are available for Python, TypeScript,
+> Rust, and C#. The shared `.prompty` format is aligned across runtimes by
+> generated model types and conformance vectors. Feedback welcome via
+> [Issues](https://github.com/microsoft/prompty/issues).
 
 Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your prompt once — run it from VS Code or a language runtime that shares Prompty's generated model and conformance vectors.
 
@@ -42,7 +45,7 @@ Say hello to {{name}}.
 
 **Python**
 ```bash
-pip install "prompty[jinja2,openai]"
+uv pip install "prompty[jinja2,openai]"
 ```
 ```python
 import prompty
@@ -177,10 +180,10 @@ while each runtime keeps its own idiomatic implementation.
 ### Python
 
 ```bash
-pip install "prompty[all]"              # everything
-pip install "prompty[jinja2,openai]"    # just OpenAI
-pip install "prompty[jinja2,foundry]"   # Microsoft Foundry
-pip install "prompty[jinja2,anthropic]" # Anthropic
+uv pip install "prompty[all]"              # everything
+uv pip install "prompty[jinja2,openai]"    # just OpenAI
+uv pip install "prompty[jinja2,foundry]"   # Microsoft Foundry
+uv pip install "prompty[jinja2,anthropic]" # Anthropic
 ```
 
 ```python

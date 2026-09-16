@@ -209,22 +209,14 @@ user:
   </TabItem>
   <TabItem label="Rust">
     ```rust
-    use prompty::{StreamChunk, PromptyStream, consume_stream_chunks};
-
     let agent = prompty::load("chat.prompty")?;
     let inputs = serde_json::json!({"question": "Tell me a joke"});
     let messages = prompty::prepare(&agent, Some(&inputs)).await?;
-    let result = prompty::run(&agent, &messages).await?;
 
-    // Process streaming chunks
-    let stream = prompty::from_structured_value::<PromptyStream>(&result)?;
-    consume_stream_chunks(stream, |chunk| match chunk {
-        StreamChunk::Text(text) => print!("{text}"),
-        StreamChunk::Thinking(thought) => print!("[thinking] {thought}"),
-        StreamChunk::Tool(tc) => println!("[tool] {}: {}", tc.name, tc.arguments),
-        StreamChunk::Error(err) => eprintln!("[error] {err}"),
-    }).await;
-    println!();
+    // Rust run() consumes a streaming provider response and returns
+    // the accumulated text result.
+    let result = prompty::run(&agent, &messages).await?;
+    println!("{result}");
     ```
   </TabItem>
 </Tabs>
