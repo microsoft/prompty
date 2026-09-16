@@ -108,6 +108,33 @@ export OPENAI_API_KEY=sk-te-your-inference-key
 This keeps the `.prompty` file unchanged while the endpoint provides routing,
 policy, usage tracking, or trace correlation around OpenAI-compatible calls.
 
+## What's new in v2: agentic turns
+
+Prompty v2 keeps the prompt asset simple, then adds a shared **agentic turn**
+runtime when your app needs tools, memory, and runtime controls. Define tools in
+frontmatter, bind the actual functions in host code, and call `turn()` instead
+of `invoke()` when the model should loop through tool calls before returning a
+final answer.
+
+- **Tool loop** — execute model-requested tools, append tool results, and retry
+  until the model returns a final response.
+- **Runtime controls** — guardrails, cancellation, steering messages, retries,
+  and event callbacks live in code instead of prompt text.
+- **Context and memory** — thread inputs, context budgets, compaction, and
+  memory-aware turns keep long conversations portable across runtimes.
+- **Observable agents** — every render, parse, model call, tool call, and final
+  result can flow into traces.
+
+```python
+from prompty import turn
+
+result = turn(
+    "agent.prompty",
+    inputs={"question": "What's the weather in Seattle?"},
+    tools={"get_weather": get_weather},
+)
+```
+
 ## Contributor hygiene
 
 Prompty normalizes text files to LF line endings via `.gitattributes`. Enable the

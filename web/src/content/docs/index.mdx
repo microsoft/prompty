@@ -5,19 +5,19 @@ head:
     content: prompty.ai
 description: |
   Prompty is a markdown file format for LLM prompts — define model config,
-  inputs, tools, and templates in YAML frontmatter, then execute across
-  Python and TypeScript.
+  inputs, tools, templates, and agentic controls in YAML frontmatter, then
+  execute across Python, TypeScript, C#, and Rust.
 template: splash
 editUrl: false
 lastUpdated: false
 header: false
 next: false
 hero:
-  title: Agency with observability
+  title: Prompts to agents, with observability
   tagline: |
     Prompty is a markdown file format for LLM prompts — define model config,
-    inputs, tools, and templates in YAML frontmatter, then execute across
-    Python and TypeScript.
+    inputs, tools, templates, and agentic controls in YAML frontmatter, then
+    execute across Python, TypeScript, C#, and Rust.
   image:
     html: <img src="/prompty_p.svg" alt="Prompty" width="320" height="374" />
   actions:
@@ -69,8 +69,8 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
       - Zero-overhead when no tracer is registered
   </Info>
   <Info reversed={true} title="The pipeline" image="/images/prompty-pipeline.svg">
-    Prompty processes every prompt through a **four-stage pipeline** — each
-    stage is swappable and independently traceable.
+    Prompty processes every prompt through a **four-stage pipeline**, then adds
+    `turn()` when you need an agentic loop around that same prompt asset.
 
       - **Render** — expand template variables with Jinja2 or Mustache
       - **Parse** — split role markers into a message list
@@ -92,14 +92,17 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 </NumberGrid>
 
 <InfoGrid>
-  <Info reversed={false} title="Agent mode & tools" image="/images/agent-tools.png">
-    Define tools in your frontmatter and let the runtime handle the **tool-calling loop**
-    automatically. Supports streaming, structured output, and the OpenAI Responses API.
+  <Info reversed={false} title="Agentic runtime, same prompt file" image="/images/agent-tools.png">
+    Prompty v2 adds a shared **agentic turn runtime** on top of the normal
+    render → parse → execute → process pipeline. Define tools in frontmatter,
+    provide handlers from host code, and call `turn()` when the model should
+    use tools or carry a governed conversation forward.
 
       - Function tools with local callables
-      - MCP server integration
-      - OpenAPI-based tools
-      - Automatic retry and error recovery
+      - MCP, OpenAPI, and custom tool declarations
+      - Runtime controls for guardrails, steering, cancellation, and retries
+      - Context budgets, compaction, and memory-aware conversation turns
+      - Event streams and traces for every model/tool loop iteration
   </Info>
   <Info reversed={true} title="Open source, open standard" image="/images/open-source-ecosystem.svg">
     Prompty is built on the premise that even with increasing complexity in AI,
@@ -115,6 +118,7 @@ import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 <CardGrid>
   <LinkCard title="Jump In!" href="/welcome/" />
   <LinkCard title="Core Concepts" href="/core-concepts/" />
+  <LinkCard title="Agentic Concepts" href="/agentic-concepts/" />
 </CardGrid>
 
 <AboutPrompty title="Sponsored by:">
