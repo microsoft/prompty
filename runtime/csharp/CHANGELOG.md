@@ -2,7 +2,7 @@
 
 All notable changes to the Prompty C# runtime will be documented here.
 
-## [2.0.0-alpha.1] — Unreleased
+## [2.0.0] — 2026-09-16
 
 ### Added
 - §8.8 Structured Result Casting: `StructuredResult` class (Dictionary subclass) with `Cast<T>()` method
@@ -23,3 +23,4 @@ All notable changes to the Prompty C# runtime will be documented here.
 ### Fixed
 - Tool guardrail denial now returns synthetic result instead of throwing
 - C# context summarizer extracts tool-call names from dropped messages
+- OpenAI wire vector coverage now exercises audio parts, MP3 audio, and additional model options without stale legacy skips
