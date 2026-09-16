@@ -2,63 +2,60 @@ name: prompty.ai web deploy
 
 on:
   workflow_dispatch:
-  
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - ".github/workflows/web-deploy.yml"
+
 permissions:
-  id-token: write
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  build-and-deploy-web:
+  build:
+    name: Build docs site
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-    - name: Create tag
-      run: |
-        TAG="v$(TZ='America/Los_Angeles' date +%Y%m%d.%H%M%S)"
-        echo "TAG=$TAG" >> "$GITHUB_ENV"
-        echo "Using tag: $TAG"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-    - name: Log in to Azure
-      uses: azure/login@7ddb5af1ef8758cf1353cf3b42f940aee27ba21c # v3.0.2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
 
-    - name: Log in to registry
-      uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-      with:
-        registry: ${{ secrets.REGISTRY_ENDPOINT }}
-        username: ${{ secrets.REGISTRY_USERNAME }}
-        password: ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
-    - name: Build and push container
-      run: |
-        cd web
-        docker build . -t ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG}
-        docker push ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG}
+      - name: Install dependencies
+        run: npm ci
 
-    
+      - name: Build docs site
+        run: npm run build
 
-    - name: Push Container
-      run: |
-        az containerapp up --name prompty-web \
-                            --image ${{ secrets.REGISTRY_ENDPOINT }}/prompty/web:${TAG} \
-                            --ingress external \
-                            --target-port 8080 \
-                            --resource-group prompty \
-                            --registry-server ${{ secrets.REGISTRY_ENDPOINT }} \
-                            --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-                            --registry-password ${{ secrets.REGISTRY_PASSWORD }}
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: web/dist
 
-        az containerapp update --name prompty-web \
-                                --resource-group prompty \
-                                --min-replicas 1 \
-                                --max-replicas 5 \
-                                --scale-rule-name azure-http-rule \
-                                --scale-rule-type http \
-                                --scale-rule-http-concurrency 100 \
-                                --no-wait
-
-    - name: Logout
-      run: |
-        az logout
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages site
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
