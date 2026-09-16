@@ -2,6 +2,13 @@
 
 All notable changes to the Prompty Python runtime will be documented here.
 
+## [2.0.2](https://github.com/microsoft/prompty/compare/python/2.0.1...python/2.0.2) (2026-09-16)
+
+
+### Features
+
+* add memory and live-provider conformance coverage across runtimes ([#548](https://github.com/microsoft/prompty/issues/548)) ([da51edb](https://github.com/microsoft/prompty/commit/da51edbf1d0e06f3d010bb3aa741e30f906e4316))
+
 ## [2.0.1](https://github.com/microsoft/prompty/compare/python/2.0.0...python-2.0.1) (2026-09-10)
 
 
