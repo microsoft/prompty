@@ -8,6 +8,7 @@ use std::{
 };
 
 use async_trait::async_trait;
+use prompty::model::context::LoadContext;
 use prompty::{
     AllowAllPermissions, AppendContextPackingStrategy, CancellationToken, Clock, ContextCandidate,
     ContextError, ContextPipeline, ContextPortability, ContextRequest, ContextSource,
@@ -15,8 +16,8 @@ use prompty::{
     EngineCheckpoint, EngineEvent, EngineEventKind, EnginePermissionDecision, EngineToolRequest,
     EngineToolResult, FinalOutputPolicyRequest, FinalOutputPolicyResult, HostPolicyError,
     HostPolicyPort, HostPolicyRequest, HostPolicyResult, IdGenerator, InvocationContextState,
-    Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort, ModelStreamChunk,
-    ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
+    MemoryStore, Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
+    ModelStreamChunk, ModelStreamPort, NoopDurabilityPort, NoopHostPolicyPort, NoopModelStreamPort,
     NoopPostCommitPort, NoopRetryPolicyPort, PermissionPort, PortError, PostCommitPort,
     ResumeContext, RetryPolicyError, RetryPolicyPort, RetryPolicyRequest, Role, ToolOutcome,
     ToolPort, TurnCommit, TurnEngine, TurnEngineEffects, TurnEngineError, TurnEngineRequest,
@@ -208,7 +209,13 @@ struct TurnVector {
     tool_outputs: HashMap<String, String>,
     #[serde(default)]
     deny_tools: HashSet<String>,
+    memory: Option<VectorMemory>,
     expected: VectorExpected,
+}
+
+#[derive(Debug, Deserialize)]
+struct VectorMemory {
+    store: Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1286,6 +1293,18 @@ fn to_message(message: &VectorMessage) -> Message {
     Message::with_text(role, message.content.clone())
 }
 
+fn turn_messages(vector: &TurnVector) -> Vec<Message> {
+    let mut messages: Vec<Message> = vector.messages.iter().map(to_message).collect();
+    if let Some(memory) = &vector.memory {
+        let store = MemoryStore::load_from_value(&memory.store, &LoadContext::default());
+        let prompt = store.format_for_system_prompt();
+        if !prompt.is_empty() {
+            messages.insert(0, Message::with_text(Role::System, prompt));
+        }
+    }
+    messages
+}
+
 fn to_response(response: &VectorModelResponse) -> ModelInvocationResponse {
     let next_context_state = match (response.next_portability, &response.delegated_state) {
         (None, None) => None,
@@ -1321,7 +1340,7 @@ async fn canonical_turn_engine_matches_vectors() {
             requests: Mutex::new(Vec::new()),
         });
         let tools = Arc::new(VectorTools {
-            outputs: vector.tool_outputs,
+            outputs: vector.tool_outputs.clone(),
             calls: Mutex::new(Vec::new()),
         });
         let events = Arc::new(RecordingEvents::default());
@@ -1336,7 +1355,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 retry: Arc::new(NoopRetryPolicyPort),
                 conversation: Arc::new(DefaultConversationPort),
                 permission: Arc::new(VectorPermissions {
-                    denied: vector.deny_tools,
+                    denied: vector.deny_tools.clone(),
                 }),
                 tools: tools.clone(),
                 durability: Arc::new(RecordingDurability {
@@ -1357,7 +1376,7 @@ async fn canonical_turn_engine_matches_vectors() {
                 TurnEngineRequest::new(
                     format!("session-{}", vector.name),
                     format!("turn-{}", vector.name),
-                    vector.messages.iter().map(to_message).collect(),
+                    turn_messages(&vector),
                 ),
                 cancellation,
             )

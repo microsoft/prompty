@@ -143,6 +143,22 @@ __all__ = [
     "AgentDefinition",
     # Model discovery
     "ModelInfo",
+    # Memory
+    "MemoryEntry",
+    "MemoryPort",
+    "MemoryStore",
+    "ScoredMemory",
+    "add_memory",
+    "clear_memory",
+    "core_memories",
+    "evict_to_cap",
+    "format_for_system_prompt",
+    "format_recall_results",
+    "recall",
+    "remember",
+    "remove_memory",
+    "update_content",
+    "update_memory",
 ]
 
 # Re-export generated model types
@@ -224,6 +240,21 @@ from .invoker import (
     turn_async,
     validate_inputs,
 )
+from .memory import (
+    MemoryPort,
+    ScoredMemory,
+    add_memory,
+    clear_memory,
+    core_memories,
+    evict_to_cap,
+    format_for_system_prompt,
+    format_recall_results,
+    recall,
+    remember,
+    remove_memory,
+    update_content,
+    update_memory,
+)
 from .model import (
     Agent,
     AnonymousConnection,
@@ -238,6 +269,8 @@ from .model import (
     LoadContext,
     McpApprovalMode,
     McpTool,
+    MemoryEntry,
+    MemoryStore,
     Model,
     ModelInfo,
     ModelOptions,

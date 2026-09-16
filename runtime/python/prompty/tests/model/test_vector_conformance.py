@@ -23,6 +23,7 @@ pytestmark = pytest.mark.asyncio
 _ADAPTER_MODULE = importlib.import_module("vector_adapters")
 VECTOR_ADAPTERS = getattr(_ADAPTER_MODULE, "VECTOR_ADAPTERS", {})
 VECTOR_WAIVERS = getattr(_ADAPTER_MODULE, "VECTOR_WAIVERS", {})
+VECTOR_CAPABILITIES = getattr(_ADAPTER_MODULE, "VECTOR_CAPABILITIES", {})
 VECTOR_DOUBLES = getattr(_ADAPTER_MODULE, "VECTOR_DOUBLES", {})
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,6 +32,7 @@ _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 _SEAM = {
     "adapters": VECTOR_ADAPTERS,
     "waivers": VECTOR_WAIVERS,
+    "capabilities": VECTOR_CAPABILITIES,
     "doubles": VECTOR_DOUBLES,
     "base_dir": _BASE_DIR,
 }
@@ -537,7 +539,168 @@ async def test_vector_15_discoveryconformance_mapmodel_openai_model_finetune_no_
     await run_vector("DiscoveryConformance", "mapModel", vector, False, _SEAM)
 
 
-async def test_vector_16_loadconformance_load_basic_load():
+async def test_vector_16_liveproviderconformance_invoke_anthropic_chat_accepts_wire():
+    vector_json = r"""
+    {
+      "name": "anthropic_chat_accepts_wire",
+      "description": "Anthropic accepts the runtime's canonical chat wire shape and returns non-empty assistant content.",
+      "stage": "live-provider",
+      "provider": "anthropic",
+      "targetApi": "chat",
+      "requires": [
+        "provider:anthropic"
+      ],
+      "input": {
+        "provider": "anthropic",
+        "apiType": "chat",
+        "model": "claude-sonnet-4-5-20250929",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reply with exactly one word: pong."
+          }
+        ],
+        "options": {
+          "temperature": 0,
+          "maxOutputTokens": 32
+        }
+      },
+      "expected": {
+        "accepted": true,
+        "contentNonEmpty": true
+      },
+      "operation": "invoke"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("LiveProviderConformance", "invoke", vector, False, _SEAM)
+
+
+async def test_vector_17_liveproviderconformance_invoke_foundry_azure_key_chat_accepts_wire():
+    vector_json = r"""
+    {
+      "name": "foundry_azure_key_chat_accepts_wire",
+      "description": "Azure OpenAI / Foundry key-auth deployment accepts the runtime's canonical chat wire shape.",
+      "stage": "live-provider",
+      "provider": "foundry",
+      "targetApi": "chat",
+      "requires": [
+        "provider:foundry-key"
+      ],
+      "input": {
+        "provider": "foundry",
+        "apiType": "chat",
+        "model": {
+          "$env": "AZURE_OPENAI_CHAT_DEPLOYMENT"
+        },
+        "endpoint": {
+          "$env": "AZURE_OPENAI_ENDPOINT"
+        },
+        "apiKey": {
+          "$env": "AZURE_OPENAI_API_KEY"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reply with exactly one word: pong."
+          }
+        ],
+        "options": {
+          "temperature": 0,
+          "maxOutputTokens": 16
+        }
+      },
+      "expected": {
+        "accepted": true,
+        "contentNonEmpty": true
+      },
+      "operation": "invoke"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("LiveProviderConformance", "invoke", vector, False, _SEAM)
+
+
+async def test_vector_18_liveproviderconformance_invoke_foundry_entra_chat_accepts_wire():
+    vector_json = r"""
+    {
+      "name": "foundry_entra_chat_accepts_wire",
+      "description": "Foundry project Entra-auth deployment accepts the runtime's canonical chat wire shape.",
+      "stage": "live-provider",
+      "provider": "foundry",
+      "targetApi": "chat",
+      "requires": [
+        "provider:foundry-entra"
+      ],
+      "input": {
+        "provider": "foundry",
+        "apiType": "chat",
+        "model": {
+          "$env": "FOUNDRY_MODEL"
+        },
+        "endpoint": {
+          "$env": "FOUNDRY_PROJECT_ENDPOINT"
+        },
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reply with exactly one word: pong."
+          }
+        ],
+        "options": {
+          "temperature": 0,
+          "maxOutputTokens": 16
+        }
+      },
+      "expected": {
+        "accepted": true,
+        "contentNonEmpty": true
+      },
+      "operation": "invoke"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("LiveProviderConformance", "invoke", vector, False, _SEAM)
+
+
+async def test_vector_19_liveproviderconformance_invoke_openai_chat_accepts_wire():
+    vector_json = r"""
+    {
+      "name": "openai_chat_accepts_wire",
+      "description": "OpenAI accepts the runtime's canonical chat wire shape and returns non-empty assistant content.",
+      "stage": "live-provider",
+      "provider": "openai",
+      "targetApi": "chat",
+      "requires": [
+        "provider:openai"
+      ],
+      "input": {
+        "provider": "openai",
+        "apiType": "chat",
+        "model": "gpt-4o-mini",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Reply with exactly one word: pong."
+          }
+        ],
+        "options": {
+          "temperature": 0,
+          "maxOutputTokens": 16
+        }
+      },
+      "expected": {
+        "accepted": true,
+        "contentNonEmpty": true
+      },
+      "operation": "invoke"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("LiveProviderConformance", "invoke", vector, False, _SEAM)
+
+
+async def test_vector_20_loadconformance_load_basic_load():
     vector_json = r"""
     {
       "name": "basic_load",
@@ -606,7 +769,7 @@ async def test_vector_16_loadconformance_load_basic_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_17_loadconformance_load_connection_types_load():
+async def test_vector_21_loadconformance_load_connection_types_load():
     vector_json = r"""
     {
       "name": "connection_types_load",
@@ -640,7 +803,7 @@ async def test_vector_17_loadconformance_load_connection_types_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_18_loadconformance_load_embedding_load():
+async def test_vector_22_loadconformance_load_embedding_load():
     vector_json = r"""
     {
       "name": "embedding_load",
@@ -681,7 +844,7 @@ async def test_vector_18_loadconformance_load_embedding_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_19_loadconformance_load_empty_frontmatter_body_only():
+async def test_vector_23_loadconformance_load_empty_frontmatter_body_only():
     vector_json = r"""
     {
       "name": "empty_frontmatter_body_only",
@@ -706,7 +869,7 @@ async def test_vector_19_loadconformance_load_empty_frontmatter_body_only():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_20_loadconformance_load_env_default():
+async def test_vector_24_loadconformance_load_env_default():
     vector_json = r"""
     {
       "name": "env_default",
@@ -740,7 +903,7 @@ async def test_vector_20_loadconformance_load_env_default():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_21_loadconformance_load_env_missing_error():
+async def test_vector_25_loadconformance_load_env_missing_error():
     vector_json = r"""
     {
       "name": "env_missing_error",
@@ -769,7 +932,7 @@ async def test_vector_21_loadconformance_load_env_missing_error():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_22_loadconformance_load_env_resolution():
+async def test_vector_26_loadconformance_load_env_resolution():
     vector_json = r"""
     {
       "name": "env_resolution",
@@ -805,7 +968,7 @@ async def test_vector_22_loadconformance_load_env_resolution():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_23_loadconformance_load_file_reference_in_tree_allowed():
+async def test_vector_27_loadconformance_load_file_reference_in_tree_allowed():
     vector_json = r"""
     {
       "name": "file_reference_in_tree_allowed",
@@ -843,7 +1006,7 @@ async def test_vector_23_loadconformance_load_file_reference_in_tree_allowed():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_24_loadconformance_load_file_reference_traversal_rejected():
+async def test_vector_28_loadconformance_load_file_reference_traversal_rejected():
     vector_json = r"""
     {
       "name": "file_reference_traversal_rejected",
@@ -876,7 +1039,7 @@ async def test_vector_24_loadconformance_load_file_reference_traversal_rejected(
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_25_loadconformance_load_file_resolution():
+async def test_vector_29_loadconformance_load_file_resolution():
     vector_json = r"""
     {
       "name": "file_resolution",
@@ -916,7 +1079,7 @@ async def test_vector_25_loadconformance_load_file_resolution():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_26_loadconformance_load_image_apitype_load():
+async def test_vector_30_loadconformance_load_image_apitype_load():
     vector_json = r"""
     {
       "name": "image_apitype_load",
@@ -960,7 +1123,7 @@ async def test_vector_26_loadconformance_load_image_apitype_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_27_loadconformance_load_input_scalar_shorthand():
+async def test_vector_31_loadconformance_load_input_scalar_shorthand():
     vector_json = r"""
     {
       "name": "input_scalar_shorthand",
@@ -1005,7 +1168,7 @@ async def test_vector_27_loadconformance_load_input_scalar_shorthand():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_28_loadconformance_load_input_validation_default_fill():
+async def test_vector_32_loadconformance_load_input_validation_default_fill():
     vector_json = r"""
     {
       "name": "input_validation_default_fill",
@@ -1037,7 +1200,7 @@ async def test_vector_28_loadconformance_load_input_validation_default_fill():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_29_loadconformance_load_input_validation_example_not_used():
+async def test_vector_33_loadconformance_load_input_validation_example_not_used():
     vector_json = r"""
     {
       "name": "input_validation_example_not_used",
@@ -1068,7 +1231,7 @@ async def test_vector_29_loadconformance_load_input_validation_example_not_used(
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_30_loadconformance_load_input_validation_optional_omit():
+async def test_vector_34_loadconformance_load_input_validation_optional_omit():
     vector_json = r"""
     {
       "name": "input_validation_optional_omit",
@@ -1098,7 +1261,7 @@ async def test_vector_30_loadconformance_load_input_validation_optional_omit():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_31_loadconformance_load_input_validation_required():
+async def test_vector_35_loadconformance_load_input_validation_required():
     vector_json = r"""
     {
       "name": "input_validation_required",
@@ -1129,7 +1292,7 @@ async def test_vector_31_loadconformance_load_input_validation_required():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_32_loadconformance_load_instructions_from_body():
+async def test_vector_36_loadconformance_load_instructions_from_body():
     vector_json = r"""
     {
       "name": "instructions_from_body",
@@ -1152,7 +1315,7 @@ async def test_vector_32_loadconformance_load_instructions_from_body():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_33_loadconformance_load_invalid_frontmatter_error():
+async def test_vector_37_loadconformance_load_invalid_frontmatter_error():
     vector_json = r"""
     {
       "name": "invalid_frontmatter_error",
@@ -1171,7 +1334,7 @@ async def test_vector_33_loadconformance_load_invalid_frontmatter_error():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_34_loadconformance_load_kind_always_prompt():
+async def test_vector_38_loadconformance_load_kind_always_prompt():
     vector_json = r"""
     {
       "name": "kind_always_prompt",
@@ -1190,7 +1353,7 @@ async def test_vector_34_loadconformance_load_kind_always_prompt():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_35_loadconformance_load_minimal_load():
+async def test_vector_39_loadconformance_load_minimal_load():
     vector_json = r"""
     {
       "name": "minimal_load",
@@ -1217,7 +1380,7 @@ async def test_vector_35_loadconformance_load_minimal_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_36_loadconformance_load_missing_file_error():
+async def test_vector_40_loadconformance_load_missing_file_error():
     vector_json = r"""
     {
       "name": "missing_file_error",
@@ -1236,7 +1399,7 @@ async def test_vector_36_loadconformance_load_missing_file_error():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_37_loadconformance_load_model_shorthand():
+async def test_vector_41_loadconformance_load_model_shorthand():
     vector_json = r"""
     {
       "name": "model_shorthand",
@@ -1262,7 +1425,7 @@ async def test_vector_37_loadconformance_load_model_shorthand():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_38_loadconformance_load_structured_outputs_load():
+async def test_vector_42_loadconformance_load_structured_outputs_load():
     vector_json = r"""
     {
       "name": "structured_outputs_load",
@@ -1328,7 +1491,7 @@ async def test_vector_38_loadconformance_load_structured_outputs_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_39_loadconformance_load_template_string_invalid():
+async def test_vector_43_loadconformance_load_template_string_invalid():
     vector_json = r"""
     {
       "name": "template_string_invalid",
@@ -1353,7 +1516,7 @@ async def test_vector_39_loadconformance_load_template_string_invalid():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_40_loadconformance_load_tools_custom_load():
+async def test_vector_44_loadconformance_load_tools_custom_load():
     vector_json = r"""
     {
       "name": "tools_custom_load",
@@ -1390,7 +1553,7 @@ async def test_vector_40_loadconformance_load_tools_custom_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_41_loadconformance_load_tools_function_load():
+async def test_vector_45_loadconformance_load_tools_function_load():
     vector_json = r"""
     {
       "name": "tools_function_load",
@@ -1456,7 +1619,7 @@ async def test_vector_41_loadconformance_load_tools_function_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_42_loadconformance_load_tools_mcp_load():
+async def test_vector_46_loadconformance_load_tools_mcp_load():
     vector_json = r"""
     {
       "name": "tools_mcp_load",
@@ -1495,7 +1658,7 @@ async def test_vector_42_loadconformance_load_tools_mcp_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_43_loadconformance_load_tools_openapi_load():
+async def test_vector_47_loadconformance_load_tools_openapi_load():
     vector_json = r"""
     {
       "name": "tools_openapi_load",
@@ -1534,7 +1697,628 @@ async def test_vector_43_loadconformance_load_tools_openapi_load():
     await run_vector("LoadConformance", "load", vector, False, _SEAM)
 
 
-async def test_vector_44_turnconformance_replay_max_iterations():
+async def test_vector_48_memoryconformance_operate_clear_by_category_and_all():
+    vector_json = r"""
+    {
+      "name": "clear_by_category_and_all",
+      "description": "Clear removes only the requested category, or all memories when no category is supplied.",
+      "stage": "memory",
+      "input": {
+        "operation": "clear",
+        "store": {
+          "entries": [
+            {
+              "content": "fact",
+              "category": "core"
+            },
+            {
+              "content": "summary",
+              "category": "archival"
+            },
+            {
+              "content": "another summary",
+              "category": "archival"
+            },
+            {
+              "content": "insight",
+              "category": "insight"
+            }
+          ]
+        },
+        "category": "archival"
+      },
+      "expected": {
+        "removed": 2,
+        "store": {
+          "entries": [
+            {
+              "content": "fact",
+              "category": "core"
+            },
+            {
+              "content": "insight",
+              "category": "insight"
+            }
+          ]
+        }
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_49_memoryconformance_operate_format_core_and_recall_results():
+    vector_json = r"""
+    {
+      "name": "format_core_and_recall_results",
+      "description": "Formatting injects only core memories into system prompts and formats recall results with category and tags.",
+      "stage": "memory",
+      "input": {
+        "operation": "format",
+        "store": {
+          "entries": [
+            {
+              "content": "persistent fact",
+              "category": "core"
+            },
+            {
+              "content": "a summary",
+              "category": "archival"
+            },
+            {
+              "content": "run the deploy",
+              "category": "core",
+              "tags": [
+                "ops"
+              ]
+            }
+          ]
+        },
+        "query": "deploy"
+      },
+      "expected": {
+        "system_prompt": "## Memory\n- persistent fact\n- run the deploy\n",
+        "recall_results": "1. [core] run the deploy\n   tags: ops\n"
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_50_memoryconformance_operate_recall_empty_query_and_limit():
+    vector_json = r"""
+    {
+      "name": "recall_empty_query_and_limit",
+      "description": "Empty-query recall returns all memories in insertion order with score 0; positive limit truncates.",
+      "stage": "memory",
+      "input": {
+        "operation": "recall",
+        "store": {
+          "entries": [
+            {
+              "content": "first",
+              "category": "insight",
+              "createdAt": "2024-01-03T00:00:00Z"
+            },
+            {
+              "content": "second",
+              "category": "core",
+              "createdAt": "2024-01-01T00:00:00Z"
+            },
+            {
+              "content": "third",
+              "category": "archival",
+              "createdAt": "2024-01-02T00:00:00Z"
+            }
+          ]
+        },
+        "query": "",
+        "limit": 2
+      },
+      "expected": {
+        "results": [
+          {
+            "content": "first",
+            "category": "insight",
+            "score": 0,
+            "keyword_matches": 0
+          },
+          {
+            "content": "second",
+            "category": "core",
+            "score": 0,
+            "keyword_matches": 0
+          }
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_51_memoryconformance_operate_recall_ranks_by_weighted_score():
+    vector_json = r"""
+    {
+      "name": "recall_ranks_by_weighted_score",
+      "description": "Recall ranks by weighted lexical score: content match = 2, tag match = 3, core match boost = 1.",
+      "stage": "memory",
+      "input": {
+        "operation": "recall",
+        "store": {
+          "entries": [
+            {
+              "content": "the sky is clear",
+              "category": "insight"
+            },
+            {
+              "content": "favorite color is blue sky",
+              "category": "insight"
+            },
+            {
+              "content": "unrelated text",
+              "category": "insight",
+              "tags": [
+                "space"
+              ]
+            },
+            {
+              "content": "always deploy on green",
+              "category": "core"
+            }
+          ]
+        },
+        "query": "blue sky",
+        "limit": 0
+      },
+      "expected": {
+        "results": [
+          {
+            "content": "favorite color is blue sky",
+            "category": "insight",
+            "score": 4,
+            "keyword_matches": 2
+          },
+          {
+            "content": "the sky is clear",
+            "category": "insight",
+            "score": 2,
+            "keyword_matches": 1
+          }
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_52_memoryconformance_operate_recall_score_ties_preserve_insertion_order():
+    vector_json = r"""
+    {
+      "name": "recall_score_ties_preserve_insertion_order",
+      "description": "Recall preserves insertion order for memories with identical scores.",
+      "stage": "memory",
+      "input": {
+        "operation": "recall",
+        "store": {
+          "entries": [
+            {
+              "content": "alpha first",
+              "category": "insight"
+            },
+            {
+              "content": "alpha second",
+              "category": "insight"
+            },
+            {
+              "content": "alpha third",
+              "category": "insight"
+            }
+          ]
+        },
+        "query": "alpha",
+        "limit": 0
+      },
+      "expected": {
+        "results": [
+          {
+            "content": "alpha first",
+            "category": "insight",
+            "score": 2,
+            "keyword_matches": 1
+          },
+          {
+            "content": "alpha second",
+            "category": "insight",
+            "score": 2,
+            "keyword_matches": 1
+          },
+          {
+            "content": "alpha third",
+            "category": "insight",
+            "score": 2,
+            "keyword_matches": 1
+          }
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_53_memoryconformance_operate_recall_tags_and_core_boost():
+    vector_json = r"""
+    {
+      "name": "recall_tags_and_core_boost",
+      "description": "Recall gives tag matches higher weight than content matches and boosts matching core memories.",
+      "stage": "memory",
+      "input": {
+        "operation": "recall",
+        "store": {
+          "entries": [
+            {
+              "content": "all about deploy",
+              "category": "archival"
+            },
+            {
+              "content": "unrelated text",
+              "category": "insight",
+              "tags": [
+                "deploy"
+              ]
+            },
+            {
+              "content": "always deploy on green",
+              "category": "core"
+            }
+          ]
+        },
+        "query": "deploy",
+        "limit": 0
+      },
+      "expected": {
+        "results": [
+          {
+            "content": "unrelated text",
+            "category": "insight",
+            "score": 3,
+            "keyword_matches": 1
+          },
+          {
+            "content": "always deploy on green",
+            "category": "core",
+            "score": 3,
+            "keyword_matches": 1
+          },
+          {
+            "content": "all about deploy",
+            "category": "archival",
+            "score": 2,
+            "keyword_matches": 1
+          }
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_54_memoryconformance_operate_recall_tokenization_punctuation_unicode_and_dedup():
+    vector_json = r"""
+    {
+      "name": "recall_tokenization_punctuation_unicode_and_dedup",
+      "description": "Recall trims punctuation, lowercases tokens, preserves Unicode letters, and counts duplicate query tokens once.",
+      "stage": "memory",
+      "input": {
+        "operation": "recall",
+        "store": {
+          "entries": [
+            {
+              "content": "deploy guide",
+              "category": "insight"
+            },
+            {
+              "content": "unrelated text",
+              "category": "insight",
+              "tags": [
+                "café"
+              ]
+            },
+            {
+              "content": "deploy café",
+              "category": "core"
+            }
+          ]
+        },
+        "query": "DEPLOY, deploy!!! café",
+        "limit": 0
+      },
+      "expected": {
+        "results": [
+          {
+            "content": "deploy café",
+            "category": "core",
+            "score": 5,
+            "keyword_matches": 2
+          },
+          {
+            "content": "unrelated text",
+            "category": "insight",
+            "score": 3,
+            "keyword_matches": 1
+          },
+          {
+            "content": "deploy guide",
+            "category": "insight",
+            "score": 2,
+            "keyword_matches": 1
+          }
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_55_memoryconformance_operate_remember_dedups_core_by_tags():
+    vector_json = r"""
+    {
+      "name": "remember_dedups_core_by_tags",
+      "description": "Remember replaces an existing core memory with identical tags, appends the new memory, and leaves non-core entries intact.",
+      "stage": "memory",
+      "input": {
+        "operation": "remember",
+        "store": {
+          "entries": [
+            {
+              "content": "old fact",
+              "category": "core",
+              "tags": [
+                "subject"
+              ]
+            },
+            {
+              "content": "summary",
+              "category": "archival",
+              "tags": [
+                "subject"
+              ]
+            }
+          ]
+        },
+        "entry": {
+          "content": "new fact",
+          "category": "core",
+          "tags": [
+            "subject"
+          ]
+        },
+        "max_entries": 0
+      },
+      "expected": {
+        "store": {
+          "entries": [
+            {
+              "content": "summary",
+              "category": "archival",
+              "tags": [
+                "subject"
+              ]
+            },
+            {
+              "content": "new fact",
+              "category": "core",
+              "tags": [
+                "subject"
+              ]
+            }
+          ]
+        }
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_56_memoryconformance_operate_remember_dedups_core_missing_and_empty_tags():
+    vector_json = r"""
+    {
+      "name": "remember_dedups_core_missing_and_empty_tags",
+      "description": "Remember treats missing and empty tag lists as equivalent for core-memory deduplication.",
+      "stage": "memory",
+      "input": {
+        "operation": "remember",
+        "store": {
+          "entries": [
+            {
+              "content": "old core with missing tags",
+              "category": "core"
+            },
+            {
+              "content": "old core with empty tags",
+              "category": "core",
+              "tags": []
+            },
+            {
+              "content": "non-core survives",
+              "category": "insight"
+            }
+          ]
+        },
+        "entry": {
+          "content": "new core with empty tags",
+          "category": "core",
+          "tags": []
+        },
+        "max_entries": 0
+      },
+      "expected": {
+        "store": {
+          "entries": [
+            {
+              "content": "non-core survives",
+              "category": "insight"
+            },
+            {
+              "content": "new core with empty tags",
+              "category": "core",
+              "tags": []
+            }
+          ]
+        }
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_57_memoryconformance_operate_remember_evicts_archival_first():
+    vector_json = r"""
+    {
+      "name": "remember_evicts_archival_first",
+      "description": "Remember enforces the cap by evicting the oldest archival memory before older core/insight entries.",
+      "stage": "memory",
+      "input": {
+        "operation": "remember",
+        "store": {
+          "entries": [
+            {
+              "content": "core a",
+              "category": "core",
+              "tags": [
+                "a"
+              ]
+            },
+            {
+              "content": "archival b",
+              "category": "archival"
+            }
+          ]
+        },
+        "entry": {
+          "content": "core c",
+          "category": "core",
+          "tags": [
+            "c"
+          ]
+        },
+        "max_entries": 2
+      },
+      "expected": {
+        "store": {
+          "entries": [
+            {
+              "content": "core a",
+              "category": "core",
+              "tags": [
+                "a"
+              ]
+            },
+            {
+              "content": "core c",
+              "category": "core",
+              "tags": [
+                "c"
+              ]
+            }
+          ]
+        }
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_58_memoryconformance_operate_snapshot_port_round_trip():
+    vector_json = r"""
+    {
+      "name": "snapshot_port_round_trip",
+      "description": "A host memory port persists and reloads the whole MemoryStore snapshot; recall runs against the reloaded snapshot.",
+      "stage": "memory",
+      "input": {
+        "operation": "snapshot",
+        "store": {
+          "entries": []
+        },
+        "entry": {
+          "content": "remember this",
+          "category": "core"
+        },
+        "max_entries": 200,
+        "query": "remember"
+      },
+      "expected": {
+        "store": {
+          "entries": [
+            {
+              "content": "remember this",
+              "category": "core"
+            }
+          ]
+        },
+        "recalled": [
+          "remember this"
+        ]
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_59_memoryconformance_operate_update_index_out_of_range_error():
+    vector_json = r"""
+    {
+      "name": "update_index_out_of_range_error",
+      "description": "Updating a missing memory index signals a stable out-of-range error kind without relying on runtime-specific message text.",
+      "stage": "memory",
+      "input": {
+        "operation": "update",
+        "store": {
+          "entries": [
+            {
+              "content": "only",
+              "category": "core"
+            }
+          ]
+        },
+        "index": 3,
+        "entry": {
+          "content": "replacement",
+          "category": "insight"
+        }
+      },
+      "expectedError": {
+        "kind": "index_out_of_range"
+      },
+      "operation": "operate"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("MemoryConformance", "operate", vector, False, _SEAM)
+
+
+async def test_vector_60_turnconformance_replay_max_iterations():
     vector_json = r"""
     {
       "name": "max_iterations",
@@ -1569,7 +2353,7 @@ async def test_vector_44_turnconformance_replay_max_iterations():
     await run_vector("TurnConformance", "replay", vector, False, _SEAM)
 
 
-async def test_vector_45_turnconformance_replay_no_tool():
+async def test_vector_61_turnconformance_replay_no_tool():
     vector_json = r"""
     {
       "name": "no_tool",
@@ -1600,7 +2384,7 @@ async def test_vector_45_turnconformance_replay_no_tool():
     await run_vector("TurnConformance", "replay", vector, False, _SEAM)
 
 
-async def test_vector_46_turnconformance_replay_permission_denied():
+async def test_vector_62_turnconformance_replay_permission_denied():
     vector_json = r"""
     {
       "name": "permission_denied",
@@ -1634,7 +2418,7 @@ async def test_vector_46_turnconformance_replay_permission_denied():
     await run_vector("TurnConformance", "replay", vector, False, _SEAM)
 
 
-async def test_vector_47_turnconformance_replay_tool_failure():
+async def test_vector_63_turnconformance_replay_tool_failure():
     vector_json = r"""
     {
       "name": "tool_failure",
@@ -1670,7 +2454,7 @@ async def test_vector_47_turnconformance_replay_tool_failure():
     await run_vector("TurnConformance", "replay", vector, False, _SEAM)
 
 
-async def test_vector_48_turnconformance_replay_tool_success():
+async def test_vector_64_turnconformance_replay_tool_success():
     vector_json = r"""
     {
       "name": "tool_success",
@@ -1706,7 +2490,7 @@ async def test_vector_48_turnconformance_replay_tool_success():
     await run_vector("TurnConformance", "replay", vector, False, _SEAM)
 
 
-async def test_vector_49_turnconformance_run_assistant_tool_calls_metadata():
+async def test_vector_65_turnconformance_run_assistant_tool_calls_metadata():
     vector_json = r"""
     {
       "name": "assistant_tool_calls_metadata",
@@ -1858,7 +2642,7 @@ async def test_vector_49_turnconformance_run_assistant_tool_calls_metadata():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_50_turnconformance_run_async_tool_function():
+async def test_vector_66_turnconformance_run_async_tool_function():
     vector_json = r"""
     {
       "name": "async_tool_function",
@@ -1968,7 +2752,7 @@ async def test_vector_50_turnconformance_run_async_tool_function():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_51_turnconformance_run_bindings_injected():
+async def test_vector_67_turnconformance_run_bindings_injected():
     vector_json = r"""
     {
       "name": "bindings_injected",
@@ -2098,7 +2882,7 @@ async def test_vector_51_turnconformance_run_bindings_injected():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_52_turnconformance_run_cancellation_before_llm():
+async def test_vector_68_turnconformance_run_cancellation_before_llm():
     vector_json = r"""
     {
       "name": "cancellation_before_llm",
@@ -2159,7 +2943,7 @@ async def test_vector_52_turnconformance_run_cancellation_before_llm():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_53_turnconformance_run_cancellation_between_iterations():
+async def test_vector_69_turnconformance_run_cancellation_between_iterations():
     vector_json = r"""
     {
       "name": "cancellation_between_iterations",
@@ -2289,7 +3073,7 @@ async def test_vector_53_turnconformance_run_cancellation_between_iterations():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_54_turnconformance_run_cancellation_between_tools():
+async def test_vector_70_turnconformance_run_cancellation_between_tools():
     vector_json = r"""
     {
       "name": "cancellation_between_tools",
@@ -2428,7 +3212,7 @@ async def test_vector_54_turnconformance_run_cancellation_between_tools():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_55_turnconformance_run_context_no_trim_when_fits():
+async def test_vector_71_turnconformance_run_context_no_trim_when_fits():
     vector_json = r"""
     {
       "name": "context_no_trim_when_fits",
@@ -2499,7 +3283,7 @@ async def test_vector_55_turnconformance_run_context_no_trim_when_fits():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_56_turnconformance_run_context_preserves_system_messages():
+async def test_vector_72_turnconformance_run_context_preserves_system_messages():
     vector_json = r"""
     {
       "name": "context_preserves_system_messages",
@@ -2606,7 +3390,7 @@ async def test_vector_56_turnconformance_run_context_preserves_system_messages()
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_57_turnconformance_run_context_trim_basic():
+async def test_vector_73_turnconformance_run_context_trim_basic():
     vector_json = r"""
     {
       "name": "context_trim_basic",
@@ -2764,7 +3548,7 @@ async def test_vector_57_turnconformance_run_context_trim_basic():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_58_turnconformance_run_empty_tool_result():
+async def test_vector_74_turnconformance_run_empty_tool_result():
     vector_json = r"""
     {
       "name": "empty_tool_result",
@@ -2879,7 +3663,7 @@ async def test_vector_58_turnconformance_run_empty_tool_result():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_59_turnconformance_run_events_basic_tool_loop():
+async def test_vector_75_turnconformance_run_events_basic_tool_loop():
     vector_json = r"""
     {
       "name": "events_basic_tool_loop",
@@ -3025,7 +3809,7 @@ async def test_vector_59_turnconformance_run_events_basic_tool_loop():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_60_turnconformance_run_events_error_logged():
+async def test_vector_76_turnconformance_run_events_error_logged():
     vector_json = r"""
     {
       "name": "events_error_logged",
@@ -3151,7 +3935,7 @@ async def test_vector_60_turnconformance_run_events_error_logged():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_61_turnconformance_run_events_no_tools():
+async def test_vector_77_turnconformance_run_events_no_tools():
     vector_json = r"""
     {
       "name": "events_no_tools",
@@ -3229,7 +4013,7 @@ async def test_vector_61_turnconformance_run_events_no_tools():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_62_turnconformance_run_guardrail_all_pass():
+async def test_vector_78_turnconformance_run_guardrail_all_pass():
     vector_json = r"""
     {
       "name": "guardrail_all_pass",
@@ -3352,7 +4136,7 @@ async def test_vector_62_turnconformance_run_guardrail_all_pass():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_63_turnconformance_run_guardrail_input_deny():
+async def test_vector_79_turnconformance_run_guardrail_input_deny():
     vector_json = r"""
     {
       "name": "guardrail_input_deny",
@@ -3408,7 +4192,7 @@ async def test_vector_63_turnconformance_run_guardrail_input_deny():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_64_turnconformance_run_guardrail_output_deny():
+async def test_vector_80_turnconformance_run_guardrail_output_deny():
     vector_json = r"""
     {
       "name": "guardrail_output_deny",
@@ -3486,7 +4270,7 @@ async def test_vector_64_turnconformance_run_guardrail_output_deny():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_65_turnconformance_run_guardrail_tool_deny():
+async def test_vector_81_turnconformance_run_guardrail_tool_deny():
     vector_json = r"""
     {
       "name": "guardrail_tool_deny",
@@ -3640,7 +4424,7 @@ async def test_vector_65_turnconformance_run_guardrail_tool_deny():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_66_turnconformance_run_max_iterations_exceeded():
+async def test_vector_82_turnconformance_run_max_iterations_exceeded():
     vector_json = r"""
     {
       "name": "max_iterations_exceeded",
@@ -4150,7 +4934,7 @@ async def test_vector_66_turnconformance_run_max_iterations_exceeded():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_67_turnconformance_run_multi_turn_tool_calls():
+async def test_vector_83_turnconformance_run_multi_turn_tool_calls():
     vector_json = r"""
     {
       "name": "multi_turn_tool_calls",
@@ -4327,7 +5111,7 @@ async def test_vector_67_turnconformance_run_multi_turn_tool_calls():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_68_turnconformance_run_multiple_tool_calls_single_turn():
+async def test_vector_84_turnconformance_run_multiple_tool_calls_single_turn():
     vector_json = r"""
     {
       "name": "multiple_tool_calls_single_turn",
@@ -4508,7 +5292,7 @@ async def test_vector_68_turnconformance_run_multiple_tool_calls_single_turn():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_69_turnconformance_run_no_tool_calls():
+async def test_vector_85_turnconformance_run_no_tool_calls():
     vector_json = r"""
     {
       "name": "no_tool_calls",
@@ -4576,7 +5360,7 @@ async def test_vector_69_turnconformance_run_no_tool_calls():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_70_turnconformance_run_parallel_tools_basic():
+async def test_vector_86_turnconformance_run_parallel_tools_basic():
     vector_json = r"""
     {
       "name": "parallel_tools_basic",
@@ -4732,7 +5516,6 @@ async def test_vector_70_turnconformance_run_parallel_tools_basic():
         }
       ],
       "expected": {
-        "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
         "result": "Here's your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.",
         "iterations": 2,
         "total_messages": 8,
@@ -4750,7 +5533,7 @@ async def test_vector_70_turnconformance_run_parallel_tools_basic():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_71_turnconformance_run_parallel_tools_with_guardrail_deny():
+async def test_vector_87_turnconformance_run_parallel_tools_with_guardrail_deny():
     vector_json = r"""
     {
       "name": "parallel_tools_with_guardrail_deny",
@@ -4922,7 +5705,6 @@ async def test_vector_71_turnconformance_run_parallel_tools_with_guardrail_deny(
         }
       ],
       "expected": {
-        "rust_expected_error": "parallel_tool_calls=true is not supported by the canonical Rust engine",
         "result": "Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.",
         "iterations": 2,
         "total_messages": 8,
@@ -4942,7 +5724,180 @@ async def test_vector_71_turnconformance_run_parallel_tools_with_guardrail_deny(
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_72_turnconformance_run_single_tool_call():
+async def test_vector_88_turnconformance_run_parallel_tools_with_tool_error():
+    vector_json = r"""
+    {
+      "name": "parallel_tools_with_tool_error",
+      "description": "§13.6 Parallel Tools + tool error — 3 parallel tool calls, one tool returns an error result. All result messages are appended in the original tool_calls order.",
+      "stage": "agent",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "content": "You are a helpful assistant with access to weather, time, and service-status tools."
+          },
+          {
+            "role": "user",
+            "content": "Give me the weather in Paris, service status, and the time in Tokyo."
+          }
+        ],
+        "tools": [
+          {
+            "name": "get_weather",
+            "kind": "function",
+            "description": "Get the current weather for a city",
+            "parameters": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          },
+          {
+            "name": "get_service_status",
+            "kind": "function",
+            "description": "Get service status",
+            "parameters": []
+          },
+          {
+            "name": "get_time",
+            "kind": "function",
+            "description": "Get the current time in a city",
+            "parameters": [
+              {
+                "name": "city",
+                "kind": "string",
+                "required": true
+              }
+            ]
+          }
+        ],
+        "tool_functions": {
+          "get_weather": "returns weather string",
+          "get_service_status": "raises RuntimeError",
+          "get_time": "returns current time string"
+        },
+        "parallel_tool_calls": true
+      },
+      "sequence": [
+        {
+          "turn": 1,
+          "llm_response": {
+            "id": "chatcmpl-parallel-error-001",
+            "object": "chat.completion",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": null,
+                  "tool_calls": [
+                    {
+                      "id": "call_pe_weather",
+                      "type": "function",
+                      "function": {
+                        "name": "get_weather",
+                        "arguments": "{\"city\": \"Paris\"}"
+                      }
+                    },
+                    {
+                      "id": "call_pe_status",
+                      "type": "function",
+                      "function": {
+                        "name": "get_service_status",
+                        "arguments": "{}"
+                      }
+                    },
+                    {
+                      "id": "call_pe_time",
+                      "type": "function",
+                      "function": {
+                        "name": "get_time",
+                        "arguments": "{\"city\": \"Tokyo\"}"
+                      }
+                    }
+                  ]
+                },
+                "finish_reason": "tool_calls"
+              }
+            ]
+          },
+          "expected_tool_calls": [
+            {
+              "id": "call_pe_weather",
+              "name": "get_weather",
+              "arguments": {
+                "city": "Paris"
+              }
+            },
+            {
+              "id": "call_pe_status",
+              "name": "get_service_status",
+              "arguments": {}
+            },
+            {
+              "id": "call_pe_time",
+              "name": "get_time",
+              "arguments": {
+                "city": "Tokyo"
+              }
+            }
+          ],
+          "tool_results": [
+            {
+              "tool_call_id": "call_pe_weather",
+              "result": "72°F sunny"
+            },
+            {
+              "tool_call_id": "call_pe_status",
+              "result": "Error calling 'get_service_status': RuntimeError: Service unavailable"
+            },
+            {
+              "tool_call_id": "call_pe_time",
+              "result": "3:45 PM JST"
+            }
+          ]
+        },
+        {
+          "turn": 2,
+          "llm_response": {
+            "id": "chatcmpl-parallel-error-002",
+            "object": "chat.completion",
+            "choices": [
+              {
+                "index": 0,
+                "message": {
+                  "role": "assistant",
+                  "content": "Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.",
+                  "tool_calls": null
+                },
+                "finish_reason": "stop"
+              }
+            ]
+          },
+          "expected_tool_calls": null
+        }
+      ],
+      "expected": {
+        "result": "Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.",
+        "iterations": 2,
+        "total_messages": 8,
+        "tool_execution_order": [
+          "get_weather",
+          "get_service_status",
+          "get_time"
+        ],
+        "notes": "A tool error is represented as that tool's result content, not by reordering or dropping the slot. Runtimes may execute effects concurrently or sequentially, but provider-visible tool result messages remain aligned to the original tool_calls array."
+      },
+      "operation": "run"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("TurnConformance", "run", vector, False, _SEAM)
+
+
+async def test_vector_89_turnconformance_run_single_tool_call():
     vector_json = r"""
     {
       "name": "single_tool_call",
@@ -5089,7 +6044,7 @@ async def test_vector_72_turnconformance_run_single_tool_call():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_73_turnconformance_run_steering_inject_message():
+async def test_vector_90_turnconformance_run_steering_inject_message():
     vector_json = r"""
     {
       "name": "steering_inject_message",
@@ -5297,7 +6252,7 @@ async def test_vector_73_turnconformance_run_steering_inject_message():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_74_turnconformance_run_steering_multiple_messages():
+async def test_vector_91_turnconformance_run_steering_multiple_messages():
     vector_json = r"""
     {
       "name": "steering_multiple_messages",
@@ -5467,7 +6422,7 @@ async def test_vector_74_turnconformance_run_steering_multiple_messages():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_75_turnconformance_run_tool_not_registered_error():
+async def test_vector_92_turnconformance_run_tool_not_registered_error():
     vector_json = r"""
     {
       "name": "tool_not_registered_error",
@@ -5551,7 +6506,7 @@ async def test_vector_75_turnconformance_run_tool_not_registered_error():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_76_turnconformance_run_tool_result_message_format():
+async def test_vector_93_turnconformance_run_tool_result_message_format():
     vector_json = r"""
     {
       "name": "tool_result_message_format",
@@ -5672,7 +6627,7 @@ async def test_vector_76_turnconformance_run_tool_result_message_format():
     await run_vector("TurnConformance", "run", vector, False, _SEAM)
 
 
-async def test_vector_77_turnconformance_runturn_cancel_before_context():
+async def test_vector_94_turnconformance_runturn_cancel_before_context():
     vector_json = r"""
     {
       "name": "cancel_before_context",
@@ -5704,7 +6659,7 @@ async def test_vector_77_turnconformance_runturn_cancel_before_context():
     await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
 
 
-async def test_vector_78_turnconformance_runturn_delegated_provider_state():
+async def test_vector_95_turnconformance_runturn_delegated_provider_state():
     vector_json = r"""
     {
       "name": "delegated_provider_state",
@@ -5771,7 +6726,7 @@ async def test_vector_78_turnconformance_runturn_delegated_provider_state():
     await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
 
 
-async def test_vector_79_turnconformance_runturn_final_output():
+async def test_vector_96_turnconformance_runturn_final_output():
     vector_json = r"""
     {
       "name": "final_output",
@@ -5816,7 +6771,69 @@ async def test_vector_79_turnconformance_runturn_final_output():
     await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
 
 
-async def test_vector_80_turnconformance_runturn_ordered_tool_round():
+async def test_vector_97_turnconformance_runturn_memory_context_is_model_visible():
+    vector_json = r"""
+    {
+      "name": "memory_context_is_model_visible",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "What should I remember?"
+          }
+        ],
+        "memory": {
+          "store": {
+            "entries": [
+              {
+                "content": "User prefers concise answers",
+                "category": "core"
+              },
+              {
+                "content": "Historical deploy summary",
+                "category": "archival",
+                "tags": [
+                  "deploy"
+                ]
+              }
+            ]
+          }
+        },
+        "model": [
+          {
+            "output": "Use the memory context"
+          }
+        ]
+      },
+      "expected": {
+        "status": "success",
+        "output": "Use the memory context",
+        "iterations": 1,
+        "snapshots": 1,
+        "snapshotStablePrefixes": [
+          2
+        ],
+        "toolResults": 0,
+        "providerMessages": [
+          {
+            "role": "system",
+            "content": "## Memory\n- User prefers concise answers\n"
+          },
+          {
+            "role": "user",
+            "content": "What should I remember?"
+          }
+        ]
+      },
+      "operation": "runTurn"
+    }
+    """
+    vector = json.loads(vector_json, strict=False)
+    await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
+
+
+async def test_vector_98_turnconformance_runturn_ordered_tool_round():
     vector_json = r"""
     {
       "name": "ordered_tool_round",
@@ -5907,7 +6924,7 @@ async def test_vector_80_turnconformance_runturn_ordered_tool_round():
     await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
 
 
-async def test_vector_81_turnconformance_runturn_permission_denial_is_model_visible():
+async def test_vector_99_turnconformance_runturn_permission_denial_is_model_visible():
     vector_json = r"""
     {
       "name": "permission_denial_is_model_visible",
@@ -5958,7 +6975,7 @@ async def test_vector_81_turnconformance_runturn_permission_denial_is_model_visi
     await run_vector("TurnConformance", "runTurn", vector, False, _SEAM)
 
 
-async def test_vector_82_wireconformance_torequest_anthropic_image_format():
+async def test_vector_100_wireconformance_torequest_anthropic_image_format():
     vector_json = r"""
     {
       "name": "anthropic_image_format",
@@ -6028,7 +7045,7 @@ async def test_vector_82_wireconformance_torequest_anthropic_image_format():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_83_wireconformance_torequest_anthropic_max_tokens_required():
+async def test_vector_101_wireconformance_torequest_anthropic_max_tokens_required():
     vector_json = r"""
     {
       "name": "anthropic_max_tokens_required",
@@ -6083,7 +7100,7 @@ async def test_vector_83_wireconformance_torequest_anthropic_max_tokens_required
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_84_wireconformance_torequest_anthropic_options():
+async def test_vector_102_wireconformance_torequest_anthropic_options():
     vector_json = r"""
     {
       "name": "anthropic_options",
@@ -6152,7 +7169,7 @@ async def test_vector_84_wireconformance_torequest_anthropic_options():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_85_wireconformance_torequest_anthropic_system_separate():
+async def test_vector_103_wireconformance_torequest_anthropic_system_separate():
     vector_json = r"""
     {
       "name": "anthropic_system_separate",
@@ -6219,7 +7236,7 @@ async def test_vector_85_wireconformance_torequest_anthropic_system_separate():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_86_wireconformance_torequest_anthropic_tool_wire():
+async def test_vector_104_wireconformance_torequest_anthropic_tool_wire():
     vector_json = r"""
     {
       "name": "anthropic_tool_wire",
@@ -6304,7 +7321,7 @@ async def test_vector_86_wireconformance_torequest_anthropic_tool_wire():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_87_wireconformance_torequest_chat_audio_mp3():
+async def test_vector_105_wireconformance_torequest_chat_audio_mp3():
     vector_json = r"""
     {
       "name": "chat_audio_mp3",
@@ -6362,7 +7379,7 @@ async def test_vector_87_wireconformance_torequest_chat_audio_mp3():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_88_wireconformance_torequest_chat_audio_part():
+async def test_vector_106_wireconformance_torequest_chat_audio_part():
     vector_json = r"""
     {
       "name": "chat_audio_part",
@@ -6420,7 +7437,7 @@ async def test_vector_88_wireconformance_torequest_chat_audio_part():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_89_wireconformance_torequest_chat_image_base64():
+async def test_vector_107_wireconformance_torequest_chat_image_base64():
     vector_json = r"""
     {
       "name": "chat_image_base64",
@@ -6484,7 +7501,7 @@ async def test_vector_89_wireconformance_torequest_chat_image_base64():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_90_wireconformance_torequest_chat_image_part():
+async def test_vector_108_wireconformance_torequest_chat_image_part():
     vector_json = r"""
     {
       "name": "chat_image_part",
@@ -6548,7 +7565,7 @@ async def test_vector_90_wireconformance_torequest_chat_image_part():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_91_wireconformance_torequest_chat_multipart_content():
+async def test_vector_109_wireconformance_torequest_chat_multipart_content():
     vector_json = r"""
     {
       "name": "chat_multipart_content",
@@ -6612,7 +7629,7 @@ async def test_vector_91_wireconformance_torequest_chat_multipart_content():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_92_wireconformance_torequest_chat_simple():
+async def test_vector_110_wireconformance_torequest_chat_simple():
     vector_json = r"""
     {
       "name": "chat_simple",
@@ -6674,7 +7691,7 @@ async def test_vector_92_wireconformance_torequest_chat_simple():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_93_wireconformance_torequest_chat_single_text_optimized():
+async def test_vector_111_wireconformance_torequest_chat_single_text_optimized():
     vector_json = r"""
     {
       "name": "chat_single_text_optimized",
@@ -6723,7 +7740,7 @@ async def test_vector_93_wireconformance_torequest_chat_single_text_optimized():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_94_wireconformance_torequest_chat_with_options():
+async def test_vector_112_wireconformance_torequest_chat_with_options():
     vector_json = r"""
     {
       "name": "chat_with_options",
@@ -6791,7 +7808,7 @@ async def test_vector_94_wireconformance_torequest_chat_with_options():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_95_wireconformance_torequest_embedding_wire():
+async def test_vector_113_wireconformance_torequest_embedding_wire():
     vector_json = r"""
     {
       "name": "embedding_wire",
@@ -6835,7 +7852,7 @@ async def test_vector_95_wireconformance_torequest_embedding_wire():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_96_wireconformance_torequest_image_wire():
+async def test_vector_114_wireconformance_torequest_image_wire():
     vector_json = r"""
     {
       "name": "image_wire",
@@ -6879,7 +7896,7 @@ async def test_vector_96_wireconformance_torequest_image_wire():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_97_wireconformance_torequest_kind_to_json_type_mapping():
+async def test_vector_115_wireconformance_torequest_kind_to_json_type_mapping():
     vector_json = r"""
     {
       "name": "kind_to_json_type_mapping",
@@ -6998,7 +8015,7 @@ async def test_vector_97_wireconformance_torequest_kind_to_json_type_mapping():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_98_wireconformance_torequest_options_additional_properties():
+async def test_vector_116_wireconformance_torequest_options_additional_properties():
     vector_json = r"""
     {
       "name": "options_additional_properties",
@@ -7052,7 +8069,7 @@ async def test_vector_98_wireconformance_torequest_options_additional_properties
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_99_wireconformance_torequest_options_max_completion_tokens():
+async def test_vector_117_wireconformance_torequest_options_max_completion_tokens():
     vector_json = r"""
     {
       "name": "options_max_completion_tokens",
@@ -7104,7 +8121,7 @@ async def test_vector_99_wireconformance_torequest_options_max_completion_tokens
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_100_wireconformance_torequest_options_stop_sequences():
+async def test_vector_118_wireconformance_torequest_options_stop_sequences():
     vector_json = r"""
     {
       "name": "options_stop_sequences",
@@ -7162,7 +8179,7 @@ async def test_vector_100_wireconformance_torequest_options_stop_sequences():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_101_wireconformance_torequest_responses_simple():
+async def test_vector_119_wireconformance_torequest_responses_simple():
     vector_json = r"""
     {
       "name": "responses_simple",
@@ -7221,7 +8238,7 @@ async def test_vector_101_wireconformance_torequest_responses_simple():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_102_wireconformance_torequest_responses_structured_output():
+async def test_vector_120_wireconformance_torequest_responses_structured_output():
     vector_json = r"""
     {
       "name": "responses_structured_output",
@@ -7308,7 +8325,7 @@ async def test_vector_102_wireconformance_torequest_responses_structured_output(
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_103_wireconformance_torequest_responses_with_tools():
+async def test_vector_121_wireconformance_torequest_responses_with_tools():
     vector_json = r"""
     {
       "name": "responses_with_tools",
@@ -7388,7 +8405,7 @@ async def test_vector_103_wireconformance_torequest_responses_with_tools():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_104_wireconformance_torequest_structured_output():
+async def test_vector_122_wireconformance_torequest_structured_output():
     vector_json = r"""
     {
       "name": "structured_output",
@@ -7471,7 +8488,7 @@ async def test_vector_104_wireconformance_torequest_structured_output():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_105_wireconformance_torequest_structured_output_nested_optional():
+async def test_vector_123_wireconformance_torequest_structured_output_nested_optional():
     vector_json = r"""
     {
       "name": "structured_output_nested_optional",
@@ -7573,7 +8590,7 @@ async def test_vector_105_wireconformance_torequest_structured_output_nested_opt
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_106_wireconformance_torequest_tools_bindings_stripped():
+async def test_vector_124_wireconformance_torequest_tools_bindings_stripped():
     vector_json = r"""
     {
       "name": "tools_bindings_stripped",
@@ -7665,7 +8682,7 @@ async def test_vector_106_wireconformance_torequest_tools_bindings_stripped():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_107_wireconformance_torequest_tools_function_wire():
+async def test_vector_125_wireconformance_torequest_tools_function_wire():
     vector_json = r"""
     {
       "name": "tools_function_wire",
@@ -7747,7 +8764,7 @@ async def test_vector_107_wireconformance_torequest_tools_function_wire():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_108_wireconformance_torequest_tools_null_when_empty():
+async def test_vector_126_wireconformance_torequest_tools_null_when_empty():
     vector_json = r"""
     {
       "name": "tools_null_when_empty",
@@ -7796,7 +8813,7 @@ async def test_vector_108_wireconformance_torequest_tools_null_when_empty():
     await run_vector("WireConformance", "toRequest", vector, False, _SEAM)
 
 
-async def test_vector_109_wireconformance_torequest_tools_strict_mode():
+async def test_vector_127_wireconformance_torequest_tools_strict_mode():
     vector_json = r"""
     {
       "name": "tools_strict_mode",

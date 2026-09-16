@@ -426,7 +426,7 @@ final class AgentVectorTests: XCTestCase {
 
     // Annotation passthrough: echoed from expected because they are vector
     // annotations, not engine output.
-    for key in ["notes", "summary_contains", "rust_expected_error"] {
+    for key in ["notes", "summary_contains"] {
       if let value = expected[key] { observed[key] = value }
     }
     return observed

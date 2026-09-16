@@ -36,11 +36,9 @@ model Connection {
   usageDescription?: string;
 }
 
-alias Connections = Record<Connection> | Named<
-  Connection,
-  "Name of the connection",
-  #{ name: "my-connection" }
->[];
+alias Connections =
+  | Record<Connection>
+  | Named<Connection, "Name of the connection", #{ name: "my-connection" }>[];
 
 /**
  * Connection configuration for AI services using named connections.

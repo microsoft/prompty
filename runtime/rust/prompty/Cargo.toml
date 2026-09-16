@@ -52,3 +52,4 @@ serial_test = "4"
 # `prompty-anthropic`, so both are dev-dependencies of the conformance harness.
 prompty-openai = { path = "../prompty-openai" }
 prompty-anthropic = { path = "../prompty-anthropic" }
+prompty-foundry = { path = "../prompty-foundry" }

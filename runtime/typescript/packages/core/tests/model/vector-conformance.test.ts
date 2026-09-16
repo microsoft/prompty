@@ -12,6 +12,7 @@
 import * as vectorAdapterModule from "./vector-adapters";
 import {
   runVector,
+  type AdapterContext,
   type VectorAdapter,
   type VectorSeam,
 } from "./vector-runner";
@@ -20,15 +21,19 @@ const adapterModule = vectorAdapterModule as unknown as {
   vectorAdapters?: Record<string, VectorAdapter>;
   default?: Record<string, VectorAdapter>;
   vectorWaivers?: Record<string, string>;
+  vectorCapabilities?: Record<string, (context: AdapterContext) => boolean>;
   vectorDoubles?: Record<string, unknown>;
 };
 const adapters: Record<string, VectorAdapter> =
   adapterModule.vectorAdapters ?? adapterModule.default ?? {};
 const waivers: Record<string, string> = adapterModule.vectorWaivers ?? {};
+const capabilities: Record<string, (context: AdapterContext) => boolean> =
+  adapterModule.vectorCapabilities ?? {};
 const doubles: Record<string, unknown> = adapterModule.vectorDoubles ?? {};
 const seam: VectorSeam = {
   adapters,
   waivers,
+  capabilities,
   doubles,
   baseDir: __dirname,
 };
@@ -129,6 +134,30 @@ describe("callable vector conformance", () => {
       '{"name":"openai_model_finetune_no_owner","stage":"discovery","provider":"openai","shape":"model","input":{"id":"ft:custom-model:acme::xyz"},"expected":{"id":"ft:custom-model:acme::xyz","additionalProperties":{"id":"ft:custom-model:acme::xyz"}},"operation":"mapModel"}',
     ) as Record<string, unknown>;
     await runVector("DiscoveryConformance", "mapModel", vector, false, seam);
+  });
+  it("LiveProviderConformance.invoke:anthropic_chat_accepts_wire", async () => {
+    const vector = JSON.parse(
+      '{"name":"anthropic_chat_accepts_wire","description":"Anthropic accepts the runtime\'s canonical chat wire shape and returns non-empty assistant content.","stage":"live-provider","provider":"anthropic","targetApi":"chat","requires":["provider:anthropic"],"input":{"provider":"anthropic","apiType":"chat","model":"claude-sonnet-4-5-20250929","messages":[{"role":"user","content":"Reply with exactly one word: pong."}],"options":{"temperature":0,"maxOutputTokens":32}},"expected":{"accepted":true,"contentNonEmpty":true},"operation":"invoke"}',
+    ) as Record<string, unknown>;
+    await runVector("LiveProviderConformance", "invoke", vector, false, seam);
+  });
+  it("LiveProviderConformance.invoke:foundry_azure_key_chat_accepts_wire", async () => {
+    const vector = JSON.parse(
+      '{"name":"foundry_azure_key_chat_accepts_wire","description":"Azure OpenAI / Foundry key-auth deployment accepts the runtime\'s canonical chat wire shape.","stage":"live-provider","provider":"foundry","targetApi":"chat","requires":["provider:foundry-key"],"input":{"provider":"foundry","apiType":"chat","model":{"$env":"AZURE_OPENAI_CHAT_DEPLOYMENT"},"endpoint":{"$env":"AZURE_OPENAI_ENDPOINT"},"apiKey":{"$env":"AZURE_OPENAI_API_KEY"},"messages":[{"role":"user","content":"Reply with exactly one word: pong."}],"options":{"temperature":0,"maxOutputTokens":16}},"expected":{"accepted":true,"contentNonEmpty":true},"operation":"invoke"}',
+    ) as Record<string, unknown>;
+    await runVector("LiveProviderConformance", "invoke", vector, false, seam);
+  });
+  it("LiveProviderConformance.invoke:foundry_entra_chat_accepts_wire", async () => {
+    const vector = JSON.parse(
+      '{"name":"foundry_entra_chat_accepts_wire","description":"Foundry project Entra-auth deployment accepts the runtime\'s canonical chat wire shape.","stage":"live-provider","provider":"foundry","targetApi":"chat","requires":["provider:foundry-entra"],"input":{"provider":"foundry","apiType":"chat","model":{"$env":"FOUNDRY_MODEL"},"endpoint":{"$env":"FOUNDRY_PROJECT_ENDPOINT"},"messages":[{"role":"user","content":"Reply with exactly one word: pong."}],"options":{"temperature":0,"maxOutputTokens":16}},"expected":{"accepted":true,"contentNonEmpty":true},"operation":"invoke"}',
+    ) as Record<string, unknown>;
+    await runVector("LiveProviderConformance", "invoke", vector, false, seam);
+  });
+  it("LiveProviderConformance.invoke:openai_chat_accepts_wire", async () => {
+    const vector = JSON.parse(
+      '{"name":"openai_chat_accepts_wire","description":"OpenAI accepts the runtime\'s canonical chat wire shape and returns non-empty assistant content.","stage":"live-provider","provider":"openai","targetApi":"chat","requires":["provider:openai"],"input":{"provider":"openai","apiType":"chat","model":"gpt-4o-mini","messages":[{"role":"user","content":"Reply with exactly one word: pong."}],"options":{"temperature":0,"maxOutputTokens":16}},"expected":{"accepted":true,"contentNonEmpty":true},"operation":"invoke"}',
+    ) as Record<string, unknown>;
+    await runVector("LiveProviderConformance", "invoke", vector, false, seam);
   });
   it("LoadConformance.load:basic_load", async () => {
     const vector = JSON.parse(
@@ -298,6 +327,78 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("MemoryConformance.operate:clear_by_category_and_all", async () => {
+    const vector = JSON.parse(
+      '{"name":"clear_by_category_and_all","description":"Clear removes only the requested category, or all memories when no category is supplied.","stage":"memory","input":{"operation":"clear","store":{"entries":[{"content":"fact","category":"core"},{"content":"summary","category":"archival"},{"content":"another summary","category":"archival"},{"content":"insight","category":"insight"}]},"category":"archival"},"expected":{"removed":2,"store":{"entries":[{"content":"fact","category":"core"},{"content":"insight","category":"insight"}]}},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:format_core_and_recall_results", async () => {
+    const vector = JSON.parse(
+      '{"name":"format_core_and_recall_results","description":"Formatting injects only core memories into system prompts and formats recall results with category and tags.","stage":"memory","input":{"operation":"format","store":{"entries":[{"content":"persistent fact","category":"core"},{"content":"a summary","category":"archival"},{"content":"run the deploy","category":"core","tags":["ops"]}]},"query":"deploy"},"expected":{"system_prompt":"## Memory\\n- persistent fact\\n- run the deploy\\n","recall_results":"1. [core] run the deploy\\n   tags: ops\\n"},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:recall_empty_query_and_limit", async () => {
+    const vector = JSON.parse(
+      '{"name":"recall_empty_query_and_limit","description":"Empty-query recall returns all memories in insertion order with score 0; positive limit truncates.","stage":"memory","input":{"operation":"recall","store":{"entries":[{"content":"first","category":"insight","createdAt":"2024-01-03T00:00:00Z"},{"content":"second","category":"core","createdAt":"2024-01-01T00:00:00Z"},{"content":"third","category":"archival","createdAt":"2024-01-02T00:00:00Z"}]},"query":"","limit":2},"expected":{"results":[{"content":"first","category":"insight","score":0,"keyword_matches":0},{"content":"second","category":"core","score":0,"keyword_matches":0}]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:recall_ranks_by_weighted_score", async () => {
+    const vector = JSON.parse(
+      '{"name":"recall_ranks_by_weighted_score","description":"Recall ranks by weighted lexical score: content match = 2, tag match = 3, core match boost = 1.","stage":"memory","input":{"operation":"recall","store":{"entries":[{"content":"the sky is clear","category":"insight"},{"content":"favorite color is blue sky","category":"insight"},{"content":"unrelated text","category":"insight","tags":["space"]},{"content":"always deploy on green","category":"core"}]},"query":"blue sky","limit":0},"expected":{"results":[{"content":"favorite color is blue sky","category":"insight","score":4,"keyword_matches":2},{"content":"the sky is clear","category":"insight","score":2,"keyword_matches":1}]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:recall_score_ties_preserve_insertion_order", async () => {
+    const vector = JSON.parse(
+      '{"name":"recall_score_ties_preserve_insertion_order","description":"Recall preserves insertion order for memories with identical scores.","stage":"memory","input":{"operation":"recall","store":{"entries":[{"content":"alpha first","category":"insight"},{"content":"alpha second","category":"insight"},{"content":"alpha third","category":"insight"}]},"query":"alpha","limit":0},"expected":{"results":[{"content":"alpha first","category":"insight","score":2,"keyword_matches":1},{"content":"alpha second","category":"insight","score":2,"keyword_matches":1},{"content":"alpha third","category":"insight","score":2,"keyword_matches":1}]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:recall_tags_and_core_boost", async () => {
+    const vector = JSON.parse(
+      '{"name":"recall_tags_and_core_boost","description":"Recall gives tag matches higher weight than content matches and boosts matching core memories.","stage":"memory","input":{"operation":"recall","store":{"entries":[{"content":"all about deploy","category":"archival"},{"content":"unrelated text","category":"insight","tags":["deploy"]},{"content":"always deploy on green","category":"core"}]},"query":"deploy","limit":0},"expected":{"results":[{"content":"unrelated text","category":"insight","score":3,"keyword_matches":1},{"content":"always deploy on green","category":"core","score":3,"keyword_matches":1},{"content":"all about deploy","category":"archival","score":2,"keyword_matches":1}]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:recall_tokenization_punctuation_unicode_and_dedup", async () => {
+    const vector = JSON.parse(
+      '{"name":"recall_tokenization_punctuation_unicode_and_dedup","description":"Recall trims punctuation, lowercases tokens, preserves Unicode letters, and counts duplicate query tokens once.","stage":"memory","input":{"operation":"recall","store":{"entries":[{"content":"deploy guide","category":"insight"},{"content":"unrelated text","category":"insight","tags":["café"]},{"content":"deploy café","category":"core"}]},"query":"DEPLOY, deploy!!! café","limit":0},"expected":{"results":[{"content":"deploy café","category":"core","score":5,"keyword_matches":2},{"content":"unrelated text","category":"insight","score":3,"keyword_matches":1},{"content":"deploy guide","category":"insight","score":2,"keyword_matches":1}]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:remember_dedups_core_by_tags", async () => {
+    const vector = JSON.parse(
+      '{"name":"remember_dedups_core_by_tags","description":"Remember replaces an existing core memory with identical tags, appends the new memory, and leaves non-core entries intact.","stage":"memory","input":{"operation":"remember","store":{"entries":[{"content":"old fact","category":"core","tags":["subject"]},{"content":"summary","category":"archival","tags":["subject"]}]},"entry":{"content":"new fact","category":"core","tags":["subject"]},"max_entries":0},"expected":{"store":{"entries":[{"content":"summary","category":"archival","tags":["subject"]},{"content":"new fact","category":"core","tags":["subject"]}]}},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:remember_dedups_core_missing_and_empty_tags", async () => {
+    const vector = JSON.parse(
+      '{"name":"remember_dedups_core_missing_and_empty_tags","description":"Remember treats missing and empty tag lists as equivalent for core-memory deduplication.","stage":"memory","input":{"operation":"remember","store":{"entries":[{"content":"old core with missing tags","category":"core"},{"content":"old core with empty tags","category":"core","tags":[]},{"content":"non-core survives","category":"insight"}]},"entry":{"content":"new core with empty tags","category":"core","tags":[]},"max_entries":0},"expected":{"store":{"entries":[{"content":"non-core survives","category":"insight"},{"content":"new core with empty tags","category":"core","tags":[]}]}},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:remember_evicts_archival_first", async () => {
+    const vector = JSON.parse(
+      '{"name":"remember_evicts_archival_first","description":"Remember enforces the cap by evicting the oldest archival memory before older core/insight entries.","stage":"memory","input":{"operation":"remember","store":{"entries":[{"content":"core a","category":"core","tags":["a"]},{"content":"archival b","category":"archival"}]},"entry":{"content":"core c","category":"core","tags":["c"]},"max_entries":2},"expected":{"store":{"entries":[{"content":"core a","category":"core","tags":["a"]},{"content":"core c","category":"core","tags":["c"]}]}},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:snapshot_port_round_trip", async () => {
+    const vector = JSON.parse(
+      '{"name":"snapshot_port_round_trip","description":"A host memory port persists and reloads the whole MemoryStore snapshot; recall runs against the reloaded snapshot.","stage":"memory","input":{"operation":"snapshot","store":{"entries":[]},"entry":{"content":"remember this","category":"core"},"max_entries":200,"query":"remember"},"expected":{"store":{"entries":[{"content":"remember this","category":"core"}]},"recalled":["remember this"]},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
+  it("MemoryConformance.operate:update_index_out_of_range_error", async () => {
+    const vector = JSON.parse(
+      '{"name":"update_index_out_of_range_error","description":"Updating a missing memory index signals a stable out-of-range error kind without relying on runtime-specific message text.","stage":"memory","input":{"operation":"update","store":{"entries":[{"content":"only","category":"core"}]},"index":3,"entry":{"content":"replacement","category":"insight"}},"expectedError":{"kind":"index_out_of_range"},"operation":"operate"}',
+    ) as Record<string, unknown>;
+    await runVector("MemoryConformance", "operate", vector, false, seam);
+  });
   it("TurnConformance.replay:max_iterations", async () => {
     const vector = JSON.parse(
       '{"name":"max_iterations","stage":"replay","input":{"clock":"2026-06-28T00:00:00Z","sessionId":"session-1","turnId":"turn-1","maxIterations":1},"expected":["session:session_start:session-1:turn-1","turn:turn_start:0","turn:llm_start:0","turn:llm_complete:0","session:checkpoint_created:session-1:turn-1","turn:permission_requested:0:exec-1-permission","turn:permission_completed:0:true","turn:tool_execution_start:0:add","turn:tool_execution_complete:0:add:true","turn:tool_result:0:add:true","turn:messages_updated:0","turn:error:1:max_iterations","turn:turn_end:1:error","session:session_end:session-1:turn-1:error","summary:session-1:error:turns=1:checkpoints=1"],"operation":"replay"}',
@@ -456,13 +557,19 @@ describe("callable vector conformance", () => {
   });
   it("TurnConformance.run:parallel_tools_basic", async () => {
     const vector = JSON.parse(
-      '{"name":"parallel_tools_basic","description":"§13.6 Parallel Tools — LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.","stage":"agent","input":{"messages":[{"role":"system","content":"You are a helpful assistant with access to weather, time, and news tools."},{"role":"user","content":"Give me the weather in Paris, the current time in Tokyo, and the latest news."}],"tools":[{"name":"get_weather","kind":"function","description":"Get the current weather for a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_time","kind":"function","description":"Get the current time in a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_news","kind":"function","description":"Get the latest news headlines","parameters":[]}],"tool_functions":{"get_weather":"returns weather string","get_time":"returns current time string","get_news":"returns news headlines"},"parallel_tool_calls":true},"sequence":[{"turn":1,"llm_response":{"id":"chatcmpl-parallel-001","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_par_weather","type":"function","function":{"name":"get_weather","arguments":"{\\"city\\": \\"Paris\\"}"}},{"id":"call_par_time","type":"function","function":{"name":"get_time","arguments":"{\\"city\\": \\"Tokyo\\"}"}},{"id":"call_par_news","type":"function","function":{"name":"get_news","arguments":"{}"}}]},"finish_reason":"tool_calls"}]},"expected_tool_calls":[{"id":"call_par_weather","name":"get_weather","arguments":{"city":"Paris"}},{"id":"call_par_time","name":"get_time","arguments":{"city":"Tokyo"}},{"id":"call_par_news","name":"get_news","arguments":{}}],"tool_results":[{"tool_call_id":"call_par_weather","result":"72°F sunny"},{"tool_call_id":"call_par_time","result":"3:45 PM JST"},{"tool_call_id":"call_par_news","result":"Tech stocks rise 5%. New climate accord signed. Mars rover discovers ice."}]},{"turn":2,"llm_response":{"id":"chatcmpl-parallel-002","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Here\'s your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.","tool_calls":null},"finish_reason":"stop"}]},"expected_tool_calls":null}],"expected":{"rust_expected_error":"parallel_tool_calls=true is not supported by the canonical Rust engine","result":"Here\'s your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.","iterations":2,"total_messages":8,"tool_execution_order":["get_weather","get_time","get_news"],"notes":"With parallel_tool_calls=true, all 3 tool calls may execute concurrently. Regardless of execution order, tool result messages must be appended in the same order as the original tool_calls array. The total is 8 messages: system + user + assistant(3 tool_calls) + 3 tool results + final assistant."},"operation":"run"}',
+      '{"name":"parallel_tools_basic","description":"§13.6 Parallel Tools — LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.","stage":"agent","input":{"messages":[{"role":"system","content":"You are a helpful assistant with access to weather, time, and news tools."},{"role":"user","content":"Give me the weather in Paris, the current time in Tokyo, and the latest news."}],"tools":[{"name":"get_weather","kind":"function","description":"Get the current weather for a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_time","kind":"function","description":"Get the current time in a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_news","kind":"function","description":"Get the latest news headlines","parameters":[]}],"tool_functions":{"get_weather":"returns weather string","get_time":"returns current time string","get_news":"returns news headlines"},"parallel_tool_calls":true},"sequence":[{"turn":1,"llm_response":{"id":"chatcmpl-parallel-001","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_par_weather","type":"function","function":{"name":"get_weather","arguments":"{\\"city\\": \\"Paris\\"}"}},{"id":"call_par_time","type":"function","function":{"name":"get_time","arguments":"{\\"city\\": \\"Tokyo\\"}"}},{"id":"call_par_news","type":"function","function":{"name":"get_news","arguments":"{}"}}]},"finish_reason":"tool_calls"}]},"expected_tool_calls":[{"id":"call_par_weather","name":"get_weather","arguments":{"city":"Paris"}},{"id":"call_par_time","name":"get_time","arguments":{"city":"Tokyo"}},{"id":"call_par_news","name":"get_news","arguments":{}}],"tool_results":[{"tool_call_id":"call_par_weather","result":"72°F sunny"},{"tool_call_id":"call_par_time","result":"3:45 PM JST"},{"tool_call_id":"call_par_news","result":"Tech stocks rise 5%. New climate accord signed. Mars rover discovers ice."}]},{"turn":2,"llm_response":{"id":"chatcmpl-parallel-002","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Here\'s your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.","tool_calls":null},"finish_reason":"stop"}]},"expected_tool_calls":null}],"expected":{"result":"Here\'s your update: Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. Latest news: Tech stocks rise 5%, a new climate accord was signed, and the Mars rover discovered ice.","iterations":2,"total_messages":8,"tool_execution_order":["get_weather","get_time","get_news"],"notes":"With parallel_tool_calls=true, all 3 tool calls may execute concurrently. Regardless of execution order, tool result messages must be appended in the same order as the original tool_calls array. The total is 8 messages: system + user + assistant(3 tool_calls) + 3 tool results + final assistant."},"operation":"run"}',
     ) as Record<string, unknown>;
     await runVector("TurnConformance", "run", vector, false, seam);
   });
   it("TurnConformance.run:parallel_tools_with_guardrail_deny", async () => {
     const vector = JSON.parse(
-      '{"name":"parallel_tools_with_guardrail_deny","description":"§13.6 Parallel Tools + §13.4 Guardrails — 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.","stage":"agent","input":{"messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"Get weather, time, and run the dangerous operation."}],"tools":[{"name":"get_weather","kind":"function","description":"Get the current weather for a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_time","kind":"function","description":"Get the current time in a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"dangerous_tool","kind":"function","description":"A dangerous operation","parameters":[{"name":"target","kind":"string","required":true}]}],"tool_functions":{"get_weather":"returns weather string","get_time":"returns current time string","dangerous_tool":"returns sensitive data"},"parallel_tool_calls":true,"guardrails":{"tool":{"deny_tools":["dangerous_tool"],"reason":"Not authorized"}}},"sequence":[{"turn":1,"llm_response":{"id":"chatcmpl-par-guard-001","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_pg_weather","type":"function","function":{"name":"get_weather","arguments":"{\\"city\\": \\"Paris\\"}"}},{"id":"call_pg_danger","type":"function","function":{"name":"dangerous_tool","arguments":"{\\"target\\": \\"secret_db\\"}"}},{"id":"call_pg_time","type":"function","function":{"name":"get_time","arguments":"{\\"city\\": \\"Tokyo\\"}"}}]},"finish_reason":"tool_calls"}]},"expected_tool_calls":[{"id":"call_pg_weather","name":"get_weather","arguments":{"city":"Paris"}},{"id":"call_pg_danger","name":"dangerous_tool","arguments":{"target":"secret_db"}},{"id":"call_pg_time","name":"get_time","arguments":{"city":"Tokyo"}}],"tool_results":[{"tool_call_id":"call_pg_weather","result":"72°F sunny"},{"tool_call_id":"call_pg_danger","result":"Tool denied by guardrail: Not authorized"},{"tool_call_id":"call_pg_time","result":"3:45 PM JST"}]},{"turn":2,"llm_response":{"id":"chatcmpl-par-guard-002","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.","tool_calls":null},"finish_reason":"stop"}]},"expected_tool_calls":null}],"expected":{"rust_expected_error":"parallel_tool_calls=true is not supported by the canonical Rust engine","result":"Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.","iterations":2,"total_messages":8,"denied_tools":["dangerous_tool"],"tool_execution_order":["get_weather","get_time"],"notes":"The tool guardrail filters dangerous_tool before execution. get_weather and get_time execute (potentially in parallel). dangerous_tool receives a synthetic denial result. All 3 tool result messages are appended in the original tool_calls order. The denied tool is never actually called but its result slot is filled with the denial message."},"operation":"run"}',
+      '{"name":"parallel_tools_with_guardrail_deny","description":"§13.6 Parallel Tools + §13.4 Guardrails — 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.","stage":"agent","input":{"messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"Get weather, time, and run the dangerous operation."}],"tools":[{"name":"get_weather","kind":"function","description":"Get the current weather for a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_time","kind":"function","description":"Get the current time in a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"dangerous_tool","kind":"function","description":"A dangerous operation","parameters":[{"name":"target","kind":"string","required":true}]}],"tool_functions":{"get_weather":"returns weather string","get_time":"returns current time string","dangerous_tool":"returns sensitive data"},"parallel_tool_calls":true,"guardrails":{"tool":{"deny_tools":["dangerous_tool"],"reason":"Not authorized"}}},"sequence":[{"turn":1,"llm_response":{"id":"chatcmpl-par-guard-001","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_pg_weather","type":"function","function":{"name":"get_weather","arguments":"{\\"city\\": \\"Paris\\"}"}},{"id":"call_pg_danger","type":"function","function":{"name":"dangerous_tool","arguments":"{\\"target\\": \\"secret_db\\"}"}},{"id":"call_pg_time","type":"function","function":{"name":"get_time","arguments":"{\\"city\\": \\"Tokyo\\"}"}}]},"finish_reason":"tool_calls"}]},"expected_tool_calls":[{"id":"call_pg_weather","name":"get_weather","arguments":{"city":"Paris"}},{"id":"call_pg_danger","name":"dangerous_tool","arguments":{"target":"secret_db"}},{"id":"call_pg_time","name":"get_time","arguments":{"city":"Tokyo"}}],"tool_results":[{"tool_call_id":"call_pg_weather","result":"72°F sunny"},{"tool_call_id":"call_pg_danger","result":"Tool denied by guardrail: Not authorized"},{"tool_call_id":"call_pg_time","result":"3:45 PM JST"}]},{"turn":2,"llm_response":{"id":"chatcmpl-par-guard-002","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.","tool_calls":null},"finish_reason":"stop"}]},"expected_tool_calls":null}],"expected":{"result":"Paris is 72°F and sunny. The time in Tokyo is 3:45 PM JST. The dangerous operation could not be executed as it is not authorized.","iterations":2,"total_messages":8,"denied_tools":["dangerous_tool"],"tool_execution_order":["get_weather","get_time"],"notes":"The tool guardrail filters dangerous_tool before execution. get_weather and get_time execute (potentially in parallel). dangerous_tool receives a synthetic denial result. All 3 tool result messages are appended in the original tool_calls order. The denied tool is never actually called but its result slot is filled with the denial message."},"operation":"run"}',
+    ) as Record<string, unknown>;
+    await runVector("TurnConformance", "run", vector, false, seam);
+  });
+  it("TurnConformance.run:parallel_tools_with_tool_error", async () => {
+    const vector = JSON.parse(
+      '{"name":"parallel_tools_with_tool_error","description":"§13.6 Parallel Tools + tool error — 3 parallel tool calls, one tool returns an error result. All result messages are appended in the original tool_calls order.","stage":"agent","input":{"messages":[{"role":"system","content":"You are a helpful assistant with access to weather, time, and service-status tools."},{"role":"user","content":"Give me the weather in Paris, service status, and the time in Tokyo."}],"tools":[{"name":"get_weather","kind":"function","description":"Get the current weather for a city","parameters":[{"name":"city","kind":"string","required":true}]},{"name":"get_service_status","kind":"function","description":"Get service status","parameters":[]},{"name":"get_time","kind":"function","description":"Get the current time in a city","parameters":[{"name":"city","kind":"string","required":true}]}],"tool_functions":{"get_weather":"returns weather string","get_service_status":"raises RuntimeError","get_time":"returns current time string"},"parallel_tool_calls":true},"sequence":[{"turn":1,"llm_response":{"id":"chatcmpl-parallel-error-001","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":null,"tool_calls":[{"id":"call_pe_weather","type":"function","function":{"name":"get_weather","arguments":"{\\"city\\": \\"Paris\\"}"}},{"id":"call_pe_status","type":"function","function":{"name":"get_service_status","arguments":"{}"}},{"id":"call_pe_time","type":"function","function":{"name":"get_time","arguments":"{\\"city\\": \\"Tokyo\\"}"}}]},"finish_reason":"tool_calls"}]},"expected_tool_calls":[{"id":"call_pe_weather","name":"get_weather","arguments":{"city":"Paris"}},{"id":"call_pe_status","name":"get_service_status","arguments":{}},{"id":"call_pe_time","name":"get_time","arguments":{"city":"Tokyo"}}],"tool_results":[{"tool_call_id":"call_pe_weather","result":"72°F sunny"},{"tool_call_id":"call_pe_status","result":"Error calling \'get_service_status\': RuntimeError: Service unavailable"},{"tool_call_id":"call_pe_time","result":"3:45 PM JST"}]},{"turn":2,"llm_response":{"id":"chatcmpl-parallel-error-002","object":"chat.completion","choices":[{"index":0,"message":{"role":"assistant","content":"Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.","tool_calls":null},"finish_reason":"stop"}]},"expected_tool_calls":null}],"expected":{"result":"Paris is 72°F and sunny. The service status is unavailable right now. The time in Tokyo is 3:45 PM JST.","iterations":2,"total_messages":8,"tool_execution_order":["get_weather","get_service_status","get_time"],"notes":"A tool error is represented as that tool\'s result content, not by reordering or dropping the slot. Runtimes may execute effects concurrently or sequentially, but provider-visible tool result messages remain aligned to the original tool_calls array."},"operation":"run"}',
     ) as Record<string, unknown>;
     await runVector("TurnConformance", "run", vector, false, seam);
   });
@@ -511,6 +618,12 @@ describe("callable vector conformance", () => {
   it("TurnConformance.runTurn:final_output", async () => {
     const vector = JSON.parse(
       '{"name":"final_output","stage":"turn","input":{"messages":[{"role":"user","content":"Hello"}],"model":[{"output":"Hello back"}]},"expected":{"status":"success","output":"Hello back","iterations":1,"snapshots":1,"snapshotStablePrefixes":[1],"toolResults":0,"eventKinds":["turn_started","context_prepared","model_invocation_started","model_invocation_completed","checkpoint_created","turn_committed","post_commit_started","post_commit_completed"]},"operation":"runTurn"}',
+    ) as Record<string, unknown>;
+    await runVector("TurnConformance", "runTurn", vector, false, seam);
+  });
+  it("TurnConformance.runTurn:memory_context_is_model_visible", async () => {
+    const vector = JSON.parse(
+      '{"name":"memory_context_is_model_visible","stage":"turn","input":{"messages":[{"role":"user","content":"What should I remember?"}],"memory":{"store":{"entries":[{"content":"User prefers concise answers","category":"core"},{"content":"Historical deploy summary","category":"archival","tags":["deploy"]}]}},"model":[{"output":"Use the memory context"}]},"expected":{"status":"success","output":"Use the memory context","iterations":1,"snapshots":1,"snapshotStablePrefixes":[2],"toolResults":0,"providerMessages":[{"role":"system","content":"## Memory\\n- User prefers concise answers\\n"},{"role":"user","content":"What should I remember?"}]},"operation":"runTurn"}',
     ) as Record<string, unknown>;
     await runVector("TurnConformance", "runTurn", vector, false, seam);
   });

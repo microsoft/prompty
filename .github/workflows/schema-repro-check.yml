@@ -166,6 +166,10 @@ jobs:
         working-directory: schema
         run: npm ci
 
+      - name: Lint vector metadata
+        working-directory: schema
+        run: npm run lint:vector-metadata
+
       # The committed root global.json (added alongside this change) selects the SDK
       # for `dotnet format`. setup-dotnet above installs 9.0.317; the committed
       # global.json pins the 9.0 feature band (rollForward: latestFeature), so on a

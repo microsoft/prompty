@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.prompty.CancellationToken;
+import com.microsoft.prompty.Memory;
 import com.microsoft.prompty.Messages;
 import com.microsoft.prompty.SpecVectors;
 import com.microsoft.prompty.model.DelegatedStateReference;
@@ -15,6 +16,7 @@ import com.microsoft.prompty.model.EngineTurnStatus;
 import com.microsoft.prompty.model.InvocationContextPortability;
 import com.microsoft.prompty.model.InvocationContextState;
 import com.microsoft.prompty.model.Message;
+import com.microsoft.prompty.model.MemoryStore;
 import com.microsoft.prompty.model.ModelInvocationRequest;
 import com.microsoft.prompty.model.ModelInvocationResponse;
 import com.microsoft.prompty.model.ModelToolOutcome;
@@ -88,7 +90,7 @@ final class EngineTurnVectorsTest {
     TurnEngineResult result =
         engine.run(
             TurnEngineRequest.of(
-                "session-" + name, "turn-" + name, messages(vector.get("messages"))),
+                "session-" + name, "turn-" + name, messagesWithMemory(vector)),
             cancellation);
 
     TurnCommit commit = result.commit;
@@ -179,6 +181,24 @@ final class EngineTurnVectorsTest {
           Messages.withText(roleOf((String) map.get("role")), (String) map.get("content")));
     }
     return messages;
+  }
+
+  private static List<Message> messagesWithMemory(Map<String, Object> vector) {
+    List<Message> prepared = new ArrayList<>();
+    Object memoryObj = vector.get("memory");
+    if (memoryObj instanceof Map<?, ?> memoryMap) {
+      Object storeObj = memoryMap.get("store");
+      if (storeObj == null) {
+        storeObj = Map.of("entries", List.of());
+      }
+      MemoryStore store = MemoryStore.load(asMap(storeObj), new com.microsoft.prompty.model.LoadContext());
+      String systemPrompt = Memory.formatForSystemPrompt(store);
+      if (!systemPrompt.isEmpty()) {
+        prepared.add(Messages.withText(Role.SYSTEM, systemPrompt));
+      }
+    }
+    prepared.addAll(messages(vector.get("messages")));
+    return prepared;
   }
 
   private static Role roleOf(String role) {

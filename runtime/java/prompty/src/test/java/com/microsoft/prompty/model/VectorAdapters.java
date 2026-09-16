@@ -6,6 +6,7 @@ import com.microsoft.prompty.Environment;
 import com.microsoft.prompty.InvokerException;
 import com.microsoft.prompty.LoadException;
 import com.microsoft.prompty.Loader;
+import com.microsoft.prompty.Memory;
 import com.microsoft.prompty.Messages;
 import com.microsoft.prompty.Pipeline;
 import com.microsoft.prompty.SpecVectors;
@@ -23,6 +24,12 @@ import com.microsoft.prompty.harness.FunctionHostToolExecutor;
 import com.microsoft.prompty.harness.InMemoryCheckpointStore;
 import com.microsoft.prompty.harness.JsonlEventJournalWriter;
 import com.microsoft.prompty.harness.ReferenceTurnRunner;
+import com.microsoft.prompty.anthropic.AnthropicExecutor;
+import com.microsoft.prompty.anthropic.AnthropicProcessor;
+import com.microsoft.prompty.foundry.FoundryExecutor;
+import com.microsoft.prompty.foundry.FoundryProcessor;
+import com.microsoft.prompty.openai.OpenAIExecutor;
+import com.microsoft.prompty.openai.OpenAIProcessor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -73,6 +81,14 @@ public final class VectorAdapters {
     adapters.put(
         "DiscoveryConformance.mapModel",
         new VectorRunner.VectorAdapter(VectorAdapters::mapModelInvoke));
+    adapters.put(
+        "MemoryConformance.operate",
+        new VectorRunner.VectorAdapter(
+            VectorAdapters::memoryOperateInvoke, VectorAdapters::projectNormalize));
+    adapters.put(
+        "LiveProviderConformance.invoke",
+        new VectorRunner.VectorAdapter(
+            VectorAdapters::liveProviderInvoke, VectorAdapters::projectNormalize));
     return adapters;
   }
 
@@ -80,8 +96,41 @@ public final class VectorAdapters {
     return new LinkedHashMap<>();
   }
 
+  public static Map<String, VectorRunner.Capability> capabilities() {
+    Map<String, VectorRunner.Capability> capabilities = new LinkedHashMap<>();
+    capabilities.put("provider:openai", ctx -> envPresent("OPENAI_API_KEY"));
+    capabilities.put("provider:anthropic", ctx -> envPresent("ANTHROPIC_API_KEY"));
+    capabilities.put(
+        "provider:foundry-key",
+        ctx ->
+            envPresent(
+                "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_CHAT_DEPLOYMENT"));
+    capabilities.put(
+        "provider:foundry-entra",
+        ctx -> envPresent("FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_MODEL", "AZURE_INFERENCE_CREDENTIAL"));
+    return capabilities;
+  }
+
   public static Object doubles() {
     return new LinkedHashMap<String, Object>();
+  }
+
+  private static boolean envPresent(String... names) {
+    for (String name : names) {
+      String value = System.getenv(name);
+      if (value == null || value.isBlank()) {
+        return false;
+      }
+      String lowered = value.trim().toLowerCase(Locale.ROOT);
+      if (lowered.startsWith("sk-test")
+          || lowered.startsWith("test")
+          || lowered.startsWith("dummy")
+          || lowered.startsWith("your_")
+          || lowered.startsWith("<")) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // ===========================================================================
@@ -102,6 +151,66 @@ public final class VectorAdapters {
 
   private static Object expectedNode(VectorRunner.VectorContext ctx) {
     return asMap(ctx.vector).get("expected");
+  }
+
+  private static Object liveProviderInvoke(Object input, VectorRunner.VectorContext ctx) {
+    Map<String, Object> flags = asMap(input);
+    Agent agent = liveProviderAgent(flags);
+    List<Message> messages = liveProviderMessages(flags);
+    String provider = string(flags.getOrDefault("provider", "openai")).toLowerCase(java.util.Locale.ROOT);
+
+    Object raw;
+    Object processed;
+    if ("anthropic".equals(provider)) {
+      raw = new AnthropicExecutor().execute(agent, messages);
+      processed = new AnthropicProcessor().process(agent, raw);
+    } else if ("foundry".equals(provider) || "azure".equals(provider)) {
+      raw = new FoundryExecutor().execute(agent, messages);
+      processed = new FoundryProcessor().process(agent, raw);
+    } else {
+      raw = new OpenAIExecutor().execute(agent, messages);
+      processed = new OpenAIProcessor().process(agent, raw);
+    }
+
+    Map<String, Object> observed = new LinkedHashMap<>();
+    observed.put("accepted", true);
+    observed.put("contentNonEmpty", processed != null && !String.valueOf(processed).isBlank());
+    return observed;
+  }
+
+  private static Agent liveProviderAgent(Map<String, Object> flags) {
+    String provider = string(flags.getOrDefault("provider", "openai"));
+    String apiKey = string(flags.get("apiKey"));
+    Map<String, Object> connection = new LinkedHashMap<>();
+    if ("foundry".equals(provider) && apiKey.isBlank()) {
+      connection.put("kind", "foundry");
+    } else {
+      connection.put("kind", "key");
+      connection.put("apiKey", apiKey);
+    }
+    connection.put("endpoint", string(flags.get("endpoint")));
+
+    Map<String, Object> model = new LinkedHashMap<>();
+    model.put("id", string(flags.get("model")));
+    model.put("provider", provider);
+    model.put("apiType", string(flags.getOrDefault("apiType", "chat")));
+    model.put("connection", connection);
+    model.put("options", flags.getOrDefault("options", new LinkedHashMap<String, Object>()));
+
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("kind", "prompt");
+    data.put("name", "live-provider-vector");
+    data.put("model", model);
+    return Agent.load(data, new LoadContext());
+  }
+
+  private static List<Message> liveProviderMessages(Map<String, Object> flags) {
+    List<Message> messages = new ArrayList<>();
+    for (Object raw : asList(flags.get("messages"))) {
+      Map<String, Object> message = asMap(raw);
+      messages.add(Messages.withText(Role.fromValue(string(message.getOrDefault("role", "user"))), string(message.get("content"))));
+    }
+    return messages;
   }
 
   private static String vectorName(VectorRunner.VectorContext ctx) {
@@ -383,6 +492,71 @@ public final class VectorAdapters {
     return expectedNode(ctx);
   }
 
+  // ----------------------------------------------------- MemoryConformance.operate
+  private static Object memoryOperateInvoke(Object rawInput, VectorRunner.VectorContext ctx) {
+    Map<String, Object> input = asMap(rawInput);
+    String operation = string(input.get("operation"));
+    MemoryStore store =
+        MemoryStore.load(input.getOrDefault("store", mapOf("entries", List.of())), new LoadContext());
+
+    return switch (operation) {
+      case "recall" -> {
+        List<Object> results = new ArrayList<>();
+        for (Memory.Scored scored : Memory.recall(store, string(input.get("query")), intOf(input.get("limit")))) {
+          results.add(scoredMemory(scored));
+        }
+        yield mapOf("results", results);
+      }
+      case "remember" -> {
+        MemoryEntry entry = MemoryEntry.load(input.get("entry"), new LoadContext());
+        Memory.remember(store, entry, intOf(input.get("max_entries")));
+        yield mapOf("store", store.save(new SaveContext()));
+      }
+      case "clear" -> {
+        String categoryValue = string(input.get("category"));
+        MemoryCategory category = categoryValue.isEmpty() ? null : MemoryCategory.fromValue(categoryValue);
+        int removed = Memory.clear(store, category);
+        yield mapOf("removed", removed, "store", store.save(new SaveContext()));
+      }
+      case "update" -> {
+        MemoryEntry entry = MemoryEntry.load(input.get("entry"), new LoadContext());
+        try {
+          Memory.update(store, intOf(input.get("index")), entry);
+        } catch (IndexOutOfBoundsException e) {
+          throw new VectorRunner.VectorException(e.getMessage(), mapOf("kind", "index_out_of_range"));
+        }
+        yield mapOf("store", store.save(new SaveContext()));
+      }
+      case "format" -> {
+        List<Memory.Scored> results = Memory.recall(store, string(input.get("query")), intOf(input.get("limit")));
+        yield mapOf(
+            "system_prompt", Memory.formatForSystemPrompt(store),
+            "recall_results", Memory.formatRecallResults(results));
+      }
+      case "snapshot" -> {
+        MemoryEntry entry = MemoryEntry.load(input.get("entry"), new LoadContext());
+        Memory.remember(store, entry, intOf(input.get("max_entries")));
+        MemoryStore reloaded = MemoryStore.load(store.save(new SaveContext()), new LoadContext());
+        List<String> recalled = new ArrayList<>();
+        for (Memory.Scored scored : Memory.recall(reloaded, string(input.get("query")), intOf(input.get("limit")))) {
+          recalled.add(scored.entry().content);
+        }
+        yield mapOf("store", reloaded.save(new SaveContext()), "recalled", recalled);
+      }
+      default -> throw new IllegalArgumentException("Unsupported memory operation: " + operation);
+    };
+  }
+
+  private static Object scoredMemory(Memory.Scored scored) {
+    double rawScore = scored.score();
+    Object score = rawScore == Math.rint(rawScore) ? (long) rawScore : rawScore;
+    return mapOf(
+        "content", scored.entry().content,
+        "category", scored.entry().category.value,
+        "score", score,
+        "keyword_matches", scored.keywordMatches());
+  }
+
   // ---------------------------------------------------------------------------
   // TurnConformance.run -- provider-agnostic agent loop
   // ---------------------------------------------------------------------------
@@ -531,7 +705,7 @@ public final class VectorAdapters {
       observed.put("error_reason", result.errorReason);
     }
 
-    for (String annotation : List.of("notes", "summary_contains", "rust_expected_error")) {
+    for (String annotation : List.of("notes", "summary_contains")) {
       if (expected.containsKey(annotation)) {
         observed.put(annotation, expected.get(annotation));
       }
@@ -870,6 +1044,7 @@ public final class VectorAdapters {
   private static Object runTurnInvoke(Object input, VectorRunner.VectorContext ctx) {
     Map<String, Object> flags = asMap(input);
     String name = string(asMap(ctx.vector).get("name"));
+    List<Object> providerMessages = turnMessageMapsWithMemory(flags);
 
     ScriptedTurnModel model = new ScriptedTurnModel(turnResponses(flags.get("model")));
     RecordingTools tools = new RecordingTools(stringMap(flags.get("toolOutputs")));
@@ -893,7 +1068,7 @@ public final class VectorAdapters {
 
     TurnEngineResult result =
         engine.run(
-            TurnEngineRequest.of("session-" + name, "turn-" + name, turnMessages(flags.get("messages"))),
+            TurnEngineRequest.of("session-" + name, "turn-" + name, turnMessages(providerMessages)),
             cancellation);
     TurnCommit commit = result.commit;
 
@@ -922,6 +1097,7 @@ public final class VectorAdapters {
     observed.put("toolResults", result.toolResults.size());
     observed.put("toolResultOrder", toolResultOrder);
     observed.put("eventKinds", eventKinds);
+    observed.put("providerMessages", providerMessages);
     if (commit.contextState != null) {
       observed.put("commitPortability", commit.contextState.portability.value);
       observed.put(
@@ -937,6 +1113,27 @@ public final class VectorAdapters {
       Map<String, Object> map = asMap(entry);
       messages.add(Messages.withText(turnRole(string(map.get("role"))), string(map.get("content"))));
     }
+    return messages;
+  }
+
+  private static List<Object> turnMessageMapsWithMemory(Map<String, Object> flags) {
+    List<Object> messages = new ArrayList<>();
+    Object memoryObj = flags.get("memory");
+    if (memoryObj instanceof Map<?, ?> memoryMap) {
+      Object storeObj = memoryMap.get("store");
+      if (storeObj == null) {
+        storeObj = Map.of("entries", List.of());
+      }
+      MemoryStore store = MemoryStore.load(asMap(storeObj), new LoadContext());
+      String systemPrompt = Memory.formatForSystemPrompt(store);
+      if (!systemPrompt.isEmpty()) {
+        Map<String, Object> system = new LinkedHashMap<>();
+        system.put("role", "system");
+        system.put("content", systemPrompt);
+        messages.add(system);
+      }
+    }
+    messages.addAll(asList(flags.get("messages")));
     return messages;
   }
 
@@ -1268,7 +1465,9 @@ public final class VectorAdapters {
   // ---------------------------------------------------------------------------
 
   private static Object projectNormalize(Object observed, VectorRunner.VectorContext ctx) {
-    return project(observed, asMap(ctx.vector).get("expected"));
+    Map<String, Object> vector = asMap(ctx.vector);
+    Object expected = vector.containsKey("expected") ? vector.get("expected") : vector.get("expectedError");
+    return project(observed, expected);
   }
 
   private static Object project(Object observed, Object expected) {
@@ -1290,6 +1489,13 @@ public final class VectorAdapters {
         out.add(project(observedList.get(i), expectedList.get(i)));
       }
       return out;
+    }
+    if (expected instanceof Number expectedNumber && observed instanceof Number observedNumber) {
+      double observedDouble = observedNumber.doubleValue();
+      double expectedDouble = expectedNumber.doubleValue();
+      if (expectedDouble == Math.rint(expectedDouble) && observedDouble == Math.rint(observedDouble)) {
+        return observedNumber.longValue();
+      }
     }
     return observed;
   }

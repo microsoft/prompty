@@ -98,3 +98,18 @@ export {
   reconcileStream,
   type StreamReconciliation,
 } from "./stream-reconcile.js";
+export {
+  addMemory,
+  clearMemory,
+  coreMemories,
+  evictToCap,
+  formatForSystemPrompt,
+  formatRecallResults,
+  recall,
+  remember,
+  removeMemory,
+  updateContent,
+  updateMemory,
+  type MemoryPort,
+  type ScoredMemory,
+} from "./memory.js";

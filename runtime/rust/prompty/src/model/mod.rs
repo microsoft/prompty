@@ -46,8 +46,14 @@ pub use executor::*;
 pub mod host_tool_executor;
 pub use host_tool_executor::*;
 
+pub mod live_provider_conformance;
+pub use live_provider_conformance::*;
+
 pub mod load_conformance;
 pub use load_conformance::*;
+
+pub mod memory_conformance;
+pub use memory_conformance::*;
 
 pub mod model_lister;
 pub use model_lister::*;

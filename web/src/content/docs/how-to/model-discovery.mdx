@@ -161,7 +161,7 @@ share the same connection resolution.
 Every provider's job in discovery is the same: turn a raw provider response into
 the canonical, Typra-generated [`ModelInfo`](/reference/modelinfo/) shape. That
 mapping is a shared behavioral contract, not a per-runtime detail, so it is
-pinned by fixtures in **`spec/vectors/discovery/discovery_vectors.json`** that
+pinned by generated fixtures from **`schema/model/conformance/vectors`** that
 all runtimes run against:
 
 - Each vector is `{ provider, shape, input, expected }`, where `input` is a raw
@@ -186,7 +186,7 @@ all runtimes run against:
 ### Shared capability enrichment
 
 Enrichment data used to be a hardcoded table inside a single runtime. It is now a
-shared, provider-keyed dataset — **`spec/data/model_capabilities.json`** — that
+shared, provider-keyed dataset — **`schema/data/model_capabilities.json`** — that
 every runtime embeds and applies with one rule:
 
 > **Provider-supplied fields always win.** Dataset entries only fill fields the
@@ -203,15 +203,15 @@ window or modalities simply never hits the fallback. The dataset is intentionall
 modalities, new model families) refreshed as a snapshot, whereas TypeSpec owns
 the structural `ModelInfo` contract.
 
-`spec/data/model_capabilities.json` is the canonical cross-runtime source. Since
+`schema/data/model_capabilities.json` is the canonical cross-runtime source. Since
 a distributable package (crate, wheel, npm/NuGet tarball) can only bundle files
 inside its own tree, each runtime **vendors a checked-in copy** into its package
 and embeds that copy — the Rust crate keeps its copy at
-`runtime/rust/prompty/data/model_capabilities.json` and a `vendored_copy_matches_spec`
-test fails if the two ever drift. To refresh capability data, edit the `spec/`
+`runtime/rust/prompty/data/model_capabilities.json` and a `vendored_copy_matches_schema`
+test fails if the two ever drift. To refresh capability data, edit the `schema/`
 file and re-copy it into each runtime's vendored path.
 
-The algorithm is pinned by **`spec/vectors/discovery/enrichment_vectors.json`**
+The algorithm is pinned by generated enrichment vectors from **`schema/model/conformance/vectors`**
 (`{ provider, id, input, expected }` — enrich a base `ModelInfo` and assert the
 result), so every runtime's `enrich()` primitive converges. The Rust reference
 implementation is `prompty::discovery::{enrich, lookup}` in

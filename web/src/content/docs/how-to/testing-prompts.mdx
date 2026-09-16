@@ -339,6 +339,14 @@ Gate integration tests behind environment variables so they only run when
 API keys are available. This keeps `CI` fast by default and lets you opt-in
 to live tests locally.
 
+Prompty also includes canonical live-provider conformance vectors for OpenAI,
+Anthropic, and Foundry/Azure-family chat endpoints. These checks assert provider
+acceptance of Prompty's generated wire contract, not exact response wording:
+successful runs must return a structurally valid, non-empty response. If a
+runtime cannot find the required environment variables or identity capability,
+the vector is skipped before making a network call. If credentials are present
+and the provider rejects the request, the vector fails.
+
 <Tabs>
   <TabItem label="Python">
     ```python

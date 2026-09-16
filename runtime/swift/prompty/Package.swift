@@ -33,7 +33,7 @@ let package = Package(
     ),
     .target(
       name: "PromptyFoundry",
-      dependencies: ["Prompty", .product(name: "PromptyModel", package: "prompty-model")]
+      dependencies: ["Prompty", "PromptyOpenAI", .product(name: "PromptyModel", package: "prompty-model")]
     ),
     .testTarget(
       name: "PromptyTests",

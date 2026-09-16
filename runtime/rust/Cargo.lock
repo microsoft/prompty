@@ -1248,6 +1248,7 @@ dependencies = [
  "opentelemetry-stdout",
  "opentelemetry_sdk",
  "prompty-anthropic",
+ "prompty-foundry",
  "prompty-openai",
  "rand 0.9.5",
  "regex",

@@ -47,5 +47,9 @@ interface Renderer {
 
   @doc("Render the template into a provenance-tagged segment tree")
   @vector(RenderSegmentVectors)
-  renderSegments(agent: Agent, template: string, inputs: Record<unknown>): RenderSegment[];
+  renderSegments(
+    agent: Agent,
+    template: string,
+    inputs: Record<unknown>,
+  ): RenderSegment[];
 }

@@ -1,4 +1,7 @@
 import Foundation
+#if canImport(FoundationNetworking)
+  import FoundationNetworking
+#endif
 
 @testable import PromptyModel
 
@@ -33,7 +36,15 @@ enum VectorAdapters {
         normalize: { observed, context in runNormalize(observed, context) }
       ),
       "TurnConformance.runTurn": VectorAdapter(
-        asynchronous: { input, context in runTurnInvoke(input, context) },
+        asynchronous: { input, context in try runTurnInvoke(input, context) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "MemoryConformance.operate": VectorAdapter(
+        sync: { input, context in try memoryOperate(input, context) },
+        normalize: { observed, context in projectNormalize(observed, context) }
+      ),
+      "LiveProviderConformance.invoke": VectorAdapter(
+        asynchronous: { input, context in try await liveProviderInvoke(input, context) },
         normalize: { observed, context in projectNormalize(observed, context) }
       ),
     ]
@@ -43,8 +54,112 @@ enum VectorAdapters {
     return [:]
   }
 
+  static func capabilities() -> [String: (VectorContext) -> Bool] {
+    [
+      "provider:openai": { _ in envPresent("OPENAI_API_KEY") },
+      "provider:anthropic": { _ in envPresent("ANTHROPIC_API_KEY") },
+      "provider:foundry-key": { _ in
+        envPresent("AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_CHAT_DEPLOYMENT")
+      },
+      "provider:foundry-entra": { _ in false },
+    ]
+  }
+
   static func doubles() -> Any? {
     [:] as [String: Any]
+  }
+
+  static func envPresent(_ names: String...) -> Bool {
+    names.allSatisfy { !(ProcessInfo.processInfo.environment[$0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+  }
+
+  static func liveProviderInvoke(_ input: Any?, _ context: VectorContext) async throws -> Any? {
+    guard let flags = input as? [String: Any] else {
+      throw VectorError("Missing live provider input")
+    }
+    let provider = (flags["provider"] as? String ?? "openai").lowercased()
+    let apiType = flags["apiType"] as? String ?? "chat"
+    let model = flags["model"] as? String ?? ""
+    let messages = liveWireMessages(flags["messages"] as? [[String: Any]] ?? [])
+    let wire = try buildWireRequest([
+      "provider": provider,
+      "apiType": apiType,
+      "model_id": model,
+      "messages": messages,
+      "options": flags["options"] as? [String: Any] ?? [:],
+    ])
+
+    let response = try await liveHttp(provider: provider, model: model, endpoint: flags["endpoint"] as? String, body: wire)
+    let processed = processResponse(provider: provider, apiType: apiType, response: response, hasOutputs: false)
+    let content = processed as? String
+    return [
+      "accepted": true,
+      "contentNonEmpty": content.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? !(processed is NSNull),
+    ]
+  }
+
+  static func liveWireMessages(_ messages: [[String: Any]]) -> [[String: Any]] {
+    messages.map { message in
+      [
+        "role": message["role"] as? String ?? "user",
+        "content": [
+          [
+            "kind": "text",
+            "value": message["content"] as? String ?? "",
+          ]
+        ],
+      ]
+    }
+  }
+
+  static func liveHttp(provider: String, model: String, endpoint: String?, body: [String: Any]) async throws -> Any {
+    let url: URL
+    var requestBody = body
+    switch provider {
+    case "anthropic":
+      guard let urlValue = URL(string: "https://api.anthropic.com/v1/messages") else {
+        throw VectorError("Invalid Anthropic endpoint")
+      }
+      url = urlValue
+    case "foundry", "azure":
+      let base = endpoint?.trimmingCharacters(in: CharacterSet(charactersIn: "/")) ?? ""
+      guard !base.isEmpty,
+        let urlValue = URL(string: "\(base)/openai/deployments/\(model)/chat/completions?api-version=2024-12-01-preview")
+      else {
+        throw VectorError("Invalid Foundry endpoint")
+      }
+      requestBody.removeValue(forKey: "model")
+      url = urlValue
+    default:
+      guard let urlValue = URL(string: "https://api.openai.com/v1/chat/completions") else {
+        throw VectorError("Invalid OpenAI endpoint")
+      }
+      url = urlValue
+    }
+
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    switch provider {
+    case "anthropic":
+      request.setValue(ProcessInfo.processInfo.environment["ANTHROPIC_API_KEY"], forHTTPHeaderField: "x-api-key")
+      request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+    case "foundry", "azure":
+      request.setValue(ProcessInfo.processInfo.environment["AZURE_OPENAI_API_KEY"], forHTTPHeaderField: "api-key")
+    default:
+      request.setValue("Bearer \(ProcessInfo.processInfo.environment["OPENAI_API_KEY"] ?? "")", forHTTPHeaderField: "Authorization")
+    }
+    request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+    guard let http = response as? HTTPURLResponse else {
+      throw VectorError("Live provider returned a non-HTTP response")
+    }
+    guard (200..<300).contains(http.statusCode) else {
+      let text = String(data: data, encoding: .utf8) ?? ""
+      throw VectorError("Live provider rejected request with HTTP \(http.statusCode)", payload: text)
+    }
+    return try JSONSerialization.jsonObject(with: data)
   }
 
   // MARK: - Projection helpers
@@ -92,7 +207,81 @@ enum VectorAdapters {
   }
 
   static func projectNormalize(_ observed: Any?, _ context: VectorContext) -> Any? {
-    project(observed, context.vector["expected"])
+    project(observed, context.vector["expected"] ?? context.vector["expectedError"])
+  }
+
+  static func memoryOperate(_ input: Any?, _ context: VectorContext) throws -> Any? {
+    guard let flags = input as? [String: Any] else {
+      throw VectorError("Missing memory input")
+    }
+    let operation = flags["operation"] as? String ?? ""
+    var store = try MemoryStore.load(flags["store"] ?? ["entries": []])
+
+    switch operation {
+    case "recall":
+      return [
+        "results": recall(store, query: flags["query"] as? String ?? "", limit: intValue(flags["limit"]))
+          .map(memoryResult)
+      ]
+    case "remember":
+      remember(
+        &store,
+        try MemoryEntry.load(flags["entry"] ?? [:]),
+        maxEntries: intValue(flags["max_entries"])
+      )
+      return ["store": try store.save()]
+    case "clear":
+      let category = try (flags["category"] as? String).map { try MemoryCategory.parse($0) }
+      let removed = clearMemory(&store, category: category)
+      return ["removed": removed, "store": try store.save()]
+    case "update":
+      do {
+        try updateMemory(
+          &store,
+          index: intValue(flags["index"]),
+          entry: try MemoryEntry.load(flags["entry"] ?? [:])
+        )
+      } catch MemoryError.indexOutOfRange(let message) {
+        throw VectorError(message, payload: ["kind": "index_out_of_range"])
+      }
+      return ["store": try store.save()]
+    case "format":
+      let results = recall(store, query: flags["query"] as? String ?? "", limit: intValue(flags["limit"]))
+      return [
+        "system_prompt": formatForSystemPrompt(store),
+        "recall_results": formatRecallResults(results),
+      ]
+    case "snapshot":
+      remember(
+        &store,
+        try MemoryEntry.load(flags["entry"] ?? [:]),
+        maxEntries: intValue(flags["max_entries"])
+      )
+      let reloaded = try MemoryStore.load(try store.save())
+      let recalled = recall(reloaded, query: flags["query"] as? String ?? "", limit: intValue(flags["limit"]))
+        .map { $0.entry.content }
+      return ["store": try reloaded.save(), "recalled": recalled]
+    default:
+      throw VectorError("Unsupported memory operation: \(operation)")
+    }
+  }
+
+  static func memoryResult(_ result: ScoredMemory) -> [String: Any] {
+    let rounded = result.score.rounded()
+    let score: Any = abs(result.score - rounded) < 0.000_001 ? Int(rounded) : result.score
+    return [
+      "content": result.entry.content,
+      "category": result.entry.category.rawValue,
+      "score": score,
+      "keyword_matches": result.keywordMatches,
+    ]
+  }
+
+  static func intValue(_ value: Any?) -> Int {
+    if let value = value as? Int { return value }
+    if let value = value as? Double { return Int(value) }
+    if let value = value as? NSNumber { return value.intValue }
+    return 0
   }
 
   static func seamDiscriminator(_ input: [String: Any], _ path: String...) throws -> String {
@@ -541,7 +730,7 @@ enum VectorAdapters {
     // Annotation passthrough -- cross-runtime notes that are not behavioral
     // observations. Echo them so canonical equality holds without fabricating
     // engine output.
-    for annotation in ["notes", "summary_contains", "rust_expected_error"] {
+    for annotation in ["notes", "summary_contains"] {
       if let value = expected[annotation] { observed[annotation] = value }
     }
 
@@ -638,9 +827,9 @@ enum VectorAdapters {
 
   // MARK: - TurnConformance.runTurn
 
-  static func runTurnInvoke(_ input: Any?, _ context: VectorContext) -> Any? {
+  static func runTurnInvoke(_ input: Any?, _ context: VectorContext) throws -> Any? {
     let flags = input as? [String: Any] ?? [:]
-    let messages = flags["messages"] as? [[String: Any]] ?? []
+    let messages = try turnMessagesWithMemory(flags)
     let scripted = flags["model"] as? [[String: Any]] ?? []
     let toolOutputs = flags["toolOutputs"] as? [String: Any] ?? [:]
     let denyTools = Set(flags["denyTools"] as? [String] ?? [])
@@ -681,6 +870,20 @@ enum VectorAdapters {
       "toolResults": result.toolResults.count,
       "toolResultOrder": result.toolResultOrder,
       "eventKinds": result.events,
+      "providerMessages": messages,
     ]
+  }
+
+  static func turnMessagesWithMemory(_ flags: [String: Any]) throws -> [[String: Any]] {
+    var messages: [[String: Any]] = []
+    if let memory = flags["memory"] as? [String: Any] {
+      let store = try MemoryStore.load(memory["store"] ?? ["entries": []])
+      let systemPrompt = formatForSystemPrompt(store)
+      if !systemPrompt.isEmpty {
+        messages.append(["role": "system", "content": systemPrompt])
+      }
+    }
+    messages.append(contentsOf: flags["messages"] as? [[String: Any]] ?? [])
+    return messages
   }
 }

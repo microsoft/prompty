@@ -85,11 +85,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "LiveProviderConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "csharp",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "LoadConformance.cs",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "csharp",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "MemoryConformance.cs",
       "seamKind": "protocol-adapter"
     },
     {
@@ -229,11 +245,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "live_provider_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "go",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "load_conformance.go",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "go",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "memory_conformance.go",
       "seamKind": "protocol-adapter"
     },
     {
@@ -373,11 +405,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "LiveProviderConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "java",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "LoadConformance.java",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "java",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "MemoryConformance.java",
       "seamKind": "protocol-adapter"
     },
     {
@@ -517,11 +565,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "LiveProviderConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "markdown",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "LoadConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "markdown",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "MemoryConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -661,11 +725,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "._LiveProviderConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "python",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "._LoadConformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "python",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "._MemoryConformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -805,11 +885,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "live_provider_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "rust",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "load_conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "rust",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "memory_conformance",
       "seamKind": "protocol-adapter"
     },
     {
@@ -949,11 +1045,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "Sources/PromptyModel/live_provider_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "swift",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "Sources/PromptyModel/load_conformance.swift",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "swift",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "Sources/PromptyModel/memory_conformance.swift",
       "seamKind": "protocol-adapter"
     },
     {
@@ -1093,11 +1205,27 @@
       "seamKind": "protocol-adapter"
     },
     {
+      "contract": "LiveProviderConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "LiveProviderConformance",
+      "generatedSource": "./live-provider-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
       "contract": "LoadConformance",
       "target": "typescript",
       "group": "",
       "symbol": "LoadConformance",
       "generatedSource": "./load-conformance",
+      "seamKind": "protocol-adapter"
+    },
+    {
+      "contract": "MemoryConformance",
+      "target": "typescript",
+      "group": "",
+      "symbol": "MemoryConformance",
+      "generatedSource": "./memory-conformance",
       "seamKind": "protocol-adapter"
     },
     {

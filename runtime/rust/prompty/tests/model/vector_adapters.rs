@@ -20,7 +20,9 @@ use prompty::harness::{
     AdapterError, CollectingEventSink, FunctionHostToolExecutor, InMemoryCheckpointStore,
     JsonlEventJournalWriter, ReferenceTurnRunner,
 };
+use prompty::memory::{MemoryEntry, MemoryStore, format_recall_results};
 use prompty::model::Agent;
+use prompty::model::MemoryCategory;
 use prompty::model::ModelInfo;
 use prompty::model::context::{LoadContext, SaveContext};
 use prompty::model::contracts::pipeline::turn_options::TurnOptions;
@@ -39,11 +41,11 @@ use prompty::types::StreamChunk;
 use prompty::{
     AppendContextPackingStrategy, CancellationToken, Clock, ContextPipeline, ContextPortability,
     DefaultConversationPort, DelegatedStateReference, DurabilityPort, EngineCheckpoint,
-    EngineEvent, EnginePermissionDecision, EngineToolRequest, EngineToolResult, IdGenerator,
-    InvocationContextState, Message, ModelInvocationRequest, ModelInvocationResponse, ModelPort,
-    ModelStreamPort, NoopHostPolicyPort, NoopModelStreamPort, NoopRetryPolicyPort, PermissionPort,
-    PortError, PostCommitPort, Role, ToolOutcome, ToolPort, TurnCommit, TurnEngine,
-    TurnEngineEffects, TurnEngineRequest, load, validate_inputs,
+    EngineEvent, EnginePermissionDecision, EngineToolRequest, EngineToolResult, Executor,
+    IdGenerator, InvocationContextState, Message, ModelInvocationRequest, ModelInvocationResponse,
+    ModelPort, ModelStreamPort, NoopHostPolicyPort, NoopModelStreamPort, NoopRetryPolicyPort,
+    PermissionPort, PortError, PostCommitPort, Processor, Role, ToolOutcome, ToolPort, TurnCommit,
+    TurnEngine, TurnEngineEffects, TurnEngineRequest, load, validate_inputs,
 };
 use regex::Regex;
 use serde::Deserialize;
@@ -197,6 +199,32 @@ pub fn adapters() -> HashMap<&'static str, Adapter> {
                 normalize: None,
             },
         ),
+        (
+            "MemoryConformance.operate",
+            Adapter {
+                invoke: Invoke::Sync(memory_operate_adapter),
+                normalize: Some(project_normalize),
+            },
+        ),
+        (
+            "LiveProviderConformance.invoke",
+            Adapter {
+                invoke: Invoke::Async(Box::new(|input, ctx| {
+                    let input = input.clone();
+                    let ctx = Context {
+                        contract: ctx.contract.clone(),
+                        operation: ctx.operation.clone(),
+                        vector: ctx.vector.clone(),
+                        provider: ctx.provider.clone(),
+                        target_api: ctx.target_api.clone(),
+                        doubles: ctx.doubles.clone(),
+                        base_dir: ctx.base_dir.clone(),
+                    };
+                    Box::pin(async move { live_provider_adapter(&input, &ctx).await })
+                })),
+                normalize: Some(project_normalize),
+            },
+        ),
     ])
 }
 
@@ -204,8 +232,169 @@ pub fn waivers() -> HashMap<&'static str, &'static str> {
     HashMap::new()
 }
 
+pub fn capabilities() -> HashMap<&'static str, fn(&Context) -> bool> {
+    HashMap::from([
+        (
+            "provider:openai",
+            cap_provider_openai as fn(&Context) -> bool,
+        ),
+        (
+            "provider:anthropic",
+            cap_provider_anthropic as fn(&Context) -> bool,
+        ),
+        (
+            "provider:foundry-key",
+            cap_provider_foundry_key as fn(&Context) -> bool,
+        ),
+        (
+            "provider:foundry-entra",
+            cap_provider_foundry_entra as fn(&Context) -> bool,
+        ),
+    ])
+}
+
 pub fn doubles() -> Value {
     Value::Object(serde_json::Map::new())
+}
+
+fn env_present(names: &[&str]) -> bool {
+    names.iter().all(|name| {
+        std::env::var(name).is_ok_and(|value| {
+            let trimmed = value.trim();
+            let lowered = trimmed.to_ascii_lowercase();
+            !trimmed.is_empty()
+                && !lowered.starts_with("sk-test")
+                && !lowered.starts_with("test")
+                && !lowered.starts_with("dummy")
+                && !lowered.starts_with("your_")
+                && !lowered.starts_with('<')
+        })
+    })
+}
+
+fn cap_provider_openai(_: &Context) -> bool {
+    env_present(&["OPENAI_API_KEY"])
+}
+
+fn cap_provider_anthropic(_: &Context) -> bool {
+    env_present(&["ANTHROPIC_API_KEY"])
+}
+
+fn cap_provider_foundry_key(_: &Context) -> bool {
+    env_present(&[
+        "AZURE_OPENAI_ENDPOINT",
+        "AZURE_OPENAI_API_KEY",
+        "AZURE_OPENAI_CHAT_DEPLOYMENT",
+    ])
+}
+
+fn cap_provider_foundry_entra(_: &Context) -> bool {
+    env_present(&[
+        "FOUNDRY_PROJECT_ENDPOINT",
+        "FOUNDRY_MODEL",
+        "AZURE_OPENAI_ACCESS_TOKEN",
+    ])
+}
+
+async fn live_provider_adapter(input: &Value, _: &Context) -> Result<Value, VectorError> {
+    let flags = input
+        .as_object()
+        .ok_or_else(|| VectorError::new("live provider input must be an object"))?;
+    let agent = live_provider_agent(flags);
+    let messages = live_provider_messages(flags);
+    let provider = flags
+        .get("provider")
+        .and_then(Value::as_str)
+        .unwrap_or("openai")
+        .to_ascii_lowercase();
+
+    let processed = match provider.as_str() {
+        "anthropic" => {
+            let raw = prompty_anthropic::AnthropicExecutor
+                .execute(&agent, &messages)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?;
+            prompty_anthropic::AnthropicProcessor
+                .process(&agent, raw)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?
+        }
+        "foundry" | "azure" => {
+            let raw = prompty_foundry::FoundryExecutor
+                .execute(&agent, &messages)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?;
+            prompty_foundry::FoundryProcessor
+                .process(&agent, raw)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?
+        }
+        _ => {
+            let raw = prompty_openai::OpenAIExecutor
+                .execute(&agent, &messages)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?;
+            prompty_openai::OpenAIProcessor
+                .process(&agent, raw)
+                .await
+                .map_err(|error| VectorError::new(error.to_string()))?
+        }
+    };
+
+    Ok(json!({
+        "accepted": true,
+        "contentNonEmpty": processed.as_str().is_some_and(|text| !text.trim().is_empty())
+            || !processed.is_null(),
+    }))
+}
+
+fn live_provider_agent(flags: &serde_json::Map<String, Value>) -> Agent {
+    let provider = flags
+        .get("provider")
+        .and_then(Value::as_str)
+        .unwrap_or("openai");
+    let api_key = flags.get("apiKey").and_then(Value::as_str).unwrap_or("");
+    let connection = if provider == "foundry" && api_key.is_empty() {
+        json!({
+            "kind": "foundry",
+            "endpoint": flags.get("endpoint").and_then(Value::as_str).unwrap_or(""),
+        })
+    } else {
+        json!({
+            "kind": "key",
+            "endpoint": flags.get("endpoint").and_then(Value::as_str).unwrap_or(""),
+            "apiKey": api_key,
+        })
+    };
+    let agent = json!({
+        "kind": "prompt",
+        "name": "live-provider-vector",
+        "model": {
+            "id": flags.get("model").and_then(Value::as_str).unwrap_or(""),
+            "provider": provider,
+            "apiType": flags.get("apiType").and_then(Value::as_str).unwrap_or("chat"),
+            "connection": connection,
+            "options": flags.get("options").cloned().unwrap_or_else(|| json!({})),
+        }
+    });
+    Agent::load_from_value(&agent, &LoadContext::default())
+}
+
+fn live_provider_messages(flags: &serde_json::Map<String, Value>) -> Vec<Message> {
+    flags
+        .get("messages")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .map(|message| {
+            Message::user(
+                message
+                    .get("content")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default(),
+            )
+        })
+        .collect()
 }
 
 fn enrich_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
@@ -218,6 +407,138 @@ fn enrich_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
 fn map_model_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
     let provider = ctx.provider.as_deref().unwrap_or("");
     Ok(prompty::discovery::map_model(input, provider).to_value(&SaveContext::default()))
+}
+
+fn scored_memory_to_value(result: prompty::memory::ScoredMemory) -> Value {
+    let score = if result.score.fract() == 0.0 {
+        json!(result.score as i64)
+    } else {
+        json!(result.score)
+    };
+    json!({
+        "content": result.entry.content,
+        "category": result.entry.category.as_str(),
+        "score": score,
+        "keyword_matches": result.keyword_matches,
+    })
+}
+
+fn memory_operate_adapter(input: &Value, _ctx: &Context) -> Result<Value, VectorError> {
+    let operation = input
+        .get("operation")
+        .and_then(Value::as_str)
+        .ok_or_else(|| VectorError::new("memory operation missing"))?;
+    let mut store: MemoryStore = serde_json::from_value(
+        input
+            .get("store")
+            .cloned()
+            .unwrap_or_else(|| json!({"entries": []})),
+    )
+    .map_err(|err| VectorError::new(err.to_string()))?;
+
+    match operation {
+        "recall" => {
+            let query = input.get("query").and_then(Value::as_str).unwrap_or("");
+            let limit = input.get("limit").and_then(Value::as_u64).unwrap_or(0) as usize;
+            let results = store
+                .recall(query, limit)
+                .into_iter()
+                .map(scored_memory_to_value)
+                .collect::<Vec<_>>();
+            Ok(json!({ "results": results }))
+        }
+        "remember" => {
+            let entry: MemoryEntry = serde_json::from_value(
+                input
+                    .get("entry")
+                    .cloned()
+                    .ok_or_else(|| VectorError::new("memory entry missing"))?,
+            )
+            .map_err(|err| VectorError::new(err.to_string()))?;
+            let max_entries = input
+                .get("max_entries")
+                .and_then(Value::as_u64)
+                .unwrap_or(0) as usize;
+            store.remember(entry, max_entries);
+            serde_json::to_value(&store)
+                .map(|store| json!({ "store": store }))
+                .map_err(|err| VectorError::new(err.to_string()))
+        }
+        "clear" => {
+            let category = match input.get("category").and_then(Value::as_str) {
+                Some("core") => Some(MemoryCategory::Core),
+                Some("archival") => Some(MemoryCategory::Archival),
+                Some("insight") => Some(MemoryCategory::Insight),
+                Some(other) => {
+                    return Err(VectorError::new(format!(
+                        "Unsupported memory category: {other}"
+                    )));
+                }
+                None => None,
+            };
+            let removed = store.clear(category);
+            serde_json::to_value(&store)
+                .map(|store| json!({ "removed": removed, "store": store }))
+                .map_err(|err| VectorError::new(err.to_string()))
+        }
+        "update" => {
+            let entry: MemoryEntry = serde_json::from_value(
+                input
+                    .get("entry")
+                    .cloned()
+                    .ok_or_else(|| VectorError::new("memory entry missing"))?,
+            )
+            .map_err(|err| VectorError::new(err.to_string()))?;
+            let index = input.get("index").and_then(Value::as_u64).unwrap_or(0) as usize;
+            store.update(index, entry).map_err(|err| VectorError {
+                message: err,
+                payload: Some(json!({ "kind": "index_out_of_range" })),
+            })?;
+            serde_json::to_value(&store)
+                .map(|store| json!({ "store": store }))
+                .map_err(|err| VectorError::new(err.to_string()))
+        }
+        "format" => {
+            let query = input.get("query").and_then(Value::as_str).unwrap_or("");
+            let limit = input.get("limit").and_then(Value::as_u64).unwrap_or(0) as usize;
+            let results = store.recall(query, limit);
+            Ok(json!({
+                "system_prompt": store.format_for_system_prompt(),
+                "recall_results": format_recall_results(&results),
+            }))
+        }
+        "snapshot" => {
+            let entry: MemoryEntry = serde_json::from_value(
+                input
+                    .get("entry")
+                    .cloned()
+                    .ok_or_else(|| VectorError::new("memory entry missing"))?,
+            )
+            .map_err(|err| VectorError::new(err.to_string()))?;
+            let max_entries = input
+                .get("max_entries")
+                .and_then(Value::as_u64)
+                .unwrap_or(0) as usize;
+            store.remember(entry, max_entries);
+            let reloaded: MemoryStore = serde_json::from_value(
+                serde_json::to_value(&store).map_err(|err| VectorError::new(err.to_string()))?,
+            )
+            .map_err(|err| VectorError::new(err.to_string()))?;
+            let query = input.get("query").and_then(Value::as_str).unwrap_or("");
+            let limit = input.get("limit").and_then(Value::as_u64).unwrap_or(0) as usize;
+            let recalled = reloaded
+                .recall(query, limit)
+                .into_iter()
+                .map(|result| Value::String(result.entry.content))
+                .collect::<Vec<_>>();
+            serde_json::to_value(&reloaded)
+                .map(|store| json!({ "store": store, "recalled": recalled }))
+                .map_err(|err| VectorError::new(err.to_string()))
+        }
+        other => Err(VectorError::new(format!(
+            "Unsupported memory operation: {other}"
+        ))),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -254,7 +575,12 @@ fn project(observed: &Value, expected: &Value) -> Value {
 }
 
 fn project_normalize(observed: &Value, ctx: &Context) -> Value {
-    let expected = ctx.vector.get("expected").cloned().unwrap_or(Value::Null);
+    let expected = ctx
+        .vector
+        .get("expected")
+        .or_else(|| ctx.vector.get("expectedError"))
+        .cloned()
+        .unwrap_or(Value::Null);
     project(observed, &expected)
 }
 
@@ -857,6 +1183,7 @@ struct RtVector {
     tool_outputs: HashMap<String, String>,
     #[serde(default)]
     deny_tools: HashSet<String>,
+    memory: Option<Value>,
 }
 
 struct RtScriptedModel {
@@ -992,6 +1319,24 @@ fn rt_to_message(message: &RtVectorMessage) -> Message {
     Message::with_text(role, message.content.clone())
 }
 
+fn rt_messages_with_memory(vector: &RtVector) -> Result<Vec<Message>, VectorError> {
+    let mut messages = Vec::new();
+    if let Some(memory) = &vector.memory {
+        let store_value = memory
+            .get("store")
+            .cloned()
+            .unwrap_or_else(|| json!({ "entries": [] }));
+        let store: MemoryStore = serde_json::from_value(store_value)
+            .map_err(|error| VectorError::new(format!("invalid memory store: {error}")))?;
+        let system_prompt = store.format_for_system_prompt();
+        if !system_prompt.is_empty() {
+            messages.push(Message::with_text(Role::System, system_prompt));
+        }
+    }
+    messages.extend(vector.messages.iter().map(rt_to_message));
+    Ok(messages)
+}
+
 fn rt_to_response(response: &RtModelResponse) -> ModelInvocationResponse {
     let next_context_state = match (response.next_portability, &response.delegated_state) {
         (None, None) => None,
@@ -1053,12 +1398,13 @@ async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
         cancellation.cancel();
     }
 
+    let prepared_messages = rt_messages_with_memory(&vector)?;
     let result = engine
         .run(
             TurnEngineRequest::new(
                 format!("session-{}", vector.name),
                 format!("turn-{}", vector.name),
-                vector.messages.iter().map(rt_to_message).collect(),
+                prepared_messages,
             ),
             cancellation,
         )
@@ -1095,6 +1441,22 @@ async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
         .iter()
         .map(|event| Value::String(event.kind.to_string()))
         .collect();
+    let provider_messages: Vec<Value> = result
+        .snapshots
+        .first()
+        .map(|snapshot| {
+            snapshot
+                .messages
+                .iter()
+                .map(|message| {
+                    json!({
+                        "role": message.role.to_string(),
+                        "content": message.text_content(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
 
     Ok(serde_json::json!({
         "status": serde_json::to_value(result.commit.status).unwrap_or(Value::Null),
@@ -1109,6 +1471,7 @@ async fn run_turn_impl(input: Value) -> Result<Value, VectorError> {
         "toolResults": result.tool_results.len(),
         "toolResultOrder": tool_result_order,
         "eventKinds": event_kinds,
+        "providerMessages": provider_messages,
     }))
 }
 
@@ -1632,7 +1995,7 @@ async fn run_impl(input: Value, vector: Value) -> Result<Value, VectorError> {
     // Annotation passthrough -- cross-runtime notes that are not Rust behavioral
     // observations. Echo them so canonical equality holds without fabricating
     // engine output.
-    for annotation in ["notes", "summary_contains", "rust_expected_error"] {
+    for annotation in ["notes", "summary_contains"] {
         if let Some(value) = expected.get(annotation) {
             observed.insert(annotation.to_string(), value.clone());
         }

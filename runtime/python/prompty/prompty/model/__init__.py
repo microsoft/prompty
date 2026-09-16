@@ -16,7 +16,9 @@ from ._EventJournalWriter import EventJournalWriter
 from ._EventSink import EventSink
 from ._Executor import Executor
 from ._HostToolExecutor import HostToolExecutor
+from ._LiveProviderConformance import LiveProviderConformance
 from ._LoadConformance import LoadConformance
+from ._MemoryConformance import MemoryConformance
 from ._ModelLister import ModelLister
 from ._Parser import Parser
 from ._PermissionResolver import PermissionResolver
@@ -379,7 +381,9 @@ __all__ = [
     "EventSink",
     "Executor",
     "HostToolExecutor",
+    "LiveProviderConformance",
     "LoadConformance",
+    "MemoryConformance",
     "ModelLister",
     "Parser",
     "PermissionResolver",

@@ -989,47 +989,35 @@ class AgentVectorsTest {
   @DisplayName("parallel tool calls")
   class ParallelTools {
 
-    /**
-     * The vector's expected text names the Rust runtime because it was recorded there. Everything
-     * else about the message is shared, so the runtime name is the one part that is dropped.
-     */
-    private String sharedExpectation(Map<String, Object> vector) {
-      return ((String) expected(vector).get("rust_expected_error")).replace("Rust ", "");
-    }
-
     @Test
-    @DisplayName("requesting parallel tool calls is rejected as invalid")
+    @DisplayName("requesting parallel tool calls preserves ordered results")
     void basic() {
       Map<String, Object> vector = vector("parallel_tools_basic");
-      InvokerException failure =
-          assertThrows(InvokerException.class, () -> run("parallel_tools_basic"));
-
-      assertEquals(InvokerException.Kind.VALIDATION, failure.kind());
-      assertTrue(
-          failure.getMessage().contains(sharedExpectation(vector)),
-          "expected the shared rejection message, got: " + failure.getMessage());
+      assertEquals(expectedResult(vector), run("parallel_tools_basic"));
     }
 
     @Test
-    @DisplayName("the rejection happens before any other configuration is considered")
+    @DisplayName("guardrail denials preserve the original tool result slot")
     void withGuardrailDeny() {
       Map<String, Object> vector = vector("parallel_tools_with_guardrail_deny");
-      InvokerException failure =
-          assertThrows(InvokerException.class, () -> run("parallel_tools_with_guardrail_deny"));
-
-      assertEquals(InvokerException.Kind.VALIDATION, failure.kind());
-      assertTrue(
-          failure.getMessage().contains(sharedExpectation(vector)),
-          "expected the shared rejection message, got: " + failure.getMessage());
+      assertEquals(expectedResult(vector), run("parallel_tools_with_guardrail_deny"));
     }
 
     @Test
-    @DisplayName("a rejected turn still reports a start and an end")
+    @DisplayName("tool errors preserve the original parallel result slot")
+    void withToolError() {
+      Map<String, Object> vector = vector("parallel_tools_with_tool_error");
+      assertEquals(expectedResult(vector), run("parallel_tools_with_tool_error"));
+    }
+
+    @Test
+    @DisplayName("a parallel-tool turn still reports a successful lifecycle")
     void reportsTerminalEvents() {
       List<String> events = new ArrayList<>();
-      assertThrows(
-          InvokerException.class, () -> run("parallel_tools_basic", null, events));
-      assertEquals(List.of("turn_start", "error", "turn_end"), events);
+      run("parallel_tools_basic", null, events);
+      assertTrue(events.contains("turn_start"), "expected turn_start in " + events);
+      assertFalse(events.contains("error"), "did not expect error in " + events);
+      assertTrue(events.contains("turn_end"), "expected turn_end in " + events);
     }
   }
 
@@ -1069,6 +1057,7 @@ class AgentVectorsTest {
             "steering_inject_message",
             "steering_multiple_messages",
             "parallel_tools_basic",
+            "parallel_tools_with_tool_error",
             "parallel_tools_with_guardrail_deny");
 
     List<String> declared = new ArrayList<>();

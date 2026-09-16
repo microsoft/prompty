@@ -18,11 +18,9 @@ model Binding {
   input: string;
 }
 
-alias Bindings = Record<Binding> | Named<
-  Binding,
-  "Name of the binding",
-  #{ name: "my-tool" }
->[];
+alias Bindings =
+  | Record<Binding>
+  | Named<Binding, "Name of the binding", #{ name: "my-tool" }>[];
 
 union ToolTypes {
   functionType: "function",
@@ -88,8 +86,10 @@ model CustomTool extends Tool {
   options: Record<unknown>;
 }
 
-alias Tools = Record<Tool> | Named<
-  Tool,
-  "Name of the tool. If a function tool, this is the function name, otherwise it is the type",
-  #{ name: "my-tool" }
->[];
+alias Tools =
+  | Record<Tool>
+  | Named<
+      Tool,
+      "Name of the tool. If a function tool, this is the function name, otherwise it is the type",
+      #{ name: "my-tool" }
+    >[];

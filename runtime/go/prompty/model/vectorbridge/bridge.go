@@ -56,6 +56,27 @@ func DiscoveryConformanceMapModel(impl fixtures.DiscoveryConformance) func(rawIn
 	}
 }
 
+// LiveProviderConformanceInvoke decodes LiveProviderConformance.invoke vector input and invokes a
+// typed fixtures.LiveProviderConformance. Adapt the returned func into your Adapter, e.g.:
+//
+//	VectorAdapters["LiveProviderConformance.invoke"] = bridged(vectorbridge.LiveProviderConformanceInvoke(impl))
+func LiveProviderConformanceInvoke(impl fixtures.LiveProviderConformance) func(rawInput any) (any, error) {
+	return func(rawInput any) (any, error) {
+		payload, _ := rawInput.(map[string]any)
+		var input interface{}
+		{
+			inputBytes, marshalErr := json.Marshal(payload["input"])
+			if marshalErr != nil {
+				return nil, marshalErr
+			}
+			if unmarshalErr := json.Unmarshal(inputBytes, &input); unmarshalErr != nil {
+				return nil, unmarshalErr
+			}
+		}
+		return impl.Invoke(input)
+	}
+}
+
 // LoadConformanceLoad decodes LoadConformance.load vector input and invokes a
 // typed fixtures.LoadConformance. Adapt the returned func into your Adapter, e.g.:
 //
@@ -74,6 +95,27 @@ func LoadConformanceLoad(impl fixtures.LoadConformance) func(rawInput any) (any,
 			}
 		}
 		return impl.Load(source)
+	}
+}
+
+// MemoryConformanceOperate decodes MemoryConformance.operate vector input and invokes a
+// typed fixtures.MemoryConformance. Adapt the returned func into your Adapter, e.g.:
+//
+//	VectorAdapters["MemoryConformance.operate"] = bridged(vectorbridge.MemoryConformanceOperate(impl))
+func MemoryConformanceOperate(impl fixtures.MemoryConformance) func(rawInput any) (any, error) {
+	return func(rawInput any) (any, error) {
+		payload, _ := rawInput.(map[string]any)
+		var input interface{}
+		{
+			inputBytes, marshalErr := json.Marshal(payload["input"])
+			if marshalErr != nil {
+				return nil, marshalErr
+			}
+			if unmarshalErr := json.Unmarshal(inputBytes, &input); unmarshalErr != nil {
+				return nil, unmarshalErr
+			}
+		}
+		return impl.Operate(input)
 	}
 }
 

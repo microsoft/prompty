@@ -47,6 +47,58 @@ const TurnVectors = """
       }
     },
     {
+      "name": "memory_context_is_model_visible",
+      "stage": "turn",
+      "input": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "What should I remember?"
+          }
+        ],
+        "memory": {
+          "store": {
+            "entries": [
+              {
+                "content": "User prefers concise answers",
+                "category": "core"
+              },
+              {
+                "content": "Historical deploy summary",
+                "category": "archival",
+                "tags": ["deploy"]
+              }
+            ]
+          }
+        },
+        "model": [
+          {
+            "output": "Use the memory context"
+          }
+        ]
+      },
+      "expected": {
+        "status": "success",
+        "output": "Use the memory context",
+        "iterations": 1,
+        "snapshots": 1,
+        "snapshotStablePrefixes": [
+          2
+        ],
+        "toolResults": 0,
+        "providerMessages": [
+          {
+            "role": "system",
+            "content": "## Memory\\n- User prefers concise answers\\n"
+          },
+          {
+            "role": "user",
+            "content": "What should I remember?"
+          }
+        ]
+      }
+    },
+    {
       "name": "ordered_tool_round",
       "stage": "turn",
       "input": {

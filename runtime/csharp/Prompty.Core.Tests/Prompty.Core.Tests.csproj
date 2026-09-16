@@ -22,6 +22,7 @@
          no runtime cycle: production Prompty.Core never references the providers. -->
     <ProjectReference Include="..\Prompty.OpenAI\Prompty.OpenAI.csproj" />
     <ProjectReference Include="..\Prompty.Anthropic\Prompty.Anthropic.csproj" />
+    <ProjectReference Include="..\Prompty.Foundry\Prompty.Foundry.csproj" />
   </ItemGroup>
 
   <ItemGroup>

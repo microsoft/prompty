@@ -79,7 +79,7 @@ func TestAgentLoadJSON(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -101,8 +101,8 @@ func TestAgentLoadJSON(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -186,7 +186,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -213,8 +212,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -311,7 +310,7 @@ func TestAgentFromJSON(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -328,8 +327,8 @@ func TestAgentFromJSON(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -413,7 +412,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -435,8 +433,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -533,7 +531,7 @@ func TestAgentRoundtrip(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -562,8 +560,8 @@ func TestAgentRoundtrip(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -660,7 +658,7 @@ func TestAgentToJSON(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -696,8 +694,8 @@ func TestAgentToJSON(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -794,7 +792,7 @@ func TestAgentToYAML(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -830,8 +828,8 @@ func TestAgentToYAML(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -927,7 +925,7 @@ func TestAgentLoadJSON1(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -949,8 +947,8 @@ func TestAgentLoadJSON1(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1024,7 +1022,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -1051,8 +1048,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1138,7 +1135,7 @@ func TestAgentFromJSON1(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -1155,8 +1152,8 @@ func TestAgentFromJSON1(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1230,7 +1227,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -1252,8 +1248,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1339,7 +1335,7 @@ func TestAgentRoundtrip1(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -1368,8 +1364,8 @@ func TestAgentRoundtrip1(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1455,7 +1451,7 @@ func TestAgentToJSON1(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -1491,8 +1487,8 @@ func TestAgentToJSON1(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1578,7 +1574,7 @@ func TestAgentToYAML1(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -1614,8 +1610,8 @@ func TestAgentToYAML1(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1703,7 +1699,7 @@ func TestAgentLoadJSON2(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -1725,8 +1721,8 @@ func TestAgentLoadJSON2(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1813,7 +1809,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -1840,8 +1835,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -1942,7 +1937,7 @@ func TestAgentFromJSON2(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -1959,8 +1954,8 @@ func TestAgentFromJSON2(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2047,7 +2042,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -2069,8 +2063,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2171,7 +2165,7 @@ func TestAgentRoundtrip2(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -2200,8 +2194,8 @@ func TestAgentRoundtrip2(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2302,7 +2296,7 @@ func TestAgentToJSON2(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -2338,8 +2332,8 @@ func TestAgentToJSON2(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2440,7 +2434,7 @@ func TestAgentToYAML2(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -2476,8 +2470,8 @@ func TestAgentToYAML2(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2577,7 +2571,7 @@ func TestAgentLoadJSON3(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -2599,8 +2593,8 @@ func TestAgentLoadJSON3(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2677,7 +2671,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -2704,8 +2697,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2795,7 +2788,7 @@ func TestAgentFromJSON3(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -2812,8 +2805,8 @@ func TestAgentFromJSON3(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -2890,7 +2883,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -2912,8 +2904,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3003,7 +2995,7 @@ func TestAgentRoundtrip3(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -3032,8 +3024,8 @@ func TestAgentRoundtrip3(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3123,7 +3115,7 @@ func TestAgentToJSON3(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -3159,8 +3151,8 @@ func TestAgentToJSON3(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3250,7 +3242,7 @@ func TestAgentToYAML3(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -3286,8 +3278,8 @@ func TestAgentToYAML3(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3380,7 +3372,7 @@ func TestAgentLoadJSON4(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -3402,8 +3394,8 @@ func TestAgentLoadJSON4(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3499,7 +3491,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -3526,8 +3517,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3639,7 +3630,7 @@ func TestAgentFromJSON4(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -3656,8 +3647,8 @@ func TestAgentFromJSON4(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3753,7 +3744,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -3775,8 +3765,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -3888,7 +3878,7 @@ func TestAgentRoundtrip4(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -3917,8 +3907,8 @@ func TestAgentRoundtrip4(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4030,7 +4020,7 @@ func TestAgentToJSON4(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -4066,8 +4056,8 @@ func TestAgentToJSON4(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4179,7 +4169,7 @@ func TestAgentToYAML4(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -4215,8 +4205,8 @@ func TestAgentToYAML4(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4327,7 +4317,7 @@ func TestAgentLoadJSON5(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -4349,8 +4339,8 @@ func TestAgentLoadJSON5(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4436,7 +4426,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -4463,8 +4452,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4565,7 +4554,7 @@ func TestAgentFromJSON5(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -4582,8 +4571,8 @@ func TestAgentFromJSON5(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4669,7 +4658,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -4691,8 +4679,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4793,7 +4781,7 @@ func TestAgentRoundtrip5(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -4822,8 +4810,8 @@ func TestAgentRoundtrip5(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -4924,7 +4912,7 @@ func TestAgentToJSON5(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -4960,8 +4948,8 @@ func TestAgentToJSON5(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5062,7 +5050,7 @@ func TestAgentToYAML5(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -5098,8 +5086,8 @@ func TestAgentToYAML5(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5202,7 +5190,7 @@ func TestAgentLoadJSON6(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -5224,8 +5212,8 @@ func TestAgentLoadJSON6(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5324,7 +5312,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -5351,8 +5338,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5468,7 +5455,7 @@ func TestAgentFromJSON6(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -5485,8 +5472,8 @@ func TestAgentFromJSON6(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5585,7 +5572,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -5607,8 +5593,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5724,7 +5710,7 @@ func TestAgentRoundtrip6(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -5753,8 +5739,8 @@ func TestAgentRoundtrip6(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -5870,7 +5856,7 @@ func TestAgentToJSON6(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -5906,8 +5892,8 @@ func TestAgentToJSON6(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6023,7 +6009,7 @@ func TestAgentToYAML6(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -6059,8 +6045,8 @@ func TestAgentToYAML6(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6175,7 +6161,7 @@ func TestAgentLoadJSON7(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -6197,8 +6183,8 @@ func TestAgentLoadJSON7(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6287,7 +6273,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -6314,8 +6299,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6420,7 +6405,7 @@ func TestAgentFromJSON7(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 
@@ -6437,8 +6422,8 @@ func TestAgentFromJSON7(t *testing.T) {
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6527,7 +6512,6 @@ instructions: |-
   As the assistant, you answer questions briefly, succinctly,
   and in a personable manner using markdown and even add some
   personal flair with appropriate emojis.
-
   # Customer
   You are helping {{firstName}} {{lastName}} to find answers to
   their questions. Use their name to address them in your responses.
@@ -6549,8 +6533,8 @@ instructions: |-
 	if instance.Description == nil || *instance.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, instance.Description)
 	}
-	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
+	if instance.Instructions == nil || *instance.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, instance.Instructions)
 	}
 	if instance.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6655,7 +6639,7 @@ func TestAgentRoundtrip7(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -6684,8 +6668,8 @@ func TestAgentRoundtrip7(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6790,7 +6774,7 @@ func TestAgentToJSON7(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -6826,8 +6810,8 @@ func TestAgentToJSON7(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")
@@ -6932,7 +6916,7 @@ func TestAgentToYAML7(t *testing.T) {
     "format": "mustache",
     "parser": "prompty"
   },
-  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
+  "instructions": "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}"
 }
 `
 	var data map[string]interface{}
@@ -6968,8 +6952,8 @@ func TestAgentToYAML7(t *testing.T) {
 	if reloaded.Description == nil || *reloaded.Description != "A basic prompt that uses the GPT-3 chat API to answer questions" {
 		t.Errorf(`Expected Description to be "A basic prompt that uses the GPT-3 chat API to answer questions", got %v`, reloaded.Description)
 	}
-	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
-		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
+	if reloaded.Instructions == nil || *reloaded.Instructions != "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}" {
+		t.Errorf(`Expected Instructions to be "system:\nYou are an AI assistant who helps people find information.\nAs the assistant, you answer questions briefly, succinctly,\nand in a personable manner using markdown and even add some\npersonal flair with appropriate emojis.\n# Customer\nYou are helping {{firstName}} {{lastName}} to find answers to\ntheir questions. Use their name to address them in your responses.\nuser:\n{{question}}", got %v`, reloaded.Instructions)
 	}
 	if reloaded.Metadata == nil {
 		t.Fatalf("Expected Metadata to be populated")

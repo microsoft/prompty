@@ -91,7 +91,7 @@ model:
 - Supports streaming via `PromptyStream` / `AsyncPromptyStream` (Python), async iterables (TypeScript), and `IAsyncEnumerable` (C#)
 - Structured output is supported via `outputs` → `response_format`
 - [Agentic turns](/agentic-concepts/agent-loop/) are available via `turn()` — they use `apiType: chat` with an automatic tool-calling loop
-- Model listing is available in Python, TypeScript, C#, and Rust; see [Discover Available Models](/how-to/model-discovery/)
+- Model listing is available where provider packages expose discovery; see [Discover Available Models](/how-to/model-discovery/)
 
 ---
 
@@ -185,7 +185,7 @@ model:
 - Supports the same features as the OpenAI provider (streaming, structured output,
   agent mode)
 - Model deployments are managed through the [Azure AI Foundry portal](https://ai.azure.com/)
-- Deployment listing is available in Python, TypeScript, and C#; see [Discover Available Models](/how-to/model-discovery/)
+- Deployment listing is available where provider packages expose discovery; see [Discover Available Models](/how-to/model-discovery/)
 
 ---
 
