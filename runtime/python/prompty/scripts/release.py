@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -76,9 +77,10 @@ def bump_version(current: str, bump: str) -> str:
     sys.exit(1)
 
 
-def run(cmd: str) -> None:
-    print(f"  $ {cmd}")
-    subprocess.run(cmd, cwd=REPO_ROOT, shell=True, check=True)
+def run(cmd: list[str]) -> None:
+    """Run a release command without invoking a shell."""
+    print(f"  $ {shlex.join(cmd)}")
+    subprocess.run(cmd, cwd=REPO_ROOT, check=True)
 
 
 def main() -> None:
@@ -116,12 +118,12 @@ def main() -> None:
 
     # Git commit, tag, push
     print("\n🔖 Creating commit and tag...\n")
-    run("git add runtime/python/prompty/prompty/_version.py")
-    run(f'git commit -m "chore(python): release v{new_version}"')
-    run(f'git tag -a {tag} -m "{tag}"')
+    run(["git", "add", "runtime/python/prompty/prompty/_version.py"])
+    run(["git", "commit", "-m", f"chore(python): release v{new_version}"])
+    run(["git", "tag", "-a", tag, "-m", tag])
 
     print("\n🚀 Pushing to origin...\n")
-    run("git push origin main --follow-tags")
+    run(["git", "push", "origin", "main", "--follow-tags"])
 
     print(f"\n✅ Done! Tag {tag} pushed.")
     print("   CI will build, test, and publish to PyPI.\n")
