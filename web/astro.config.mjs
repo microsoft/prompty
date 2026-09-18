@@ -10,8 +10,9 @@ export default defineConfig({
   trailingSlash: "always",
   integrations: [
     mermaid({
-      theme: 'forest',
-      autoTheme: true
+      theme: "neutral",
+      autoTheme: true,
+      enableLog: false,
     }),
     starlight({
       title: "Prompty",

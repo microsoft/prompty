@@ -57,3 +57,60 @@
 starlight-tabs .tablist-wrapper {
   overflow-y: hidden;
 }
+
+/* Improve Mermaid contrast in Starlight dark mode. */
+:root[data-theme="dark"] .mermaid {
+  background: var(--sl-color-bg-nav);
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+:root[data-theme="dark"] .mermaid svg {
+  color: var(--sl-color-white);
+}
+
+:root[data-theme="dark"] .mermaid .node rect,
+:root[data-theme="dark"] .mermaid .node circle,
+:root[data-theme="dark"] .mermaid .node ellipse,
+:root[data-theme="dark"] .mermaid .node polygon,
+:root[data-theme="dark"] .mermaid .node path,
+:root[data-theme="dark"] .mermaid rect.actor,
+:root[data-theme="dark"] .mermaid .actor.actor-top,
+:root[data-theme="dark"] .mermaid .actor.actor-bottom {
+  fill: var(--sl-color-gray-6) !important;
+  stroke: var(--prompty-blue) !important;
+}
+
+:root[data-theme="dark"] .mermaid .edgeLabel,
+:root[data-theme="dark"] .mermaid .labelBkg,
+:root[data-theme="dark"] .mermaid .labelBox {
+  background-color: var(--sl-color-bg-nav) !important;
+  fill: var(--sl-color-bg-nav) !important;
+}
+
+:root[data-theme="dark"] .mermaid text,
+:root[data-theme="dark"] .mermaid tspan,
+:root[data-theme="dark"] .mermaid .label,
+:root[data-theme="dark"] .mermaid .nodeLabel,
+:root[data-theme="dark"] .mermaid .edgeLabel,
+:root[data-theme="dark"] .mermaid .messageText,
+:root[data-theme="dark"] .mermaid .actor,
+:root[data-theme="dark"] .mermaid .actor tspan,
+:root[data-theme="dark"] .mermaid .label tspan,
+:root[data-theme="dark"] .mermaid .nodeLabel tspan,
+:root[data-theme="dark"] .mermaid .edgeLabel tspan {
+  color: var(--sl-color-white) !important;
+  fill: var(--sl-color-white) !important;
+}
+
+:root[data-theme="dark"] .mermaid .flowchart-link,
+:root[data-theme="dark"] .mermaid .messageLine0,
+:root[data-theme="dark"] .mermaid .messageLine1 {
+  stroke: var(--prompty-blue) !important;
+}
+
+:root[data-theme="dark"] .mermaid marker path {
+  fill: var(--prompty-blue) !important;
+  stroke: var(--prompty-blue) !important;
+}
