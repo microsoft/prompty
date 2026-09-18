@@ -178,7 +178,11 @@ The loop does not invent tool implementations. A `.prompty` file can declare
 tool schemas, but your application still supplies the functions or provider
 implementations that execute them.
 
-The loop also does not automatically persist memory. Conversation history is
-passed by the application, usually through a `kind: thread` input. See
-[Conversation History](/core-concepts/conversation-history/) for the thread
-pattern.
+The loop also does not automatically choose a memory backend. Prompty defines
+the portable memory store and deterministic recall/formatting behavior, but
+your application still supplies the persistence hook and lifecycle policy. See
+[Memory](/agentic-concepts/memory/) for the host/runtime boundary.
+
+Conversation history is passed by the application, usually through a
+`kind: thread` input. See [Conversation History](/core-concepts/conversation-history/)
+for the thread pattern.
