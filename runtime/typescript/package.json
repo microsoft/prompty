@@ -21,7 +21,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
-    "prettier": "^3.8.3"
+    "prettier": "^3.9.8"
   },
   "overrides": {
     "esbuild": "0.28.2"
