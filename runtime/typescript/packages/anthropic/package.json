@@ -55,13 +55,13 @@
     }
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.124.0",
+    "@anthropic-ai/sdk": "^0.127.0",
     "@prompty/core": "^2.0.0",
-    "@types/node": "^26.4.1",
-    "dotenv": "^17.4.2",
+    "@types/node": "^26.6.1",
+    "dotenv": "^18.0.0",
     "tsup": "^8.4.0",
     "typescript": "^5.7.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.1"
   },
   "dependencies": {
     "@prompty/core": "^2.0.0"

@@ -366,13 +366,13 @@
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26",
-    "@vscode/vsce": "^3.9.2",
+    "@vscode/vsce": "^4.0.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.10.0",
-    "js-yaml": "^5.4.1",
-    "mocha": "^12.0.0",
+    "js-yaml": "^5.4.2",
+    "mocha": "^12.0.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.69.0"
+    "typescript-eslint": "^8.70.0"
   },
   "overrides": {
     "mocha": {
@@ -383,6 +383,6 @@
     }
   },
   "dependencies": {
-    "marked": "^18.0.11"
+    "marked": "^18.0.13"
   }
 }
