@@ -130,7 +130,7 @@ jobs:
       #   dotnet    csharp/driver.js runs `dotnet format <csproj>`
       #   gofmt     go/driver.js runs `gofmt -w` (and `goimports -w` if present)
       - name: Install Rust toolchain (provides rustfmt)
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
         with:
           toolchain: '1.97.1'
           components: rustfmt
