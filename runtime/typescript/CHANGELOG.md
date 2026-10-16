@@ -2,6 +2,11 @@
 
 All notable changes to the Prompty TypeScript runtime will be documented here.
 
+## [2.0.1] — 2026-10-16
+
+### Fixed
+- OpenAI Responses processor now falls back to nested completed message text when top-level `output_text` is missing or empty (#571)
+
 ## [2.0.0] â€” 2026-09-16
 
 ### Added
