@@ -10,12 +10,12 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/starlight": "^0.42.0",
-    "@mermaid-js/layout-elk": "^0.2.3",
-    "astro": "^7.2.2",
+    "@astrojs/starlight": "^0.42.6",
+    "@mermaid-js/layout-elk": "^1.0.1",
+    "astro": "^7.3.8",
     "astro-mermaid": "^2.0.1",
-    "mermaid": "^11.17.2",
-    "sass": "^1.104.0",
+    "mermaid": "^12.1.0",
+    "sass": "^1.105.1",
     "sharp": "^0.35.5",
     "starlight-auto-sidebar": "^0.4.1"
   },
@@ -23,6 +23,6 @@
     "uuid": "^14.0.0"
   },
   "devDependencies": {
-    "starlight-links-validator": "0.26.0"
+    "starlight-links-validator": "0.27.0"
   }
 }
