@@ -967,7 +967,9 @@ def test_responses_empty_output_text_message_content_fallback(processor_provider
     response = payload["response"]
     provider = agent.model.provider
     impl = resolve_processor(provider, processor_provider)
-    assert impl is not None, f"responses_empty_output_text_message_content_fallback: no Processor attached for {provider}"
+    assert impl is not None, (
+        f"responses_empty_output_text_message_content_fallback: no Processor attached for {provider}"
+    )
     result = impl.process(agent, response)
     if inspect.isawaitable(result):
         result = asyncio.run(result)
