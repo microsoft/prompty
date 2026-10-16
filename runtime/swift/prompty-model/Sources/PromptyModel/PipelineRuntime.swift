@@ -306,7 +306,24 @@ private func processOpenAIResponses(_ resp: [String: Any], hasOutputs: Bool) -> 
     toolCalls.append(["id": item["call_id"] ?? NSNull(), "name": item["name"] ?? NSNull(), "arguments": item["arguments"] ?? NSNull()])
   }
   if !toolCalls.isEmpty { return toolCalls }
-  return maybeParseStructured(resp["output_text"] as? String ?? "", hasOutputs)
+  return maybeParseStructured(openAIResponsesOutputText(resp), hasOutputs)
+}
+
+private func openAIResponsesOutputText(_ resp: [String: Any]) -> String {
+  if let outputText = resp["output_text"] as? String, !outputText.isEmpty {
+    return outputText
+  }
+
+  var text = ""
+  for item in resp["output"] as? [[String: Any]] ?? [] where (item["type"] as? String) == "message" {
+    for part in item["content"] as? [[String: Any]] ?? [] {
+      let partType = part["type"] as? String
+      if partType == "output_text" || partType == "text" {
+        text += part["text"] as? String ?? ""
+      }
+    }
+  }
+  return text
 }
 
 private func processOpenAIEmbedding(_ resp: [String: Any]) -> Any {

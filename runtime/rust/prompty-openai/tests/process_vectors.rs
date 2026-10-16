@@ -152,5 +152,7 @@ process_test!(chat_empty_content);
 // Responses API vectors — skip if we don't support responses API yet
 process_test!(responses_text);
 process_test!(responses_tool_calls);
+process_test!(responses_message_content_fallback);
+process_test!(responses_empty_output_text_message_content_fallback);
 process_test!(responses_structured);
 process_test!(responses_empty_output);

@@ -364,7 +364,43 @@ final class ProcessorConformanceTests: XCTestCase {
     XCTAssertNotNil(actual)
   }
 
-  func testVector19ProcessorProcessResponsesStructured() async throws {
+  func testVector19ProcessorProcessResponsesEmptyOutputTextMessageContentFallback() async throws {
+    guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_empty_output_text_fallback\",\"object\":\"response\",\"created_at\":1700000024,\"model\":\"gpt-5.5-pro\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_empty_output_text_fallback\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Nested text wins.\",\"annotations\":[]}]}],\"output_text\":\"\",\"usage\":{\"input_tokens\":12,\"output_tokens\":4,\"total_tokens\":16}},\"has_outputs\":false}".data(using: .utf8),
+      let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
+    else {
+      XCTFail("failed to parse embedded vector input")
+      return
+    }
+    let agent = try Agent.load(input["agent"]!)
+    let response = input["response"] as! Any
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_empty_output_text_message_content_fallback: no Processor attached for " + providerKind)
+      return
+    }
+    let actual = try await impl.process(agent: agent, response: response)
+    XCTAssertNotNil(actual)
+  }
+
+  func testVector20ProcessorProcessResponsesMessageContentFallback() async throws {
+    guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_content_fallback\",\"object\":\"response\",\"created_at\":1700000023,\"model\":\"gpt-5.5-pro\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_content_fallback\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Visible final answer.\",\"annotations\":[]}]}],\"usage\":{\"input_tokens\":12,\"output_tokens\":4,\"total_tokens\":16}},\"has_outputs\":false}".data(using: .utf8),
+      let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
+    else {
+      XCTFail("failed to parse embedded vector input")
+      return
+    }
+    let agent = try Agent.load(input["agent"]!)
+    let response = input["response"] as! Any
+    let providerKind = try (agent.model!.save())["provider"] as! String
+    guard let impl = ProcessorResolver.resolve(provider: providerKind, registry: provider()) else {
+      XCTFail("responses_message_content_fallback: no Processor attached for " + providerKind)
+      return
+    }
+    let actual = try await impl.process(agent: agent, response: response)
+    XCTAssertNotNil(actual)
+  }
+
+  func testVector21ProcessorProcessResponsesStructured() async throws {
     guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_struct1\",\"object\":\"response\",\"created_at\":1700000022,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_002\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"annotations\":[]}]}],\"output_text\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"usage\":{\"input_tokens\":20,\"output_tokens\":8,\"total_tokens\":28}},\"has_outputs\":true}".data(using: .utf8),
       let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
     else {
@@ -382,7 +418,7 @@ final class ProcessorConformanceTests: XCTestCase {
     XCTAssertNotNil(actual)
   }
 
-  func testVector20ProcessorProcessResponsesText() async throws {
+  func testVector22ProcessorProcessResponsesText() async throws {
     guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_abc123\",\"object\":\"response\",\"created_at\":1700000020,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_001\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Hello!\",\"annotations\":[]}]}],\"output_text\":\"Hello!\",\"usage\":{\"input_tokens\":10,\"output_tokens\":2,\"total_tokens\":12}},\"has_outputs\":false}".data(using: .utf8),
       let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
     else {
@@ -400,7 +436,7 @@ final class ProcessorConformanceTests: XCTestCase {
     XCTAssertNotNil(actual)
   }
 
-  func testVector21ProcessorProcessResponsesToolCalls() async throws {
+  func testVector23ProcessorProcessResponsesToolCalls() async throws {
     guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_tool1\",\"object\":\"response\",\"created_at\":1700000021,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"function_call\",\"id\":\"fc_001\",\"call_id\":\"call_1\",\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"status\":\"completed\"}],\"output_text\":\"\",\"usage\":{\"input_tokens\":25,\"output_tokens\":18,\"total_tokens\":43}},\"has_outputs\":false}".data(using: .utf8),
       let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
     else {
@@ -418,7 +454,7 @@ final class ProcessorConformanceTests: XCTestCase {
     XCTAssertNotNil(actual)
   }
 
-  func testVector22ProcessorProcessStreamStreamRefusalIsDeterminate() async throws {
+  func testVector24ProcessorProcessStreamStreamRefusalIsDeterminate() async throws {
     guard let inputData = "{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"stream\":[{\"kind\":\"provider\",\"value\":{\"choices\":[{\"delta\":{\"refusal\":\"I cannot help with that\"}}]}}],\"events\":[{\"kind\":\"provider\",\"value\":{\"choices\":[{\"delta\":{\"refusal\":\"I cannot help with that\"}}]}}]}".data(using: .utf8),
       let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any]
     else {

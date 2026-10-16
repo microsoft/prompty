@@ -812,14 +812,24 @@ describe("processResponse Responses API", () => {
     expect(processResponse(agent, response)).toEqual({ summary: "test", score: 5 });
   });
 
-  it("falls back to message content when output_text is absent", () => {
+  it("falls back to message content when output_text is absent or empty", () => {
     const agent = makeAgent({ apiType: "responses" });
-    const response = {
-      object: "response",
-      output: [
-        { type: "message", content: [{ type: "output_text", text: "Fallback text" }] },
-      ],
-    };
-    expect(processResponse(agent, response)).toBe("Fallback text");
+    for (const response of [
+      {
+        object: "response",
+        output: [
+          { type: "message", content: [{ type: "output_text", text: "Fallback text" }] },
+        ],
+      },
+      {
+        object: "response",
+        output: [
+          { type: "message", content: [{ type: "output_text", text: "Fallback text" }] },
+        ],
+        output_text: "",
+      },
+    ]) {
+      expect(processResponse(agent, response)).toBe("Fallback text");
+    }
   });
 });

@@ -920,6 +920,113 @@ def test_responses_empty_output(processor_provider):
     assert result is not None
 
 
+def test_responses_empty_output_text_message_content_fallback(processor_provider):
+    payload = json.loads(
+        r"""
+    {
+      "agent": {
+        "model": {
+          "provider": "openai"
+        }
+      },
+      "apiType": "responses",
+      "response": {
+        "id": "resp_empty_output_text_fallback",
+        "object": "response",
+        "created_at": 1700000024,
+        "model": "gpt-5.5-pro",
+        "status": "completed",
+        "output": [
+          {
+            "type": "message",
+            "id": "msg_empty_output_text_fallback",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Nested text wins.",
+                "annotations": []
+              }
+            ]
+          }
+        ],
+        "output_text": "",
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4,
+          "total_tokens": 16
+        }
+      },
+      "has_outputs": false
+    }
+        """,
+        strict=False,
+    )
+    agent = Agent.load(payload["agent"])
+    response = payload["response"]
+    provider = agent.model.provider
+    impl = resolve_processor(provider, processor_provider)
+    assert impl is not None, f"responses_empty_output_text_message_content_fallback: no Processor attached for {provider}"
+    result = impl.process(agent, response)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    assert result is not None
+
+
+def test_responses_message_content_fallback(processor_provider):
+    payload = json.loads(
+        r"""
+    {
+      "agent": {
+        "model": {
+          "provider": "openai"
+        }
+      },
+      "apiType": "responses",
+      "response": {
+        "id": "resp_content_fallback",
+        "object": "response",
+        "created_at": 1700000023,
+        "model": "gpt-5.5-pro",
+        "status": "completed",
+        "output": [
+          {
+            "type": "message",
+            "id": "msg_content_fallback",
+            "status": "completed",
+            "role": "assistant",
+            "content": [
+              {
+                "type": "output_text",
+                "text": "Visible final answer.",
+                "annotations": []
+              }
+            ]
+          }
+        ],
+        "usage": {
+          "input_tokens": 12,
+          "output_tokens": 4,
+          "total_tokens": 16
+        }
+      },
+      "has_outputs": false
+    }
+        """,
+        strict=False,
+    )
+    agent = Agent.load(payload["agent"])
+    response = payload["response"]
+    provider = agent.model.provider
+    impl = resolve_processor(provider, processor_provider)
+    assert impl is not None, f"responses_message_content_fallback: no Processor attached for {provider}"
+    result = impl.process(agent, response)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    assert result is not None
+
+
 def test_responses_structured(processor_provider):
     payload = json.loads(
         r"""

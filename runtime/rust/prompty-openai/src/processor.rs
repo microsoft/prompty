@@ -177,10 +177,7 @@ fn portable_assistant_messages(response: &Value) -> Vec<Message> {
         }
         return vec![Message::with_text(
             Role::Assistant,
-            response
-                .get("output_text")
-                .and_then(Value::as_str)
-                .unwrap_or(""),
+            extract_responses_output_text(response),
         )];
     }
 
@@ -339,22 +336,43 @@ fn process_responses_api(agent: &Agent, response: &Value) -> Result<Value, Invok
         }
     }
 
-    // Extract output_text (convenience field)
-    let output_text = response
-        .get("output_text")
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let output_text = extract_responses_output_text(response);
 
     // Structured output
     if let Some(outputs) = agent.as_outputs() {
         if !outputs.is_empty() {
-            if let Ok(parsed) = serde_json::from_str::<Value>(output_text) {
+            if let Ok(parsed) = serde_json::from_str::<Value>(&output_text) {
                 return Ok(parsed);
             }
         }
     }
 
-    Ok(Value::String(output_text.to_string()))
+    Ok(Value::String(output_text))
+}
+
+fn extract_responses_output_text(response: &Value) -> String {
+    if let Some(output_text) = response.get("output_text").and_then(Value::as_str) {
+        if !output_text.is_empty() {
+            return output_text.to_string();
+        }
+    }
+
+    response
+        .get("output")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+        .filter(|item| item.get("type").and_then(Value::as_str) == Some("message"))
+        .filter_map(|item| item.get("content").and_then(Value::as_array))
+        .flatten()
+        .filter(|part| {
+            matches!(
+                part.get("type").and_then(Value::as_str),
+                Some("output_text" | "text")
+            )
+        })
+        .filter_map(|part| part.get("text").and_then(Value::as_str))
+        .collect::<String>()
 }
 
 // ---------------------------------------------------------------------------
@@ -889,6 +907,41 @@ mod tests {
         assert_eq!(
             assistant_messages[0].metadata["tool_calls"][0]["id"],
             "call_1"
+        );
+    }
+
+    #[test]
+    fn test_responses_portable_assistant_messages_use_message_content_fallback() {
+        let agent = make_agent(Value::Null);
+        let response = json!({
+            "object": "response",
+            "id": "resp_123",
+            "output": [{
+                "type": "message",
+                "role": "assistant",
+                "status": "completed",
+                "content": [{
+                    "type": "output_text",
+                    "text": "Visible final answer."
+                }]
+            }]
+        });
+
+        let result = process_invocation_response_with_context(
+            &agent,
+            &response,
+            "openai",
+            false,
+            &request(Vec::new()),
+        )
+        .unwrap();
+
+        assert_eq!(result.output, Some(json!("Visible final answer.")));
+        let assistant_messages = result.assistant_messages.as_ref().unwrap();
+        assert_eq!(assistant_messages.len(), 1);
+        assert_eq!(
+            assistant_messages[0].text_content(),
+            "Visible final answer."
         );
     }
 

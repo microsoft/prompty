@@ -907,6 +907,111 @@ public class ProcessorConformanceTests
     }
 
     [Fact]
+    public async Task ResponsesEmptyOutputTextMessageContentFallback()
+    {
+        string inputJson = """
+{
+  "agent": {
+    "model": {
+      "provider": "openai"
+    }
+  },
+  "apiType": "responses",
+  "response": {
+    "id": "resp_empty_output_text_fallback",
+    "object": "response",
+    "created_at": 1700000024,
+    "model": "gpt-5.5-pro",
+    "status": "completed",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_empty_output_text_fallback",
+        "status": "completed",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Nested text wins.",
+            "annotations": []
+          }
+        ]
+      }
+    ],
+    "output_text": "",
+    "usage": {
+      "input_tokens": 12,
+      "output_tokens": 4,
+      "total_tokens": 16
+    }
+  },
+  "has_outputs": false
+}
+""";
+        using var document = JsonDocument.Parse(inputJson);
+        var root = document.RootElement;
+        var agent = Agent.FromJson(root.GetProperty("agent").GetRawText());
+        var response = JsonSerializer.Deserialize<object>(root.GetProperty("response").GetRawText());
+        var provider = agent.Model.Provider;
+        var impl = ProcessorResolver.Resolve(provider, Provider());
+        Assert.NotNull(impl);
+        var actual = await impl!.ProcessAsync(agent, response);
+        Assert.NotNull(actual);
+    }
+
+    [Fact]
+    public async Task ResponsesMessageContentFallback()
+    {
+        string inputJson = """
+{
+  "agent": {
+    "model": {
+      "provider": "openai"
+    }
+  },
+  "apiType": "responses",
+  "response": {
+    "id": "resp_content_fallback",
+    "object": "response",
+    "created_at": 1700000023,
+    "model": "gpt-5.5-pro",
+    "status": "completed",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_content_fallback",
+        "status": "completed",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Visible final answer.",
+            "annotations": []
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 12,
+      "output_tokens": 4,
+      "total_tokens": 16
+    }
+  },
+  "has_outputs": false
+}
+""";
+        using var document = JsonDocument.Parse(inputJson);
+        var root = document.RootElement;
+        var agent = Agent.FromJson(root.GetProperty("agent").GetRawText());
+        var response = JsonSerializer.Deserialize<object>(root.GetProperty("response").GetRawText());
+        var provider = agent.Model.Provider;
+        var impl = ProcessorResolver.Resolve(provider, Provider());
+        Assert.NotNull(impl);
+        var actual = await impl!.ProcessAsync(agent, response);
+        Assert.NotNull(actual);
+    }
+
+    [Fact]
     public async Task ResponsesStructured()
     {
         string inputJson = """

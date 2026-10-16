@@ -549,6 +549,87 @@ const ProcessVectors = """
       }
     },
     {
+      "name": "responses_message_content_fallback",
+      "description": "Responses API completed message without output_text — extracts output[].content[].output_text",
+      "stage": "process",
+      "input": {
+        "agent": { "model": { "provider": "openai" } },
+        "apiType": "responses",
+        "response": {
+          "id": "resp_content_fallback",
+          "object": "response",
+          "created_at": 1700000023,
+          "model": "gpt-5.5-pro",
+          "status": "completed",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_content_fallback",
+              "status": "completed",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Visible final answer.",
+                  "annotations": []
+                }
+              ]
+            }
+          ],
+          "usage": {
+            "input_tokens": 12,
+            "output_tokens": 4,
+            "total_tokens": 16
+          }
+        },
+        "has_outputs": false
+      },
+      "expected": {
+        "result": "Visible final answer."
+      }
+    },
+    {
+      "name": "responses_empty_output_text_message_content_fallback",
+      "description": "Responses API completed message with empty output_text — falls back to output[].content[].output_text",
+      "stage": "process",
+      "input": {
+        "agent": { "model": { "provider": "openai" } },
+        "apiType": "responses",
+        "response": {
+          "id": "resp_empty_output_text_fallback",
+          "object": "response",
+          "created_at": 1700000024,
+          "model": "gpt-5.5-pro",
+          "status": "completed",
+          "output": [
+            {
+              "type": "message",
+              "id": "msg_empty_output_text_fallback",
+              "status": "completed",
+              "role": "assistant",
+              "content": [
+                {
+                  "type": "output_text",
+                  "text": "Nested text wins.",
+                  "annotations": []
+                }
+              ]
+            }
+          ],
+          "output_text": "",
+          "usage": {
+            "input_tokens": 12,
+            "output_tokens": 4,
+            "total_tokens": 16
+          }
+        },
+        "has_outputs": false
+      },
+      "expected": {
+        "result": "Nested text wins."
+      }
+    },
+    {
       "name": "responses_structured",
       "description": "Responses API with structured output (has_outputs=true) — JSON-parses output_text into object",
       "stage": "process",
