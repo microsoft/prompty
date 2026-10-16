@@ -16,7 +16,7 @@
     "astro-mermaid": "^2.0.1",
     "mermaid": "^11.17.2",
     "sass": "^1.104.0",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.5",
     "starlight-auto-sidebar": "^0.4.1"
   },
   "overrides": {
