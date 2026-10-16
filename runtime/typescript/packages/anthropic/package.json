@@ -61,7 +61,7 @@
     "dotenv": "^17.4.2",
     "tsup": "^8.4.0",
     "typescript": "^5.7.0",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@prompty/core": "^2.0.0"
