@@ -238,7 +238,7 @@ function processResponsesApi(
 
   // Text content — use output_text convenience field
   const outputText = response.output_text as string | undefined;
-  if (outputText !== undefined) {
+  if (outputText) {
     // Structured output — JSON parse when outputs schema exists
     if (agent.outputs && agent.outputs.length > 0) {
       try {

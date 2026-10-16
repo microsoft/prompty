@@ -255,7 +255,7 @@ def _process_responses_api(response: Any, agent: Agent | None = None) -> Any:
 
     # Text content — use output_text convenience field
     output_text = getattr(response, "output_text", None)
-    if output_text is not None:
+    if output_text:
         if agent is not None and agent.outputs and isinstance(output_text, str):
             try:
                 return StructuredResult(json.loads(output_text), output_text)

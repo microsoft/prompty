@@ -280,7 +280,35 @@ public final class ProcessorConformanceTests {
     assertNotNull(actual, "responses_empty_output");
   }
 
-  private static void vector19ProcessorProcessResponsesStructured() throws Exception {
+  private static void vector19ProcessorProcessResponsesEmptyOutputTextMessageContentFallback() throws Exception {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_empty_output_text_fallback\",\"object\":\"response\",\"created_at\":1700000024,\"model\":\"gpt-5.5-pro\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_empty_output_text_fallback\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Nested text wins.\",\"annotations\":[]}]}],\"output_text\":\"\",\"usage\":{\"input_tokens\":12,\"output_tokens\":4,\"total_tokens\":16}},\"has_outputs\":false}");
+    Object payload = TypraJson.parse(sb.toString());
+    java.util.Map<?, ?> input = (java.util.Map<?, ?>) payload;
+    Agent agent = Agent.load(input.get("agent"), null);
+    Object response = (Object) input.get("response");
+    String provider = agent.model.provider;
+    Processor impl = ProcessorResolver.resolve(provider, VectorProviders.processor());
+    if (impl == null) throw new AssertionError("responses_empty_output_text_message_content_fallback: no Processor attached for " + provider);
+    Object actual = impl.process(agent, response);
+    assertNotNull(actual, "responses_empty_output_text_message_content_fallback");
+  }
+
+  private static void vector20ProcessorProcessResponsesMessageContentFallback() throws Exception {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_content_fallback\",\"object\":\"response\",\"created_at\":1700000023,\"model\":\"gpt-5.5-pro\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_content_fallback\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Visible final answer.\",\"annotations\":[]}]}],\"usage\":{\"input_tokens\":12,\"output_tokens\":4,\"total_tokens\":16}},\"has_outputs\":false}");
+    Object payload = TypraJson.parse(sb.toString());
+    java.util.Map<?, ?> input = (java.util.Map<?, ?>) payload;
+    Agent agent = Agent.load(input.get("agent"), null);
+    Object response = (Object) input.get("response");
+    String provider = agent.model.provider;
+    Processor impl = ProcessorResolver.resolve(provider, VectorProviders.processor());
+    if (impl == null) throw new AssertionError("responses_message_content_fallback: no Processor attached for " + provider);
+    Object actual = impl.process(agent, response);
+    assertNotNull(actual, "responses_message_content_fallback");
+  }
+
+  private static void vector21ProcessorProcessResponsesStructured() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_struct1\",\"object\":\"response\",\"created_at\":1700000022,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_002\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"annotations\":[]}]}],\"output_text\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"usage\":{\"input_tokens\":20,\"output_tokens\":8,\"total_tokens\":28}},\"has_outputs\":true}");
     Object payload = TypraJson.parse(sb.toString());
@@ -294,7 +322,7 @@ public final class ProcessorConformanceTests {
     assertNotNull(actual, "responses_structured");
   }
 
-  private static void vector20ProcessorProcessResponsesText() throws Exception {
+  private static void vector22ProcessorProcessResponsesText() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_abc123\",\"object\":\"response\",\"created_at\":1700000020,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"message\",\"id\":\"msg_001\",\"status\":\"completed\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"Hello!\",\"annotations\":[]}]}],\"output_text\":\"Hello!\",\"usage\":{\"input_tokens\":10,\"output_tokens\":2,\"total_tokens\":12}},\"has_outputs\":false}");
     Object payload = TypraJson.parse(sb.toString());
@@ -308,7 +336,7 @@ public final class ProcessorConformanceTests {
     assertNotNull(actual, "responses_text");
   }
 
-  private static void vector21ProcessorProcessResponsesToolCalls() throws Exception {
+  private static void vector23ProcessorProcessResponsesToolCalls() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"apiType\":\"responses\",\"response\":{\"id\":\"resp_tool1\",\"object\":\"response\",\"created_at\":1700000021,\"model\":\"gpt-4o-mini\",\"status\":\"completed\",\"output\":[{\"type\":\"function_call\",\"id\":\"fc_001\",\"call_id\":\"call_1\",\"name\":\"get_weather\",\"arguments\":\"{\\\"city\\\":\\\"Paris\\\"}\",\"status\":\"completed\"}],\"output_text\":\"\",\"usage\":{\"input_tokens\":25,\"output_tokens\":18,\"total_tokens\":43}},\"has_outputs\":false}");
     Object payload = TypraJson.parse(sb.toString());
@@ -322,7 +350,7 @@ public final class ProcessorConformanceTests {
     assertNotNull(actual, "responses_tool_calls");
   }
 
-  private static void vector22ProcessorProcessStreamStreamRefusalIsDeterminate() throws Exception {
+  private static void vector24ProcessorProcessStreamStreamRefusalIsDeterminate() throws Exception {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"agent\":{\"model\":{\"provider\":\"openai\"}},\"stream\":[{\"kind\":\"provider\",\"value\":{\"choices\":[{\"delta\":{\"refusal\":\"I cannot help with that\"}}]}}],\"events\":[{\"kind\":\"provider\",\"value\":{\"choices\":[{\"delta\":{\"refusal\":\"I cannot help with that\"}}]}}]}");
     Object payload = TypraJson.parse(sb.toString());
@@ -357,10 +385,12 @@ public final class ProcessorConformanceTests {
     failed += runCase("Processor.process:image_url", ProcessorConformanceTests::vector16ProcessorProcessImageUrl);
     failed += runCase("Processor.processStream:partial_text_then_indeterminate_failure", ProcessorConformanceTests::vector17ProcessorProcessStreamPartialTextThenIndeterminateFailure);
     failed += runCase("Processor.process:responses_empty_output", ProcessorConformanceTests::vector18ProcessorProcessResponsesEmptyOutput);
-    failed += runCase("Processor.process:responses_structured", ProcessorConformanceTests::vector19ProcessorProcessResponsesStructured);
-    failed += runCase("Processor.process:responses_text", ProcessorConformanceTests::vector20ProcessorProcessResponsesText);
-    failed += runCase("Processor.process:responses_tool_calls", ProcessorConformanceTests::vector21ProcessorProcessResponsesToolCalls);
-    failed += runCase("Processor.processStream:stream_refusal_is_determinate", ProcessorConformanceTests::vector22ProcessorProcessStreamStreamRefusalIsDeterminate);
+    failed += runCase("Processor.process:responses_empty_output_text_message_content_fallback", ProcessorConformanceTests::vector19ProcessorProcessResponsesEmptyOutputTextMessageContentFallback);
+    failed += runCase("Processor.process:responses_message_content_fallback", ProcessorConformanceTests::vector20ProcessorProcessResponsesMessageContentFallback);
+    failed += runCase("Processor.process:responses_structured", ProcessorConformanceTests::vector21ProcessorProcessResponsesStructured);
+    failed += runCase("Processor.process:responses_text", ProcessorConformanceTests::vector22ProcessorProcessResponsesText);
+    failed += runCase("Processor.process:responses_tool_calls", ProcessorConformanceTests::vector23ProcessorProcessResponsesToolCalls);
+    failed += runCase("Processor.processStream:stream_refusal_is_determinate", ProcessorConformanceTests::vector24ProcessorProcessStreamStreamRefusalIsDeterminate);
     if (failed > 0) {
       throw new AssertionError(failed + " @vector conformance failure(s)");
     }

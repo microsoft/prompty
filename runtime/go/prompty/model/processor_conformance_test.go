@@ -1283,6 +1283,151 @@ func TestProcessorProcessResponsesEmptyOutput(t *testing.T) {
 	_ = actual
 }
 
+func TestProcessorProcessResponsesEmptyOutputTextMessageContentFallback(t *testing.T) {
+	inputJSON := `{
+  "agent": {
+    "model": {
+      "provider": "openai"
+    }
+  },
+  "apiType": "responses",
+  "response": {
+    "id": "resp_empty_output_text_fallback",
+    "object": "response",
+    "created_at": 1700000024,
+    "model": "gpt-5.5-pro",
+    "status": "completed",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_empty_output_text_fallback",
+        "status": "completed",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Nested text wins.",
+            "annotations": []
+          }
+        ]
+      }
+    ],
+    "output_text": "",
+    "usage": {
+      "input_tokens": 12,
+      "output_tokens": 4,
+      "total_tokens": 16
+    }
+  },
+  "has_outputs": false
+}`
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(inputJSON), &payload); err != nil {
+		t.Fatalf("failed to decode vector input: %v", err)
+	}
+	agent, err := fixtures.LoadAgent(payload["agent"], fixtures.NewLoadContext())
+	if err != nil {
+		t.Fatalf("agent parse: %v", err)
+	}
+	var response interface{}
+	{
+		responseBytes, marshalErr := json.Marshal(payload["response"])
+		if marshalErr != nil {
+			t.Fatalf("response marshal: %v", marshalErr)
+		}
+		if unmarshalErr := json.Unmarshal(responseBytes, &response); unmarshalErr != nil {
+			t.Fatalf("response parse: %v", unmarshalErr)
+		}
+	}
+	provider := agent.Model.(interface {
+		Save(*fixtures.SaveContext) map[string]interface{}
+	}).Save(fixtures.NewSaveContext())["provider"].(string)
+	impl, err := fixtures.ResolveProcessor(provider, vectoradapters.ProcessorProvider())
+	if err != nil {
+		t.Fatalf("resolve %q: %v", provider, err)
+	}
+	if impl == nil {
+		t.Fatalf("responses_empty_output_text_message_content_fallback: no Processor attached for %q", provider)
+	}
+	actual, err := impl.Process(agent, response)
+	if err != nil {
+		t.Fatalf("responses_empty_output_text_message_content_fallback: %v", err)
+	}
+	_ = actual
+}
+
+func TestProcessorProcessResponsesMessageContentFallback(t *testing.T) {
+	inputJSON := `{
+  "agent": {
+    "model": {
+      "provider": "openai"
+    }
+  },
+  "apiType": "responses",
+  "response": {
+    "id": "resp_content_fallback",
+    "object": "response",
+    "created_at": 1700000023,
+    "model": "gpt-5.5-pro",
+    "status": "completed",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_content_fallback",
+        "status": "completed",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Visible final answer.",
+            "annotations": []
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 12,
+      "output_tokens": 4,
+      "total_tokens": 16
+    }
+  },
+  "has_outputs": false
+}`
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(inputJSON), &payload); err != nil {
+		t.Fatalf("failed to decode vector input: %v", err)
+	}
+	agent, err := fixtures.LoadAgent(payload["agent"], fixtures.NewLoadContext())
+	if err != nil {
+		t.Fatalf("agent parse: %v", err)
+	}
+	var response interface{}
+	{
+		responseBytes, marshalErr := json.Marshal(payload["response"])
+		if marshalErr != nil {
+			t.Fatalf("response marshal: %v", marshalErr)
+		}
+		if unmarshalErr := json.Unmarshal(responseBytes, &response); unmarshalErr != nil {
+			t.Fatalf("response parse: %v", unmarshalErr)
+		}
+	}
+	provider := agent.Model.(interface {
+		Save(*fixtures.SaveContext) map[string]interface{}
+	}).Save(fixtures.NewSaveContext())["provider"].(string)
+	impl, err := fixtures.ResolveProcessor(provider, vectoradapters.ProcessorProvider())
+	if err != nil {
+		t.Fatalf("resolve %q: %v", provider, err)
+	}
+	if impl == nil {
+		t.Fatalf("responses_message_content_fallback: no Processor attached for %q", provider)
+	}
+	actual, err := impl.Process(agent, response)
+	if err != nil {
+		t.Fatalf("responses_message_content_fallback: %v", err)
+	}
+	_ = actual
+}
+
 func TestProcessorProcessResponsesStructured(t *testing.T) {
 	inputJSON := `{
   "agent": {

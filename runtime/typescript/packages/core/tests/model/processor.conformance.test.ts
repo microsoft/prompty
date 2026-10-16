@@ -245,6 +245,30 @@ describe("Processor @vector conformance", () => {
     const result = await impl!.process(agent, response);
     expect(result).toBeDefined();
   });
+  it("responses_empty_output_text_message_content_fallback", async () => {
+    const payload = JSON.parse(
+      '{"agent":{"model":{"provider":"openai"}},"apiType":"responses","response":{"id":"resp_empty_output_text_fallback","object":"response","created_at":1700000024,"model":"gpt-5.5-pro","status":"completed","output":[{"type":"message","id":"msg_empty_output_text_fallback","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Nested text wins.","annotations":[]}]}],"output_text":"","usage":{"input_tokens":12,"output_tokens":4,"total_tokens":16}},"has_outputs":false}',
+    ) as Record<string, unknown>;
+    const agent = Agent.load(payload["agent"] as Record<string, unknown>);
+    const response = payload["response"] as unknown;
+    const provider = agent.model.provider;
+    const impl = resolveProcessor(provider, processorProvider);
+    expect(impl).not.toBeNull();
+    const result = await impl!.process(agent, response);
+    expect(result).toBeDefined();
+  });
+  it("responses_message_content_fallback", async () => {
+    const payload = JSON.parse(
+      '{"agent":{"model":{"provider":"openai"}},"apiType":"responses","response":{"id":"resp_content_fallback","object":"response","created_at":1700000023,"model":"gpt-5.5-pro","status":"completed","output":[{"type":"message","id":"msg_content_fallback","status":"completed","role":"assistant","content":[{"type":"output_text","text":"Visible final answer.","annotations":[]}]}],"usage":{"input_tokens":12,"output_tokens":4,"total_tokens":16}},"has_outputs":false}',
+    ) as Record<string, unknown>;
+    const agent = Agent.load(payload["agent"] as Record<string, unknown>);
+    const response = payload["response"] as unknown;
+    const provider = agent.model.provider;
+    const impl = resolveProcessor(provider, processorProvider);
+    expect(impl).not.toBeNull();
+    const result = await impl!.process(agent, response);
+    expect(result).toBeDefined();
+  });
   it("responses_structured", async () => {
     const payload = JSON.parse(
       '{"agent":{"model":{"provider":"openai"}},"apiType":"responses","response":{"id":"resp_struct1","object":"response","created_at":1700000022,"model":"gpt-4o-mini","status":"completed","output":[{"type":"message","id":"msg_002","status":"completed","role":"assistant","content":[{"type":"output_text","text":"{\\"city\\":\\"Paris\\"}","annotations":[]}]}],"output_text":"{\\"city\\":\\"Paris\\"}","usage":{"input_tokens":20,"output_tokens":8,"total_tokens":28}},"has_outputs":true}',

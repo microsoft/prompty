@@ -100,8 +100,34 @@ func processOpenAIResponses(resp map[string]interface{}, hasOutputs bool) any {
 	if len(toolCalls) > 0 {
 		return toolCalls
 	}
-	outputText, _ := resp["output_text"].(string)
+	outputText := openAIResponsesOutputText(resp)
 	return maybeParseStructured(outputText, hasOutputs)
+}
+
+func openAIResponsesOutputText(resp map[string]interface{}) string {
+	if outputText, _ := resp["output_text"].(string); outputText != "" {
+		return outputText
+	}
+
+	output, _ := resp["output"].([]interface{})
+	var b strings.Builder
+	for _, item := range output {
+		it, _ := item.(map[string]interface{})
+		if it["type"] != "message" {
+			continue
+		}
+		content, _ := it["content"].([]interface{})
+		for _, part := range content {
+			p, _ := part.(map[string]interface{})
+			partType, _ := p["type"].(string)
+			if partType != "output_text" && partType != "text" {
+				continue
+			}
+			text, _ := p["text"].(string)
+			b.WriteString(text)
+		}
+	}
+	return b.String()
 }
 
 func processOpenAIEmbedding(resp map[string]interface{}) any {

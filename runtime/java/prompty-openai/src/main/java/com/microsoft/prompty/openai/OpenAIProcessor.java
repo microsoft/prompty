@@ -164,7 +164,7 @@ public class OpenAIProcessor implements Processor {
       if (!messages.isEmpty()) {
         return messages;
       }
-      messages.add(Messages.assistant(stringOrEmpty(Streams.pointer(response, "output_text"))));
+      messages.add(Messages.assistant(responsesOutputText(response)));
       return messages;
     }
 
@@ -280,7 +280,28 @@ public class OpenAIProcessor implements Processor {
     if (!toolCalls.isEmpty()) {
       return toolCalls;
     }
-    return structuredOrText(agent, stringOrEmpty(Streams.pointer(response, "output_text")));
+    return structuredOrText(agent, responsesOutputText(response));
+  }
+
+  private static String responsesOutputText(Object response) {
+    String outputText = stringOrEmpty(Streams.pointer(response, "output_text"));
+    if (!outputText.isEmpty()) {
+      return outputText;
+    }
+
+    StringBuilder text = new StringBuilder();
+    for (Object item : asList(Streams.pointer(response, "output"))) {
+      if (!"message".equals(Streams.pointer(item, "type"))) {
+        continue;
+      }
+      for (Object part : asList(Streams.pointer(item, "content"))) {
+        Object partType = Streams.pointer(part, "type");
+        if ("output_text".equals(partType) || "text".equals(partType)) {
+          text.append(stringOrEmpty(Streams.pointer(part, "text")));
+        }
+      }
+    }
+    return text.toString();
   }
 
   /**

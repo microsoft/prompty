@@ -1070,6 +1070,133 @@ async fn test_processor_process_responses_empty_output() {
 }
 
 #[tokio::test]
+async fn test_processor_process_responses_empty_output_text_message_content_fallback() {
+    let ctx = LoadContext::default();
+    let agent = Agent::from_json(
+        r####"
+{
+  "model": {
+    "provider": "openai"
+  }
+}
+"####,
+        &ctx,
+    )
+    .expect("agent parses");
+    let response: serde_json::Value = serde_json::from_str(
+        r####"
+{
+  "id": "resp_empty_output_text_fallback",
+  "object": "response",
+  "created_at": 1700000024,
+  "model": "gpt-5.5-pro",
+  "status": "completed",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_empty_output_text_fallback",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Nested text wins.",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "output_text": "",
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 4,
+    "total_tokens": 16
+  }
+}
+"####,
+    )
+    .expect("response parses");
+    let kind = agent
+        .model
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .expect("discriminator present");
+    let provider = vector_adapters::processor_provider();
+    let seam_impl = processor_resolver::resolve(kind, &provider).unwrap_or_else(|| {
+        panic!(
+            "responses_empty_output_text_message_content_fallback: no Processor attached for {kind}"
+        )
+    });
+    let actual = seam_impl
+        .process(&agent, &response)
+        .await
+        .expect("seam invocation");
+    let _ = actual;
+}
+
+#[tokio::test]
+async fn test_processor_process_responses_message_content_fallback() {
+    let ctx = LoadContext::default();
+    let agent = Agent::from_json(
+        r####"
+{
+  "model": {
+    "provider": "openai"
+  }
+}
+"####,
+        &ctx,
+    )
+    .expect("agent parses");
+    let response: serde_json::Value = serde_json::from_str(
+        r####"
+{
+  "id": "resp_content_fallback",
+  "object": "response",
+  "created_at": 1700000023,
+  "model": "gpt-5.5-pro",
+  "status": "completed",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_content_fallback",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Visible final answer.",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 4,
+    "total_tokens": 16
+  }
+}
+"####,
+    )
+    .expect("response parses");
+    let kind = agent
+        .model
+        .get("provider")
+        .and_then(|v| v.as_str())
+        .expect("discriminator present");
+    let provider = vector_adapters::processor_provider();
+    let seam_impl = processor_resolver::resolve(kind, &provider).unwrap_or_else(|| {
+        panic!("responses_message_content_fallback: no Processor attached for {kind}")
+    });
+    let actual = seam_impl
+        .process(&agent, &response)
+        .await
+        .expect("seam invocation");
+    let _ = actual;
+}
+
+#[tokio::test]
 async fn test_processor_process_responses_structured() {
     let ctx = LoadContext::default();
     let agent = Agent::from_json(
