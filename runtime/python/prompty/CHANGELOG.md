@@ -2,6 +2,14 @@
 
 All notable changes to the Prompty Python runtime will be documented here.
 
+## [2.0.3](https://github.com/microsoft/prompty/compare/python/2.0.2...python/2.0.3) (2026-10-16)
+
+
+### Bug Fixes
+
+* **openai:** extract nested Responses message text when `output_text` is missing or empty ([#571](https://github.com/microsoft/prompty/pull/571)) ([9369929](https://github.com/microsoft/prompty/commit/93699297d9a3a870f02ba54cf5f0108fc491466c))
+* **python:** avoid shell interpretation in release tooling ([#571](https://github.com/microsoft/prompty/pull/571)) ([9369929](https://github.com/microsoft/prompty/commit/93699297d9a3a870f02ba54cf5f0108fc491466c))
+
 ## [2.0.2](https://github.com/microsoft/prompty/compare/python/2.0.1...python/2.0.2) (2026-09-16)
 
 
