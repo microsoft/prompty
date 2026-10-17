@@ -729,26 +729,4 @@ function toRecord(value: unknown): Record<string, unknown> {
 	return saveObject(value);
 }
 
-function redactSecrets(value: unknown): unknown {
-	if (Array.isArray(value)) {
-		return value.map(redactSecrets);
-	}
-	if (!value || typeof value !== 'object') {
-		return value;
-	}
-	const result: Record<string, unknown> = {};
-	for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
-		result[key] = isSensitiveKey(key) ? '[redacted]' : redactSecrets(item);
-	}
-	return result;
-}
-
-function isSensitiveKey(key: string): boolean {
-	const normalized = key.toLowerCase();
-	return normalized.includes('apikey')
-		|| normalized.includes('api_key')
-		|| normalized.includes('secret')
-		|| normalized.includes('password')
-		|| normalized.includes('token')
-		|| normalized.includes('credential');
-}
+import { redactSecrets, redactSecretValue } from '../utils/redact';
