@@ -278,10 +278,12 @@ def _resilient_json_parse(raw: str) -> dict | list | None:
     except (json.JSONDecodeError, ValueError):
         pass
 
-    # Strategy 2: Strip markdown code fences
-    fence_match = re.match(r"^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$", raw, re.DOTALL)
-    if fence_match:
-        stripped = fence_match.group(1)
+    # Strategy 2: Strip markdown code fences. String ops rather than the
+    # spec's regex: its overlapping `\s*`/`\n?`/`.*?` backtracks cubically on
+    # an opening fence that never closes.
+    fenced = raw.strip()
+    if len(fenced) >= 6 and fenced.startswith("```") and fenced.endswith("```"):
+        stripped = fenced[3:-3].removeprefix("json").strip()
         try:
             result = json.loads(stripped)
             warnings.warn("Parsed tool arguments after stripping markdown fences", stacklevel=2)
