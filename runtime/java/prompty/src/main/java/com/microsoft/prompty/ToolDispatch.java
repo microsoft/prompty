@@ -8,7 +8,6 @@ import com.microsoft.prompty.model.TypraJson;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -32,9 +31,6 @@ public final class ToolDispatch {
 
   /** Longest prefix of unparseable arguments quoted back in an error. */
   private static final int ERROR_EXCERPT_CHARS = 200;
-
-  private static final Pattern CODE_FENCE =
-      Pattern.compile("^\\s*```(?:json)?\\s*\\n?(.*?)\\n?\\s*```\\s*$", Pattern.DOTALL);
 
   private static final Pattern TRAILING_COMMA = Pattern.compile(",\\s*([}\\]])");
 
@@ -177,14 +173,11 @@ public final class ToolDispatch {
       return direct;
     }
 
-    Matcher fenced = CODE_FENCE.matcher(text);
-    if (fenced.matches()) {
-      String stripped = fenced.group(1);
-      if (!stripped.equals(text)) {
-        Object parsed = tryParse(stripped);
-        if (parsed != NOT_JSON) {
-          return parsed;
-        }
+    String stripped = stripCodeFence(text);
+    if (stripped != null && !stripped.equals(text)) {
+      Object parsed = tryParse(stripped);
+      if (parsed != NOT_JSON) {
+        return parsed;
       }
     }
 
@@ -218,6 +211,45 @@ public final class ToolDispatch {
     } catch (RuntimeException notJson) {
       return NOT_JSON;
     }
+  }
+
+  /**
+   * Returns the text inside a surrounding markdown code fence, or {@code null} when the input is
+   * not fenced.
+   *
+   * <p>Plain index arithmetic rather than a regex: the obvious {@code
+   * ^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$} backtracks cubically on an opening fence that never
+   * closes, and tool arguments are model output. Whitespace is the ASCII set a regex {@code \s}
+   * matches, so results are unchanged.
+   */
+  private static String stripCodeFence(String text) {
+    int start = 0;
+    int end = text.length();
+    while (start < end && isSpace(text.charAt(start))) {
+      start++;
+    }
+    while (end > start && isSpace(text.charAt(end - 1))) {
+      end--;
+    }
+    if (end - start < 6 || !text.startsWith("```", start) || !text.startsWith("```", end - 3)) {
+      return null;
+    }
+    int from = start + 3;
+    int to = end - 3;
+    if (text.startsWith("json", from) && from + 4 <= to) {
+      from += 4;
+    }
+    while (from < to && isSpace(text.charAt(from))) {
+      from++;
+    }
+    while (to > from && isSpace(text.charAt(to - 1))) {
+      to--;
+    }
+    return text.substring(from, to);
+  }
+
+  private static boolean isSpace(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == 0x0B || c == '\f' || c == '\r';
   }
 
   /** Extract the first balanced {@code {...}} block, respecting strings and escapes. */

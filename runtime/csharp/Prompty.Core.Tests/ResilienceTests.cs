@@ -161,6 +161,41 @@ public class ResilientJsonParsingTests
     }
 
     [Fact]
+    public void ParseArguments_MarkdownFencesWithSurroundingWhitespace_Stripped()
+    {
+        var result = ToolDispatch.ParseArguments("  \n```json  \n  {\"city\": \"NY\"}  \n  ```  \n");
+        Assert.Equal("NY", result["city"]?.ToString());
+
+        result = ToolDispatch.ParseArguments("```{\"city\": \"NY\"}```");
+        Assert.Equal("NY", result["city"]?.ToString());
+    }
+
+    [Fact]
+    public void ParseArguments_UnclosedFence_FallsThroughToBlockExtraction()
+    {
+        var result = ToolDispatch.ParseArguments("```json\n{\"city\": \"NY\"}");
+        Assert.Equal("NY", result["city"]?.ToString());
+
+        Assert.True(ToolDispatch.ParseArguments("```json\n```").ContainsKey("_error"));
+        Assert.True(ToolDispatch.ParseArguments("``````").ContainsKey("_error"));
+    }
+
+    [Theory]
+    [InlineData(' ')]
+    [InlineData('\n')]
+    public void ParseArguments_UnclosedFenceFollowedByWhitespace_DoesNotBacktrack(char filler)
+    {
+        var arguments = "```json" + new string(filler, 20000) + "x";
+
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        var result = ToolDispatch.ParseArguments(arguments);
+        started.Stop();
+
+        Assert.True(result.ContainsKey("_error"));
+        Assert.True(started.ElapsedMilliseconds < 1000, $"took {started.ElapsedMilliseconds} ms");
+    }
+
+    [Fact]
     public void ParseArguments_JsonInProse_Extracted()
     {
         var result = ToolDispatch.ParseArguments("Here is: {\"city\": \"NY\"} done");

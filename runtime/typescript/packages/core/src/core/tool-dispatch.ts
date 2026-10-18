@@ -239,6 +239,21 @@ export function extractFirstJsonBlock(text: string): string | null {
 }
 
 /**
+ * Return the text inside a surrounding markdown code fence, or null when `raw`
+ * is not fenced. String operations rather than a regex: the obvious
+ * `^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$` backtracks cubically on an
+ * opening fence that never closes, and tool arguments are model output.
+ */
+function stripCodeFence(raw: string): string | null {
+  const text = raw.trim();
+  if (text.length < 6 || !text.startsWith("```") || !text.endsWith("```")) {
+    return null;
+  }
+  const inner = text.slice(3, -3);
+  return (inner.startsWith("json") ? inner.slice(4) : inner).trim();
+}
+
+/**
  * Parse JSON with fallback strategies per spec §9.8.
  * Returns parsed value on success, or null if all strategies fail.
  */
@@ -256,10 +271,10 @@ export function resilientJsonParse(
   }
 
   // Strategy 2: Strip markdown code fences
-  const fenceMatch = raw.match(/^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$/);
-  if (fenceMatch) {
+  const fenced = stripCodeFence(raw);
+  if (fenced !== null) {
     try {
-      const result = JSON.parse(fenceMatch[1]);
+      const result = JSON.parse(fenced);
       console.warn(
         "[prompty] Parsed tool arguments after stripping markdown fences",
       );
