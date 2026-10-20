@@ -67,3 +67,19 @@ A missing credential or unavailable provider feature is a skip, not a pass and
 not a waiver. A present credential/capability followed by provider rejection is
 a real conformance failure because the runtime's observable provider boundary no
 longer matches the live service.
+
+## OpenAI execution guards
+
+`openai-reasoning-guard.json` is an offline execution-boundary fixture shared by
+the TypeScript, Rust and C# OpenAI providers. It follows the existing Python
+policy: normalize case and leading `.`/`/`, recognize `o[1-9]` and `gpt-5`
+prefixes, remove scalar sampling options on reasoning models, and remove
+`reasoning_effort` on other models. Guards run after typed and additional
+properties merge; typed options take precedence. Source options and generated
+`ModelOptions.toWire`/`to_wire` conversions remain unchanged.
+
+Each case names absent request keys and present key/value pairs, applied to both
+Chat Completions and Responses builders. Numeric comparison treats JSON integers
+and floats as the same value. These vectors require no credentials. They verify
+the current name-based policy, which cannot identify arbitrary Azure deployment
+aliases or promise compatibility with future model capabilities.

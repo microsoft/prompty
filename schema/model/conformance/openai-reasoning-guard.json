@@ -1,0 +1,123 @@
+[
+  {
+    "name": "o1 typed sampling",
+    "model": "o1",
+    "options": {
+      "temperature": 0.5,
+      "topP": 0.9,
+      "topK": 2,
+      "frequencyPenalty": 0.1,
+      "presencePenalty": 0.2,
+      "reasoningEffort": "high"
+    },
+    "absent": [
+      "temperature",
+      "top_p",
+      "top_k",
+      "frequency_penalty",
+      "presence_penalty"
+    ],
+    "present": { "reasoning_effort": "high" }
+  },
+  {
+    "name": "GPT-5 passthrough sampling",
+    "model": "gpt-5-2025-08-07",
+    "options": {
+      "additionalProperties": {
+        "temperature": 0,
+        "top_p": 0,
+        "top_k": 0,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "reasoning_effort": "low",
+        "custom_flag": true
+      }
+    },
+    "absent": [
+      "temperature",
+      "top_p",
+      "top_k",
+      "frequency_penalty",
+      "presence_penalty"
+    ],
+    "present": { "reasoning_effort": "low", "custom_flag": true }
+  },
+  {
+    "name": "case and path normalization",
+    "model": "../O3-MINI",
+    "options": { "temperature": 0, "reasoningEffort": "medium" },
+    "absent": ["temperature"],
+    "present": { "reasoning_effort": "medium" }
+  },
+  {
+    "name": "normalized GPT-5",
+    "model": "./GPT-5-mini",
+    "options": { "topP": 0, "reasoningEffort": "low" },
+    "absent": ["top_p"],
+    "present": { "reasoning_effort": "low" }
+  },
+  {
+    "name": "future o-series",
+    "model": "o9",
+    "options": { "temperature": 1, "reasoningEffort": "high" },
+    "absent": ["temperature"],
+    "present": { "reasoning_effort": "high" }
+  },
+  {
+    "name": "ordinary typed effort",
+    "model": "gpt-4o",
+    "options": { "temperature": 0, "topP": 0.9, "reasoningEffort": "high" },
+    "absent": ["reasoning_effort"],
+    "present": { "temperature": 0, "top_p": 0.9 }
+  },
+  {
+    "name": "ordinary passthrough effort",
+    "model": "gpt-4.1",
+    "options": {
+      "additionalProperties": {
+        "reasoning_effort": "high",
+        "custom_flag": true
+      }
+    },
+    "absent": ["reasoning_effort"],
+    "present": { "custom_flag": true }
+  },
+  {
+    "name": "unknown deployment follows ordinary policy",
+    "model": "my-deployment",
+    "options": { "temperature": 0, "reasoningEffort": "low" },
+    "absent": ["reasoning_effort"],
+    "present": { "temperature": 0 }
+  },
+  {
+    "name": "o-zero is ordinary",
+    "model": "o0",
+    "options": { "temperature": 0, "reasoningEffort": "low" },
+    "absent": ["reasoning_effort"],
+    "present": { "temperature": 0 }
+  },
+  {
+    "name": "empty model",
+    "model": "",
+    "options": { "reasoningEffort": "low" },
+    "absent": ["reasoning_effort"],
+    "present": {}
+  },
+  {
+    "name": "reasoning without options",
+    "model": "o3",
+    "options": {},
+    "absent": ["temperature", "reasoning_effort"],
+    "present": {}
+  },
+  {
+    "name": "typed values win over passthrough",
+    "model": "o4-mini",
+    "options": {
+      "reasoningEffort": "high",
+      "additionalProperties": { "reasoning_effort": "low", "temperature": 1 }
+    },
+    "absent": ["temperature"],
+    "present": { "reasoning_effort": "high" }
+  }
+]

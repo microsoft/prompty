@@ -198,28 +198,48 @@ public static class WireFormat
         // unknown JSON properties through its serialized additional data. Merge the
         // passthrough keys into the serialized options and read them back so they
         // survive to the wire when the executor sends the typed options.
-        if (opts.AdditionalProperties is { Count: > 0 })
-            options = MergeAdditionalProperties(options, opts.AdditionalProperties);
-
-        return options;
+        var wire = PrepareExecutionOptions(
+            ModelReaderWriter.Write(options, ModelReaderWriterOptions.Json),
+            opts, "openai", agent.Model?.Id ?? "");
+        return ModelReaderWriter.Read<ChatCompletionOptions>(wire, ModelReaderWriterOptions.Json)
+               ?? options;
     }
 
     /// <summary>
-    /// Merge arbitrary passthrough keys into a <see cref="ChatCompletionOptions"/> by
-    /// round-tripping through JSON. The returned options re-emit the extra top-level
-    /// keys when the SDK serializes the request body.
+    /// Merge typed and passthrough options, then apply the Python execution policy.
+    /// Round-tripping through SDK JSON preserves fields without a typed SDK surface.
     /// </summary>
-    private static ChatCompletionOptions MergeAdditionalProperties(
-        ChatCompletionOptions options, IDictionary<string, object?> additional)
+    private static BinaryData PrepareExecutionOptions(
+        BinaryData wire, Core.ModelOptions? options, string provider, string model)
     {
-        var wire = ModelReaderWriter.Write(options, ModelReaderWriterOptions.Json);
         var obj = JsonNode.Parse(wire.ToString())?.AsObject() ?? new JsonObject();
-        foreach (var kvp in additional)
-            obj[kvp.Key] = kvp.Value is null ? null : JsonSerializer.SerializeToNode(kvp.Value);
+        if (options is not null)
+        {
+            // Fill SDK gaps (including reasoningEffort), preserving typed-key precedence.
+            foreach (var kvp in options.ToWire(provider))
+                if (!obj.ContainsKey(kvp.Key) && kvp.Value is not null)
+                    obj[kvp.Key] = JsonSerializer.SerializeToNode(kvp.Value);
+            if (options.AdditionalProperties is not null)
+                foreach (var kvp in options.AdditionalProperties)
+                    if (!obj.ContainsKey(kvp.Key))
+                        obj[kvp.Key] = JsonSerializer.SerializeToNode(kvp.Value);
+        }
 
-        return ModelReaderWriter.Read<ChatCompletionOptions>(
-                   BinaryData.FromString(obj.ToJsonString()), ModelReaderWriterOptions.Json)
-               ?? options;
+        // The generated ToWire contract stays rename-only. This policy belongs
+        // at execution time, after additionalProperties have been merged.
+        var name = model.ToLowerInvariant().TrimStart('.', '/');
+        var reasoning = name.StartsWith("gpt-5", StringComparison.Ordinal)
+            || (name.Length > 1 && name[0] == 'o' && name[1] is >= '1' and <= '9');
+        if (reasoning)
+        {
+            foreach (var key in new[] { "temperature", "top_p", "top_k", "frequency_penalty", "presence_penalty" })
+                if (obj.Remove(key))
+                    System.Diagnostics.Trace.TraceWarning(
+                        $"OpenAI reasoning model '{model}' does not support '{key}'; dropping it. Use reasoningEffort instead.");
+        }
+        else
+            obj.Remove("reasoning_effort");
+        return BinaryData.FromString(obj.ToJsonString());
     }
 
     // -----------------------------------------------------------------------
@@ -293,7 +313,10 @@ public static class WireFormat
                 jsonSchemaIsStrict: true);
         }
 
-        return options;
+        var wire = PrepareExecutionOptions(
+            ModelReaderWriter.Write(options, ModelReaderWriterOptions.Json), opts, "responses", model);
+        return ModelReaderWriter.Read<CreateResponseOptions>(wire, ModelReaderWriterOptions.Json)
+               ?? options;
     }
 
     /// <summary>

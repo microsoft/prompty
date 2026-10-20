@@ -154,6 +154,7 @@ pub fn build_chat_args(agent: &Agent, messages: &[Message]) -> Result<Value, Sch
         args.insert("response_format".to_string(), rf);
     }
 
+    apply_reasoning_guard(&mut args);
     Ok(Value::Object(args))
 }
 
@@ -613,7 +614,43 @@ pub fn build_responses_args(agent: &Agent, messages: &[Message]) -> Result<Value
         args.insert("text".to_string(), text_config);
     }
 
+    apply_reasoning_guard(&mut args);
     Ok(Value::Object(args))
+}
+
+/// Match Python's execution policy after merging typed and passthrough options.
+/// Deployment aliases cannot be classified by this name-based heuristic.
+/// Generated ModelOptions::to_wire remains a pure rename-only conversion.
+fn apply_reasoning_guard(args: &mut Map<String, Value>) {
+    let model = args
+        .get("model")
+        .and_then(Value::as_str)
+        .unwrap_or("")
+        .to_string();
+    let lower = model.to_ascii_lowercase();
+    let name = lower.trim_start_matches(['.', '/']);
+    let o_series = name.as_bytes().first() == Some(&b'o')
+        && name
+            .as_bytes()
+            .get(1)
+            .is_some_and(|c| matches!(c, b'1'..=b'9'));
+    if o_series || name.starts_with("gpt-5") {
+        for key in [
+            "temperature",
+            "top_p",
+            "top_k",
+            "frequency_penalty",
+            "presence_penalty",
+        ] {
+            if args.remove(key).is_some() {
+                eprintln!(
+                    "OpenAI reasoning model '{model}' does not support '{key}'; dropping it. Use reasoningEffort instead."
+                );
+            }
+        }
+    } else {
+        args.remove("reasoning_effort");
+    }
 }
 
 fn message_to_responses_input(msg: &Message) -> Value {
