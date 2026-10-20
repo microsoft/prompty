@@ -313,8 +313,10 @@ enum VectorAdapters {
 
   static func loadInvoke(_ input: Any?, _ context: VectorContext) throws -> Any? {
     let object = input as? [String: Any] ?? [:]
-    let restore = applyEnv(object["env"])
+    let env = object["env"] as? [String: Any] ?? [:]
+    let restore = applyEnv(env, unset: env[EndpointTrust.trustedEndpointsEnv] == nil ? [EndpointTrust.trustedEndpointsEnv] : [])
     defer { restore() }
+    let trusted = (object["trustedEndpoints"] as? [Any] ?? []).compactMap { $0 as? String }
 
     // Input-validation vectors carry inputs alongside frontmatter at the top level;
     // full-load vectors nest inputs inside the frontmatter.
@@ -330,11 +332,11 @@ enum VectorAdapters {
     do {
       let agent: Agent
       if let fixture = object["fixture"] as? String, !fixture.isEmpty {
-        agent = try loadPromptyFile(findSpecFixtures(context.baseDir).appendingPathComponent(fixture))
+        agent = try loadPromptyFile(findSpecFixtures(context.baseDir).appendingPathComponent(fixture), trustedEndpoints: trusted)
       } else if let raw = object["frontmatter_raw"] as? String, !raw.isEmpty {
-        agent = try loadFromRaw(raw)
+        agent = try loadFromRaw(raw, trustedEndpoints: trusted)
       } else if object["frontmatter"] is [String: Any] {
-        agent = try materializeAndLoad(object)
+        agent = try materializeAndLoad(object, trustedEndpoints: trusted)
       } else {
         return ["error": "<no loadable input>"]
       }
@@ -361,13 +363,15 @@ enum VectorAdapters {
     return root
   }
 
-  static func loadFromRaw(_ raw: String) throws -> Agent {
+  static func loadFromRaw(_ raw: String, trustedEndpoints: [String] = []) throws -> Agent {
     let dir = try scratchDir("prompty-load-")
     defer { try? FileManager.default.removeItem(at: dir) }
-    return try loadPromptyContent(raw.replacingOccurrences(of: "\r\n", with: "\n"), parentDir: dir, allowedRoots: [dir])
+    return try loadPromptyContent(
+      raw.replacingOccurrences(of: "\r\n", with: "\n"), parentDir: dir, allowedRoots: [dir],
+      trustedEndpoints: trustedEndpoints)
   }
 
-  static func materializeAndLoad(_ input: [String: Any]) throws -> Agent {
+  static func materializeAndLoad(_ input: [String: Any], trustedEndpoints: [String] = []) throws -> Agent {
     let tempBase = try scratchDir("prompty-load-")
     defer { try? FileManager.default.removeItem(at: tempBase) }
     var agentDir = tempBase
@@ -382,6 +386,7 @@ enum VectorAdapters {
     }
     var frontmatter = input["frontmatter"] as? [String: Any] ?? [:]
     let root = agentDir.standardizedFileURL
+    try checkEndpointTrust(frontmatter, parentDir: agentDir, allowedRoots: [root], trustedEndpoints: trustedEndpoints)
     try resolveReferences(&frontmatter, parentDir: agentDir, allowedRoots: [root])
     return try buildAgentFromData(frontmatter)
   }
@@ -455,16 +460,31 @@ enum VectorAdapters {
     return payload
   }
 
-  static func applyEnv(_ value: Any?) -> () -> Void {
+  /// Apply a vector's `env` (and force-unset `unset`) through `promptyEnvironmentOverrides`,
+  /// returning a closure that restores the prior override state exactly.
+  static func applyEnv(_ value: Any?, unset: [String] = []) -> () -> Void {
     let env = value as? [String: Any] ?? [:]
-    var saved: [String: String?] = [:]
+    var saved: [String: String??] = [:]
+    func save(_ key: String) {
+      if !saved.keys.contains(key) {
+        saved[key] = promptyEnvironmentOverrides.keys.contains(key) ? .some(promptyEnvironmentOverrides[key] ?? nil) : .none
+      }
+    }
     for (key, raw) in env {
-      saved[key] = promptyEnvironmentOverrides[key] ?? nil
+      save(key)
       promptyEnvironmentOverrides[key] = "\(raw)"
+    }
+    for key in unset {
+      save(key)
+      promptyEnvironmentOverrides[key] = .some(nil)
     }
     return {
       for (key, previous) in saved {
-        promptyEnvironmentOverrides[key] = previous
+        if let previous {
+          promptyEnvironmentOverrides[key] = previous
+        } else {
+          promptyEnvironmentOverrides.removeValue(forKey: key)
+        }
       }
     }
   }

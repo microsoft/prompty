@@ -33,6 +33,13 @@ final class ReadmeSnippetTests: XCTestCase {
       return raw
     }
 
+    func trusted() throws -> Agent {
+      try Loader.load(
+        path: "local.prompty",
+        options: LoadOptions(trustedEndpoints: ["http://localhost:11434", "https://*.contoso.com"])
+      )
+    }
+
     func toolLoop(
       agent: Agent, raw: Any?, inputs: [String: Any],
       myTools: [String: ([String: Any]) throws -> String]
@@ -48,6 +55,7 @@ final class ReadmeSnippetTests: XCTestCase {
 
     XCTAssertNotNil(quickStart)
     XCTAssertNotNil(stages)
+    XCTAssertNotNil(trusted)
     XCTAssertNotNil(toolLoop)
   }
 }

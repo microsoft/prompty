@@ -12,8 +12,14 @@ public struct LoadOptions {
   /// file's own directory is always permitted.
   public var allowedFileRoots: [URL]
 
-  public init(allowedFileRoots: [URL] = []) {
+  /// Extra origins (e.g. `https://my-proxy.contoso.com`, `https://*.contoso.com`,
+  /// or `*`) trusted to receive ambient credentials, in addition to the built-in
+  /// provider origins and `PROMPTY_TRUSTED_ENDPOINTS` (spec §2.5.1).
+  public var trustedEndpoints: [String]
+
+  public init(allowedFileRoots: [URL] = [], trustedEndpoints: [String] = []) {
     self.allowedFileRoots = allowedFileRoots
+    self.trustedEndpoints = trustedEndpoints
   }
 
   public static let `default` = LoadOptions()
@@ -84,8 +90,13 @@ public enum Loader {
     // 3. A `.prompty` file always describes a prompt.
     data["kind"] = Defaults.kind
 
-    // 4. Resolve ${env:} / ${file:} before handing the tree to the model.
+    // 4. Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
     let agentDirectory = filePath.deletingLastPathComponent()
+    try EndpointTrustCheck.check(
+      data, agentDirectory: agentDirectory, allowedRoots: options.allowedFileRoots,
+      trustedEndpoints: options.trustedEndpoints)
+
+    // 5. Resolve ${env:} / ${file:} before handing the tree to the model.
     var tree: Any = data
     try References.resolve(
       &tree, agentDirectory: agentDirectory, allowedRoots: options.allowedFileRoots)
@@ -94,12 +105,12 @@ public enum Loader {
       throw LoadError.invalidFrontmatter("Frontmatter must be a YAML mapping")
     }
 
-    // 5. Normalize the shapes the schema accepts as shorthand.
+    // 6. Normalize the shapes the schema accepts as shorthand.
     normalizeModel(&resolved)
     try normalizeProperties(&resolved, key: "inputs", path: "inputs")
     try normalizeProperties(&resolved, key: "outputs", path: "outputs")
 
-    // 6. Hand off to the generated model — the canonical type layer.
+    // 7. Hand off to the generated model — the canonical type layer.
     var agent: Agent
     do {
       agent = try Agent.load(resolved)
@@ -107,7 +118,7 @@ public enum Loader {
       throw LoadError.invalidModel(String(describing: error))
     }
 
-    // 7. Record the source path so relative tool references can resolve later.
+    // 8. Record the source path so relative tool references can resolve later.
     var metadata = agent.metadata ?? [:]
     metadata[Defaults.sourcePathKey] = filePath.path
     agent.metadata = metadata
