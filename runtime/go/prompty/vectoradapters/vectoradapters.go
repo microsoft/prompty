@@ -412,6 +412,14 @@ func loadInvoke(input any, ctx Context) (any, error) {
 	restore := applyEnv(typed["env"])
 	defer restore()
 
+	// Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+	if envMap, _ := typed["env"].(map[string]any); envMap == nil || envMap[prompty.TrustedEndpointsEnv] == nil {
+		if prev, ok := os.LookupEnv(prompty.TrustedEndpointsEnv); ok {
+			os.Unsetenv(prompty.TrustedEndpointsEnv)
+			defer os.Setenv(prompty.TrustedEndpointsEnv, prev)
+		}
+	}
+	opts := prompty.LoadOptions{TrustedEndpoints: toStringSlice(typed["trustedEndpoints"])}
 	// Input-validation vectors carry both a top-level `inputs` map and a
 	// `frontmatter`; full-load vectors nest inputs inside the frontmatter.
 	_, hasInputs := typed["inputs"]
@@ -433,11 +441,11 @@ func loadInvoke(input any, ctx Context) (any, error) {
 	switch {
 	case isNonEmptyString(typed["fixture"]):
 		dir := findSpecFixtures(ctx.BaseDir)
-		agent, err = prompty.LoadPromptyFile(filepath.Join(dir, typed["fixture"].(string)))
+		agent, err = prompty.LoadPromptyFileWithOptions(filepath.Join(dir, typed["fixture"].(string)), opts)
 	case isNonEmptyString(typed["frontmatter_raw"]):
-		agent, err = loadFromRaw(typed["frontmatter_raw"].(string))
+		agent, err = loadFromRaw(typed["frontmatter_raw"].(string), opts)
 	case isMapAny(typed["frontmatter"]):
-		agent, err = materializeAndLoad(typed)
+		agent, err = materializeAndLoad(typed, opts)
 	default:
 		return nil, fmt.Errorf("<no loadable input>")
 	}
@@ -473,19 +481,19 @@ func unwrapProperties(data map[string]any) map[string]any {
 	return data
 }
 
-func loadFromRaw(raw string) (prompty.Agent, error) {
+func loadFromRaw(raw string, opts prompty.LoadOptions) (prompty.Agent, error) {
 	tmp, err := os.MkdirTemp("", "prompty-load-")
 	if err != nil {
 		return prompty.Agent{}, err
 	}
 	defer os.RemoveAll(tmp)
-	return prompty.LoadPromptyContent(strings.ReplaceAll(raw, "\r\n", "\n"), tmp, []string{tmp})
+	return prompty.LoadPromptyContentWithOptions(strings.ReplaceAll(raw, "\r\n", "\n"), tmp, []string{tmp}, opts)
 }
 
 // materializeAndLoad writes the vector's files (honoring agent_subdir and
 // allowing `..` keys so path-traversal vectors can plant a target outside the
 // allowed root), resolves references against the agent directory, and loads.
-func materializeAndLoad(input map[string]any) (prompty.Agent, error) {
+func materializeAndLoad(input map[string]any, opts prompty.LoadOptions) (prompty.Agent, error) {
 	tempBase, err := os.MkdirTemp("", "prompty-load-")
 	if err != nil {
 		return prompty.Agent{}, err
@@ -516,6 +524,9 @@ func materializeAndLoad(input map[string]any) (prompty.Agent, error) {
 
 	frontmatter := toMapAny(input["frontmatter"])
 	roots := []string{canonicalDir(agentDir)}
+	if err := prompty.CheckEndpointTrust(frontmatter, agentDir, roots, opts.TrustedEndpoints); err != nil {
+		return prompty.Agent{}, err
+	}
 	if err := prompty.ResolveReferences(frontmatter, agentDir, roots); err != nil {
 		return prompty.Agent{}, err
 	}
@@ -647,6 +658,8 @@ func loadErrorPayload(err error) (map[string]any, bool) {
 		kind = "invalid_template"
 	case "required_input":
 		kind = "missing_required_input"
+	case "untrusted_endpoint":
+		kind = "untrusted_endpoint"
 	default:
 		return nil, false
 	}
