@@ -1087,4 +1087,259 @@ func RunLoadConformanceConformance(t *testing.T, seam fixtures.LoadConformance) 
 			t.Fatalf("tools_openapi_load misrouted: got %#v, want %#v", actualValue, expectedValue)
 		}
 	}
+	// vector: trusted_endpoint_builtin_allowed
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_builtin_allowed: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_builtin_allowed: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_builtin_allowed: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_builtin_allowed: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_builtin_allowed: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_builtin_allowed misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: trusted_endpoint_env_endpoint_allowed
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://host-chosen.example.com\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_env_endpoint_allowed misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: trusted_endpoint_env_list_allowed
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_env_list_allowed: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_env_list_allowed: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_env_list_allowed: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_env_list_allowed: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_env_list_allowed: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_env_list_allowed misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: trusted_endpoint_literal_key_allowed
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_literal_key_allowed: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_literal_key_allowed: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_literal_key_allowed: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_literal_key_allowed: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_literal_key_allowed: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_literal_key_allowed misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: trusted_endpoint_option_allowed
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_option_allowed: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_option_allowed: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_option_allowed: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_option_allowed: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_option_allowed: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_option_allowed misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: trusted_endpoint_reference_skipped
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("trusted_endpoint_reference_skipped: decode source: %v", err)
+		}
+		actual, err := seam.Load(source)
+		if err != nil {
+			t.Fatalf("trusted_endpoint_reference_skipped: unexpected error: %v", err)
+		}
+		actualBytes, marshalErr := json.Marshal(actual)
+		if marshalErr != nil {
+			t.Fatalf("trusted_endpoint_reference_skipped: marshal actual: %v", marshalErr)
+		}
+		var actualValue any
+		if err := json.Unmarshal(actualBytes, &actualValue); err != nil {
+			t.Fatalf("trusted_endpoint_reference_skipped: decode actual: %v", err)
+		}
+		var expectedValue any
+		if err := json.Unmarshal([]byte("{\"model\":{\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}"), &expectedValue); err != nil {
+			t.Fatalf("trusted_endpoint_reference_skipped: decode expected: %v", err)
+		}
+		if !reflect.DeepEqual(actualValue, expectedValue) {
+			t.Fatalf("trusted_endpoint_reference_skipped misrouted: got %#v, want %#v", actualValue, expectedValue)
+		}
+	}
+	// vector: untrusted_endpoint_ambient_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_ambient_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_ambient_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_env_default_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_env_default_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_env_default_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_env_key_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_env_key_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_env_key_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_file_connection_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_file_connection_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_file_connection_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_key_with_client_secret_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_key_with_client_secret_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_key_with_client_secret_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_mismatched_credential_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_mismatched_credential_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_mismatched_credential_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_no_key_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_no_key_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_no_key_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_suffix_spoof_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_suffix_spoof_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_suffix_spoof_rejected: expected an error, got nil")
+		}
+	}
+	// vector: untrusted_endpoint_wildcard_apex_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_wildcard_apex_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_wildcard_apex_rejected: expected an error, got nil")
+		}
+	}
 }

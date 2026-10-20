@@ -285,6 +285,53 @@ Connection types are discriminated by the `kind` field:
 | `foundry`     | `endpoint`                     | Microsoft Foundry connection             |
 | `oauth`       | `endpoint`, `authenticationMode` | OAuth-based authentication            |
 
+#### §2.5.1 Endpoint Trust
+
+A `.prompty` file is untrusted input. Executors MAY attach **ambient credentials**
+(credentials the file did not supply — e.g. `DefaultAzureCredential` tokens, or
+`AZURE_OPENAI_API_KEY` / `OPENAI_API_KEY` env fallbacks) to `model.connection.endpoint`.
+A file MUST NOT be able to direct ambient credentials to a destination it chose.
+
+Loaders MUST enforce this at load time (§4.2 step 5) on `model.connection`:
+
+1. Skip the check when `connection` is absent or `kind` is `reference`.
+2. The **credential is file-supplied** only when the field the declared `kind` consumes
+   is a non-empty literal string (not a `${...}` reference): `apiKey` for `kind: key`,
+   `clientSecret` for `kind: oauth`. Every other case is ambient, including `${env:}` or
+   `${file:}` credentials, any other `kind` (e.g. `foundry`, `anonymous`, custom), and
+   credential fields the declared `kind` does not consume (e.g. `apiKey` on `kind: foundry`).
+3. Each **destination** (`endpoint`, and `tokenUrl` when present) is **host-controlled**
+   when it is absent, or is `${env:VAR}` / `${env:VAR:default}` and `VAR` is set.
+   A literal value, a `${file:}` value (always untrusted), or an `${env:}` default used
+   because `VAR` is unset is **file-controlled**.
+4. If the credential is ambient and any file-controlled destination is not **trusted**,
+   raise `untrusted_endpoint`.
+
+When `model` or `model.connection` is itself a `${file:...}` reference, loaders MUST
+resolve it (with §2.11 containment) and apply the same classification to its contents.
+
+**Trusted origins** are the union of:
+
+| Source                                        | Example                                   |
+| --------------------------------------------- | ----------------------------------------- |
+| Built-in first-party provider origins         | see below                                 |
+| Host load option `trustedEndpoints`           | `["https://my-proxy.contoso.com"]`        |
+| Env var `PROMPTY_TRUSTED_ENDPOINTS` (comma-separated) | `http://localhost:11434,https://*.contoso.com` |
+
+Built-in: `https://api.openai.com`, `https://api.anthropic.com`,
+`https://*.openai.azure.com`, `https://*.services.ai.azure.com`,
+`https://*.cognitiveservices.azure.com`, `https://login.microsoftonline.com`.
+
+**Matching**: compare origins only (scheme + host + port). Scheme and host are
+case-insensitive; default ports (`http`:80, `https`:443) are normalized; path, query,
+and userinfo are ignored. An entry `scheme://*.domain[:port]` matches any strict
+subdomain of `domain` (not `domain` itself). The entry `*` trusts every endpoint.
+A destination that does not parse as an absolute `http`/`https` URL is untrusted.
+`.prompty` frontmatter MUST NOT be able to grant itself trust.
+
+Tool connections (§2.9) are out of scope today because no executor attaches ambient
+credentials to them; any future handler that does MUST apply the same rule.
+
 ### §2.6 ModelOptions
 
 | Property                  | Type       | Description                                |
@@ -815,6 +862,9 @@ flush asynchronously. A failing backend MUST NOT cause the pipeline to fail.
 | `load`       | `(path: string) → PromptAgent`     | PromptAgent   |
 | `load_async` | `(path: string) → PromptAgent`     | PromptAgent   |
 
+Both functions MUST accept host load options `allowedFileRoots` (§2.11) and
+`trustedEndpoints` (§2.5.1), named idiomatically per language.
+
 Both functions MUST be traced: emit a `load` span with `inputs = {path: <path>}` and
 `result = {agent_name: <name>, ...}`.
 
@@ -839,7 +889,11 @@ function load(path):
             RAISE ValueError("Frontmatter must be a YAML mapping")
        h. parsed["instructions"] ← body
        i. RETURN parsed
-  5. data ← resolve_references(data, base_dir=parent(path)):
+  5. check_endpoint_trust(data, base_dir=parent(path), options):
+       // §2.5.1 — inspects RAW (unresolved) model.connection
+       IF credential is ambient AND a file-controlled destination is untrusted:
+         RAISE untrusted_endpoint
+  6. data ← resolve_references(data, base_dir=parent(path)):
        Walk every value in data recursively:
        For each string value matching ${protocol:content}:
          protocol ← lowercase text before first ":"
@@ -868,7 +922,7 @@ function load(path):
                REPLACE with read_file_text(file_path)
            DEFAULT:
              Leave value unchanged (unknown protocol)
-  6. Apply shorthand expansions:
+  7. Apply shorthand expansions:
        a. IF data["model"] is a string:
             data["model"] ← {id: data["model"]}
        b. IF data["template"] is missing:
@@ -878,13 +932,13 @@ function load(path):
        d. For each property in data["inputs"] (if dict form):
             IF value is a scalar (not a dict):
               Convert to Property(kind: infer_kind(value), default: value)
-  7. Inject kind:
+  8. Inject kind:
        data["kind"] ← "prompt"
        // .prompty files always produce PromptAgents
-  8. agent ← load_typed_agent(data)
+  9. agent ← load_typed_agent(data)
        // Use the generated model loader for the target language
        // This validates types and produces a PromptAgent instance
-  9. RETURN agent
+  10. RETURN agent
 ```
 
 ### §4.3 Dotenv Loading
@@ -924,6 +978,11 @@ environment. Environment variables take precedence.
 | `${env:VAR}` where VAR is not set (no default) | `ValueError`     |
 | `${file:path}` where file does not exist   | `FileNotFoundError`   |
 | Invalid YAML in frontmatter               | `ValueError` (or YAML parse error) |
+| Ambient credential to untrusted endpoint (§2.5.1) | `untrusted_endpoint` |
+
+The `untrusted_endpoint` message SHOULD name the endpoint and suggest the fixes:
+use `${env:VAR}` for the endpoint, add its origin to `trustedEndpoints` /
+`PROMPTY_TRUSTED_ENDPOINTS`, or use `kind: reference`.
 
 ---
 

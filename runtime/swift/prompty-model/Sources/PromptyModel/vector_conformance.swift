@@ -276,7 +276,7 @@ public func runLoadConformanceConformance<S: LoadConformance>(_ seam: S) async t
   }
   // vector: connection_types_load
   do {
-    let inputData = "{\"frontmatter\":{\"name\":\"connection-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}}}".data(using: .utf8)!
+    let inputData = "{\"frontmatter\":{\"name\":\"connection-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}},\"trustedEndpoints\":[\"https://localhost:8080\"]}".data(using: .utf8)!
     guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
       throw SeamConformanceError("connection_types_load: failed to parse embedded vector input")
     }
@@ -318,7 +318,7 @@ public func runLoadConformanceConformance<S: LoadConformance>(_ seam: S) async t
   }
   // vector: env_default
   do {
-    let inputData = "{\"frontmatter\":{\"name\":\"env-default-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MISSING_VAR:fallback_value}\"}}},\"env\":{}}".data(using: .utf8)!
+    let inputData = "{\"frontmatter\":{\"name\":\"env-default-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MISSING_VAR:fallback_value}\",\"apiKey\":\"literal-key\"}}},\"env\":{}}".data(using: .utf8)!
     guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
       throw SeamConformanceError("env_default: failed to parse embedded vector input")
     }
@@ -668,6 +668,243 @@ public func runLoadConformanceConformance<S: LoadConformance>(_ seam: S) async t
     let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
     guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
       throw SeamConformanceError("tools_openapi_load misrouted")
+    }
+  }
+  // vector: trusted_endpoint_builtin_allowed
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-builtin\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_builtin_allowed: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_builtin_allowed misrouted")
+    }
+  }
+  // vector: trusted_endpoint_env_endpoint_allowed
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-env-endpoint\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:VECTOR_FOUNDRY_ENDPOINT}\"}}},\"env\":{\"VECTOR_FOUNDRY_ENDPOINT\":\"https://host-chosen.example.com\"}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_env_endpoint_allowed: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://host-chosen.example.com\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_env_endpoint_allowed misrouted")
+    }
+  }
+  // vector: trusted_endpoint_env_list_allowed
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-env-list\",\"model\":{\"id\":\"llama3\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}},\"env\":{\"PROMPTY_TRUSTED_ENDPOINTS\":\"https://other.example.com, http://localhost:11434\"}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_env_list_allowed: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_env_list_allowed misrouted")
+    }
+  }
+  // vector: trusted_endpoint_literal_key_allowed
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-literal-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\",\"apiKey\":\"file-supplied-key\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_literal_key_allowed: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_literal_key_allowed misrouted")
+    }
+  }
+  // vector: trusted_endpoint_option_allowed
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-option\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}},\"trustedEndpoints\":[\"HTTPS://PROXY.Example.com\"]}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_option_allowed: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_option_allowed misrouted")
+    }
+  }
+  // vector: trusted_endpoint_reference_skipped
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"trusted-reference\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("trusted_endpoint_reference_skipped: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    let actual = try await seam.load(source: source)
+    let expectedData = "{\"model\":{\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}".data(using: .utf8)!
+    let expected = try JSONSerialization.jsonObject(with: expectedData, options: [.fragmentsAllowed])
+    guard try seamConformanceCanonicalJSON(try actual.save()) == seamConformanceCanonicalJSON(expected) else {
+      throw SeamConformanceError("trusted_endpoint_reference_skipped misrouted")
+    }
+  }
+  // vector: untrusted_endpoint_ambient_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-ambient\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"foundry\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com/api/projects/p\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_ambient_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_ambient_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_env_default_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-env-default\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:NONEXISTENT:https://attacker.example.com}\"}}},\"env\":{}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_env_default_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_env_default_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_env_key_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-env-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\"${env:VECTOR_HOST_KEY}\"}}},\"env\":{\"VECTOR_HOST_KEY\":\"host-secret\"}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_env_key_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_env_key_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_file_connection_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-file-conn\",\"model\":{\"id\":\"gpt-4\",\"connection\":\"${file:conn.json}\"}},\"files\":{\"conn.json\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com\"}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_file_connection_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_file_connection_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_key_with_client_secret_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-key-client-secret\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"clientSecret\":\"junk\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_key_with_client_secret_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_key_with_client_secret_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_mismatched_credential_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-mismatched-credential\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\"junk\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_mismatched_credential_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_mismatched_credential_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_no_key_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-no-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://127.0.0.1:8080\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_no_key_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_no_key_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_suffix_spoof_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-spoof\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://good.example.com.attacker.example.com\"}}},\"trustedEndpoints\":[\"https://good.example.com\"]}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_suffix_spoof_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_suffix_spoof_rejected: expected an error")
+    }
+  }
+  // vector: untrusted_endpoint_wildcard_apex_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-apex\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"http://myres.openai.azure.com\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_wildcard_apex_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_wildcard_apex_rejected: expected an error")
     }
   }
 }

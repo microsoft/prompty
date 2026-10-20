@@ -246,7 +246,7 @@ public final class VectorConformance {
     {
       // vector: connection_types_load
       StringBuilder inputJson = new StringBuilder();
-      inputJson.append("{\"frontmatter\":{\"name\":\"connection-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}}}");
+      inputJson.append("{\"frontmatter\":{\"name\":\"connection-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"anonymous\",\"endpoint\":\"https://localhost:8080\"}}},\"trustedEndpoints\":[\"https://localhost:8080\"]}");
       java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
       Object source = (Object) input.get("source");
       Agent actual = seam.load(source);
@@ -285,7 +285,7 @@ public final class VectorConformance {
     {
       // vector: env_default
       StringBuilder inputJson = new StringBuilder();
-      inputJson.append("{\"frontmatter\":{\"name\":\"env-default-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MISSING_VAR:fallback_value}\"}}},\"env\":{}}");
+      inputJson.append("{\"frontmatter\":{\"name\":\"env-default-test\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"${env:MISSING_VAR:fallback_value}\",\"apiKey\":\"literal-key\"}}},\"env\":{}}");
       java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
       Object source = (Object) input.get("source");
       Agent actual = seam.load(source);
@@ -599,6 +599,210 @@ public final class VectorConformance {
       Object expected = TypraJson.parse(expectedJson.toString());
       if (!actual.toJson().equals(TypraJson.stringify(expected)))
         throw new AssertionError("tools_openapi_load misrouted");
+    }
+    {
+      // vector: trusted_endpoint_builtin_allowed
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-builtin\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_builtin_allowed misrouted");
+    }
+    {
+      // vector: trusted_endpoint_env_endpoint_allowed
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-env-endpoint\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:VECTOR_FOUNDRY_ENDPOINT}\"}}},\"env\":{\"VECTOR_FOUNDRY_ENDPOINT\":\"https://host-chosen.example.com\"}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://host-chosen.example.com\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_env_endpoint_allowed misrouted");
+    }
+    {
+      // vector: trusted_endpoint_env_list_allowed
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-env-list\",\"model\":{\"id\":\"llama3\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}},\"env\":{\"PROMPTY_TRUSTED_ENDPOINTS\":\"https://other.example.com, http://localhost:11434\"}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_env_list_allowed misrouted");
+    }
+    {
+      // vector: trusted_endpoint_literal_key_allowed
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-literal-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\",\"apiKey\":\"file-supplied-key\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_literal_key_allowed misrouted");
+    }
+    {
+      // vector: trusted_endpoint_option_allowed
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-option\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}},\"trustedEndpoints\":[\"HTTPS://PROXY.Example.com\"]}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_option_allowed misrouted");
+    }
+    {
+      // vector: trusted_endpoint_reference_skipped
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"trusted-reference\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Agent actual = seam.load(source);
+      StringBuilder expectedJson = new StringBuilder();
+      expectedJson.append("{\"model\":{\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}");
+      Object expected = TypraJson.parse(expectedJson.toString());
+      if (!actual.toJson().equals(TypraJson.stringify(expected)))
+        throw new AssertionError("trusted_endpoint_reference_skipped misrouted");
+    }
+    {
+      // vector: untrusted_endpoint_ambient_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-ambient\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"foundry\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com/api/projects/p\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_ambient_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_env_default_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-env-default\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:NONEXISTENT:https://attacker.example.com}\"}}},\"env\":{}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_env_default_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_env_key_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-env-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\"${env:VECTOR_HOST_KEY}\"}}},\"env\":{\"VECTOR_HOST_KEY\":\"host-secret\"}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_env_key_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_file_connection_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-file-conn\",\"model\":{\"id\":\"gpt-4\",\"connection\":\"${file:conn.json}\"}},\"files\":{\"conn.json\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com\"}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_file_connection_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_key_with_client_secret_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-key-client-secret\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"clientSecret\":\"junk\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_key_with_client_secret_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_mismatched_credential_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-mismatched-credential\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\"junk\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_mismatched_credential_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_no_key_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-no-key\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://127.0.0.1:8080\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_no_key_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_suffix_spoof_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-spoof\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://good.example.com.attacker.example.com\"}}},\"trustedEndpoints\":[\"https://good.example.com\"]}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_suffix_spoof_rejected: expected an error");
+    }
+    {
+      // vector: untrusted_endpoint_wildcard_apex_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-apex\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"http://myres.openai.azure.com\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_wildcard_apex_rejected: expected an error");
     }
   }
 

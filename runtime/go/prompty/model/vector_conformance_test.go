@@ -811,7 +811,10 @@ func TestVector21LoadConformanceLoadConnectionTypesLoad(t *testing.T) {
           "endpoint": "https://localhost:8080"
         }
       }
-    }
+    },
+    "trustedEndpoints": [
+      "https://localhost:8080"
+    ]
   },
   "expected": {
     "model": {
@@ -911,7 +914,8 @@ func TestVector24LoadConformanceLoadEnvDefault(t *testing.T) {
         "id": "gpt-4",
         "connection": {
           "kind": "key",
-          "endpoint": "${env:MISSING_VAR:fallback_value}"
+          "endpoint": "${env:MISSING_VAR:fallback_value}",
+          "apiKey": "literal-key"
         }
       }
     },
@@ -1726,7 +1730,496 @@ func TestVector47LoadConformanceLoadToolsOpenapiLoad(t *testing.T) {
 	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
 }
 
-func TestVector48MemoryConformanceOperateClearByCategoryAndAll(t *testing.T) {
+func TestVector48LoadConformanceLoadTrustedEndpointBuiltinAllowed(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_builtin_allowed",
+  "description": "Built-in first-party provider origins (here https://*.services.ai.azure.com) are trusted without host configuration",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-builtin",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "https://myres.services.ai.azure.com/api/projects/p"
+        }
+      }
+    }
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "foundry",
+        "endpoint": "https://myres.services.ai.azure.com/api/projects/p"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector49LoadConformanceLoadTrustedEndpointEnvEndpointAllowed(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_env_endpoint_allowed",
+  "description": "An ${env:VAR} endpoint whose VAR is set is host-controlled and allowed with ambient credentials",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-env-endpoint",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "${env:VECTOR_FOUNDRY_ENDPOINT}"
+        }
+      }
+    },
+    "env": {
+      "VECTOR_FOUNDRY_ENDPOINT": "https://host-chosen.example.com"
+    }
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "foundry",
+        "endpoint": "https://host-chosen.example.com"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector50LoadConformanceLoadTrustedEndpointEnvListAllowed(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_env_list_allowed",
+  "description": "PROMPTY_TRUSTED_ENDPOINTS (comma-separated, whitespace-trimmed) admits a local endpoint",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-env-list",
+      "model": {
+        "id": "llama3",
+        "connection": {
+          "kind": "key",
+          "endpoint": "http://localhost:11434/v1"
+        }
+      }
+    },
+    "env": {
+      "PROMPTY_TRUSTED_ENDPOINTS": "https://other.example.com, http://localhost:11434"
+    }
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "key",
+        "endpoint": "http://localhost:11434/v1"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector51LoadConformanceLoadTrustedEndpointLiteralKeyAllowed(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_literal_key_allowed",
+  "description": "A file-supplied literal apiKey may go to any endpoint: no ambient credential is at risk",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-literal-key",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "key",
+          "endpoint": "https://anywhere.example.com",
+          "apiKey": "file-supplied-key"
+        }
+      }
+    }
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "key",
+        "endpoint": "https://anywhere.example.com"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector52LoadConformanceLoadTrustedEndpointOptionAllowed(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_option_allowed",
+  "description": "A host-provided trustedEndpoints origin admits the endpoint; scheme/host case and default port are normalized and the path is ignored",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-option",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "https://proxy.example.com:443/openai/v1"
+        }
+      }
+    },
+    "trustedEndpoints": [
+      "HTTPS://PROXY.Example.com"
+    ]
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "foundry",
+        "endpoint": "https://proxy.example.com:443/openai/v1"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector53LoadConformanceLoadTrustedEndpointReferenceSkipped(t *testing.T) {
+	vectorJSON := `{
+  "name": "trusted_endpoint_reference_skipped",
+  "description": "kind: reference connections carry no endpoint and are not subject to the trust check",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "trusted-reference",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "reference",
+          "name": "my-connection"
+        }
+      }
+    }
+  },
+  "expected": {
+    "model": {
+      "connection": {
+        "kind": "reference",
+        "name": "my-connection"
+      }
+    }
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector54LoadConformanceLoadUntrustedEndpointAmbientRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_ambient_rejected",
+  "description": "A literal endpoint with no file-supplied credential (ambient identity) is rejected unless its origin is trusted (spec §2.5.1)",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-ambient",
+      "model": {
+        "id": "gpt-4",
+        "provider": "foundry",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "https://attacker.example.com/api/projects/p"
+        }
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector55LoadConformanceLoadUntrustedEndpointEnvDefaultRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_env_default_rejected",
+  "description": "An ${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-env-default",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "${env:NONEXISTENT:https://attacker.example.com}"
+        }
+      }
+    },
+    "env": {}
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector56LoadConformanceLoadUntrustedEndpointEnvKeyRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_env_key_rejected",
+  "description": "A literal endpoint with an ${env:} apiKey is rejected: the file would route a host secret to a destination it chose",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-env-key",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "key",
+          "endpoint": "https://attacker.example.com",
+          "apiKey": "${env:VECTOR_HOST_KEY}"
+        }
+      }
+    },
+    "env": {
+      "VECTOR_HOST_KEY": "host-secret"
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector57LoadConformanceLoadUntrustedEndpointFileConnectionRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_file_connection_rejected",
+  "description": "A connection loaded via ${file:} is file-controlled; an ambient-credential endpoint inside it is rejected",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-file-conn",
+      "model": {
+        "id": "gpt-4",
+        "connection": "${file:conn.json}"
+      }
+    },
+    "files": {
+      "conn.json": {
+        "kind": "foundry",
+        "endpoint": "https://attacker.example.com"
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector58LoadConformanceLoadUntrustedEndpointKeyWithClientSecretRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_key_with_client_secret_rejected",
+  "description": "A literal clientSecret on kind key is ignored, so the apiKey stays ambient and the endpoint is rejected",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-key-client-secret",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "key",
+          "endpoint": "https://attacker.example.com",
+          "clientSecret": "junk"
+        }
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector59LoadConformanceLoadUntrustedEndpointMismatchedCredentialRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_mismatched_credential_rejected",
+  "description": "A literal apiKey on a kind that does not consume it (foundry) does not make the credential file-supplied",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-mismatched-credential",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "https://attacker.example.com",
+          "apiKey": "junk"
+        }
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector60LoadConformanceLoadUntrustedEndpointNoKeyRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_no_key_rejected",
+  "description": "A key connection with a literal endpoint and no apiKey (executor env-key fallback) is rejected",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-no-key",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "key",
+          "endpoint": "http://127.0.0.1:8080"
+        }
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector61LoadConformanceLoadUntrustedEndpointSuffixSpoofRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_suffix_spoof_rejected",
+  "description": "Origin matching is exact: a host that merely starts with a trusted host is not trusted",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-spoof",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "https://good.example.com.attacker.example.com"
+        }
+      }
+    },
+    "trustedEndpoints": [
+      "https://good.example.com"
+    ]
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector62LoadConformanceLoadUntrustedEndpointWildcardApexRejected(t *testing.T) {
+	vectorJSON := `{
+  "name": "untrusted_endpoint_wildcard_apex_rejected",
+  "description": "A wildcard origin (https://*.openai.azure.com) matches strict subdomains only, never the apex or another scheme",
+  "stage": "load",
+  "input": {
+    "frontmatter": {
+      "name": "untrusted-apex",
+      "model": {
+        "id": "gpt-4",
+        "connection": {
+          "kind": "foundry",
+          "endpoint": "http://myres.openai.azure.com"
+        }
+      }
+    }
+  },
+  "expectedError": {
+    "kind": "untrusted_endpoint"
+  },
+  "operation": "load"
+}`
+	var vector map[string]any
+	if err := json.Unmarshal([]byte(vectorJSON), &vector); err != nil {
+		t.Fatalf("failed to decode vector: %v", err)
+	}
+	vectorrunner.RunVector(t, "LoadConformance", "load", vector, vcSeam())
+}
+
+func TestVector63MemoryConformanceOperateClearByCategoryAndAll(t *testing.T) {
 	vectorJSON := `{
   "name": "clear_by_category_and_all",
   "description": "Clear removes only the requested category, or all memories when no category is supplied.",
@@ -1779,7 +2272,7 @@ func TestVector48MemoryConformanceOperateClearByCategoryAndAll(t *testing.T) {
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector49MemoryConformanceOperateFormatCoreAndRecallResults(t *testing.T) {
+func TestVector64MemoryConformanceOperateFormatCoreAndRecallResults(t *testing.T) {
 	vectorJSON := `{
   "name": "format_core_and_recall_results",
   "description": "Formatting injects only core memories into system prompts and formats recall results with category and tags.",
@@ -1820,7 +2313,7 @@ func TestVector49MemoryConformanceOperateFormatCoreAndRecallResults(t *testing.T
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector50MemoryConformanceOperateRecallEmptyQueryAndLimit(t *testing.T) {
+func TestVector65MemoryConformanceOperateRecallEmptyQueryAndLimit(t *testing.T) {
 	vectorJSON := `{
   "name": "recall_empty_query_and_limit",
   "description": "Empty-query recall returns all memories in insertion order with score 0; positive limit truncates.",
@@ -1874,7 +2367,7 @@ func TestVector50MemoryConformanceOperateRecallEmptyQueryAndLimit(t *testing.T) 
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector51MemoryConformanceOperateRecallRanksByWeightedScore(t *testing.T) {
+func TestVector66MemoryConformanceOperateRecallRanksByWeightedScore(t *testing.T) {
 	vectorJSON := `{
   "name": "recall_ranks_by_weighted_score",
   "description": "Recall ranks by weighted lexical score: content match = 2, tag match = 3, core match boost = 1.",
@@ -1932,7 +2425,7 @@ func TestVector51MemoryConformanceOperateRecallRanksByWeightedScore(t *testing.T
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector52MemoryConformanceOperateRecallScoreTiesPreserveInsertionOrder(t *testing.T) {
+func TestVector67MemoryConformanceOperateRecallScoreTiesPreserveInsertionOrder(t *testing.T) {
 	vectorJSON := `{
   "name": "recall_score_ties_preserve_insertion_order",
   "description": "Recall preserves insertion order for memories with identical scores.",
@@ -1989,7 +2482,7 @@ func TestVector52MemoryConformanceOperateRecallScoreTiesPreserveInsertionOrder(t
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector53MemoryConformanceOperateRecallTagsAndCoreBoost(t *testing.T) {
+func TestVector68MemoryConformanceOperateRecallTagsAndCoreBoost(t *testing.T) {
 	vectorJSON := `{
   "name": "recall_tags_and_core_boost",
   "description": "Recall gives tag matches higher weight than content matches and boosts matching core memories.",
@@ -2049,7 +2542,7 @@ func TestVector53MemoryConformanceOperateRecallTagsAndCoreBoost(t *testing.T) {
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector54MemoryConformanceOperateRecallTokenizationPunctuationUnicodeAndDedup(t *testing.T) {
+func TestVector69MemoryConformanceOperateRecallTokenizationPunctuationUnicodeAndDedup(t *testing.T) {
 	vectorJSON := `{
   "name": "recall_tokenization_punctuation_unicode_and_dedup",
   "description": "Recall trims punctuation, lowercases tokens, preserves Unicode letters, and counts duplicate query tokens once.",
@@ -2109,7 +2602,7 @@ func TestVector54MemoryConformanceOperateRecallTokenizationPunctuationUnicodeAnd
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector55MemoryConformanceOperateRememberDedupsCoreByTags(t *testing.T) {
+func TestVector70MemoryConformanceOperateRememberDedupsCoreByTags(t *testing.T) {
 	vectorJSON := `{
   "name": "remember_dedups_core_by_tags",
   "description": "Remember replaces an existing core memory with identical tags, appends the new memory, and leaves non-core entries intact.",
@@ -2172,7 +2665,7 @@ func TestVector55MemoryConformanceOperateRememberDedupsCoreByTags(t *testing.T) 
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector56MemoryConformanceOperateRememberDedupsCoreMissingAndEmptyTags(t *testing.T) {
+func TestVector71MemoryConformanceOperateRememberDedupsCoreMissingAndEmptyTags(t *testing.T) {
 	vectorJSON := `{
   "name": "remember_dedups_core_missing_and_empty_tags",
   "description": "Remember treats missing and empty tag lists as equivalent for core-memory deduplication.",
@@ -2227,7 +2720,7 @@ func TestVector56MemoryConformanceOperateRememberDedupsCoreMissingAndEmptyTags(t
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector57MemoryConformanceOperateRememberEvictsArchivalFirst(t *testing.T) {
+func TestVector72MemoryConformanceOperateRememberEvictsArchivalFirst(t *testing.T) {
 	vectorJSON := `{
   "name": "remember_evicts_archival_first",
   "description": "Remember enforces the cap by evicting the oldest archival memory before older core/insight entries.",
@@ -2287,7 +2780,7 @@ func TestVector57MemoryConformanceOperateRememberEvictsArchivalFirst(t *testing.
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector58MemoryConformanceOperateSnapshotPortRoundTrip(t *testing.T) {
+func TestVector73MemoryConformanceOperateSnapshotPortRoundTrip(t *testing.T) {
 	vectorJSON := `{
   "name": "snapshot_port_round_trip",
   "description": "A host memory port persists and reloads the whole MemoryStore snapshot; recall runs against the reloaded snapshot.",
@@ -2326,7 +2819,7 @@ func TestVector58MemoryConformanceOperateSnapshotPortRoundTrip(t *testing.T) {
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector59MemoryConformanceOperateUpdateIndexOutOfRangeError(t *testing.T) {
+func TestVector74MemoryConformanceOperateUpdateIndexOutOfRangeError(t *testing.T) {
 	vectorJSON := `{
   "name": "update_index_out_of_range_error",
   "description": "Updating a missing memory index signals a stable out-of-range error kind without relying on runtime-specific message text.",
@@ -2359,7 +2852,7 @@ func TestVector59MemoryConformanceOperateUpdateIndexOutOfRangeError(t *testing.T
 	vectorrunner.RunVector(t, "MemoryConformance", "operate", vector, vcSeam())
 }
 
-func TestVector60TurnConformanceReplayMaxIterations(t *testing.T) {
+func TestVector75TurnConformanceReplayMaxIterations(t *testing.T) {
 	vectorJSON := `{
   "name": "max_iterations",
   "stage": "replay",
@@ -2395,7 +2888,7 @@ func TestVector60TurnConformanceReplayMaxIterations(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "replay", vector, vcSeam())
 }
 
-func TestVector61TurnConformanceReplayNoTool(t *testing.T) {
+func TestVector76TurnConformanceReplayNoTool(t *testing.T) {
 	vectorJSON := `{
   "name": "no_tool",
   "stage": "replay",
@@ -2427,7 +2920,7 @@ func TestVector61TurnConformanceReplayNoTool(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "replay", vector, vcSeam())
 }
 
-func TestVector62TurnConformanceReplayPermissionDenied(t *testing.T) {
+func TestVector77TurnConformanceReplayPermissionDenied(t *testing.T) {
 	vectorJSON := `{
   "name": "permission_denied",
   "stage": "replay",
@@ -2462,7 +2955,7 @@ func TestVector62TurnConformanceReplayPermissionDenied(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "replay", vector, vcSeam())
 }
 
-func TestVector63TurnConformanceReplayToolFailure(t *testing.T) {
+func TestVector78TurnConformanceReplayToolFailure(t *testing.T) {
 	vectorJSON := `{
   "name": "tool_failure",
   "stage": "replay",
@@ -2499,7 +2992,7 @@ func TestVector63TurnConformanceReplayToolFailure(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "replay", vector, vcSeam())
 }
 
-func TestVector64TurnConformanceReplayToolSuccess(t *testing.T) {
+func TestVector79TurnConformanceReplayToolSuccess(t *testing.T) {
 	vectorJSON := `{
   "name": "tool_success",
   "stage": "replay",
@@ -2536,7 +3029,7 @@ func TestVector64TurnConformanceReplayToolSuccess(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "replay", vector, vcSeam())
 }
 
-func TestVector65TurnConformanceRunAssistantToolCallsMetadata(t *testing.T) {
+func TestVector80TurnConformanceRunAssistantToolCallsMetadata(t *testing.T) {
 	vectorJSON := `{
   "name": "assistant_tool_calls_metadata",
   "description": "When the LLM returns tool calls, the assistant message appended to the conversation must have role='assistant', empty content, and metadata.tool_calls containing the full tool_calls array with id/type/function for each call.",
@@ -2689,7 +3182,7 @@ func TestVector65TurnConformanceRunAssistantToolCallsMetadata(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector66TurnConformanceRunAsyncToolFunction(t *testing.T) {
+func TestVector81TurnConformanceRunAsyncToolFunction(t *testing.T) {
 	vectorJSON := `{
   "name": "async_tool_function",
   "description": "Agent loop correctly handles async tool functions",
@@ -2800,7 +3293,7 @@ func TestVector66TurnConformanceRunAsyncToolFunction(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector67TurnConformanceRunBindingsInjected(t *testing.T) {
+func TestVector82TurnConformanceRunBindingsInjected(t *testing.T) {
 	vectorJSON := `{
   "name": "bindings_injected",
   "description": "Tool has a binding {unit: {input: 'preferred_unit'}}. The LLM omits the bound parameter. At execution time, the binding injects the value from the parent inputs, so the tool receives the merged arguments.",
@@ -2931,7 +3424,7 @@ func TestVector67TurnConformanceRunBindingsInjected(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector68TurnConformanceRunCancellationBeforeLlm(t *testing.T) {
+func TestVector83TurnConformanceRunCancellationBeforeLlm(t *testing.T) {
 	vectorJSON := `{
   "name": "cancellation_before_llm",
   "description": "§13.2 Cancellation — Cancel token is already cancelled before the first LLM call. No LLM calls are made and CancelledError is raised.",
@@ -2993,7 +3486,7 @@ func TestVector68TurnConformanceRunCancellationBeforeLlm(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector69TurnConformanceRunCancellationBetweenIterations(t *testing.T) {
+func TestVector84TurnConformanceRunCancellationBetweenIterations(t *testing.T) {
 	vectorJSON := `{
   "name": "cancellation_between_iterations",
   "description": "§13.2 Cancellation — Turn 1 completes (tool call + result). Cancel fires before turn 2. The loop exits with CancelledError after 1 iteration.",
@@ -3124,7 +3617,7 @@ func TestVector69TurnConformanceRunCancellationBetweenIterations(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector70TurnConformanceRunCancellationBetweenTools(t *testing.T) {
+func TestVector85TurnConformanceRunCancellationBetweenTools(t *testing.T) {
 	vectorJSON := `{
   "name": "cancellation_between_tools",
   "description": "§13.2 Cancellation — LLM requests 2 tool calls. Cancel fires after the first tool executes. The second tool must NOT be called.",
@@ -3264,7 +3757,7 @@ func TestVector70TurnConformanceRunCancellationBetweenTools(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector71TurnConformanceRunContextNoTrimWhenFits(t *testing.T) {
+func TestVector86TurnConformanceRunContextNoTrimWhenFits(t *testing.T) {
 	vectorJSON := `{
   "name": "context_no_trim_when_fits",
   "description": "§13.3 Context Window — Messages fit within the context budget. No trimming occurs and all messages are preserved.",
@@ -3336,7 +3829,7 @@ func TestVector71TurnConformanceRunContextNoTrimWhenFits(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector72TurnConformanceRunContextPreservesSystemMessages(t *testing.T) {
+func TestVector87TurnConformanceRunContextPreservesSystemMessages(t *testing.T) {
 	vectorJSON := `{
   "name": "context_preserves_system_messages",
   "description": "§13.3 Context Window — Two system messages plus many user/assistant pairs. After trimming, both system messages MUST still be present.",
@@ -3444,7 +3937,7 @@ func TestVector72TurnConformanceRunContextPreservesSystemMessages(t *testing.T) 
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector73TurnConformanceRunContextTrimBasic(t *testing.T) {
+func TestVector88TurnConformanceRunContextTrimBasic(t *testing.T) {
 	vectorJSON := `{
   "name": "context_trim_basic",
   "description": "§13.3 Context Window — Messages exceed the context budget. Oldest user/assistant pairs are dropped and a summary is inserted after the system message.",
@@ -3603,7 +4096,7 @@ func TestVector73TurnConformanceRunContextTrimBasic(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector74TurnConformanceRunEmptyToolResult(t *testing.T) {
+func TestVector89TurnConformanceRunEmptyToolResult(t *testing.T) {
 	vectorJSON := `{
   "name": "empty_tool_result",
   "description": "Tool function returns an empty string. The tool result message must still be sent to the LLM with empty content — it must not be skipped or filtered out.",
@@ -3719,7 +4212,7 @@ func TestVector74TurnConformanceRunEmptyToolResult(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector75TurnConformanceRunEventsBasicToolLoop(t *testing.T) {
+func TestVector90TurnConformanceRunEventsBasicToolLoop(t *testing.T) {
 	vectorJSON := `{
   "name": "events_basic_tool_loop",
   "description": "§13.1 Events — A 2-turn tool-call loop emits the full event lifecycle: status → tool_call_start → tool_result → messages_updated → done.",
@@ -3866,7 +4359,7 @@ func TestVector75TurnConformanceRunEventsBasicToolLoop(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector76TurnConformanceRunEventsErrorLogged(t *testing.T) {
+func TestVector91TurnConformanceRunEventsErrorLogged(t *testing.T) {
 	vectorJSON := `{
   "name": "events_error_logged",
   "description": "§13.1 Events  A tool function raises an exception during execution. The exception is caught and returned as an error string to the LLM. The loop continues normally.",
@@ -3993,7 +4486,7 @@ func TestVector76TurnConformanceRunEventsErrorLogged(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector77TurnConformanceRunEventsNoTools(t *testing.T) {
+func TestVector92TurnConformanceRunEventsNoTools(t *testing.T) {
 	vectorJSON := `{
   "name": "events_no_tools",
   "description": "§13.1 Events — Single-turn completion with no tool calls. Only the done event is emitted.",
@@ -4072,7 +4565,7 @@ func TestVector77TurnConformanceRunEventsNoTools(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector78TurnConformanceRunGuardrailAllPass(t *testing.T) {
+func TestVector93TurnConformanceRunGuardrailAllPass(t *testing.T) {
 	vectorJSON := `{
   "name": "guardrail_all_pass",
   "description": "§13.4 Guardrails — All guardrails (input, output, tool) are configured but all pass. The agent loop completes normally.",
@@ -4196,7 +4689,7 @@ func TestVector78TurnConformanceRunGuardrailAllPass(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector79TurnConformanceRunGuardrailInputDeny(t *testing.T) {
+func TestVector94TurnConformanceRunGuardrailInputDeny(t *testing.T) {
 	vectorJSON := `{
   "name": "guardrail_input_deny",
   "description": "§13.4 Guardrails — Input guardrail denies the request before any LLM call is made. Returns GuardrailError with the denial reason.",
@@ -4253,7 +4746,7 @@ func TestVector79TurnConformanceRunGuardrailInputDeny(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector80TurnConformanceRunGuardrailOutputDeny(t *testing.T) {
+func TestVector95TurnConformanceRunGuardrailOutputDeny(t *testing.T) {
 	vectorJSON := `{
   "name": "guardrail_output_deny",
   "description": "§13.4 Guardrails — Input guardrail passes, LLM returns a response, but the output guardrail denies it. Returns GuardrailError.",
@@ -4332,7 +4825,7 @@ func TestVector80TurnConformanceRunGuardrailOutputDeny(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector81TurnConformanceRunGuardrailToolDeny(t *testing.T) {
+func TestVector96TurnConformanceRunGuardrailToolDeny(t *testing.T) {
 	vectorJSON := `{
   "name": "guardrail_tool_deny",
   "description": "§13.4 Guardrails — LLM requests 2 tool calls. Tool guardrail denies one (dangerous_tool) but allows the other (get_weather). Denied tool gets a synthetic error result.",
@@ -4487,7 +4980,7 @@ func TestVector81TurnConformanceRunGuardrailToolDeny(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector82TurnConformanceRunMaxIterationsExceeded(t *testing.T) {
+func TestVector97TurnConformanceRunMaxIterationsExceeded(t *testing.T) {
 	vectorJSON := `{
   "name": "max_iterations_exceeded",
   "description": "LLM returns tool calls on every turn for 11 iterations, exceeding MAX_ITERATIONS=10. The agent loop must raise an error.",
@@ -4998,7 +5491,7 @@ func TestVector82TurnConformanceRunMaxIterationsExceeded(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector83TurnConformanceRunMultiTurnToolCalls(t *testing.T) {
+func TestVector98TurnConformanceRunMultiTurnToolCalls(t *testing.T) {
 	vectorJSON := `{
   "name": "multi_turn_tool_calls",
   "description": "Three-turn chain: Turn 1 calls get_weather, Turn 2 calls convert_temperature with the result, Turn 3 returns the final answer.",
@@ -5176,7 +5669,7 @@ func TestVector83TurnConformanceRunMultiTurnToolCalls(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector84TurnConformanceRunMultipleToolCallsSingleTurn(t *testing.T) {
+func TestVector99TurnConformanceRunMultipleToolCallsSingleTurn(t *testing.T) {
 	vectorJSON := `{
   "name": "multiple_tool_calls_single_turn",
   "description": "Turn 1: LLM returns two parallel tool calls — get_weather for Paris and London. Both results appended. Turn 2: LLM summarises both.",
@@ -5358,7 +5851,7 @@ func TestVector84TurnConformanceRunMultipleToolCallsSingleTurn(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector85TurnConformanceRunNoToolCalls(t *testing.T) {
+func TestVector100TurnConformanceRunNoToolCalls(t *testing.T) {
 	vectorJSON := `{
   "name": "no_tool_calls",
   "description": "LLM returns content immediately with no tool calls — the agent loop completes in a single iteration.",
@@ -5427,7 +5920,7 @@ func TestVector85TurnConformanceRunNoToolCalls(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector86TurnConformanceRunParallelToolsBasic(t *testing.T) {
+func TestVector101TurnConformanceRunParallelToolsBasic(t *testing.T) {
 	vectorJSON := `{
   "name": "parallel_tools_basic",
   "description": "§13.6 Parallel Tools — LLM requests 3 tool calls in one turn. All execute (potentially in parallel) and results are returned in the same order as the requests.",
@@ -5601,7 +6094,7 @@ func TestVector86TurnConformanceRunParallelToolsBasic(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector87TurnConformanceRunParallelToolsWithGuardrailDeny(t *testing.T) {
+func TestVector102TurnConformanceRunParallelToolsWithGuardrailDeny(t *testing.T) {
 	vectorJSON := `{
   "name": "parallel_tools_with_guardrail_deny",
   "description": "§13.6 Parallel Tools + §13.4 Guardrails — 3 parallel tool calls, one denied by tool guardrail. The 2 allowed tools execute, the denied tool gets a synthetic result.",
@@ -5793,7 +6286,7 @@ func TestVector87TurnConformanceRunParallelToolsWithGuardrailDeny(t *testing.T) 
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector88TurnConformanceRunParallelToolsWithToolError(t *testing.T) {
+func TestVector103TurnConformanceRunParallelToolsWithToolError(t *testing.T) {
 	vectorJSON := `{
   "name": "parallel_tools_with_tool_error",
   "description": "§13.6 Parallel Tools + tool error — 3 parallel tool calls, one tool returns an error result. All result messages are appended in the original tool_calls order.",
@@ -5967,7 +6460,7 @@ func TestVector88TurnConformanceRunParallelToolsWithToolError(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector89TurnConformanceRunSingleToolCall(t *testing.T) {
+func TestVector104TurnConformanceRunSingleToolCall(t *testing.T) {
 	vectorJSON := `{
   "name": "single_tool_call",
   "description": "Turn 1: LLM requests get_weather for Paris. Turn 2: after receiving the tool result, LLM returns a final content response.",
@@ -6115,7 +6608,7 @@ func TestVector89TurnConformanceRunSingleToolCall(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector90TurnConformanceRunSteeringInjectMessage(t *testing.T) {
+func TestVector105TurnConformanceRunSteeringInjectMessage(t *testing.T) {
 	vectorJSON := `{
   "name": "steering_inject_message",
   "description": "§13.5 Steering — After turn 1 (tool call + result), a steering message is injected before turn 2's LLM call. The LLM sees the injected message in context.",
@@ -6324,7 +6817,7 @@ func TestVector90TurnConformanceRunSteeringInjectMessage(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector91TurnConformanceRunSteeringMultipleMessages(t *testing.T) {
+func TestVector106TurnConformanceRunSteeringMultipleMessages(t *testing.T) {
 	vectorJSON := `{
   "name": "steering_multiple_messages",
   "description": "§13.5 Steering — Two steering messages are queued and both injected before iteration 2. Tests atomic drain — both appear in order.",
@@ -6495,7 +6988,7 @@ func TestVector91TurnConformanceRunSteeringMultipleMessages(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector92TurnConformanceRunToolNotRegisteredError(t *testing.T) {
+func TestVector107TurnConformanceRunToolNotRegisteredError(t *testing.T) {
 	vectorJSON := `{
   "name": "tool_not_registered_error",
   "description": "LLM calls a tool named 'unknown_tool' that has no registered handler in tool_functions. The agent loop must raise a ValueError.",
@@ -6580,7 +7073,7 @@ func TestVector92TurnConformanceRunToolNotRegisteredError(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector93TurnConformanceRunToolResultMessageFormat(t *testing.T) {
+func TestVector108TurnConformanceRunToolResultMessageFormat(t *testing.T) {
 	vectorJSON := `{
   "name": "tool_result_message_format",
   "description": "After executing a tool, the tool result message appended to the conversation must have role='tool', content as a TextPart with the stringified result, and metadata.tool_call_id matching the original call id.",
@@ -6702,7 +7195,7 @@ func TestVector93TurnConformanceRunToolResultMessageFormat(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "run", vector, vcSeam())
 }
 
-func TestVector94TurnConformanceRunTurnCancelBeforeContext(t *testing.T) {
+func TestVector109TurnConformanceRunTurnCancelBeforeContext(t *testing.T) {
 	vectorJSON := `{
   "name": "cancel_before_context",
   "stage": "turn",
@@ -6735,7 +7228,7 @@ func TestVector94TurnConformanceRunTurnCancelBeforeContext(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector95TurnConformanceRunTurnDelegatedProviderState(t *testing.T) {
+func TestVector110TurnConformanceRunTurnDelegatedProviderState(t *testing.T) {
 	vectorJSON := `{
   "name": "delegated_provider_state",
   "stage": "turn",
@@ -6803,7 +7296,7 @@ func TestVector95TurnConformanceRunTurnDelegatedProviderState(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector96TurnConformanceRunTurnFinalOutput(t *testing.T) {
+func TestVector111TurnConformanceRunTurnFinalOutput(t *testing.T) {
 	vectorJSON := `{
   "name": "final_output",
   "stage": "turn",
@@ -6849,7 +7342,7 @@ func TestVector96TurnConformanceRunTurnFinalOutput(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector97TurnConformanceRunTurnMemoryContextIsModelVisible(t *testing.T) {
+func TestVector112TurnConformanceRunTurnMemoryContextIsModelVisible(t *testing.T) {
 	vectorJSON := `{
   "name": "memory_context_is_model_visible",
   "stage": "turn",
@@ -6912,7 +7405,7 @@ func TestVector97TurnConformanceRunTurnMemoryContextIsModelVisible(t *testing.T)
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector98TurnConformanceRunTurnOrderedToolRound(t *testing.T) {
+func TestVector113TurnConformanceRunTurnOrderedToolRound(t *testing.T) {
 	vectorJSON := `{
   "name": "ordered_tool_round",
   "stage": "turn",
@@ -7004,7 +7497,7 @@ func TestVector98TurnConformanceRunTurnOrderedToolRound(t *testing.T) {
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector99TurnConformanceRunTurnPermissionDenialIsModelVisible(t *testing.T) {
+func TestVector114TurnConformanceRunTurnPermissionDenialIsModelVisible(t *testing.T) {
 	vectorJSON := `{
   "name": "permission_denial_is_model_visible",
   "stage": "turn",
@@ -7056,7 +7549,7 @@ func TestVector99TurnConformanceRunTurnPermissionDenialIsModelVisible(t *testing
 	vectorrunner.RunVector(t, "TurnConformance", "runTurn", vector, vcSeam())
 }
 
-func TestVector100WireConformanceToRequestAnthropicImageFormat(t *testing.T) {
+func TestVector115WireConformanceToRequestAnthropicImageFormat(t *testing.T) {
 	vectorJSON := `{
   "name": "anthropic_image_format",
   "description": "§7.5 — Anthropic: ImagePart uses base64 source block with media_type, not image_url format.",
@@ -7127,7 +7620,7 @@ func TestVector100WireConformanceToRequestAnthropicImageFormat(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector101WireConformanceToRequestAnthropicMaxTokensRequired(t *testing.T) {
+func TestVector116WireConformanceToRequestAnthropicMaxTokensRequired(t *testing.T) {
 	vectorJSON := `{
   "name": "anthropic_max_tokens_required",
   "description": "§7.5 — Anthropic: when maxOutputTokens is not set, max_tokens MUST default to 4096 (required by API).",
@@ -7183,7 +7676,7 @@ func TestVector101WireConformanceToRequestAnthropicMaxTokensRequired(t *testing.
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector102WireConformanceToRequestAnthropicOptions(t *testing.T) {
+func TestVector117WireConformanceToRequestAnthropicOptions(t *testing.T) {
 	vectorJSON := `{
   "name": "anthropic_options",
   "description": "Anthropic: option names map correctly (topK, stopSequences)",
@@ -7253,7 +7746,7 @@ func TestVector102WireConformanceToRequestAnthropicOptions(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector103WireConformanceToRequestAnthropicSystemSeparate(t *testing.T) {
+func TestVector118WireConformanceToRequestAnthropicSystemSeparate(t *testing.T) {
 	vectorJSON := `{
   "name": "anthropic_system_separate",
   "description": "§7.5 — Anthropic: system message extracted to top-level 'system' field; messages array contains only non-system messages.",
@@ -7321,7 +7814,7 @@ func TestVector103WireConformanceToRequestAnthropicSystemSeparate(t *testing.T) 
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector104WireConformanceToRequestAnthropicToolWire(t *testing.T) {
+func TestVector119WireConformanceToRequestAnthropicToolWire(t *testing.T) {
 	vectorJSON := `{
   "name": "anthropic_tool_wire",
   "description": "Anthropic: tools use input_schema (not parameters), name at top level",
@@ -7407,7 +7900,7 @@ func TestVector104WireConformanceToRequestAnthropicToolWire(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector105WireConformanceToRequestChatAudioMp3(t *testing.T) {
+func TestVector120WireConformanceToRequestChatAudioMp3(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_audio_mp3",
   "description": "§7.1.2 — AudioPart with mediaType audio/mpeg MUST map to format 'mp3', not 'mpeg'.",
@@ -7466,7 +7959,7 @@ func TestVector105WireConformanceToRequestChatAudioMp3(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector106WireConformanceToRequestChatAudioPart(t *testing.T) {
+func TestVector121WireConformanceToRequestChatAudioPart(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_audio_part",
   "description": "§7.1.2 — AudioPart with mediaType audio/wav maps to input_audio with format 'wav'.",
@@ -7525,7 +8018,7 @@ func TestVector106WireConformanceToRequestChatAudioPart(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector107WireConformanceToRequestChatImageBase64(t *testing.T) {
+func TestVector122WireConformanceToRequestChatImageBase64(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_image_base64",
   "description": "Base64 data URI image part preserved as-is in image_url",
@@ -7590,7 +8083,7 @@ func TestVector107WireConformanceToRequestChatImageBase64(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector108WireConformanceToRequestChatImagePart(t *testing.T) {
+func TestVector123WireConformanceToRequestChatImagePart(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_image_part",
   "description": "Image content part converted to OpenAI image_url format",
@@ -7655,7 +8148,7 @@ func TestVector108WireConformanceToRequestChatImagePart(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector109WireConformanceToRequestChatMultipartContent(t *testing.T) {
+func TestVector124WireConformanceToRequestChatMultipartContent(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_multipart_content",
   "description": "§7.1.1/§7.1.2 — Message with TextPart + ImagePart MUST produce an array of typed content blocks.",
@@ -7720,7 +8213,7 @@ func TestVector109WireConformanceToRequestChatMultipartContent(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector110WireConformanceToRequestChatSimple(t *testing.T) {
+func TestVector125WireConformanceToRequestChatSimple(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_simple",
   "description": "§7.1.7 — Two messages (system + user), no tools, no options. Minimal chat request.",
@@ -7783,7 +8276,7 @@ func TestVector110WireConformanceToRequestChatSimple(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector111WireConformanceToRequestChatSingleTextOptimized(t *testing.T) {
+func TestVector126WireConformanceToRequestChatSingleTextOptimized(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_single_text_optimized",
   "description": "§7.1.1 — Message with exactly 1 TextPart MUST produce a plain string content, not an array.",
@@ -7833,7 +8326,7 @@ func TestVector111WireConformanceToRequestChatSingleTextOptimized(t *testing.T) 
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector112WireConformanceToRequestChatWithOptions(t *testing.T) {
+func TestVector127WireConformanceToRequestChatWithOptions(t *testing.T) {
 	vectorJSON := `{
   "name": "chat_with_options",
   "description": "§7.1.5 — All standard ModelOptions mapped to OpenAI parameter names.",
@@ -7902,7 +8395,7 @@ func TestVector112WireConformanceToRequestChatWithOptions(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector113WireConformanceToRequestEmbeddingWire(t *testing.T) {
+func TestVector128WireConformanceToRequestEmbeddingWire(t *testing.T) {
 	vectorJSON := `{
   "name": "embedding_wire",
   "description": "§7.2 — Embedding request: text extracted from messages, single string input (not array).",
@@ -7947,7 +8440,7 @@ func TestVector113WireConformanceToRequestEmbeddingWire(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector114WireConformanceToRequestImageWire(t *testing.T) {
+func TestVector129WireConformanceToRequestImageWire(t *testing.T) {
 	vectorJSON := `{
   "name": "image_wire",
   "description": "§7.3 — Image generation request: prompt extracted from last user message.",
@@ -7992,7 +8485,7 @@ func TestVector114WireConformanceToRequestImageWire(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector115WireConformanceToRequestKindToJsonTypeMapping(t *testing.T) {
+func TestVector130WireConformanceToRequestKindToJsonTypeMapping(t *testing.T) {
 	vectorJSON := `{
   "name": "kind_to_json_type_mapping",
   "description": "§7.1.4 — All Property kind values mapped to JSON Schema types: string→string, integer→integer, float→number, boolean→boolean, array→array, object→object.",
@@ -8112,7 +8605,7 @@ func TestVector115WireConformanceToRequestKindToJsonTypeMapping(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector116WireConformanceToRequestOptionsAdditionalProperties(t *testing.T) {
+func TestVector131WireConformanceToRequestOptionsAdditionalProperties(t *testing.T) {
 	vectorJSON := `{
   "name": "options_additional_properties",
   "description": "§7.1.5 — additionalProperties from ModelOptions MUST be merged into the request as top-level keys.",
@@ -8167,7 +8660,7 @@ func TestVector116WireConformanceToRequestOptionsAdditionalProperties(t *testing
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector117WireConformanceToRequestOptionsMaxCompletionTokens(t *testing.T) {
+func TestVector132WireConformanceToRequestOptionsMaxCompletionTokens(t *testing.T) {
 	vectorJSON := `{
   "name": "options_max_completion_tokens",
   "description": "§7.1.5 — maxOutputTokens MUST map to max_completion_tokens, NOT the deprecated max_tokens.",
@@ -8220,7 +8713,7 @@ func TestVector117WireConformanceToRequestOptionsMaxCompletionTokens(t *testing.
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector118WireConformanceToRequestOptionsStopSequences(t *testing.T) {
+func TestVector133WireConformanceToRequestOptionsStopSequences(t *testing.T) {
 	vectorJSON := `{
   "name": "options_stop_sequences",
   "description": "§7.1.5 — stopSequences MUST map to 'stop' in the OpenAI wire format.",
@@ -8279,7 +8772,7 @@ func TestVector118WireConformanceToRequestOptionsStopSequences(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector119WireConformanceToRequestResponsesSimple(t *testing.T) {
+func TestVector134WireConformanceToRequestResponsesSimple(t *testing.T) {
 	vectorJSON := `{
   "name": "responses_simple",
   "description": "Responses API: system becomes instructions, messages become input items",
@@ -8339,7 +8832,7 @@ func TestVector119WireConformanceToRequestResponsesSimple(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector120WireConformanceToRequestResponsesStructuredOutput(t *testing.T) {
+func TestVector135WireConformanceToRequestResponsesStructuredOutput(t *testing.T) {
 	vectorJSON := `{
   "name": "responses_structured_output",
   "description": "Responses API: structured output uses text.format.json_schema",
@@ -8427,7 +8920,7 @@ func TestVector120WireConformanceToRequestResponsesStructuredOutput(t *testing.T
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector121WireConformanceToRequestResponsesWithTools(t *testing.T) {
+func TestVector136WireConformanceToRequestResponsesWithTools(t *testing.T) {
 	vectorJSON := `{
   "name": "responses_with_tools",
   "description": "Responses API: tools use flat format (no nested function key)",
@@ -8508,7 +9001,7 @@ func TestVector121WireConformanceToRequestResponsesWithTools(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector122WireConformanceToRequestStructuredOutput(t *testing.T) {
+func TestVector137WireConformanceToRequestStructuredOutput(t *testing.T) {
 	vectorJSON := `{
   "name": "structured_output",
   "description": "§7.1.6 — outputs converted to response_format with json_schema, strict=true, additionalProperties=false.",
@@ -8592,7 +9085,7 @@ func TestVector122WireConformanceToRequestStructuredOutput(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector123WireConformanceToRequestStructuredOutputNestedOptional(t *testing.T) {
+func TestVector138WireConformanceToRequestStructuredOutputNestedOptional(t *testing.T) {
 	vectorJSON := `{
   "name": "structured_output_nested_optional",
   "description": "§7.1.4/§7.1.6 — OpenAI strict mode recursively requires every object property and represents optional fields as nullable.",
@@ -8695,7 +9188,7 @@ func TestVector123WireConformanceToRequestStructuredOutputNestedOptional(t *test
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector124WireConformanceToRequestToolsBindingsStripped(t *testing.T) {
+func TestVector139WireConformanceToRequestToolsBindingsStripped(t *testing.T) {
 	vectorJSON := `{
   "name": "tools_bindings_stripped",
   "description": "§7.1.3 — Parameters listed in bindings MUST be stripped from wire tools (properties AND required).",
@@ -8788,7 +9281,7 @@ func TestVector124WireConformanceToRequestToolsBindingsStripped(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector125WireConformanceToRequestToolsFunctionWire(t *testing.T) {
+func TestVector140WireConformanceToRequestToolsFunctionWire(t *testing.T) {
 	vectorJSON := `{
   "name": "tools_function_wire",
   "description": "§7.1.3 — FunctionTool projected as OpenAI function definition with JSON Schema parameters.",
@@ -8871,7 +9364,7 @@ func TestVector125WireConformanceToRequestToolsFunctionWire(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector126WireConformanceToRequestToolsNullWhenEmpty(t *testing.T) {
+func TestVector141WireConformanceToRequestToolsNullWhenEmpty(t *testing.T) {
 	vectorJSON := `{
   "name": "tools_null_when_empty",
   "description": "§7.1.3 — When no tools are defined, the tools key MUST be absent from the request entirely.",
@@ -8921,7 +9414,7 @@ func TestVector126WireConformanceToRequestToolsNullWhenEmpty(t *testing.T) {
 	vectorrunner.RunVector(t, "WireConformance", "toRequest", vector, vcSeam())
 }
 
-func TestVector127WireConformanceToRequestToolsStrictMode(t *testing.T) {
+func TestVector142WireConformanceToRequestToolsStrictMode(t *testing.T) {
 	vectorJSON := `{
   "name": "tools_strict_mode",
   "description": "§7.1.3 — FunctionTool with strict=true: strict lives on function def, additionalProperties=false in parameters schema.",

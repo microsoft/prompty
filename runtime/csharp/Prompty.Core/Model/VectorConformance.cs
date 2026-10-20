@@ -387,6 +387,174 @@ public static class VectorConformance
             if (Canonical(actual.ToJson()) != Canonical("{\"tools\":[{\"name\":\"weather_api\",\"kind\":\"openapi\",\"specification\":\"./weather.json\"}]}"))
                 throw new SeamConformanceException("tools_openapi_load misrouted");
         }
+        {
+            // vector: trusted_endpoint_builtin_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://myres.services.ai.azure.com/api/projects/p\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_builtin_allowed misrouted");
+        }
+        {
+            // vector: trusted_endpoint_env_endpoint_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://host-chosen.example.com\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_env_endpoint_allowed misrouted");
+        }
+        {
+            // vector: trusted_endpoint_env_list_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"http://localhost:11434/v1\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_env_list_allowed misrouted");
+        }
+        {
+            // vector: trusted_endpoint_literal_key_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://anywhere.example.com\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_literal_key_allowed misrouted");
+        }
+        {
+            // vector: trusted_endpoint_option_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://proxy.example.com:443/openai/v1\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_option_allowed misrouted");
+        }
+        {
+            // vector: trusted_endpoint_reference_skipped
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_reference_skipped misrouted");
+        }
+        {
+            // vector: untrusted_endpoint_ambient_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_ambient_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_env_default_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_env_default_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_env_key_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_env_key_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_file_connection_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_file_connection_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_key_with_client_secret_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_key_with_client_secret_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_mismatched_credential_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_mismatched_credential_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_no_key_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_no_key_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_suffix_spoof_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_suffix_spoof_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_wildcard_apex_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_wildcard_apex_rejected: expected an error");
+        }
     }
 
 }

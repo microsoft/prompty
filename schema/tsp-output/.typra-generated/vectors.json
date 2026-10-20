@@ -841,7 +841,10 @@
                 "endpoint": "https://localhost:8080"
               }
             }
-          }
+          },
+          "trustedEndpoints": [
+            "https://localhost:8080"
+          ]
         },
         "expected": {
           "model": {
@@ -950,7 +953,8 @@
               "id": "gpt-4",
               "connection": {
                 "kind": "key",
-                "endpoint": "${env:MISSING_VAR:fallback_value}"
+                "endpoint": "${env:MISSING_VAR:fallback_value}",
+                "apiKey": "literal-key"
               }
             }
           },
@@ -1849,6 +1853,540 @@
               "specification": "./weather.json"
             }
           ]
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_builtin_allowed",
+        "description": "Built-in first-party provider origins (here https://*.services.ai.azure.com) are trusted without host configuration",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-builtin",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "https://myres.services.ai.azure.com/api/projects/p"
+              }
+            }
+          }
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://myres.services.ai.azure.com/api/projects/p"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_env_endpoint_allowed",
+        "description": "An ${env:VAR} endpoint whose VAR is set is host-controlled and allowed with ambient credentials",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-env-endpoint",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "${env:VECTOR_FOUNDRY_ENDPOINT}"
+              }
+            }
+          },
+          "env": {
+            "VECTOR_FOUNDRY_ENDPOINT": "https://host-chosen.example.com"
+          }
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://host-chosen.example.com"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_env_list_allowed",
+        "description": "PROMPTY_TRUSTED_ENDPOINTS (comma-separated, whitespace-trimmed) admits a local endpoint",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-env-list",
+            "model": {
+              "id": "llama3",
+              "connection": {
+                "kind": "key",
+                "endpoint": "http://localhost:11434/v1"
+              }
+            }
+          },
+          "env": {
+            "PROMPTY_TRUSTED_ENDPOINTS": "https://other.example.com, http://localhost:11434"
+          }
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "key",
+              "endpoint": "http://localhost:11434/v1"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_literal_key_allowed",
+        "description": "A file-supplied literal apiKey may go to any endpoint: no ambient credential is at risk",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-literal-key",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "key",
+                "endpoint": "https://anywhere.example.com",
+                "apiKey": "file-supplied-key"
+              }
+            }
+          }
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "key",
+              "endpoint": "https://anywhere.example.com"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_option_allowed",
+        "description": "A host-provided trustedEndpoints origin admits the endpoint; scheme/host case and default port are normalized and the path is ignored",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-option",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "https://proxy.example.com:443/openai/v1"
+              }
+            }
+          },
+          "trustedEndpoints": [
+            "HTTPS://PROXY.Example.com"
+          ]
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://proxy.example.com:443/openai/v1"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "trusted_endpoint_reference_skipped",
+        "description": "kind: reference connections carry no endpoint and are not subject to the trust check",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "trusted-reference",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "reference",
+                "name": "my-connection"
+              }
+            }
+          }
+        },
+        "expected": {
+          "model": {
+            "connection": {
+              "kind": "reference",
+              "name": "my-connection"
+            }
+          }
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_ambient_rejected",
+        "description": "A literal endpoint with no file-supplied credential (ambient identity) is rejected unless its origin is trusted (spec §2.5.1)",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-ambient",
+            "model": {
+              "id": "gpt-4",
+              "provider": "foundry",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "https://attacker.example.com/api/projects/p"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_env_default_rejected",
+        "description": "An ${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-env-default",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "${env:NONEXISTENT:https://attacker.example.com}"
+              }
+            }
+          },
+          "env": {}
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_env_key_rejected",
+        "description": "A literal endpoint with an ${env:} apiKey is rejected: the file would route a host secret to a destination it chose",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-env-key",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "key",
+                "endpoint": "https://attacker.example.com",
+                "apiKey": "${env:VECTOR_HOST_KEY}"
+              }
+            }
+          },
+          "env": {
+            "VECTOR_HOST_KEY": "host-secret"
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_file_connection_rejected",
+        "description": "A connection loaded via ${file:} is file-controlled; an ambient-credential endpoint inside it is rejected",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-file-conn",
+            "model": {
+              "id": "gpt-4",
+              "connection": "${file:conn.json}"
+            }
+          },
+          "files": {
+            "conn.json": {
+              "kind": "foundry",
+              "endpoint": "https://attacker.example.com"
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_key_with_client_secret_rejected",
+        "description": "A literal clientSecret on kind key is ignored, so the apiKey stays ambient and the endpoint is rejected",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-key-client-secret",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "key",
+                "endpoint": "https://attacker.example.com",
+                "clientSecret": "junk"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_mismatched_credential_rejected",
+        "description": "A literal apiKey on a kind that does not consume it (foundry) does not make the credential file-supplied",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-mismatched-credential",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "https://attacker.example.com",
+                "apiKey": "junk"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_no_key_rejected",
+        "description": "A key connection with a literal endpoint and no apiKey (executor env-key fallback) is rejected",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-no-key",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "key",
+                "endpoint": "http://127.0.0.1:8080"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_suffix_spoof_rejected",
+        "description": "Origin matching is exact: a host that merely starts with a trusted host is not trusted",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-spoof",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "https://good.example.com.attacker.example.com"
+              }
+            }
+          },
+          "trustedEndpoints": [
+            "https://good.example.com"
+          ]
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
+        "name": "untrusted_endpoint_wildcard_apex_rejected",
+        "description": "A wildcard origin (https://*.openai.azure.com) matches strict subdomains only, never the apex or another scheme",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-apex",
+            "model": {
+              "id": "gpt-4",
+              "connection": {
+                "kind": "foundry",
+                "endpoint": "http://myres.openai.azure.com"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
         },
         "operation": "load"
       }

@@ -459,3 +459,151 @@ def run_load_conformance_conformance(seam: LoadConformance) -> None:
     assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
         "tools_openapi_load misrouted"
     )
+    # vector: trusted_endpoint_builtin_allowed
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads(
+        '{"model":{"connection":{"kind":"foundry","endpoint":"https://myres.services.ai.azure.com/api/projects/p"}}}'
+    )
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_builtin_allowed misrouted"
+    )
+    # vector: trusted_endpoint_env_endpoint_allowed
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads('{"model":{"connection":{"kind":"foundry","endpoint":"https://host-chosen.example.com"}}}')
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_env_endpoint_allowed misrouted"
+    )
+    # vector: trusted_endpoint_env_list_allowed
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads('{"model":{"connection":{"kind":"key","endpoint":"http://localhost:11434/v1"}}}')
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_env_list_allowed misrouted"
+    )
+    # vector: trusted_endpoint_literal_key_allowed
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads('{"model":{"connection":{"kind":"key","endpoint":"https://anywhere.example.com"}}}')
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_literal_key_allowed misrouted"
+    )
+    # vector: trusted_endpoint_option_allowed
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads(
+        '{"model":{"connection":{"kind":"foundry","endpoint":"https://proxy.example.com:443/openai/v1"}}}'
+    )
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_option_allowed misrouted"
+    )
+    # vector: trusted_endpoint_reference_skipped
+    source = json.loads("null")
+    result = seam.load(source)
+    if inspect.isawaitable(result):
+        result = asyncio.run(result)
+    expected = json.loads('{"model":{"connection":{"kind":"reference","name":"my-connection"}}}')
+    assert json.dumps(result.save(), sort_keys=True) == json.dumps(expected, sort_keys=True), (
+        "trusted_endpoint_reference_skipped misrouted"
+    )
+    # vector: untrusted_endpoint_ambient_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_ambient_rejected: expected an error"
+    # vector: untrusted_endpoint_env_default_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_env_default_rejected: expected an error"
+    # vector: untrusted_endpoint_env_key_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_env_key_rejected: expected an error"
+    # vector: untrusted_endpoint_file_connection_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_file_connection_rejected: expected an error"
+    # vector: untrusted_endpoint_key_with_client_secret_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_key_with_client_secret_rejected: expected an error"
+    # vector: untrusted_endpoint_mismatched_credential_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_mismatched_credential_rejected: expected an error"
+    # vector: untrusted_endpoint_no_key_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_no_key_rejected: expected an error"
+    # vector: untrusted_endpoint_suffix_spoof_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_suffix_spoof_rejected: expected an error"
+    # vector: untrusted_endpoint_wildcard_apex_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_wildcard_apex_rejected: expected an error"
