@@ -17,7 +17,8 @@ export type LoadErrorKind =
   | "file_not_found"
   | "invalid_frontmatter"
   | "invalid_template"
-  | "missing_required_input";
+  | "missing_required_input"
+  | "untrusted_endpoint";
 
 /**
  * A typed error raised by the loader/pipeline for negative-path load and

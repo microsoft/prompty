@@ -86,7 +86,7 @@ import {
   type TurnToolCall,
   type TurnToolResult,
 } from "../../src/index.js";
-import { defaultSaveContext } from "../../src/core/loader.js";
+import { defaultSaveContext, type LoadOptions } from "../../src/core/loader.js";
 import { TurnOptions } from "../../src/model/index.js";
 import { enrich, mapModel } from "../../src/model/discovery.js";
 import { ModelInfo } from "../../src/model/contracts/models/model-info.js";
@@ -375,6 +375,16 @@ function loadInvoke(input: any, _context: AdapterContext): unknown {
     oldEnv[k] = process.env[k];
     process.env[k] = v;
   }
+  // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+  if (!("PROMPTY_TRUSTED_ENDPOINTS" in envVars)) {
+    if (!("PROMPTY_TRUSTED_ENDPOINTS" in oldEnv)) {
+      oldEnv.PROMPTY_TRUSTED_ENDPOINTS = process.env.PROMPTY_TRUSTED_ENDPOINTS;
+    }
+    delete process.env.PROMPTY_TRUSTED_ENDPOINTS;
+  }
+  const loadOptions: LoadOptions = {
+    trustedEndpoints: input.trustedEndpoints,
+  };
 
   try {
     // --- input-validation vectors ---
@@ -390,18 +400,20 @@ function loadInvoke(input: any, _context: AdapterContext): unknown {
     const base = mkdtempSync(join(tmpdir(), "prompty-vec-"));
     try {
       if ("fixture" in input) {
-        return saveCanonical(load(join(SPEC_FIXTURES, input.fixture)));
+        return saveCanonical(
+          load(join(SPEC_FIXTURES, input.fixture), loadOptions),
+        );
       }
       if ("frontmatter_raw" in input) {
         const p = join(base, "vector.prompty");
         writeFileSync(p, input.frontmatter_raw, "utf8");
-        return saveCanonical(load(p));
+        return saveCanonical(load(p, loadOptions));
       }
       const sub = input.agent_subdir ? join(base, input.agent_subdir) : base;
       mkdirSync(sub, { recursive: true });
       const p = join(sub, "vector.prompty");
       writePrompty(p, input.frontmatter, input.files);
-      return saveCanonical(load(p));
+      return saveCanonical(load(p, loadOptions));
     } finally {
       rmSync(base, { recursive: true, force: true });
     }

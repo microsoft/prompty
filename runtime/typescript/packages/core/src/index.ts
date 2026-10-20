@@ -58,6 +58,9 @@ export {
   // Loader
   load,
   type LoadOptions,
+  isTrustedEndpoint,
+  BUILTIN_TRUSTED_ENDPOINTS,
+  TRUSTED_ENDPOINTS_ENV,
 
   // Pipeline functions
   validateInputs,

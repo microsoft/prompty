@@ -5,6 +5,12 @@ export * from "./connections.js";
 export { load, defaultSaveContext, type LoadOptions } from "./loader.js";
 export { PromptyLoadError, type LoadErrorKind } from "./errors.js";
 export {
+  isTrustedEndpoint,
+  checkConnectionTrust,
+  BUILTIN_TRUSTED_ENDPOINTS,
+  TRUSTED_ENDPOINTS_ENV,
+} from "./endpoint-trust.js";
+export {
   validateInputs,
   render,
   parse,
