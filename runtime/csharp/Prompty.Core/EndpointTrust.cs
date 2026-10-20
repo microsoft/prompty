@@ -167,6 +167,9 @@ public static partial class EndpointTrust
 
     private static OriginParts? Origin(string url)
     {
+        // HTTP clients treat '\' as '/', so parsers disagree on the host; reject outright.
+        if (url.Contains('\\'))
+            return null;
         var s = new string(url.Trim().Where(c => c is not ('\t' or '\r' or '\n')).ToArray());
 
         var scheme = string.Empty;

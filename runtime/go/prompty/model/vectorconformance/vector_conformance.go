@@ -1254,6 +1254,17 @@ func RunLoadConformanceConformance(t *testing.T, seam fixtures.LoadConformance) 
 			t.Fatalf("untrusted_endpoint_ambient_rejected: expected an error, got nil")
 		}
 	}
+	// vector: untrusted_endpoint_backslash_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_backslash_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_backslash_rejected: expected an error, got nil")
+		}
+	}
 	// vector: untrusted_endpoint_env_default_rejected
 	{
 		var source interface{}

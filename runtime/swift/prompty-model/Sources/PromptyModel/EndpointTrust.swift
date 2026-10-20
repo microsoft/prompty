@@ -139,6 +139,8 @@ public enum EndpointTrust {
   ///
   /// Mirrors Python's `urllib.parse.urlsplit` so every runtime classifies the same strings alike.
   static func origin(_ url: String) -> Origin? {
+    // HTTP clients treat '\' as '/', so parsers disagree on the host; reject outright.
+    if url.contains("\\") { return nil }
     let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
     let text = String(String.UnicodeScalarView(trimmed.unicodeScalars.filter { !"\t\r\n".unicodeScalars.contains($0) }))
     guard let colon = text.firstIndex(of: ":") else { return nil }

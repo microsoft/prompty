@@ -1555,6 +1555,20 @@ pub async fn run_load_conformance_conformance<S: crate::model::LoadConformance +
             "untrusted_endpoint_ambient_rejected: expected an error"
         );
     }
+    // vector: untrusted_endpoint_backslash_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_backslash_rejected: expected an error"
+        );
+    }
     // vector: untrusted_endpoint_env_default_rejected
     {
         let source: serde_json::Value = serde_json::from_str(

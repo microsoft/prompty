@@ -378,6 +378,26 @@ const LoadVectors = """
       }
     },
     {
+      "name": "untrusted_endpoint_backslash_rejected",
+      "description": "A backslash makes parsers disagree on the host (clients connect to evil.com), so the destination is untrusted",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-backslash",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://evil.example.com\\\\@api.openai.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
       "name": "untrusted_endpoint_env_default_rejected",
       "description": "An \${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected",
       "stage": "load",

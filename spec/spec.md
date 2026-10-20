@@ -326,7 +326,8 @@ Built-in: `https://api.openai.com`, `https://api.anthropic.com`,
 case-insensitive; default ports (`http`:80, `https`:443) are normalized; path, query,
 and userinfo are ignored. An entry `scheme://*.domain[:port]` matches any strict
 subdomain of `domain` (not `domain` itself). The entry `*` trusts every endpoint.
-A destination that does not parse as an absolute `http`/`https` URL is untrusted.
+A destination that does not parse as an absolute `http`/`https` URL, or that contains a
+backslash (`\`), is untrusted.
 `.prompty` frontmatter MUST NOT be able to grant itself trust.
 
 Tool connections (§2.9) are out of scope today because no executor attaches ambient

@@ -35,6 +35,9 @@ _DESTINATION_KEYS = ("endpoint", "tokenUrl")
 
 def _origin(url: str) -> tuple[str, str, int] | None:
     """Return ``(scheme, host, port)`` for an absolute http(s) URL, else ``None``."""
+    # HTTP clients treat '\' as '/', so parsers disagree on the host; reject outright.
+    if "\\" in url:
+        return None
     try:
         parts = urlsplit(url.strip())
         port = parts.port

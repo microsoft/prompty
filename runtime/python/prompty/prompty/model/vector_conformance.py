@@ -527,6 +527,16 @@ def run_load_conformance_conformance(seam: LoadConformance) -> None:
     except Exception as error:  # noqa: BLE001
         caught = error
     assert caught is not None, "untrusted_endpoint_ambient_rejected: expected an error"
+    # vector: untrusted_endpoint_backslash_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_backslash_rejected: expected an error"
     # vector: untrusted_endpoint_env_default_rejected
     source = json.loads("null")
     caught = None

@@ -761,6 +761,21 @@ export async function runLoadConformanceConformance(
       "untrusted_endpoint_ambient_rejected: expected an error",
     );
   }
+  // vector: untrusted_endpoint_backslash_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_backslash_rejected: expected an error",
+    );
+  }
   // vector: untrusted_endpoint_env_default_rejected
   {
     const sourceJson = "null";

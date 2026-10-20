@@ -369,6 +369,12 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:untrusted_endpoint_backslash_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_backslash_rejected","description":"A backslash makes parsers disagree on the host (clients connect to evil.com), so the destination is untrusted","stage":"load","input":{"frontmatter":{"name":"untrusted-backslash","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://evil.example.com\\\\@api.openai.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:untrusted_endpoint_env_default_rejected", async () => {
     const vector = JSON.parse(
       '{"name":"untrusted_endpoint_env_default_rejected","description":"An ${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected","stage":"load","input":{"frontmatter":{"name":"untrusted-env-default","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"${env:NONEXISTENT:https://attacker.example.com}"}}},"env":{}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',

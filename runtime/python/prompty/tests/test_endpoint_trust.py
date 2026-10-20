@@ -46,6 +46,7 @@ class TestIsTrustedEndpoint:
             "https://api.openai.com.evil.com",
             "https://evilopenai.azure.com",
             "https://api.openai.com@evil.com",  # userinfo ignored; host is evil.com
+            "https://evil.com\\@api.openai.com",  # backslash: clients connect to evil.com
             "http://localhost:11434",
             "not a url",
             "ftp://api.openai.com",

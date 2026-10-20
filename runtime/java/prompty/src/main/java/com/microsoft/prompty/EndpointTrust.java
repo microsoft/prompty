@@ -50,6 +50,10 @@ public final class EndpointTrust {
    * another. The rules follow the reference runtime's {@code urlsplit}-based parsing.
    */
   static Origin origin(String url) {
+    // HTTP clients treat '\' as '/', so parsers disagree on the host; reject outright.
+    if (url.indexOf('\\') >= 0) {
+      return null;
+    }
     String s = url.strip().replace("\t", "").replace("\r", "").replace("\n", "");
     int colon = s.indexOf(':');
     if (colon <= 0 || !isScheme(s.substring(0, colon))) {
