@@ -4,7 +4,7 @@ namespace Prompty.Core;
 
 /// <summary>
 /// Loads .prompty files into typed Prompty instances.
-/// Flow: read file → parse frontmatter/body → resolve ${env:}/${file:} refs → Prompty.Load().
+/// Flow: read file → parse frontmatter/body → check endpoint trust (§2.5.1) → resolve ${env:}/${file:} refs → Prompty.Load().
 /// </summary>
 public static class PromptyLoader
 {
@@ -91,7 +91,12 @@ public static class PromptyLoader
                 $"Template must be an object with format/parser, got string '{templateString}'.");
         }
 
-        // 2. Load via typed model with ${env:}/${file:} resolution
+        // 2. Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+        EndpointTrust.CheckConnectionTrust(
+            ReferenceResolver.RawConnection(data, fullPath, options?.AllowedFileRoots),
+            options?.TrustedEndpoints);
+
+        // 3. Load via typed model with ${env:}/${file:} resolution
         var ctx = new LoadContext
         {
             PreProcess = ReferenceResolver.CreatePreProcess(fullPath, options?.AllowedFileRoots),
@@ -99,7 +104,7 @@ public static class PromptyLoader
 
         var agent = Agent.Load(data, ctx);
 
-        // 3. Attach source path in metadata
+        // 4. Attach source path in metadata
         agent.Metadata ??= new Dictionary<string, object?>();
         agent.Metadata["__source_path"] = fullPath;
 

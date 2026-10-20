@@ -101,6 +101,29 @@ var agent = PromptyLoader.Load("chat.prompty");
 var agent = await PromptyLoader.LoadAsync("chat.prompty");
 ```
 
+#### Load options
+
+```csharp
+var agent = PromptyLoader.Load("chat.prompty", new PromptyLoadOptions
+{
+    // Extra directories ${file:...} references may read from (the prompt's directory is always allowed).
+    AllowedFileRoots = ["/shared/config"],
+    // Extra origins trusted to receive ambient credentials (spec §2.5.1).
+    TrustedEndpoints = ["http://localhost:11434", "https://*.contoso.com"],
+});
+```
+
+**Endpoint trust.** A `.prompty` file is untrusted input, so the loader refuses
+(`PromptyLoadException` with `Kind == "untrusted_endpoint"`) to load a file whose
+`model.connection` would send ambient credentials (`DefaultAzureCredential` tokens,
+`*_API_KEY` env vars) to an endpoint or `tokenUrl` the file chose. Built-in provider
+origins (`https://api.openai.com`, `https://api.anthropic.com`, `https://*.openai.azure.com`,
+`https://*.services.ai.azure.com`, `https://*.cognitiveservices.azure.com`,
+`https://login.microsoftonline.com`) are always trusted. To allow another destination,
+set the endpoint via `${env:VAR}`, add its origin to `TrustedEndpoints` or the
+comma-separated `PROMPTY_TRUSTED_ENDPOINTS` env var (`*` trusts all), supply a literal
+credential in the file, or use `kind: reference`.
+
 ### Pipeline
 
 ```csharp

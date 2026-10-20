@@ -2,6 +2,10 @@
 
 All notable changes to the Prompty C# runtime will be documented here.
 
+## [Unreleased]
+### Security
+- Loader enforces spec §2.5.1 endpoint trust: a `.prompty` whose `model.connection` would send ambient credentials to a file-chosen, untrusted `endpoint`/`tokenUrl` fails with `untrusted_endpoint`. New `PromptyLoadOptions.TrustedEndpoints` option and `PROMPTY_TRUSTED_ENDPOINTS` env var.
+
 ## [2.0.0] — 2026-09-16
 
 ### Added
