@@ -25,6 +25,9 @@ pub enum LoadError {
         /// Detail message
         detail: String,
     },
+    /// Ambient credentials would be sent to a file-chosen, untrusted
+    /// destination (spec §2.5.1).
+    UntrustedEndpoint(String),
     /// A catch-all for other load errors (e.g. spawn_blocking panic).
     Other(String),
 }
@@ -49,6 +52,9 @@ impl std::fmt::Display for LoadError {
             }
             LoadError::FileReference { path, detail } => {
                 write!(f, "File reference error: {}: {}", path.display(), detail)
+            }
+            LoadError::UntrustedEndpoint(msg) => {
+                write!(f, "Untrusted endpoint: {msg}")
             }
             LoadError::Other(msg) => {
                 write!(f, "Load error: {msg}")

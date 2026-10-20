@@ -57,6 +57,43 @@ pub fn resolve_single_ref(
         .flatten()
 }
 
+/// Follow a whole-value `${file:...}` reference with the same containment
+/// rules as full resolution. Non-file values are returned unchanged; a
+/// referenced file that does not exist yields `Null` (full resolution reports
+/// the error later).
+pub fn follow_file_ref(
+    value: &serde_json::Value,
+    agent_dir: &Path,
+    allowed_file_roots: &[PathBuf],
+) -> Result<serde_json::Value, LoadError> {
+    let Some(s) = value.as_str() else {
+        return Ok(value.clone());
+    };
+    if !s.starts_with("${") || !s.ends_with('}') {
+        return Ok(value.clone());
+    }
+    let inner = &s[2..s.len() - 1];
+    let Some((protocol, reference)) = inner.split_once(':') else {
+        return Ok(value.clone());
+    };
+    if !protocol.eq_ignore_ascii_case("file") {
+        return Ok(value.clone());
+    }
+    let requested = Path::new(reference);
+    let target = if requested.is_absolute() {
+        requested.to_path_buf()
+    } else {
+        agent_dir.join(requested)
+    };
+    if !target.exists() {
+        return Ok(serde_json::Value::Null);
+    }
+    Ok(
+        resolve_file(reference, agent_dir, allowed_file_roots, "model.connection")?
+            .unwrap_or(serde_json::Value::Null),
+    )
+}
+
 /// Try to resolve a single string value. Returns `Some(resolved)` if it was
 /// a `${protocol:value}` reference, `None` if it should be kept as-is.
 fn try_resolve_string(

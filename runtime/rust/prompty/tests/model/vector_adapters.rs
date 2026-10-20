@@ -750,6 +750,7 @@ fn load_error_payload(err: &prompty::LoadError) -> Value {
         LE::InvalidTemplate(..) => "invalid_template",
         LE::EnvVarNotSet { .. } => "env_var_not_set",
         LE::FileReference { .. } => "file_reference",
+        LE::UntrustedEndpoint(..) => "untrusted_endpoint",
         LE::Other(..) => return serde_json::json!({ "message": err.to_string() }),
     };
     serde_json::json!({ "kind": kind })
@@ -843,6 +844,15 @@ fn load_adapter(input: &Value, ctx: &Context) -> Result<Value, VectorError> {
             }
         }
     }
+    // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+    const TRUST_ENV: &str = "PROMPTY_TRUSTED_ENDPOINTS";
+    if !env_vars
+        .as_ref()
+        .is_some_and(|vars| vars.contains_key(TRUST_ENV))
+    {
+        restore.push((TRUST_ENV.to_string(), std::env::var(TRUST_ENV).ok()));
+        unsafe { std::env::remove_var(TRUST_ENV) };
+    }
 
     let result = load_agent_from_input(&obj, ctx);
 
@@ -859,10 +869,23 @@ fn load_agent_from_input(
     obj: &serde_json::Map<String, Value>,
     ctx: &Context,
 ) -> Result<Value, VectorError> {
+    let options = prompty::LoadOptions {
+        trusted_endpoints: obj
+            .get("trustedEndpoints")
+            .and_then(|v| v.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|e| e.as_str().map(str::to_string))
+                    .collect()
+            })
+            .unwrap_or_default(),
+        ..Default::default()
+    };
+
     // fixture path
     if let Some(Value::String(fixture)) = obj.get("fixture") {
         let path = spec_fixtures(ctx).join(fixture);
-        return match load(&path) {
+        return match prompty::load_with_options(&path, options) {
             Ok(agent) => Ok(agent_to_canonical(&agent)),
             Err(e) => Err(load_vector_error(e)),
         };
@@ -895,7 +918,7 @@ fn load_agent_from_input(
     let prompty_path = agent_dir.join("vector.prompty");
     std::fs::write(&prompty_path, text).ok();
 
-    let out = match load(&prompty_path) {
+    let out = match prompty::load_with_options(&prompty_path, options) {
         Ok(agent) => Ok(agent_to_canonical(&agent)),
         Err(e) => Err(load_vector_error(e)),
     };
