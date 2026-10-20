@@ -142,6 +142,7 @@ class LoadVectorsTest {
         case ENV_VAR_NOT_SET -> "env_var_not_set";
         case FILE_REFERENCE -> "file_reference";
         case INVALID_TEMPLATE -> "invalid_template";
+        case UNTRUSTED_ENDPOINT -> "untrusted_endpoint";
         case OTHER -> "other";
       });
     } else if (thrown instanceof InvokerException invoker
@@ -184,7 +185,7 @@ class LoadVectorsTest {
   private Agent load(Map<String, Object> input) {
     String fixture = SpecVectors.string(input, "fixture");
     if (fixture != null) {
-      return Loader.load(SpecVectors.fixtures().resolve(fixture));
+      return Loader.load(SpecVectors.fixtures().resolve(fixture), loadOptions(input));
     }
 
     String raw = SpecVectors.string(input, "frontmatter_raw");
@@ -217,7 +218,7 @@ class LoadVectorsTest {
 
     // `${file:}` references resolve relative to the agent's own directory, so the vector's virtual
     // files have to sit beside a virtual agent path rather than beside the test's working directory.
-    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"));
+    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"), loadOptions(input));
   }
 
   private static String toYaml(Object frontmatter) {
@@ -273,7 +274,23 @@ class LoadVectorsTest {
         keys.add(name);
       }
     }
+    // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+    if (!env.containsKey(EndpointTrust.TRUSTED_ENDPOINTS_ENV)) {
+      Environment.mask(EndpointTrust.TRUSTED_ENDPOINTS_ENV);
+      keys.add(EndpointTrust.TRUSTED_ENDPOINTS_ENV);
+    }
     return keys;
+  }
+
+  /** Host load options a vector requests -- currently only {@code trustedEndpoints}. */
+  private static LoadOptions loadOptions(Map<String, Object> input) {
+    List<String> trusted = new ArrayList<>();
+    if (input.get("trustedEndpoints") instanceof List<?> list) {
+      for (Object item : list) {
+        trusted.add(String.valueOf(item));
+      }
+    }
+    return new LoadOptions(List.of(), trusted);
   }
 
   private static void clearEnv(List<String> keys) {

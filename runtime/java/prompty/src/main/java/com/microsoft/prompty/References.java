@@ -100,6 +100,22 @@ public final class References {
     return tryResolveString(value, "<preProcess>", agentDir, allowedFileRoots, false);
   }
 
+  /**
+   * Read a {@code ${file:...}} target under the same containment rules as reference resolution.
+   *
+   * <p>A target that escapes the allowed roots throws {@link LoadException.Kind#FILE_REFERENCE}; a
+   * contained target that does not exist yields empty, leaving the error to normal resolution.
+   */
+  static Optional<Object> readContainedFile(
+      String relativePath, Path agentDir, List<Path> allowedFileRoots, String key) {
+    Path requested = Path.of(relativePath);
+    Path full = requested.isAbsolute() ? requested : agentDir.resolve(requested);
+    if (!Files.exists(full)) {
+      return Optional.empty();
+    }
+    return resolveFile(relativePath, agentDir, allowedFileRoots, key);
+  }
+
   private static Optional<Object> tryResolveString(
       String value, String key, Path agentDir, List<Path> allowedFileRoots, boolean throwOnError) {
     if (!value.startsWith("${") || !value.endsWith("}")) {

@@ -2,9 +2,11 @@ package com.microsoft.prompty.model;
 
 import com.microsoft.prompty.CancellationToken;
 import com.microsoft.prompty.Discovery;
+import com.microsoft.prompty.EndpointTrust;
 import com.microsoft.prompty.Environment;
 import com.microsoft.prompty.InvokerException;
 import com.microsoft.prompty.LoadException;
+import com.microsoft.prompty.LoadOptions;
 import com.microsoft.prompty.Loader;
 import com.microsoft.prompty.Memory;
 import com.microsoft.prompty.Messages;
@@ -319,6 +321,7 @@ public final class VectorAdapters {
       case ENV_VAR_NOT_SET -> "env_var_not_set";
       case FILE_REFERENCE -> "file_reference";
       case INVALID_TEMPLATE -> "invalid_template";
+      case UNTRUSTED_ENDPOINT -> "untrusted_endpoint";
       case OTHER -> "other";
     });
     return payload;
@@ -349,7 +352,7 @@ public final class VectorAdapters {
   private static Agent loadAgent(Map<String, Object> input) {
     String fixture = string(input.get("fixture"));
     if (!fixture.isEmpty()) {
-      return Loader.load(SpecVectors.fixtures().resolve(fixture));
+      return Loader.load(SpecVectors.fixtures().resolve(fixture), loadOptions(input));
     }
     String raw = input.get("frontmatter_raw") instanceof String r ? r : null;
     Map<String, Object> files = asMap(input.get("files"));
@@ -371,7 +374,7 @@ public final class VectorAdapters {
       Object content = file.getValue();
       write(target, content instanceof String text ? text : TypraJson.stringify(content));
     }
-    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"));
+    return Loader.loadFromString(raw, agentDir.resolve("virtual.prompty"), loadOptions(input));
   }
 
   private static String toYaml(Object frontmatter) {
@@ -420,7 +423,23 @@ public final class VectorAdapters {
         keys.add(name);
       }
     }
+    // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+    if (!env.containsKey(EndpointTrust.TRUSTED_ENDPOINTS_ENV)) {
+      Environment.mask(EndpointTrust.TRUSTED_ENDPOINTS_ENV);
+      keys.add(EndpointTrust.TRUSTED_ENDPOINTS_ENV);
+    }
     return keys;
+  }
+
+  /** Host load options a vector requests -- currently only {@code trustedEndpoints}. */
+  private static LoadOptions loadOptions(Map<String, Object> input) {
+    List<String> trusted = new ArrayList<>();
+    if (input.get("trustedEndpoints") instanceof List<?> list) {
+      for (Object item : list) {
+        trusted.add(String.valueOf(item));
+      }
+    }
+    return new LoadOptions(List.of(), trusted);
   }
 
   private static void clearEnv(List<String> keys) {
