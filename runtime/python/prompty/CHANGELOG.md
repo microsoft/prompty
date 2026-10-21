@@ -2,6 +2,13 @@
 
 All notable changes to the Prompty Python runtime will be documented here.
 
+## [2.1.0](https://github.com/microsoft/prompty/compare/python/2.0.3...python/2.1.0) (2026-10-20)
+
+
+### Features
+
+* secure-by-default endpoint trust for ambient credentials ([#590](https://github.com/microsoft/prompty/pull/590)) ([b26eed4](https://github.com/microsoft/prompty/commit/b26eed4383f9e405a2bca22c256b6e46f3dd57be)). `load()` now rejects a `.prompty` whose `model.connection` would send ambient credentials to a file-chosen, untrusted `endpoint`/`tokenUrl` (`untrusted_endpoint`). Trust additional origins with the `trusted_endpoints` load option or `PROMPTY_TRUSTED_ENDPOINTS`.
+
 ## [2.0.3](https://github.com/microsoft/prompty/compare/python/2.0.2...python/2.0.3) (2026-10-16)
 
 
