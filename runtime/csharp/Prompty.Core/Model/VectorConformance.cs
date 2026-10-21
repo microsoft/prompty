@@ -395,6 +395,13 @@ public static class VectorConformance
                 throw new SeamConformanceException("trusted_endpoint_builtin_allowed misrouted");
         }
         {
+            // vector: trusted_endpoint_default_port_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://API.OpenAI.com:443/v1\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_default_port_allowed misrouted");
+        }
+        {
             // vector: trusted_endpoint_env_endpoint_allowed
             var source = JsonSerializer.Deserialize<object>("null")!;
             var actual = await seam.LoadAsync(source);
@@ -428,6 +435,13 @@ public static class VectorConformance
             var actual = await seam.LoadAsync(source);
             if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"reference\",\"name\":\"my-connection\"}}}"))
                 throw new SeamConformanceException("trusted_endpoint_reference_skipped misrouted");
+        }
+        {
+            // vector: trusted_endpoint_userinfo_allowed
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            var actual = await seam.LoadAsync(source);
+            if (Canonical(actual.ToJson()) != Canonical("{\"model\":{\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://user@api.openai.com/v1\"}}}"))
+                throw new SeamConformanceException("trusted_endpoint_userinfo_allowed misrouted");
         }
         {
             // vector: untrusted_endpoint_ambient_rejected
@@ -500,6 +514,34 @@ public static class VectorConformance
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_file_connection_rejected: expected an error");
         }
         {
+            // vector: untrusted_endpoint_fragment_before_at_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_fragment_before_at_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_ipv6_literal_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_ipv6_literal_rejected: expected an error");
+        }
+        {
             // vector: untrusted_endpoint_key_with_client_secret_rejected
             var source = JsonSerializer.Deserialize<object>("null")!;
             Exception? caught = null;
@@ -542,6 +584,76 @@ public static class VectorConformance
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_no_key_rejected: expected an error");
         }
         {
+            // vector: untrusted_endpoint_percent_encoded_host_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_percent_encoded_host_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_port_mismatch_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_port_mismatch_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_query_before_at_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_query_before_at_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_scheme_mismatch_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_scheme_mismatch_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_suffix_lookalike_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_suffix_lookalike_rejected: expected an error");
+        }
+        {
             // vector: untrusted_endpoint_suffix_spoof_rejected
             var source = JsonSerializer.Deserialize<object>("null")!;
             Exception? caught = null;
@@ -556,6 +668,48 @@ public static class VectorConformance
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_suffix_spoof_rejected: expected an error");
         }
         {
+            // vector: untrusted_endpoint_trailing_dot_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_trailing_dot_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_unicode_homoglyph_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_unicode_homoglyph_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_userinfo_lookalike_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_userinfo_lookalike_rejected: expected an error");
+        }
+        {
             // vector: untrusted_endpoint_wildcard_apex_rejected
             var source = JsonSerializer.Deserialize<object>("null")!;
             Exception? caught = null;
@@ -568,6 +722,20 @@ public static class VectorConformance
                 caught = error;
             }
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_wildcard_apex_rejected: expected an error");
+        }
+        {
+            // vector: untrusted_endpoint_wildcard_boundary_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_wildcard_boundary_rejected: expected an error");
         }
     }
 

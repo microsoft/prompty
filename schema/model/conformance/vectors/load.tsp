@@ -398,6 +398,276 @@ const LoadVectors = """
       }
     },
     {
+      "name": "untrusted_endpoint_fragment_before_at_rejected",
+      "description": "A '#' ends the authority, so the host is evil.example.com",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-fragment-before-at",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://evil.example.com#@api.openai.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_query_before_at_rejected",
+      "description": "A '?' ends the authority, so the host is evil.example.com",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-query-before-at",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://evil.example.com?@api.openai.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_userinfo_lookalike_rejected",
+      "description": "A trusted host in userinfo is not the destination host",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-userinfo-lookalike",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://api.openai.com@evil.example.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_suffix_lookalike_rejected",
+      "description": "A trusted host as a label prefix of another domain is not trusted",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-suffix-lookalike",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://api.openai.com.evil.example.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_wildcard_boundary_rejected",
+      "description": "*.services.ai.azure.com matches strict subdomains only, not evilservices.ai.azure.com",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-wildcard-boundary",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://evilservices.ai.azure.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_scheme_mismatch_rejected",
+      "description": "Built-in origins are https; http on the same host is a different origin",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-scheme-mismatch",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "http://api.openai.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_port_mismatch_rejected",
+      "description": "A non-default port is a different origin",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-port-mismatch",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://api.openai.com:8443"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_ipv6_literal_rejected",
+      "description": "An IPv6 literal is not a trusted origin",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-ipv6-literal",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://[::1]:8080"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_percent_encoded_host_rejected",
+      "description": "Hosts are compared without percent-decoding, so an encoded host never matches",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-percent-encoded-host",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://api.openai.com%2eevil.example.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_trailing_dot_rejected",
+      "description": "Hosts are compared exactly; a trailing-dot host does not match",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-trailing-dot",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://api.openai.com."
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "untrusted_endpoint_unicode_homoglyph_rejected",
+      "description": "A non-ASCII lookalike host does not match",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-unicode-homoglyph",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://аpi.openai.com"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
+      "name": "trusted_endpoint_userinfo_allowed",
+      "description": "Userinfo is ignored; the destination host api.openai.com is trusted",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "trusted-userinfo-allowed",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://user@api.openai.com/v1"
+            }
+          }
+        }
+      },
+      "expected": {
+        "model": {
+          "connection": {
+            "kind": "foundry",
+            "endpoint": "https://user@api.openai.com/v1"
+          }
+        }
+      }
+    },
+    {
+      "name": "trusted_endpoint_default_port_allowed",
+      "description": "An explicit default port normalizes to the built-in origin",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "trusted-default-port-allowed",
+          "model": {
+            "id": "gpt-4",
+            "connection": {
+              "kind": "foundry",
+              "endpoint": "https://API.OpenAI.com:443/v1"
+            }
+          }
+        }
+      },
+      "expected": {
+        "model": {
+          "connection": {
+            "kind": "foundry",
+            "endpoint": "https://API.OpenAI.com:443/v1"
+          }
+        }
+      }
+    },
+    {
       "name": "untrusted_endpoint_env_default_rejected",
       "description": "An \${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected",
       "stage": "load",

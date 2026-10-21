@@ -333,6 +333,12 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:trusted_endpoint_default_port_allowed", async () => {
+    const vector = JSON.parse(
+      '{"name":"trusted_endpoint_default_port_allowed","description":"An explicit default port normalizes to the built-in origin","stage":"load","input":{"frontmatter":{"name":"trusted-default-port-allowed","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://API.OpenAI.com:443/v1"}}}},"expected":{"model":{"connection":{"kind":"foundry","endpoint":"https://API.OpenAI.com:443/v1"}}},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:trusted_endpoint_env_endpoint_allowed", async () => {
     const vector = JSON.parse(
       '{"name":"trusted_endpoint_env_endpoint_allowed","description":"An ${env:VAR} endpoint whose VAR is set is host-controlled and allowed with ambient credentials","stage":"load","input":{"frontmatter":{"name":"trusted-env-endpoint","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"${env:VECTOR_FOUNDRY_ENDPOINT}"}}},"env":{"VECTOR_FOUNDRY_ENDPOINT":"https://host-chosen.example.com"}},"expected":{"model":{"connection":{"kind":"foundry","endpoint":"https://host-chosen.example.com"}}},"operation":"load"}',
@@ -360,6 +366,12 @@ describe("callable vector conformance", () => {
   it("LoadConformance.load:trusted_endpoint_reference_skipped", async () => {
     const vector = JSON.parse(
       '{"name":"trusted_endpoint_reference_skipped","description":"kind: reference connections carry no endpoint and are not subject to the trust check","stage":"load","input":{"frontmatter":{"name":"trusted-reference","model":{"id":"gpt-4","connection":{"kind":"reference","name":"my-connection"}}}},"expected":{"model":{"connection":{"kind":"reference","name":"my-connection"}}},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:trusted_endpoint_userinfo_allowed", async () => {
+    const vector = JSON.parse(
+      '{"name":"trusted_endpoint_userinfo_allowed","description":"Userinfo is ignored; the destination host api.openai.com is trusted","stage":"load","input":{"frontmatter":{"name":"trusted-userinfo-allowed","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://user@api.openai.com/v1"}}}},"expected":{"model":{"connection":{"kind":"foundry","endpoint":"https://user@api.openai.com/v1"}}},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
@@ -393,6 +405,18 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:untrusted_endpoint_fragment_before_at_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_fragment_before_at_rejected","description":"A \'#\' ends the authority, so the host is evil.example.com","stage":"load","input":{"frontmatter":{"name":"untrusted-fragment-before-at","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://evil.example.com#@api.openai.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_ipv6_literal_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_ipv6_literal_rejected","description":"An IPv6 literal is not a trusted origin","stage":"load","input":{"frontmatter":{"name":"untrusted-ipv6-literal","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://[::1]:8080"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:untrusted_endpoint_key_with_client_secret_rejected", async () => {
     const vector = JSON.parse(
       '{"name":"untrusted_endpoint_key_with_client_secret_rejected","description":"A literal clientSecret on kind key is ignored, so the apiKey stays ambient and the endpoint is rejected","stage":"load","input":{"frontmatter":{"name":"untrusted-key-client-secret","model":{"id":"gpt-4","connection":{"kind":"key","endpoint":"https://attacker.example.com","clientSecret":"junk"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
@@ -411,15 +435,69 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:untrusted_endpoint_percent_encoded_host_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_percent_encoded_host_rejected","description":"Hosts are compared without percent-decoding, so an encoded host never matches","stage":"load","input":{"frontmatter":{"name":"untrusted-percent-encoded-host","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://api.openai.com%2eevil.example.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_port_mismatch_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_port_mismatch_rejected","description":"A non-default port is a different origin","stage":"load","input":{"frontmatter":{"name":"untrusted-port-mismatch","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://api.openai.com:8443"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_query_before_at_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_query_before_at_rejected","description":"A \'?\' ends the authority, so the host is evil.example.com","stage":"load","input":{"frontmatter":{"name":"untrusted-query-before-at","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://evil.example.com?@api.openai.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_scheme_mismatch_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_scheme_mismatch_rejected","description":"Built-in origins are https; http on the same host is a different origin","stage":"load","input":{"frontmatter":{"name":"untrusted-scheme-mismatch","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"http://api.openai.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_suffix_lookalike_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_suffix_lookalike_rejected","description":"A trusted host as a label prefix of another domain is not trusted","stage":"load","input":{"frontmatter":{"name":"untrusted-suffix-lookalike","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://api.openai.com.evil.example.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:untrusted_endpoint_suffix_spoof_rejected", async () => {
     const vector = JSON.parse(
       '{"name":"untrusted_endpoint_suffix_spoof_rejected","description":"Origin matching is exact: a host that merely starts with a trusted host is not trusted","stage":"load","input":{"frontmatter":{"name":"untrusted-spoof","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://good.example.com.attacker.example.com"}}},"trustedEndpoints":["https://good.example.com"]},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:untrusted_endpoint_trailing_dot_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_trailing_dot_rejected","description":"Hosts are compared exactly; a trailing-dot host does not match","stage":"load","input":{"frontmatter":{"name":"untrusted-trailing-dot","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://api.openai.com."}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_unicode_homoglyph_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_unicode_homoglyph_rejected","description":"A non-ASCII lookalike host does not match","stage":"load","input":{"frontmatter":{"name":"untrusted-unicode-homoglyph","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://аpi.openai.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_userinfo_lookalike_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_userinfo_lookalike_rejected","description":"A trusted host in userinfo is not the destination host","stage":"load","input":{"frontmatter":{"name":"untrusted-userinfo-lookalike","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://api.openai.com@evil.example.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:untrusted_endpoint_wildcard_apex_rejected", async () => {
     const vector = JSON.parse(
       '{"name":"untrusted_endpoint_wildcard_apex_rejected","description":"A wildcard origin (https://*.openai.azure.com) matches strict subdomains only, never the apex or another scheme","stage":"load","input":{"frontmatter":{"name":"untrusted-apex","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"http://myres.openai.azure.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
+  it("LoadConformance.load:untrusted_endpoint_wildcard_boundary_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_wildcard_boundary_rejected","description":"*.services.ai.azure.com matches strict subdomains only, not evilservices.ai.azure.com","stage":"load","input":{"frontmatter":{"name":"untrusted-wildcard-boundary","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"https://evilservices.ai.azure.com"}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
