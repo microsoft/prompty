@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fsp from "fs/promises";
 import * as fs from "fs";
 import {
 	ConnectionProfile,
@@ -134,6 +135,14 @@ export class ConnectionStore {
 
 	// ─── File Operations ─────────────────────────────────────────────
 
+	/** Ensure the parent directory of the connections file exists. */
+	private async ensureConnectionsDir(): Promise<void> {
+		const filePath = this.getConnectionsFilePath();
+		if (!filePath) {return;}
+		const dir = path.dirname(filePath);
+		await fsp.mkdir(dir, { recursive: true });
+	}
+
 	private getConnectionsFilePath(): string | undefined {
 		const workspaceFolders = vscode.workspace.workspaceFolders;
 		if (!workspaceFolders || workspaceFolders.length === 0) {return undefined;}
@@ -141,7 +150,7 @@ export class ConnectionStore {
 		return path.join(
 			workspaceFolders[0].uri.fsPath,
 			CONNECTIONS_DIR,
-			CONNECTIONS_FILE
+			CONNECTIONS_FILE,
 		);
 	}
 
@@ -150,8 +159,7 @@ export class ConnectionStore {
 		if (!filePath) {return null;}
 
 		try {
-			if (!fs.existsSync(filePath)) {return null;}
-			const content = fs.readFileSync(filePath, "utf-8");
+			const content = await fsp.readFile(filePath, "utf-8");
 			return JSON.parse(content) as ConnectionsFile;
 		} catch {
 			return null;
@@ -164,12 +172,8 @@ export class ConnectionStore {
 			throw new Error("No workspace folder open");
 		}
 
-		const dir = path.dirname(filePath);
-		if (!fs.existsSync(dir)) {
-			fs.mkdirSync(dir, { recursive: true });
-		}
-
-		fs.writeFileSync(filePath, JSON.stringify(file, null, 2), "utf-8");
+		await this.ensureConnectionsDir();
+		await fsp.writeFile(filePath, JSON.stringify(file, null, 2), "utf-8");
 	}
 
 	private watchConfigFile(): void {
