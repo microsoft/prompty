@@ -50,18 +50,18 @@
     "@prompty/openai": "^2.1.0"
   },
   "dependencies": {
-    "@azure/ai-projects": "^2.6.0",
-    "@azure/identity": "^4.13.2",
+    "@azure/ai-projects": "^2.8.0",
+    "@azure/identity": "^4.14.0",
     "@prompty/core": "^2.1.0",
     "@prompty/openai": "^2.1.0",
-    "openai": "^7.10.0"
+    "openai": "^7.38.0"
   },
   "devDependencies": {
     "@prompty/core": "^2.1.0",
     "@prompty/openai": "^2.1.0",
-    "@types/node": "^26.4.1",
-    "dotenv": "^17.4.2",
-    "tsup": "^8.4.0",
+    "@types/node": "^26.6.5",
+    "dotenv": "^18.0.8",
+    "tsup": "^9.0.0",
     "typescript": "^5.7.0",
     "vitest": "^5.0.5"
   }
