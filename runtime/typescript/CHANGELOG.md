@@ -2,7 +2,7 @@
 
 All notable changes to the Prompty TypeScript runtime will be documented here.
 
-## [Unreleased]
+## [2.1.0] — 2026-10-20
 
 ### Security
 - `load()` enforces spec §2.5.1 endpoint trust: a file whose connection uses ambient credentials may not target an untrusted, file-chosen `endpoint`/`tokenUrl` (`untrusted_endpoint` load error). Add origins via the `trustedEndpoints` load option or `PROMPTY_TRUSTED_ENDPOINTS`.
