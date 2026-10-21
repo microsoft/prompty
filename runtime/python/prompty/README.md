@@ -294,6 +294,14 @@ input value.
 
 `${file:...}` references are scoped to the containing `.prompty` file's directory by default. Pass `allowed_file_roots` to `load()` / `load_async()` only when the host application explicitly trusts additional shared directories.
 
+### Endpoint Trust
+
+A `.prompty` file can't send ambient credentials (`DefaultAzureCredential` tokens, `OPENAI_API_KEY` and similar env keys) to an endpoint it picked itself. Unless the connection uses a literal `apiKey` (`kind: key`), a literal `endpoint`/`tokenUrl` must be trusted, or `load()` raises `PromptyLoadError("untrusted_endpoint")`.
+
+- Built-in trusted origins: `api.openai.com`, `api.anthropic.com`, `*.openai.azure.com`, `*.services.ai.azure.com`, `*.cognitiveservices.azure.com`, `login.microsoftonline.com` (all `https`).
+- Supply the endpoint from the host: `endpoint: ${env:MY_ENDPOINT}`.
+- Or trust more origins: `load(path, trusted_endpoints=["http://localhost:11434"])` or `PROMPTY_TRUSTED_ENDPOINTS=http://localhost:11434,https://*.contoso.com`.
+
 ### Connection Kinds
 
 | Kind | When to use |

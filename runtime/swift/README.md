@@ -55,6 +55,36 @@ let messages = try await Pipeline.prepare(agent, inputs: inputs)  // render + pa
 let raw      = try await Pipeline.run(agent, messages: messages)  // execute + process
 ```
 
+### Endpoint trust
+
+A `.prompty` file is untrusted input. If a connection uses ambient credentials
+(an `${env:}` API key, a bearer token, a managed identity), the loader refuses a
+literal `endpoint` or `tokenUrl` that the host hasn't approved. It throws
+`LoadError.untrustedEndpoint` (spec §2.5.1). By default the loader trusts these
+origins:
+
+- `https://api.openai.com`
+- `https://api.anthropic.com`
+- `https://*.openai.azure.com`
+- `https://*.services.ai.azure.com`
+- `https://*.cognitiveservices.azure.com`
+- `https://login.microsoftonline.com`
+
+To trust other origins, pass them as a load option or set them in the
+environment:
+
+```swift
+let agent = try Loader.load(
+  path: "local.prompty",
+  options: LoadOptions(trustedEndpoints: ["http://localhost:11434", "https://*.contoso.com"])
+)
+```
+
+`PROMPTY_TRUSTED_ENDPOINTS` is a comma-separated list of origins and is merged
+with the option. `*` trusts everything. The check passes without any trust entry
+when the endpoint comes from `${env:VAR}` (host-controlled) or when the file
+carries its own literal key.
+
 ### Tool calls
 
 When a prompt declares tools, the host drives the loop. Read the calls, then ask

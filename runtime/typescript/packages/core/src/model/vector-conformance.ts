@@ -662,4 +662,461 @@ export async function runLoadConformanceConformance(
       "tools_openapi_load misrouted",
     );
   }
+  // vector: trusted_endpoint_builtin_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"foundry","endpoint":"https://myres.services.ai.azure.com/api/projects/p"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_builtin_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_default_port_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"foundry","endpoint":"https://API.OpenAI.com:443/v1"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_default_port_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_env_endpoint_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"foundry","endpoint":"https://host-chosen.example.com"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_env_endpoint_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_env_list_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"key","endpoint":"http://localhost:11434/v1"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_env_list_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_literal_key_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"key","endpoint":"https://anywhere.example.com"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_literal_key_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_option_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"foundry","endpoint":"https://proxy.example.com:443/openai/v1"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_option_allowed misrouted",
+    );
+  }
+  // vector: trusted_endpoint_reference_skipped
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"reference","name":"my-connection"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_reference_skipped misrouted",
+    );
+  }
+  // vector: trusted_endpoint_userinfo_allowed
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    const actual = await seam.load(source);
+    const expected = JSON.parse(
+      '{"model":{"connection":{"kind":"foundry","endpoint":"https://user@api.openai.com/v1"}}}',
+    );
+    seamConformanceAssert(
+      seamConformanceCanonical(JSON.parse(JSON.stringify(actual))) ===
+        seamConformanceCanonical(expected),
+      "trusted_endpoint_userinfo_allowed misrouted",
+    );
+  }
+  // vector: untrusted_endpoint_ambient_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_ambient_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_backslash_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_backslash_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_blank_literal_key_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_blank_literal_key_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_env_default_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_env_default_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_env_key_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_env_key_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_file_connection_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_file_connection_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_fragment_before_at_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_fragment_before_at_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_ipv6_literal_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_ipv6_literal_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_key_with_client_secret_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_key_with_client_secret_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_mismatched_credential_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_mismatched_credential_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_no_key_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_no_key_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_oauth_literal_secret_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_oauth_literal_secret_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_percent_encoded_host_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_percent_encoded_host_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_port_mismatch_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_port_mismatch_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_query_before_at_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_query_before_at_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_scheme_mismatch_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_scheme_mismatch_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_suffix_lookalike_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_suffix_lookalike_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_suffix_spoof_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_suffix_spoof_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_trailing_dot_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_trailing_dot_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_unicode_homoglyph_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_unicode_homoglyph_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_userinfo_lookalike_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_userinfo_lookalike_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_wildcard_apex_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_wildcard_apex_rejected: expected an error",
+    );
+  }
+  // vector: untrusted_endpoint_wildcard_boundary_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_wildcard_boundary_rejected: expected an error",
+    );
+  }
 }

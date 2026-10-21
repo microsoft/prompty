@@ -142,7 +142,11 @@ final class LoadVectorTests: XCTestCase {
   private static func runVector(
     name: String, input: [String: Any], expected: [String: Any], expectedError: [String: Any]?
   ) throws {
-    let env = input["env"] as? [String: Any] ?? [:]
+    var env = input["env"] as? [String: Any] ?? [:]
+    // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+    if env[EndpointTrust.trustedEndpointsEnv] == nil {
+      env[EndpointTrust.trustedEndpointsEnv] = NSNull()
+    }
 
     return try withEnvironment(env) {
       // Vectors that declare a canonical `expectedError` drive the loader (or
@@ -167,8 +171,11 @@ final class LoadVectorTests: XCTestCase {
 
   /// Build a `Agent` from whichever input form the vector uses.
   static func loadAgent(_ input: [String: Any]) throws -> Agent {
+    let options = LoadOptions(
+      trustedEndpoints: (input["trustedEndpoints"] as? [Any] ?? []).compactMap { $0 as? String })
+
     if let fixture = input["fixture"] as? String {
-      return try Loader.load(path: Spec.fixtures.appendingPathComponent(fixture).path)
+      return try Loader.load(path: Spec.fixtures.appendingPathComponent(fixture).path, options: options)
     }
 
     if let files = input["files"] as? [String: Any] {
@@ -203,18 +210,19 @@ final class LoadVectorTests: XCTestCase {
 
       let raw = try promptyDocument(frontmatter: input["frontmatter"])
       return try Loader.load(
-        contents: raw, basePath: agentDir.appendingPathComponent("virtual.prompty").path)
+        contents: raw, basePath: agentDir.appendingPathComponent("virtual.prompty").path,
+        options: options)
     }
 
     if let raw = input["frontmatter_raw"] as? String {
-      return try Loader.load(contents: raw, basePath: workingFile)
+      return try Loader.load(contents: raw, basePath: workingFile, options: options)
     }
 
     guard input["frontmatter"] != nil else {
       throw VectorFailure("vector has no fixture, frontmatter, or frontmatter_raw")
     }
     let raw = try promptyDocument(frontmatter: input["frontmatter"])
-    return try Loader.load(contents: raw, basePath: workingFile)
+    return try Loader.load(contents: raw, basePath: workingFile, options: options)
   }
 
   /// Serialize a vector's `frontmatter` object into a `.prompty` document.
@@ -324,6 +332,7 @@ final class LoadVectorTests: XCTestCase {
     case .invalidFrontmatter: return ["kind": "invalid_frontmatter"]
     case .invalidModel: return ["kind": "invalid_model"]
     case .invalidNamedCollectionEntry: return ["kind": "invalid_named_collection_entry"]
+    case .untrustedEndpoint: return ["kind": "untrusted_endpoint"]
     }
   }
 
@@ -642,8 +651,10 @@ final class LoadVectorTests: XCTestCase {
 func withEnvironment<T>(_ values: [String: Any], _ body: () throws -> T) rethrows -> T {
   var restore: [String: String?] = [:]
   for (key, value) in values {
-    guard let string = value as? String else { continue }
-    restore[key] = ProcessInfo.processInfo.environment[key]
+    // `NSNull` unsets the variable for the duration of `body`.
+    let string = value as? String
+    guard string != nil || value is NSNull else { continue }
+    restore.updateValue(ProcessInfo.processInfo.environment[key], forKey: key)
     Env.set(key, string)
   }
   defer {

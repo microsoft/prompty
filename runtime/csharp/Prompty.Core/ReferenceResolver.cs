@@ -34,6 +34,66 @@ public static class ReferenceResolver
     }
 
     /// <summary>
+    /// Return the unresolved <c>model.connection</c> from raw frontmatter, following
+    /// whole-value <c>${file:...}</c> references for <c>model</c> and <c>model.connection</c>
+    /// with the same containment rules as reference resolution (spec §2.5.1).
+    /// </summary>
+    internal static object? RawConnection(
+        Dictionary<string, object?> data,
+        string promptyFilePath,
+        IEnumerable<string>? allowedFileRoots = null)
+    {
+        var parentDir = Path.GetDirectoryName(GetCanonicalPath(promptyFilePath))
+            ?? throw new ArgumentException($"Cannot determine parent directory of '{promptyFilePath}'");
+        var allowedRoots = new[] { parentDir }
+            .Concat(allowedFileRoots ?? [])
+            .Select(GetCanonicalPath)
+            .ToArray();
+
+        object? Follow(object? value, string key)
+        {
+            if (value is string str && str.StartsWith(RefPrefix) && str.EndsWith(RefSuffix))
+            {
+                var inner = str[RefPrefix.Length..^RefSuffix.Length];
+                var colonIndex = inner.IndexOf(':');
+                if (colonIndex >= 0 && inner[..colonIndex].Equals("file", StringComparison.OrdinalIgnoreCase))
+                    return LoadContainedFile(inner[(colonIndex + 1)..], parentDir, allowedRoots, key);
+            }
+            return value;
+        }
+
+        var model = Follow(data.GetValueOrDefault("model"), "model");
+        if (model is not System.Collections.IDictionary modelDict)
+            return null;
+        return Follow(modelDict.Contains("connection") ? modelDict["connection"] : null, "connection");
+    }
+
+    /// <summary>
+    /// Containment-check then load a ${file:} target; returns <c>null</c> if it does not exist.
+    /// </summary>
+    private static object? LoadContainedFile(
+        string relativePath,
+        string parentDir,
+        IReadOnlyCollection<string> allowedRoots,
+        string key)
+    {
+        var fullPath = GetCanonicalPath(Path.IsPathRooted(relativePath)
+            ? Path.GetFullPath(relativePath)
+            : Path.GetFullPath(Path.Combine(parentDir, relativePath)));
+        if (!allowedRoots.Any(root => IsWithinRoot(fullPath, root)))
+        {
+            throw new PromptyLoadException(
+                "file_reference",
+                $"File reference '{relativePath}' resolves outside allowed roots (resolved to '{fullPath}', key: '{key}').");
+        }
+
+        if (!File.Exists(fullPath))
+            return null;
+
+        return LoadFileContent(File.ReadAllText(fullPath), fullPath);
+    }
+
+    /// <summary>
     /// Walks a dictionary and resolves any string values matching ${protocol:value} patterns.
     /// Only processes top-level string values in the given dictionary (recursive walking is
     /// handled by LoadContext calling PreProcess on each nested dict).
@@ -132,7 +192,11 @@ public static class ReferenceResolver
                 $"File reference '{relativePath}' resolves outside allowed roots (resolved to '{fullPath}', key: '{key}').");
         }
 
-        var content = File.ReadAllText(fullPath);
+        return LoadFileContent(File.ReadAllText(fullPath), fullPath);
+    }
+
+    private static object LoadFileContent(string content, string fullPath)
+    {
         var ext = Path.GetExtension(fullPath).ToLowerInvariant();
 
         return ext switch

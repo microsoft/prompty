@@ -181,7 +181,8 @@ fn test_env_default() {
             "id": "gpt-4",
             "connection": {
                 "kind": "key",
-                "endpoint": "${env:MISSING_VAR:fallback_value}"
+                "endpoint": "${env:MISSING_VAR:fallback_value}",
+                "apiKey": "literal-key"
             }
         }
     });
@@ -322,7 +323,17 @@ fn test_connection_types_load() {
             }
         }
     });
-    let agent = load_from_frontmatter(&fm, &[]).unwrap();
+    let yaml = serde_yaml::to_string(&fm).unwrap();
+    let options = prompty::LoadOptions {
+        trusted_endpoints: vec!["https://localhost:8080".to_string()],
+        ..Default::default()
+    };
+    let agent = prompty::load_from_string_with_options(
+        &format!("---\n{yaml}---\n"),
+        std::env::current_dir().unwrap(),
+        options,
+    )
+    .unwrap();
     let model_conn = prompty::model_access::model_connection(&agent.model);
     let conn = model_conn.as_object().unwrap();
     assert_eq!(conn["kind"], "anonymous");

@@ -16,6 +16,7 @@ from typing import Any
 import yaml
 
 from ..model import Agent, LoadContext, SaveContext
+from .endpoint_trust import check_connection_trust
 from .errors import PromptyLoadError
 from .utils import load_prompty, load_prompty_async
 
@@ -27,7 +28,12 @@ __all__ = ["load", "load_async", "default_save_context"]
 # ---------------------------------------------------------------------------
 
 
-def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Agent:
+def load(
+    path: str | Path,
+    *,
+    allowed_file_roots: Sequence[str | Path] | None = None,
+    trusted_endpoints: Sequence[str] | None = None,
+) -> Agent:
     """Load a ``.prompty`` file and return a typed ``Agent``.
 
     Parameters
@@ -38,6 +44,10 @@ def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = 
         Additional directories that ``${file:...}`` references may read from.
         The prompt file's directory is always allowed. References that resolve
         outside all allowed roots after canonicalization are rejected.
+    trusted_endpoints:
+        Additional origins (``scheme://host[:port]`` or ``scheme://*.domain``) that
+        may receive ambient credentials when the file supplies none. Merged with
+        built-in provider origins and ``PROMPTY_TRUSTED_ENDPOINTS``.
 
     Returns
     -------
@@ -52,17 +62,22 @@ def load(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = 
     data = load_prompty(path)
 
     # 2–7 shared pipeline
-    return _build_agent(data, path, allowed_file_roots=allowed_file_roots)
+    return _build_agent(data, path, allowed_file_roots=allowed_file_roots, trusted_endpoints=trusted_endpoints)
 
 
-async def load_async(path: str | Path, *, allowed_file_roots: Sequence[str | Path] | None = None) -> Agent:
+async def load_async(
+    path: str | Path,
+    *,
+    allowed_file_roots: Sequence[str | Path] | None = None,
+    trusted_endpoints: Sequence[str] | None = None,
+) -> Agent:
     """Async variant of :func:`load`."""
     path = Path(path).resolve()
     if not path.exists():
         raise FileNotFoundError(f"Prompty file not found: {path}")
 
     data = await load_prompty_async(path)
-    return _build_agent(data, path, allowed_file_roots=allowed_file_roots)
+    return _build_agent(data, path, allowed_file_roots=allowed_file_roots, trusted_endpoints=trusted_endpoints)
 
 
 def default_save_context(**kwargs: Any) -> SaveContext:
@@ -96,6 +111,7 @@ def _build_agent(
     path: Path,
     *,
     allowed_file_roots: Sequence[str | Path] | None = None,
+    trusted_endpoints: Sequence[str] | None = None,
 ) -> Agent:
     """Shared pipeline that transforms raw frontmatter dict into a Agent."""
 
@@ -116,6 +132,9 @@ def _build_agent(
             f"Invalid template format: {tmpl!r} (expected an object with format/parser)",
         )
 
+    # Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+    check_connection_trust(_raw_connection(data, path, allowed_file_roots), trusted_endpoints)
+
     # 2. Load via Agent.load() with pre_process for ${protocol:value} expansion
     ctx = LoadContext(pre_process=_pre_process(path, allowed_file_roots=allowed_file_roots))
     agent = Agent.load(data, ctx)
@@ -128,6 +147,25 @@ def _build_agent(
         agent.metadata["__allowed_file_roots"] = [str(root) for root in allowed_file_roots]
 
     return agent
+
+
+def _raw_connection(
+    data: dict[str, Any],
+    path: Path,
+    allowed_file_roots: Sequence[str | Path] | None,
+) -> Any:
+    """Return the unresolved ``model.connection``, following whole-value ``${file:}`` references."""
+
+    def follow(value: Any) -> Any:
+        if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+            protocol, _, ref = value[2:-1].partition(":")
+            if protocol.lower() == "file":
+                file_path = _resolve_file_reference(path, ref, allowed_file_roots)
+                return _load_file_content(file_path) if file_path.exists() else None
+        return value
+
+    model = follow(data.get("model"))
+    return follow(model.get("connection")) if isinstance(model, dict) else None
 
 
 # ---------------------------------------------------------------------------

@@ -14,6 +14,7 @@ import matter from "gray-matter";
 import { LoadContext, SaveContext } from "../model/context.js";
 import { Agent } from "../model/agent.js";
 import { PromptyLoadError } from "./errors.js";
+import { checkConnectionTrust } from "./endpoint-trust.js";
 
 export interface LoadOptions {
   /**
@@ -21,6 +22,13 @@ export interface LoadOptions {
    * The prompt file's directory is always allowed.
    */
   allowedFileRoots?: string[];
+  /**
+   * Additional origins trusted to receive ambient credentials (spec §2.5.1),
+   * on top of the built-in provider origins and `PROMPTY_TRUSTED_ENDPOINTS`.
+   * Entries are origins such as `http://localhost:11434` or
+   * `https://*.contoso.com`; `*` trusts every endpoint.
+   */
+  trustedEndpoints?: string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -132,9 +140,16 @@ function buildAgent(
     );
   }
 
+  // Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+  const { agentDir, allowedRoots } = fileRoots(filePath, options);
+  checkConnectionTrust(
+    rawConnection(frontmatter, agentDir, allowedRoots),
+    options.trustedEndpoints,
+  );
+
   // 2. Load via Prompty.load() with preProcess for ${protocol:value} expansion
   const ctx = new LoadContext({
-    preProcess: makePreProcess(filePath, options) as (
+    preProcess: makePreProcess(agentDir, allowedRoots) as (
       data: Record<string, unknown>,
     ) => Record<string, unknown>,
   });
@@ -147,6 +162,64 @@ function buildAgent(
   agent.metadata["__source_path"] = filePath;
 
   return agent;
+}
+
+function fileRoots(
+  agentFile: string,
+  options: LoadOptions,
+): { agentDir: string; allowedRoots: string[] } {
+  const agentDir = realpathSync(dirname(agentFile));
+  const allowedRoots = [
+    agentDir,
+    ...(options.allowedFileRoots ?? []).map((root) =>
+      canonicalizeExistingPath(resolve(root)),
+    ),
+  ];
+  return { agentDir, allowedRoots };
+}
+
+/**
+ * Return the unresolved `model.connection`, following whole-value `${file:}`
+ * references (with the same containment as reference resolution).
+ */
+function rawConnection(
+  data: Record<string, unknown>,
+  agentDir: string,
+  allowedRoots: string[],
+): unknown {
+  const follow = (value: unknown, key: string): unknown => {
+    if (
+      typeof value === "string" &&
+      value.startsWith("${") &&
+      value.endsWith("}")
+    ) {
+      const inner = value.slice(2, -1);
+      const colon = inner.indexOf(":");
+      if (colon !== -1 && inner.slice(0, colon).toLowerCase() === "file") {
+        const reference = inner.slice(colon + 1);
+        const candidate = isAbsolute(reference)
+          ? resolve(reference)
+          : resolve(agentDir, reference);
+        // Missing files are reported by reference resolution; only containment is enforced here.
+        if (!existsSync(candidate)) {
+          if (!isWithinAnyRoot(candidate, allowedRoots)) {
+            resolveFileReference(agentDir, reference, allowedRoots, key);
+          }
+          return undefined;
+        }
+        return loadFileContent(
+          resolveFileReference(agentDir, reference, allowedRoots, key),
+        );
+      }
+    }
+    return value;
+  };
+
+  const model = follow(data["model"], "model");
+  if (typeof model !== "object" || model === null || Array.isArray(model)) {
+    return undefined;
+  }
+  return follow((model as Record<string, unknown>)["connection"], "connection");
 }
 
 function rejectExecutableFrontmatter(): never {
@@ -170,17 +243,9 @@ function rejectExecutableFrontmatter(): never {
  * provide additional allowed roots via `allowedFileRoots`.
  */
 function makePreProcess(
-  agentFile: string,
-  options: LoadOptions,
+  agentDir: string,
+  allowedRoots: string[],
 ): (data: unknown) => unknown {
-  const agentDir = realpathSync(dirname(agentFile));
-  const allowedRoots = [
-    agentDir,
-    ...(options.allowedFileRoots ?? []).map((root) =>
-      canonicalizeExistingPath(resolve(root)),
-    ),
-  ];
-
   return (data: unknown): unknown => {
     if (typeof data !== "object" || data === null || Array.isArray(data)) {
       return data;

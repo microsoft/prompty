@@ -2,7 +2,12 @@
 
 All notable changes to the Prompty TypeScript runtime will be documented here.
 
-## [2.0.1] — 2026-10-16
+## [Unreleased]
+
+### Security
+- `load()` enforces spec Â§2.5.1 endpoint trust: a file whose connection uses ambient credentials may not target an untrusted, file-chosen `endpoint`/`tokenUrl` (`untrusted_endpoint` load error). Add origins via the `trustedEndpoints` load option or `PROMPTY_TRUSTED_ENDPOINTS`.
+
+## [2.0.1] ï¿½ 2026-10-16
 
 ### Fixed
 - OpenAI Responses processor now falls back to nested completed message text when top-level `output_text` is missing or empty (#571)

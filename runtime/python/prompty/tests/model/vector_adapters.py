@@ -271,6 +271,11 @@ def _load_invoke(input: dict, context: dict) -> Any:
     if "NONEXISTENT" in json.dumps(input):
         old_env.setdefault("NONEXISTENT", os.environ.get("NONEXISTENT"))
         os.environ.pop("NONEXISTENT", None)
+    # Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+    if "PROMPTY_TRUSTED_ENDPOINTS" not in env_vars:
+        old_env.setdefault("PROMPTY_TRUSTED_ENDPOINTS", os.environ.get("PROMPTY_TRUSTED_ENDPOINTS"))
+        os.environ.pop("PROMPTY_TRUSTED_ENDPOINTS", None)
+    trusted = input.get("trustedEndpoints")
 
     try:
         # --- input-validation vectors ---
@@ -282,18 +287,18 @@ def _load_invoke(input: dict, context: dict) -> Any:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             if "fixture" in input:
-                agent = load(SPEC_FIXTURES / input["fixture"])
+                agent = load(SPEC_FIXTURES / input["fixture"], trusted_endpoints=trusted)
             elif "frontmatter_raw" in input:
                 p = tmp_path / "vector.prompty"
                 p.write_text(input["frontmatter_raw"], encoding="utf-8")
-                agent = load(p)
+                agent = load(p, trusted_endpoints=trusted)
             else:
                 frontmatter = dict(input["frontmatter"])
                 sub = tmp_path / input["agent_subdir"] if input.get("agent_subdir") else tmp_path
                 sub.mkdir(parents=True, exist_ok=True)
                 p = sub / "vector.prompty"
                 _write_prompty(p, frontmatter, input.get("files"))
-                agent = load(p)
+                agent = load(p, trusted_endpoints=trusted)
             return _agent_to_canonical(agent.save(default_save_context(use_shorthand=False)))
     except Exception as exc:  # noqa: BLE001
         # Error vectors: attach the canonical {kind, [field]} so the harness can

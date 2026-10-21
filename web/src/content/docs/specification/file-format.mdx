@@ -132,6 +132,22 @@ Connection types are discriminated by the `kind` field:
 | `foundry`     | `endpoint`                     | Microsoft Foundry connection             |
 | `oauth`       | `endpoint`, `authenticationMode` | OAuth-based authentication            |
 
+### §2.5.1 Endpoint Trust
+
+A `.prompty` file is untrusted input, so it MUST NOT be able to direct **ambient
+credentials** (`DefaultAzureCredential` tokens, env API keys) to a destination it chose.
+Unless the connection supplies its own literal credential (`apiKey` on `kind: key`), a file-controlled `endpoint` or `tokenUrl` (a literal, a
+`${file:}` value, or a used `${env:VAR:default}` fallback) must match a trusted origin, or
+loading fails with `untrusted_endpoint`. `kind: reference` and `${env:VAR}` endpoints are
+host-controlled and pass.
+
+Trusted origins: built-ins (`https://api.openai.com`, `https://api.anthropic.com`,
+`https://*.openai.azure.com`, `https://*.services.ai.azure.com`,
+`https://*.cognitiveservices.azure.com`, `https://login.microsoftonline.com`), the
+`trustedEndpoints` load option, and the `PROMPTY_TRUSTED_ENDPOINTS` env var
+(comma-separated; `*` trusts all). Matching compares scheme, host, and port only;
+`*.domain` matches strict subdomains.
+
 ## §2.6 ModelOptions
 
 | Property                  | Type       | Description                                |

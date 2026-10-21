@@ -1355,4 +1355,574 @@ pub async fn run_load_conformance_conformance<S: crate::model::LoadConformance +
         .expect("tools_openapi_load: expected parses");
         assert_eq!(actual, expected, "tools_openapi_load misrouted");
     }
+    // vector: trusted_endpoint_builtin_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_builtin_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "foundry",
+      "endpoint": "https://myres.services.ai.azure.com/api/projects/p"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_builtin_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_builtin_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_default_port_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_default_port_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "foundry",
+      "endpoint": "https://API.OpenAI.com:443/v1"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_default_port_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_default_port_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_env_endpoint_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_env_endpoint_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "foundry",
+      "endpoint": "https://host-chosen.example.com"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_env_endpoint_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_env_endpoint_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_env_list_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_env_list_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "key",
+      "endpoint": "http://localhost:11434/v1"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_env_list_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_env_list_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_literal_key_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_literal_key_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "key",
+      "endpoint": "https://anywhere.example.com"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_literal_key_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_literal_key_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_option_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_option_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "foundry",
+      "endpoint": "https://proxy.example.com:443/openai/v1"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_option_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_option_allowed misrouted"
+        );
+    }
+    // vector: trusted_endpoint_reference_skipped
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_reference_skipped: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "reference",
+      "name": "my-connection"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_reference_skipped: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_reference_skipped misrouted"
+        );
+    }
+    // vector: trusted_endpoint_userinfo_allowed
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let actual = seam
+            .load(&source)
+            .await
+            .expect("trusted_endpoint_userinfo_allowed: seam ok");
+        let expected = crate::model::Agent::from_json(
+            r####"
+{
+  "model": {
+    "connection": {
+      "kind": "foundry",
+      "endpoint": "https://user@api.openai.com/v1"
+    }
+  }
+}
+"####,
+            &ctx,
+        )
+        .expect("trusted_endpoint_userinfo_allowed: expected parses");
+        assert_eq!(
+            actual, expected,
+            "trusted_endpoint_userinfo_allowed misrouted"
+        );
+    }
+    // vector: untrusted_endpoint_ambient_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_ambient_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_backslash_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_backslash_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_blank_literal_key_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_blank_literal_key_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_env_default_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_env_default_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_env_key_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_env_key_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_file_connection_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_file_connection_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_fragment_before_at_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_fragment_before_at_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_ipv6_literal_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_ipv6_literal_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_key_with_client_secret_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_key_with_client_secret_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_mismatched_credential_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_mismatched_credential_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_no_key_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_no_key_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_oauth_literal_secret_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_oauth_literal_secret_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_percent_encoded_host_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_percent_encoded_host_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_port_mismatch_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_port_mismatch_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_query_before_at_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_query_before_at_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_scheme_mismatch_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_scheme_mismatch_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_suffix_lookalike_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_suffix_lookalike_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_suffix_spoof_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_suffix_spoof_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_trailing_dot_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_trailing_dot_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_unicode_homoglyph_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_unicode_homoglyph_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_userinfo_lookalike_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_userinfo_lookalike_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_wildcard_apex_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_wildcard_apex_rejected: expected an error"
+        );
+    }
+    // vector: untrusted_endpoint_wildcard_boundary_rejected
+    {
+        let source: serde_json::Value = serde_json::from_str(
+            r####"
+{}
+"####,
+        )
+        .expect("source parses");
+        let result = seam.load(&source).await;
+        assert!(
+            result.is_err(),
+            "untrusted_endpoint_wildcard_boundary_rejected: expected an error"
+        );
+    }
 }

@@ -27,6 +27,11 @@ public class LoadException extends RuntimeException {
      * {@code format} and {@code parser}.
      */
     INVALID_TEMPLATE,
+    /**
+     * The connection would send ambient credentials to a destination the file chose and the host
+     * has not trusted (spec §2.5.1).
+     */
+    UNTRUSTED_ENDPOINT,
     /** Any other load failure. */
     OTHER
   }
@@ -73,6 +78,10 @@ public class LoadException extends RuntimeException {
 
   public static LoadException invalidTemplate(String detail) {
     return new LoadException(Kind.INVALID_TEMPLATE, "Invalid template format: " + detail);
+  }
+
+  public static LoadException untrustedEndpoint(String detail) {
+    return new LoadException(Kind.UNTRUSTED_ENDPOINT, detail);
   }
 
   public static LoadException other(String detail) {

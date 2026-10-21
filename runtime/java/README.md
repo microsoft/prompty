@@ -63,6 +63,20 @@ cd runtime/java
 ./gradlew :prompty:test  # unit tests for the core module only
 ```
 
+## Endpoint trust
+
+A `.prompty` file is untrusted input. When its `model.connection` carries no
+file-supplied credential (a literal `apiKey` on `kind: key`), executors fall back to ambient credentials,
+so the loader refuses — with `LoadException.Kind.UNTRUSTED_ENDPOINT` — any
+file-chosen `endpoint` / `tokenUrl` whose origin is not trusted (spec §2.5.1).
+Built-in provider origins are always trusted; hosts add more through
+`LoadOptions.trustedEndpoints` or the comma-separated
+`PROMPTY_TRUSTED_ENDPOINTS` variable (`*` trusts everything):
+
+```java
+Agent agent = Loader.load(path, LoadOptions.withTrustedEndpoints("http://localhost:11434"));
+```
+
 ## Live provider tests
 
 Tests tagged `live` call real providers and are excluded from the default `test`

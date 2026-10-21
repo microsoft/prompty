@@ -426,6 +426,16 @@ connection: ${file:shared/azure-connection.json}
   cannot grant itself broader filesystem access.
 </Aside>
 
+<Aside type="caution" title="Endpoint trust">
+  A prompt file can't send ambient credentials (Azure identity tokens, env API
+  keys) to an endpoint it chose. A literal `endpoint` must be a built-in
+  provider origin (e.g. `https://*.openai.azure.com`, `https://api.openai.com`)
+  unless the connection carries its own literal key. Otherwise supply it with
+  `${env:VAR}`, use `kind: reference`, or have the host trust the origin via the
+  `trustedEndpoints` load option or `PROMPTY_TRUSTED_ENDPOINTS`. Loading fails
+  with `untrusted_endpoint` otherwise.
+</Aside>
+
 ## Shorthand Syntax Reference
 
 Prompty supports compact shorthands across several properties. Every shorthand

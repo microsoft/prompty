@@ -75,6 +75,26 @@ user:
 Hello, my name is {{name}}. {{question}}
 ```
 
+## Endpoint Trust
+
+A `.prompty` file is untrusted input. When a connection relies on ambient
+credentials (`DefaultAzureCredential`, `OPENAI_API_KEY`, …) rather than a
+literal key in the file, `load()` refuses a file-chosen `endpoint` / `tokenUrl`
+whose origin is not trusted (error kind `untrusted_endpoint`). Endpoints set via
+`${env:VAR}` (with `VAR` set) are host-controlled and always allowed.
+
+Trusted origins are the built-in provider origins (`https://api.openai.com`,
+`https://*.openai.azure.com`, …), plus any you add:
+
+```typescript
+const agent = load("./local.prompty", {
+  trustedEndpoints: ["http://localhost:11434", "https://*.contoso.com"],
+});
+```
+
+or via `PROMPTY_TRUSTED_ENDPOINTS=http://localhost:11434,https://*.contoso.com`.
+Use `*` to trust every endpoint.
+
 ## Tracing
 
 ```typescript

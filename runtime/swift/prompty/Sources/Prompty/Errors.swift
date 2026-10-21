@@ -19,6 +19,9 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
   /// value that can never be a property. `path` is the full dotted path to the
   /// offending entry and `valueCategory` names the rejected shape.
   case invalidNamedCollectionEntry(path: String, valueCategory: String)
+  /// The connection would send ambient credentials to a destination the file
+  /// chose that the host has not trusted (spec §2.5.1).
+  case untrustedEndpoint(String)
 
   public var description: String {
     switch self {
@@ -37,6 +40,8 @@ public enum LoadError: Error, CustomStringConvertible, Equatable {
         "invalid-named-collection-entry: \(path) holds a \(valueCategory), "
         + "which is not a valid named collection entry. Declare the array inside "
         + "a property instead, for example `\(path): { kind: array, default: [...] }`"
+    case .untrustedEndpoint(let message):
+      return message
     }
   }
 }

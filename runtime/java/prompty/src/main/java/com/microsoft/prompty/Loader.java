@@ -23,6 +23,8 @@ import java.util.Map;
  *   <li>Normalise authored shorthands — dictionary-form inputs and outputs whose value is a bare
  *       scalar become full properties.
  *   <li>Inject {@code kind: "prompt"}; a {@code .prompty} document always describes a prompt agent.
+ *   <li>Check endpoint trust on the raw {@code model.connection} (spec §2.5.1): ambient credentials
+ *       may only flow to a file-chosen destination whose origin the host trusts.
  *   <li>Resolve {@code ${env:...}} and {@code ${file:...}} references.
  *   <li>Hand the resulting map to the generated model's {@code load}.
  *   <li>Record the source path in {@code metadata.__source_path}.
@@ -111,6 +113,11 @@ public final class Loader {
     data.put("kind", "prompt");
 
     Path agentDir = filePath.getParent() == null ? Path.of(".") : filePath.getParent();
+
+    // Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+    EndpointTrust.checkConnectionTrust(
+        rawConnection(data, agentDir, options.allowedFileRoots()), options.trustedEndpoints());
+
     References.resolveReferences(data, agentDir, options.allowedFileRoots());
 
     LoadContext context = makeLoadContext(agentDir, options.allowedFileRoots());
@@ -122,6 +129,31 @@ public final class Loader {
     }
     agent.metadata.put(SOURCE_PATH_KEY, filePath.toString());
     return agent;
+  }
+
+  /** The unresolved {@code model.connection}, following whole-value {@code ${file:}} references. */
+  private static Object rawConnection(
+      Map<String, Object> data, Path agentDir, List<Path> allowedFileRoots) {
+    Object model = followFileReference(data.get("model"), agentDir, allowedFileRoots, "model");
+    if (!(model instanceof Map<?, ?> modelMap)) {
+      return null;
+    }
+    return followFileReference(modelMap.get("connection"), agentDir, allowedFileRoots, "connection");
+  }
+
+  private static Object followFileReference(
+      Object value, Path agentDir, List<Path> allowedFileRoots, String key) {
+    if (value instanceof String s && EndpointTrust.isReference(s)) {
+      String inner = s.substring(2, s.length() - 1);
+      int colon = inner.indexOf(':');
+      String protocol = colon < 0 ? inner : inner.substring(0, colon);
+      if ("file".equals(protocol.toLowerCase(java.util.Locale.ROOT))) {
+        String reference = colon < 0 ? "" : inner.substring(colon + 1);
+        return References.readContainedFile(reference, agentDir, allowedFileRoots, key)
+            .orElse(null);
+      }
+    }
+    return value;
   }
 
   /**

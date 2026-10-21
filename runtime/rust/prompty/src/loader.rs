@@ -9,6 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::model::Agent;
 use crate::model::context::LoadContext;
 
+pub mod endpoint_trust;
 mod error;
 mod frontmatter;
 mod resolve;
@@ -21,6 +22,11 @@ pub struct LoadOptions {
     /// Additional directories that `${file:...}` references may read from.
     /// The prompt file's directory is always allowed.
     pub allowed_file_roots: Vec<PathBuf>,
+    /// Additional origins (e.g. `https://my-proxy.contoso.com`,
+    /// `https://*.contoso.com`, or `*`) trusted to receive ambient credentials
+    /// (spec §2.5.1). Built-in provider origins and the comma-separated
+    /// `PROMPTY_TRUSTED_ENDPOINTS` env var are always included.
+    pub trusted_endpoints: Vec<String>,
 }
 
 /// Load a `.prompty` file and return a typed `Prompty`.
@@ -176,12 +182,24 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Age
     let agent_dir = file_path.parent().unwrap_or(Path::new(".")).to_path_buf();
     let ctx = make_load_context(agent_dir.clone(), options.allowed_file_roots.clone());
 
-    // 5. Resolve references on the top-level data before loading
+    // 5. Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+    let model = data
+        .get("model")
+        .map(|m| resolve::follow_file_ref(m, &agent_dir, &options.allowed_file_roots))
+        .transpose()?;
+    let connection = model
+        .as_ref()
+        .and_then(|m| m.get("connection"))
+        .map(|c| resolve::follow_file_ref(c, &agent_dir, &options.allowed_file_roots))
+        .transpose()?;
+    endpoint_trust::check_connection_trust(connection.as_ref(), &options.trusted_endpoints)?;
+
+    // 6. Resolve references on the top-level data before loading
     //    (pre_process handles nested dicts as the model recurses)
     let mut value = serde_json::Value::Object(data);
     resolve::resolve_references(&mut value, &agent_dir, &options.allowed_file_roots)?;
 
-    // 6. Validate before loading. In Typra 0.6.2 the generated
+    // 7. Validate before loading. In Typra 0.6.2 the generated
     //    `load_from_value` panics on validation failure (missing required
     //    fields, malformed collections). Surface those as a recoverable
     //    `LoadError` by validating first — this keeps negative-path callers
@@ -202,10 +220,10 @@ fn build_agent(raw: &str, file_path: &Path, options: &LoadOptions) -> Result<Age
         return Err(LoadError::InvalidFrontmatter(message));
     }
 
-    // 7. Load via emitter-generated typed constructor with context
+    // 8. Load via emitter-generated typed constructor with context
     let agent = Agent::load_from_value(&value, &ctx);
 
-    // 8. Store source path in metadata for relative reference resolution
+    // 9. Store source path in metadata for relative reference resolution
     let mut result = agent;
     let meta = ensure_metadata_object(&mut result);
     meta.insert(

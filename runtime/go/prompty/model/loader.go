@@ -22,7 +22,7 @@ var frontmatterRe = regexp.MustCompile(`(?s)^\s*(?:---|\+\+\+)(.*?)(?:---|\+\+\+
 // LoadError classifies a load failure so the conformance layer (and callers)
 // can map it onto the expected error contract.
 type LoadError struct {
-	Kind    string // env | file_missing | file_traversal | template | frontmatter | not_found | required_input
+	Kind    string // env | file_missing | file_traversal | template | frontmatter | not_found | required_input | untrusted_endpoint
 	Field   string
 	Message string
 }
@@ -219,11 +219,35 @@ func BuildAgentFromData(data map[string]interface{}) (Agent, error) {
 	return LoadAgent(data, NewLoadContext())
 }
 
+// LoadOptions carries host load options (spec §4.1). Frontmatter can never set these.
+type LoadOptions struct {
+	// AllowedFileRoots are extra directories ${file:} references may read from,
+	// in addition to the prompt file's directory (spec §2.11).
+	AllowedFileRoots []string
+	// TrustedEndpoints are extra origins allowed to receive ambient credentials
+	// (spec §2.5.1), e.g. "https://my-proxy.contoso.com" or "https://*.contoso.com".
+	TrustedEndpoints []string
+}
+
 // LoadPromptyContent parses .prompty text, resolves references relative to
 // parentDir, and returns the loaded Agent.
 func LoadPromptyContent(contents, parentDir string, allowedRoots []string) (Agent, error) {
+	return loadPromptyContent(contents, parentDir, allowedRoots, nil)
+}
+
+// LoadPromptyContentWithOptions is LoadPromptyContent with host load options.
+// opts.AllowedFileRoots are appended to allowedRoots.
+func LoadPromptyContentWithOptions(contents, parentDir string, allowedRoots []string, opts LoadOptions) (Agent, error) {
+	return loadPromptyContent(contents, parentDir, appendRoots(allowedRoots, opts.AllowedFileRoots), opts.TrustedEndpoints)
+}
+
+func loadPromptyContent(contents, parentDir string, allowedRoots, trustedEndpoints []string) (Agent, error) {
 	data, err := ParseFrontmatter(contents)
 	if err != nil {
+		return Agent{}, err
+	}
+	// Endpoint trust (spec §2.5.1) runs on the RAW connection, before references resolve.
+	if err := CheckEndpointTrust(data, parentDir, allowedRoots, trustedEndpoints); err != nil {
 		return Agent{}, err
 	}
 	if err := ResolveReferences(data, parentDir, allowedRoots); err != nil {
@@ -232,9 +256,22 @@ func LoadPromptyContent(contents, parentDir string, allowedRoots []string) (Agen
 	return BuildAgentFromData(data)
 }
 
+func appendRoots(roots, extra []string) []string {
+	out := append([]string{}, roots...)
+	for _, r := range extra {
+		out = append(out, canonicalPath(r))
+	}
+	return out
+}
+
 // LoadPromptyFile reads a .prompty file from disk and loads it, resolving
 // references relative to the file's directory.
 func LoadPromptyFile(path string) (Agent, error) {
+	return LoadPromptyFileWithOptions(path, LoadOptions{})
+}
+
+// LoadPromptyFileWithOptions is LoadPromptyFile with host load options.
+func LoadPromptyFileWithOptions(path string, opts LoadOptions) (Agent, error) {
 	if _, err := os.Stat(path); err != nil {
 		return Agent{}, &LoadError{Kind: "not_found", Message: fmt.Sprintf("FileNotFoundError: prompty file not found: '%s'", path)}
 	}
@@ -243,7 +280,7 @@ func LoadPromptyFile(path string) (Agent, error) {
 		return Agent{}, &LoadError{Kind: "not_found", Message: fmt.Sprintf("FileNotFoundError: %v", err)}
 	}
 	dir := canonicalPath(filepath.Dir(path))
-	return LoadPromptyContent(string(content), dir, []string{dir})
+	return LoadPromptyContentWithOptions(string(content), dir, []string{dir}, opts)
 }
 
 // ValidateInputs fills declared input defaults and reports missing required

@@ -296,6 +296,19 @@ public static partial class VectorAdapters
             Environment.SetEnvironmentVariable("NONEXISTENT", null);
         }
 
+        // Endpoint-trust vectors must not see an ambient PROMPTY_TRUSTED_ENDPOINTS.
+        if (input["env"] is not JsonObject envVars || !envVars.ContainsKey(EndpointTrust.TrustedEndpointsEnv))
+        {
+            savedEnv.TryAdd(EndpointTrust.TrustedEndpointsEnv, Environment.GetEnvironmentVariable(EndpointTrust.TrustedEndpointsEnv));
+            Environment.SetEnvironmentVariable(EndpointTrust.TrustedEndpointsEnv, null);
+        }
+        var loadOptions = new PromptyLoadOptions
+        {
+            TrustedEndpoints = input["trustedEndpoints"] is JsonArray trusted
+                ? trusted.Select(t => t?.GetValue<string>() ?? string.Empty).ToList()
+                : [],
+        };
+
         try
         {
             // --- input-validation vectors: BOTH a top-level `inputs` map AND `frontmatter` ---
@@ -325,7 +338,7 @@ public static partial class VectorAdapters
             Agent loaded;
             if (input["fixture"] is JsonValue fixtureVal)
             {
-                loaded = PromptyLoader.Load(Path.Combine(SpecFixtures, fixtureVal.GetValue<string>()));
+                loaded = PromptyLoader.Load(Path.Combine(SpecFixtures, fixtureVal.GetValue<string>()), loadOptions);
             }
             else if (input["frontmatter_raw"] is JsonValue rawVal)
             {
@@ -334,7 +347,7 @@ public static partial class VectorAdapters
                 {
                     var p = Path.Combine(tmp, "vector.prompty");
                     File.WriteAllText(p, rawVal.GetValue<string>());
-                    loaded = PromptyLoader.Load(p);
+                    loaded = PromptyLoader.Load(p, loadOptions);
                 }
                 finally
                 {
@@ -343,7 +356,7 @@ public static partial class VectorAdapters
             }
             else if (input["frontmatter"] is JsonObject)
             {
-                loaded = MaterializeAndLoad(input);
+                loaded = MaterializeAndLoad(input, loadOptions);
             }
             else
             {
@@ -436,7 +449,7 @@ public static partial class VectorAdapters
     /// <c>..</c> are written relative to the agent directory so path-traversal vectors
     /// can place a target outside the allowed root; the loader must reject the escape.
     /// </summary>
-    private static Agent MaterializeAndLoad(JsonObject input)
+    private static Agent MaterializeAndLoad(JsonObject input, PromptyLoadOptions? options = null)
     {
         var tempBase = NewTempDir();
         try
@@ -464,7 +477,7 @@ public static partial class VectorAdapters
             var frontmatter = input["frontmatter"]!.ToJsonString();
             var agentPath = Path.Join(agentDir, "vector.prompty");
             File.WriteAllText(agentPath, $"---\n{frontmatter}\n---\n");
-            return PromptyLoader.Load(agentPath);
+            return PromptyLoader.Load(agentPath, options);
         }
         finally
         {

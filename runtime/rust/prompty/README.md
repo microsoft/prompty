@@ -40,6 +40,33 @@ structured output. `TurnOptions::validator` runs on that final payload after any
 guardrail rewrite and before the durable success commit; rejection records a failed turn.
 `max_llm_retries` controls model attempts for both simple and tool-calling turns.
 
+### Load options and endpoint trust
+
+`load_with_options()` / `load_async_with_options()` accept `LoadOptions`:
+
+- `allowed_file_roots` — extra directories `${file:...}` references may read from.
+- `trusted_endpoints` — extra origins allowed to receive ambient credentials.
+
+A `.prompty` file is untrusted. When its connection has no literal file-supplied
+credential (a literal `apiKey` on `kind: key`), executors fall
+back to ambient credentials (Entra ID tokens, `*_API_KEY` env vars). Loading fails with
+`LoadError::UntrustedEndpoint` if such a connection's `endpoint` / `tokenUrl` is chosen
+by the file (a literal, `${file:...}`, or an `${env:VAR:default}` default) and its origin
+is not trusted. Trusted origins are the built-in provider origins (`https://api.openai.com`,
+`https://api.anthropic.com`, `https://*.openai.azure.com`, `https://*.services.ai.azure.com`,
+`https://*.cognitiveservices.azure.com`, `https://login.microsoftonline.com`), plus
+`trusted_endpoints`, plus the comma-separated `PROMPTY_TRUSTED_ENDPOINTS` env var (`*`
+trusts everything). Endpoints supplied via `${env:VAR}` with `VAR` set are host-controlled
+and always allowed.
+
+```rust
+let options = prompty::LoadOptions {
+    trusted_endpoints: vec!["http://localhost:11434".into()],
+    ..Default::default()
+};
+let agent = prompty::load_with_options("local.prompty", options)?;
+```
+
 ## Live turns, durability, and resume
 
 `turn()` is the convenient live API. For hosts that own a session journal or need to

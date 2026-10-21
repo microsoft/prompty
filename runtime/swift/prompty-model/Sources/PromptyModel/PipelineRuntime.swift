@@ -741,19 +741,38 @@ public func buildAgentFromData(_ data: [String: Any]) throws -> Agent {
   return try Agent.load(data)
 }
 
-public func loadPromptyContent(_ contents: String, parentDir: URL, allowedRoots: [URL]) throws -> Agent {
+/// Enforce endpoint trust (spec §2.5.1) on the RAW frontmatter, before references resolve.
+///
+/// Whole-value `${file:}` references for `model` and `model.connection` are followed
+/// with the same containment as reference resolution.
+public func checkEndpointTrust(
+  _ data: [String: Any], parentDir: URL, allowedRoots: [URL], trustedEndpoints: [String] = []
+) throws {
+  let connection = try EndpointTrust.rawConnection(data) { reference in
+    guard FileManager.default.fileExists(atPath: relativeFileURL(reference, base: parentDir).path) else {
+      return nil
+    }
+    return try resolveFile(reference, parentDir: parentDir, allowedRoots: allowedRoots)
+  }
+  try EndpointTrust.checkConnection(connection, trustedEndpoints: trustedEndpoints)
+}
+
+public func loadPromptyContent(
+  _ contents: String, parentDir: URL, allowedRoots: [URL], trustedEndpoints: [String] = []
+) throws -> Agent {
   var data = try parseFrontmatter(contents)
+  try checkEndpointTrust(data, parentDir: parentDir, allowedRoots: allowedRoots, trustedEndpoints: trustedEndpoints)
   try resolveReferences(&data, parentDir: parentDir, allowedRoots: allowedRoots)
   return try buildAgentFromData(data)
 }
 
-public func loadPromptyFile(_ path: URL) throws -> Agent {
+public func loadPromptyFile(_ path: URL, trustedEndpoints: [String] = []) throws -> Agent {
   guard FileManager.default.fileExists(atPath: path.path) else {
     throw PromptyLoadError(kind: "not_found", message: "FileNotFoundError: prompty file not found: '\(path.path)'")
   }
   let text = (try String(contentsOf: path, encoding: .utf8)).replacingOccurrences(of: "\r\n", with: "\n")
   let dir = canonicalURL(path.deletingLastPathComponent())
-  return try loadPromptyContent(text, parentDir: dir, allowedRoots: [dir])
+  return try loadPromptyContent(text, parentDir: dir, allowedRoots: [dir], trustedEndpoints: trustedEndpoints)
 }
 
 public func validateInputs(agent: Agent, provided: [String: Any]) throws -> [String: Any] {
