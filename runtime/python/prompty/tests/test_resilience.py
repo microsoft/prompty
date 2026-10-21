@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 import warnings
 from unittest.mock import MagicMock, patch
 
@@ -48,6 +49,34 @@ class TestResilientJsonParse:
             assert result == {"city": "NY"}
             assert len(w) == 1
 
+    @pytest.mark.parametrize(
+        "raw",
+        [
+            '  \n```json  \n  {"city": "NY"}  \n\n```  \n',
+            '```{"city": "NY"}```',
+            '```json{"city": "NY"}```',
+            '```json {"city": "NY"} ```',
+        ],
+    )
+    def test_markdown_fences_whitespace_variants(self, raw):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = _resilient_json_parse(raw)
+            assert result == {"city": "NY"}
+            assert len(w) == 1
+            assert "markdown fences" in str(w[0].message)
+
+    def test_unclosed_fence_falls_through_to_block_extraction(self):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = _resilient_json_parse('```json\n{"city": "NY"}')
+            assert result == {"city": "NY"}
+            assert "JSON block" in str(w[0].message)
+
+    @pytest.mark.parametrize("raw", ["```", "``````", "```json```", "```json\n```"])
+    def test_empty_or_degenerate_fences_return_none(self, raw):
+        assert _resilient_json_parse(raw) is None
+
     def test_extract_json_block(self):
         raw = 'Here is the result: {"city": "NY"} enjoy!'
         with warnings.catch_warnings(record=True) as w:
@@ -88,6 +117,41 @@ class TestResilientJsonParse:
         """Empty string is not valid JSON."""
         result = _resilient_json_parse("")
         assert result is None
+
+
+class TestResilientJsonParseReDoS:
+    """Fence stripping must stay linear on an opening fence that never closes.
+
+    The old regex let `\\s*`, `\\n?` and the lazy `.*?` all match the same
+    whitespace, so runtime grew cubically with the padding length (seconds
+    at 2000 characters, minutes at 10k). Linear code finishes these in
+    microseconds, so the 1s limit is only a noise guard, not a budget.
+    """
+
+    PADDING = 2000
+    LIMIT_SECONDS = 1.0
+
+    @pytest.mark.parametrize("prefix,pad", [("```json", " "), ("```", "\n")])
+    def test_unclosed_fence_with_long_whitespace_is_fast(self, prefix, pad):
+        raw = prefix + pad * self.PADDING + "x"
+        start = time.perf_counter()
+        assert _resilient_json_parse(raw) is None
+        assert time.perf_counter() - start < self.LIMIT_SECONDS
+
+    def test_dispatch_tool_returns_error_quickly(self):
+        raw = "```json" + " " * self.PADDING + "x"
+        start = time.perf_counter()
+        result = dispatch_tool("my_tool", raw, {"my_tool": lambda **kw: "ok"}, MagicMock(), {})
+        assert time.perf_counter() - start < self.LIMIT_SECONDS
+        assert "all parse strategies failed" in result
+
+    @pytest.mark.asyncio
+    async def test_dispatch_tool_async_returns_error_quickly(self):
+        raw = "```" + "\n" * self.PADDING + "x"
+        start = time.perf_counter()
+        result = await dispatch_tool_async("my_tool", raw, {"my_tool": lambda **kw: "ok"}, MagicMock(), {})
+        assert time.perf_counter() - start < self.LIMIT_SECONDS
+        assert "all parse strategies failed" in result
 
 
 class TestExtractJsonBlock:
