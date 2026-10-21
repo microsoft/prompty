@@ -49,13 +49,13 @@
   },
   "dependencies": {
     "@prompty/core": "^2.1.0",
-    "openai": "^7.10.0"
+    "openai": "^7.38.0"
   },
   "devDependencies": {
     "@prompty/core": "^2.1.0",
-    "@types/node": "^26.4.1",
-    "dotenv": "^17.4.2",
-    "tsup": "^8.4.0",
+    "@types/node": "^26.6.5",
+    "dotenv": "^18.0.8",
+    "tsup": "^9.0.0",
     "typescript": "^5.7.0",
     "vitest": "^5.0.5"
   }
