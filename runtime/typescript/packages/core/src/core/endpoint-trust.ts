@@ -103,7 +103,10 @@ function fileSuppliedCredential(connection: Record<string, unknown>): boolean {
       : undefined;
   if (key === undefined) return false;
   const value = connection[key];
-  return typeof value === "string" && value.length > 0 && !isReference(value);
+  // Blank keys count as absent: executors that trim fall back to ambient credentials.
+  return (
+    typeof value === "string" && value.trim().length > 0 && !isReference(value)
+  );
 }
 
 /** Return the effective destination if the file chose it, else `undefined`. */

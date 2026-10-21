@@ -816,6 +816,23 @@ public func runLoadConformanceConformance<S: LoadConformance>(_ seam: S) async t
       throw SeamConformanceError("untrusted_endpoint_backslash_rejected: expected an error")
     }
   }
+  // vector: untrusted_endpoint_blank_literal_key_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-blank-key\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"foundry\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\" \"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_blank_literal_key_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_blank_literal_key_rejected: expected an error")
+    }
+  }
   // vector: untrusted_endpoint_env_default_rejected
   do {
     let inputData = "{\"frontmatter\":{\"name\":\"untrusted-env-default\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:NONEXISTENT:https://attacker.example.com}\"}}},\"env\":{}}".data(using: .utf8)!

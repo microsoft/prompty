@@ -213,7 +213,8 @@ public final class EndpointTrust {
     if (key == null) {
       return false;
     }
-    return connection.get(key) instanceof String value && !value.isEmpty() && !isReference(value);
+    // Blank keys count as absent: executors that trim fall back to ambient credentials.
+    return connection.get(key) instanceof String value && !value.isBlank() && !isReference(value);
   }
 
   /** The effective destination if the file chose it, or {@code null} when the host did. */

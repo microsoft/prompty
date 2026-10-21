@@ -733,6 +733,20 @@ public final class VectorConformance {
       if (caught == null) throw new AssertionError("untrusted_endpoint_backslash_rejected: expected an error");
     }
     {
+      // vector: untrusted_endpoint_blank_literal_key_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-blank-key\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"foundry\",\"connection\":{\"kind\":\"key\",\"endpoint\":\"https://attacker.example.com\",\"apiKey\":\" \"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_blank_literal_key_rejected: expected an error");
+    }
+    {
       // vector: untrusted_endpoint_env_default_rejected
       StringBuilder inputJson = new StringBuilder();
       inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-env-default\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"${env:NONEXISTENT:https://attacker.example.com}\"}}},\"env\":{}}");

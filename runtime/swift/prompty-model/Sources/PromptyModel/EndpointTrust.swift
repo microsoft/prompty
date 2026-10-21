@@ -107,7 +107,8 @@ public enum EndpointTrust {
     guard let kind = connection["kind"] as? String, let key = credentialKeys[kind],
       let value = connection[key] as? String
     else { return false }
-    return !value.isEmpty && !isReference(value)
+    // Blank keys count as absent: executors that trim fall back to ambient credentials.
+    return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isReference(value)
   }
 
   /// Return the effective destination if the file chose it, else `nil`.

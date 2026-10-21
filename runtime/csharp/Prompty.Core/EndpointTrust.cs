@@ -119,13 +119,12 @@ public static partial class EndpointTrust
         var key = Get(connection, "kind") switch
         {
             "key" => "apiKey",
-
-
             _ => null,
         };
         if (key is null)
             return false;
-        return Get(connection, key) is string value && value.Length > 0 && !IsReference(value);
+        // Blank keys count as absent: executors that trim fall back to ambient credentials.
+        return Get(connection, key) is string value && !string.IsNullOrWhiteSpace(value) && !IsReference(value);
     }
 
     /// <summary>Return the effective destination if the file chose it, else <c>null</c>.</summary>

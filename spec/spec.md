@@ -296,7 +296,9 @@ Loaders MUST enforce this at load time (§4.2 step 5) on `model.connection`:
 
 1. Skip the check when `connection` is absent or `kind` is `reference`.
 2. The **credential is file-supplied** only when `kind` is `key` and `apiKey` is a
-   non-empty literal string (not a `${...}` reference). Every other case is ambient,
+   literal string that is not blank (contains a non-whitespace character) and is not a
+   `${...}` reference. A blank `apiKey` is ambient because executors treat it as absent
+   and fall back to ambient credentials. Every other case is ambient,
    including `${env:}` or `${file:}` keys, any other `kind` (e.g. `foundry`, `oauth`,
    `anonymous`, custom), and an `apiKey` on any other `kind`. (`oauth` is ambient because
    executors do not consume `clientSecret` and fall back to ambient credentials.)

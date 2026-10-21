@@ -472,6 +472,20 @@ public static class VectorConformance
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_backslash_rejected: expected an error");
         }
         {
+            // vector: untrusted_endpoint_blank_literal_key_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_blank_literal_key_rejected: expected an error");
+        }
+        {
             // vector: untrusted_endpoint_env_default_rejected
             var source = JsonSerializer.Deserialize<object>("null")!;
             Exception? caught = null;

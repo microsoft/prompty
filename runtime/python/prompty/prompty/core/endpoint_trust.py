@@ -89,7 +89,8 @@ def _file_supplied_credential(connection: Mapping[str, Any]) -> bool:
     if key is None:
         return False
     value = connection.get(key)
-    return isinstance(value, str) and bool(value) and not _is_reference(value)
+    # Blank keys count as absent: executors that trim fall back to ambient credentials.
+    return isinstance(value, str) and bool(value.strip()) and not _is_reference(value)
 
 
 def _file_controlled_destination(value: Any) -> str | None:

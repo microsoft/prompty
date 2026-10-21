@@ -140,7 +140,8 @@ fn file_supplied_credential(connection: &serde_json::Map<String, Value>) -> bool
 
         _ => return false,
     };
-    matches!(connection.get(key), Some(Value::String(s)) if !s.is_empty() && !is_reference(s))
+    // Blank keys count as absent: executors that trim fall back to ambient credentials.
+    matches!(connection.get(key), Some(Value::String(s)) if !s.trim().is_empty() && !is_reference(s))
 }
 
 /// Return the effective destination if the file chose it, else `None`.

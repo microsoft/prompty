@@ -387,6 +387,12 @@ describe("callable vector conformance", () => {
     ) as Record<string, unknown>;
     await runVector("LoadConformance", "load", vector, false, seam);
   });
+  it("LoadConformance.load:untrusted_endpoint_blank_literal_key_rejected", async () => {
+    const vector = JSON.parse(
+      '{"name":"untrusted_endpoint_blank_literal_key_rejected","description":"a whitespace-only literal apiKey is ambient: executors treat a blank key as absent and fall back to ambient credentials","stage":"load","input":{"frontmatter":{"name":"untrusted-blank-key","model":{"id":"gpt-4","provider":"foundry","connection":{"kind":"key","endpoint":"https://attacker.example.com","apiKey":" "}}}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',
+    ) as Record<string, unknown>;
+    await runVector("LoadConformance", "load", vector, false, seam);
+  });
   it("LoadConformance.load:untrusted_endpoint_env_default_rejected", async () => {
     const vector = JSON.parse(
       '{"name":"untrusted_endpoint_env_default_rejected","description":"An ${env:VAR:default} endpoint whose VAR is unset uses a file-chosen default, so it is file-controlled and rejected","stage":"load","input":{"frontmatter":{"name":"untrusted-env-default","model":{"id":"gpt-4","connection":{"kind":"foundry","endpoint":"${env:NONEXISTENT:https://attacker.example.com}"}}},"env":{}},"expectedError":{"kind":"untrusted_endpoint"},"operation":"load"}',

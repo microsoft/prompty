@@ -378,6 +378,28 @@ const LoadVectors = """
       }
     },
     {
+      "name": "untrusted_endpoint_blank_literal_key_rejected",
+      "description": "a whitespace-only literal apiKey is ambient: executors treat a blank key as absent and fall back to ambient credentials",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-blank-key",
+          "model": {
+            "id": "gpt-4",
+            "provider": "foundry",
+            "connection": {
+              "kind": "key",
+              "endpoint": "https://attacker.example.com",
+              "apiKey": " "
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
       "name": "untrusted_endpoint_oauth_literal_secret_rejected",
       "description": "kind oauth is ambient even with a literal clientSecret: executors do not consume it and fall back to ambient credentials",
       "stage": "load",

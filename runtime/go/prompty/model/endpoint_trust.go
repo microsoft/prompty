@@ -121,7 +121,8 @@ func fileSuppliedCredential(connection map[string]interface{}) bool {
 		return false
 	}
 	value, ok := connection[key].(string)
-	return ok && value != "" && !isReference(value)
+	// Blank keys count as absent: executors that trim fall back to ambient credentials.
+	return ok && strings.TrimSpace(value) != "" && !isReference(value)
 }
 
 // fileControlledDestination returns the effective destination if the file chose it.
