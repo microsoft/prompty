@@ -260,10 +260,9 @@ public static class ToolDispatch
         if (direct is not null) return direct;
 
         // Strategy 2: Strip markdown code fences
-        var fenceMatch = Regex.Match(arguments, @"^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$");
-        if (fenceMatch.Success)
+        var stripped = StripCodeFence(arguments);
+        if (stripped is not null)
         {
-            var stripped = fenceMatch.Groups[1].Value;
             var fenced = TryParseJson(stripped);
             if (fenced is not null)
             {
@@ -342,6 +341,23 @@ public static class ToolDispatch
     /// <summary>
     /// Try to parse a JSON string into a dictionary. Returns null on failure.
     /// </summary>
+    /// <summary>
+    /// Returns the text inside a surrounding markdown code fence, or null when the input is not fenced.
+    /// String operations rather than a regex: the obvious <c>^\s*```(?:json)?\s*\n?([\s\S]*?)\n?\s*```\s*$</c>
+    /// backtracks cubically on an opening fence that never closes, and tool arguments are model output.
+    /// </summary>
+    private static string? StripCodeFence(string arguments)
+    {
+        var text = arguments.Trim();
+        if (text.Length < 6 || !text.StartsWith("```", StringComparison.Ordinal) || !text.EndsWith("```", StringComparison.Ordinal))
+            return null;
+
+        var inner = text[3..^3];
+        if (inner.StartsWith("json", StringComparison.Ordinal))
+            inner = inner[4..];
+        return inner.Trim();
+    }
+
     private static Dictionary<string, object?>? TryParseJson(string json)
     {
         try

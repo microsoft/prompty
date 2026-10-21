@@ -46,6 +46,25 @@ describe("Resilient JSON Parsing (§9.8)", () => {
     expect(resilientJsonParse(raw)).toEqual({ temp: 72 });
   });
 
+  it("tolerates whitespace around the fences", () => {
+    expect(resilientJsonParse('  \n```json  \n  {"a": 1}  \n  ```  \n')).toEqual({ a: 1 });
+    expect(resilientJsonParse('```{"a": 1}```')).toEqual({ a: 1 });
+  });
+
+  it("falls through when the fence never closes", () => {
+    expect(resilientJsonParse('```json\n{"a": 1}')).toEqual({ a: 1 });
+    expect(resilientJsonParse("```json\n```")).toBeNull();
+    expect(resilientJsonParse("``````")).toBeNull();
+  });
+
+  it("does not backtrack on an unclosed fence followed by whitespace", () => {
+    for (const filler of [" ", "\n"]) {
+      const started = performance.now();
+      expect(resilientJsonParse("```json" + filler.repeat(3000) + "x")).toBeNull();
+      expect(performance.now() - started).toBeLessThan(1000);
+    }
+  });
+
   it("extracts JSON block from prose", () => {
     const raw = 'Here is the result: {"city": "NY"} enjoy!';
     expect(resilientJsonParse(raw)).toEqual({ city: "NY" });

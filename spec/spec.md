@@ -2570,10 +2570,9 @@ function resilient_json_parse(raw_arguments) → dict:
     return json_parse(raw_arguments)
   catch: pass
 
-  // Strategy 2: Strip markdown code fences
-  stripped = regex_replace(raw_arguments,
-    /^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$/s, "$1")
-  if stripped != raw_arguments:
+  // Strategy 2: Strip markdown code fences (string operations, see below)
+  stripped = strip_code_fence(raw_arguments)   // null when not fenced
+  if stripped is not null:
     try:
       return json_parse(stripped)
     catch: pass
@@ -2594,6 +2593,26 @@ function resilient_json_parse(raw_arguments) → dict:
   // All strategies failed — return error as tool result
   return null  // caller MUST convert to error tool result
 ```
+
+`strip_code_fence` is defined with string operations, not a regular expression:
+
+```
+function strip_code_fence(raw) → string | null:
+  t = trim_whitespace(raw)
+  if length(t) < 6 or not starts_with(t, "```") or not ends_with(t, "```"):
+    return null                      // not fenced
+  inner = t[3 : length(t) - 3]
+  if starts_with(inner, "json"):
+    inner = inner[4:]                // optional language tag
+  return trim_whitespace(inner)
+```
+
+The tempting single-regex form, `` /^\s*```(?:json)?\s*\n?(.*?)\n?\s*```\s*$/s ``, returns the
+same text but backtracks cubically when a fence opens and never closes (for
+example an opening fence and `json` followed by 10,000 spaces and no closing
+fence), and the arguments string is model output. Implementations MUST NOT
+use a backtracking regex for this step. Linear-time engines (Rust's `regex`, Go's
+`regexp`) are not affected.
 
 **Requirements:**
 

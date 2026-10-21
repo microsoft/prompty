@@ -453,6 +453,33 @@ class RuntimeTest {
     assertTrue(result.toolRequests.isEmpty());
   }
 
+  @Test
+  void parseArgumentsStripsFencesWithSurroundingWhitespace() {
+    assertEquals(
+        Map.of("a", 1), ToolDispatch.parseArguments("  \n```json  \n  {\"a\": 1}  \n  ```  \n"));
+    assertEquals(Map.of("a", 1), ToolDispatch.parseArguments("```{\"a\": 1}```"));
+  }
+
+  @Test
+  void parseArgumentsFallsThroughWhenTheFenceNeverCloses() {
+    assertEquals(Map.of("a", 1), ToolDispatch.parseArguments("```json\n{\"a\": 1}"));
+    assertThrows(IllegalArgumentException.class, () -> ToolDispatch.parseArguments("```json\n```"));
+    assertThrows(IllegalArgumentException.class, () -> ToolDispatch.parseArguments("``````"));
+  }
+
+  @Test
+  void parseArgumentsDoesNotBacktrackOnAnUnclosedFenceFollowedByWhitespace() {
+    for (char filler : new char[] {' ', '\n'}) {
+      String arguments = "```json" + String.valueOf(filler).repeat(20000) + "x";
+
+      long started = System.nanoTime();
+      assertThrows(IllegalArgumentException.class, () -> ToolDispatch.parseArguments(arguments));
+      long elapsedMillis = (System.nanoTime() - started) / 1_000_000;
+
+      assertTrue(elapsedMillis < 1000, "took " + elapsedMillis + " ms");
+    }
+  }
+
   private static Agent agentWithInputs(Map<String, String> kindsByName) {
     List<Object> inputs = new ArrayList<>();
     kindsByName.forEach((name, kind) -> inputs.add(Map.of("name", name, "kind", kind)));
