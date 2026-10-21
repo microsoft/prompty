@@ -27,7 +27,10 @@ struct AnthropicConfig {
     if let connection {
       let fields = (try? connection.save()) ?? [:]
       if let value = fields["endpoint"] as? String, !value.isEmpty { endpoint = value }
-      if let value = fields["apiKey"] as? String, !value.isEmpty { apiKey = value }
+      // apiKey is withheld from save(); read the live value from the typed connection.
+      if case .apiKeyConnection(let keyed) = connection, !keyed.apiKey.isEmpty {
+        apiKey = keyed.apiKey
+      }
     }
 
     if endpoint.isEmpty {
