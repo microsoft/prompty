@@ -1405,6 +1405,17 @@ func RunLoadConformanceConformance(t *testing.T, seam fixtures.LoadConformance) 
 			t.Fatalf("untrusted_endpoint_no_key_rejected: expected an error, got nil")
 		}
 	}
+	// vector: untrusted_endpoint_oauth_literal_secret_rejected
+	{
+		var source interface{}
+		if err := json.Unmarshal([]byte("null"), &source); err != nil {
+			t.Fatalf("untrusted_endpoint_oauth_literal_secret_rejected: decode source: %v", err)
+		}
+		_, err := seam.Load(source)
+		if err == nil {
+			t.Fatalf("untrusted_endpoint_oauth_literal_secret_rejected: expected an error, got nil")
+		}
+	}
 	// vector: untrusted_endpoint_percent_encoded_host_rejected
 	{
 		var source interface{}

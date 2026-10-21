@@ -34,7 +34,7 @@ public final class EndpointTrust {
           "https://login.microsoftonline.com");
 
   private static final Map<String, String> CREDENTIAL_KEYS =
-      Map.of("key", "apiKey", "oauth", "clientSecret");
+      Map.of("key", "apiKey");
   private static final List<String> DESTINATION_KEYS = List.of("endpoint", "tokenUrl");
 
   private EndpointTrust() {}

@@ -136,8 +136,7 @@ Connection types are discriminated by the `kind` field:
 
 A `.prompty` file is untrusted input, so it MUST NOT be able to direct **ambient
 credentials** (`DefaultAzureCredential` tokens, env API keys) to a destination it chose.
-Unless the connection supplies its own literal credential (`apiKey` on `kind: key`,
-`clientSecret` on `kind: oauth`), a file-controlled `endpoint` or `tokenUrl` (a literal, a
+Unless the connection supplies its own literal credential (`apiKey` on `kind: key`), a file-controlled `endpoint` or `tokenUrl` (a literal, a
 `${file:}` value, or a used `${env:VAR:default}` fallback) must match a trusted origin, or
 loading fails with `untrusted_endpoint`. `kind: reference` and `${env:VAR}` endpoints are
 host-controlled and pass.

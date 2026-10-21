@@ -295,11 +295,11 @@ A file MUST NOT be able to direct ambient credentials to a destination it chose.
 Loaders MUST enforce this at load time (§4.2 step 5) on `model.connection`:
 
 1. Skip the check when `connection` is absent or `kind` is `reference`.
-2. The **credential is file-supplied** only when the field the declared `kind` consumes
-   is a non-empty literal string (not a `${...}` reference): `apiKey` for `kind: key`,
-   `clientSecret` for `kind: oauth`. Every other case is ambient, including `${env:}` or
-   `${file:}` credentials, any other `kind` (e.g. `foundry`, `anonymous`, custom), and
-   credential fields the declared `kind` does not consume (e.g. `apiKey` on `kind: foundry`).
+2. The **credential is file-supplied** only when `kind` is `key` and `apiKey` is a
+   non-empty literal string (not a `${...}` reference). Every other case is ambient,
+   including `${env:}` or `${file:}` keys, any other `kind` (e.g. `foundry`, `oauth`,
+   `anonymous`, custom), and an `apiKey` on any other `kind`. (`oauth` is ambient because
+   executors do not consume `clientSecret` and fall back to ambient credentials.)
 3. Each **destination** (`endpoint`, and `tokenUrl` when present) is **host-controlled**
    when it is absent, or is `${env:VAR}` / `${env:VAR:default}` and `VAR` is set.
    A literal value, a `${file:}` value (always untrusted), or an `${env:}` default used

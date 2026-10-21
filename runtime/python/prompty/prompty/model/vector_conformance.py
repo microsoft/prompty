@@ -635,6 +635,16 @@ def run_load_conformance_conformance(seam: LoadConformance) -> None:
     except Exception as error:  # noqa: BLE001
         caught = error
     assert caught is not None, "untrusted_endpoint_no_key_rejected: expected an error"
+    # vector: untrusted_endpoint_oauth_literal_secret_rejected
+    source = json.loads("null")
+    caught = None
+    try:
+        result = seam.load(source)
+        if inspect.isawaitable(result):
+            asyncio.run(result)
+    except Exception as error:  # noqa: BLE001
+        caught = error
+    assert caught is not None, "untrusted_endpoint_oauth_literal_secret_rejected: expected an error"
     # vector: untrusted_endpoint_percent_encoded_host_rejected
     source = json.loads("null")
     caught = None

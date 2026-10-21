@@ -119,7 +119,8 @@ public static partial class EndpointTrust
         var key = Get(connection, "kind") switch
         {
             "key" => "apiKey",
-            "oauth" => "clientSecret",
+
+
             _ => null,
         };
         if (key is null)

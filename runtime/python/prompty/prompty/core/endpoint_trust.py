@@ -29,7 +29,7 @@ BUILTIN_TRUSTED_ENDPOINTS: tuple[str, ...] = (
 )
 
 _DEFAULT_PORTS = {"http": 80, "https": 443}
-_CREDENTIAL_KEYS: dict[str, str] = {"key": "apiKey", "oauth": "clientSecret"}
+_CREDENTIAL_KEYS: dict[str, str] = {"key": "apiKey"}
 _DESTINATION_KEYS = ("endpoint", "tokenUrl")
 
 

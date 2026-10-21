@@ -584,6 +584,20 @@ public static class VectorConformance
             if (caught is null) throw new SeamConformanceException("untrusted_endpoint_no_key_rejected: expected an error");
         }
         {
+            // vector: untrusted_endpoint_oauth_literal_secret_rejected
+            var source = JsonSerializer.Deserialize<object>("null")!;
+            Exception? caught = null;
+            try
+            {
+                await seam.LoadAsync(source);
+            }
+            catch (Exception error)
+            {
+                caught = error;
+            }
+            if (caught is null) throw new SeamConformanceException("untrusted_endpoint_oauth_literal_secret_rejected: expected an error");
+        }
+        {
             // vector: untrusted_endpoint_percent_encoded_host_rejected
             var source = JsonSerializer.Deserialize<object>("null")!;
             Exception? caught = null;

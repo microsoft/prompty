@@ -845,6 +845,20 @@ public final class VectorConformance {
       if (caught == null) throw new AssertionError("untrusted_endpoint_no_key_rejected: expected an error");
     }
     {
+      // vector: untrusted_endpoint_oauth_literal_secret_rejected
+      StringBuilder inputJson = new StringBuilder();
+      inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-oauth-literal\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"anthropic\",\"connection\":{\"kind\":\"oauth\",\"endpoint\":\"https://attacker.example.com\",\"clientId\":\"decoy\",\"clientSecret\":\"decoy\",\"tokenUrl\":\"https://login.microsoftonline.com/t/oauth2/v2.0/token\"}}}}");
+      java.util.Map<?, ?> input = (java.util.Map<?, ?>) TypraJson.parse(inputJson.toString());
+      Object source = (Object) input.get("source");
+      Throwable caught = null;
+      try {
+        seam.load(source);
+      } catch (Throwable error) {
+        caught = error;
+      }
+      if (caught == null) throw new AssertionError("untrusted_endpoint_oauth_literal_secret_rejected: expected an error");
+    }
+    {
       // vector: untrusted_endpoint_percent_encoded_host_rejected
       StringBuilder inputJson = new StringBuilder();
       inputJson.append("{\"frontmatter\":{\"name\":\"untrusted-percent-encoded-host\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://api.openai.com%2eevil.example.com\"}}}}");

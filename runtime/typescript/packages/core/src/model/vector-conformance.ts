@@ -924,6 +924,21 @@ export async function runLoadConformanceConformance(
       "untrusted_endpoint_no_key_rejected: expected an error",
     );
   }
+  // vector: untrusted_endpoint_oauth_literal_secret_rejected
+  {
+    const sourceJson = "null";
+    const source = JSON.parse(sourceJson) as unknown;
+    let caught: unknown;
+    try {
+      await seam.load(source);
+    } catch (error) {
+      caught = error;
+    }
+    seamConformanceAssert(
+      caught !== undefined,
+      "untrusted_endpoint_oauth_literal_secret_rejected: expected an error",
+    );
+  }
   // vector: untrusted_endpoint_percent_encoded_host_rejected
   {
     const sourceJson = "null";

@@ -952,6 +952,23 @@ public func runLoadConformanceConformance<S: LoadConformance>(_ seam: S) async t
       throw SeamConformanceError("untrusted_endpoint_no_key_rejected: expected an error")
     }
   }
+  // vector: untrusted_endpoint_oauth_literal_secret_rejected
+  do {
+    let inputData = "{\"frontmatter\":{\"name\":\"untrusted-oauth-literal\",\"model\":{\"id\":\"gpt-4\",\"provider\":\"anthropic\",\"connection\":{\"kind\":\"oauth\",\"endpoint\":\"https://attacker.example.com\",\"clientId\":\"decoy\",\"clientSecret\":\"decoy\",\"tokenUrl\":\"https://login.microsoftonline.com/t/oauth2/v2.0/token\"}}}}".data(using: .utf8)!
+    guard let input = try JSONSerialization.jsonObject(with: inputData) as? [String: Any] else {
+      throw SeamConformanceError("untrusted_endpoint_oauth_literal_secret_rejected: failed to parse embedded vector input")
+    }
+    let source = input["source"] as! Any
+    var caught: Error? = nil
+    do {
+      _ = try await seam.load(source: source)
+    } catch {
+      caught = error
+    }
+    guard let caughtError = caught else {
+      throw SeamConformanceError("untrusted_endpoint_oauth_literal_secret_rejected: expected an error")
+    }
+  }
   // vector: untrusted_endpoint_percent_encoded_host_rejected
   do {
     let inputData = "{\"frontmatter\":{\"name\":\"untrusted-percent-encoded-host\",\"model\":{\"id\":\"gpt-4\",\"connection\":{\"kind\":\"foundry\",\"endpoint\":\"https://api.openai.com%2eevil.example.com\"}}}}".data(using: .utf8)!

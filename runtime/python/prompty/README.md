@@ -296,7 +296,7 @@ input value.
 
 ### Endpoint Trust
 
-A `.prompty` file can't send ambient credentials (`DefaultAzureCredential` tokens, `OPENAI_API_KEY` and similar env keys) to an endpoint it picked itself. Unless the connection uses a literal `apiKey` (`kind: key`) or `clientSecret` (`kind: oauth`), a literal `endpoint`/`tokenUrl` must be trusted, or `load()` raises `PromptyLoadError("untrusted_endpoint")`.
+A `.prompty` file can't send ambient credentials (`DefaultAzureCredential` tokens, `OPENAI_API_KEY` and similar env keys) to an endpoint it picked itself. Unless the connection uses a literal `apiKey` (`kind: key`), a literal `endpoint`/`tokenUrl` must be trusted, or `load()` raises `PromptyLoadError("untrusted_endpoint")`.
 
 - Built-in trusted origins: `api.openai.com`, `api.anthropic.com`, `*.openai.azure.com`, `*.services.ai.azure.com`, `*.cognitiveservices.azure.com`, `login.microsoftonline.com` (all `https`).
 - Supply the endpoint from the host: `endpoint: ${env:MY_ENDPOINT}`.

@@ -66,8 +66,7 @@ cd runtime/java
 ## Endpoint trust
 
 A `.prompty` file is untrusted input. When its `model.connection` carries no
-file-supplied credential (a literal `apiKey` for `kind: key`, a literal
-`clientSecret` for `kind: oauth`), executors fall back to ambient credentials,
+file-supplied credential (a literal `apiKey` on `kind: key`), executors fall back to ambient credentials,
 so the loader refuses — with `LoadException.Kind.UNTRUSTED_ENDPOINT` — any
 file-chosen `endpoint` / `tokenUrl` whose origin is not trusted (spec §2.5.1).
 Built-in provider origins are always trusted; hosts add more through

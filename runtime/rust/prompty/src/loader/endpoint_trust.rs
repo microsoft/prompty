@@ -137,7 +137,7 @@ fn file_supplied_credential(connection: &serde_json::Map<String, Value>) -> bool
     // Only the credential field the declared kind actually consumes counts; any other kind is ambient.
     let key = match connection.get("kind").and_then(Value::as_str) {
         Some("key") => "apiKey",
-        Some("oauth") => "clientSecret",
+
         _ => return false,
     };
     matches!(connection.get(key), Some(Value::String(s)) if !s.is_empty() && !is_reference(s))

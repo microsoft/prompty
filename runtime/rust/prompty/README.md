@@ -48,7 +48,7 @@ guardrail rewrite and before the durable success commit; rejection records a fai
 - `trusted_endpoints` — extra origins allowed to receive ambient credentials.
 
 A `.prompty` file is untrusted. When its connection has no literal file-supplied
-credential (`apiKey` for `kind: key`, `clientSecret` for `kind: oauth`), executors fall
+credential (a literal `apiKey` on `kind: key`), executors fall
 back to ambient credentials (Entra ID tokens, `*_API_KEY` env vars). Loading fails with
 `LoadError::UntrustedEndpoint` if such a connection's `endpoint` / `tokenUrl` is chosen
 by the file (a literal, `${file:...}`, or an `${env:VAR:default}` default) and its origin

@@ -378,6 +378,30 @@ const LoadVectors = """
       }
     },
     {
+      "name": "untrusted_endpoint_oauth_literal_secret_rejected",
+      "description": "kind oauth is ambient even with a literal clientSecret: executors do not consume it and fall back to ambient credentials",
+      "stage": "load",
+      "input": {
+        "frontmatter": {
+          "name": "untrusted-oauth-literal",
+          "model": {
+            "id": "gpt-4",
+            "provider": "anthropic",
+            "connection": {
+              "kind": "oauth",
+              "endpoint": "https://attacker.example.com",
+              "clientId": "decoy",
+              "clientSecret": "decoy",
+              "tokenUrl": "https://login.microsoftonline.com/t/oauth2/v2.0/token"
+            }
+          }
+        }
+      },
+      "expectedError": {
+        "kind": "untrusted_endpoint"
+      }
+    },
+    {
       "name": "untrusted_endpoint_backslash_rejected",
       "description": "A backslash makes parsers disagree on the host (clients connect to evil.com), so the destination is untrusted",
       "stage": "load",

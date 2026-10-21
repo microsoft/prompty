@@ -33,7 +33,7 @@ var BuiltinTrustedEndpoints = []string{
 var defaultPorts = map[string]int{"http": 80, "https": 443}
 
 // credentialKeys maps a connection kind to the credential field it consumes.
-var credentialKeys = map[string]string{"key": "apiKey", "oauth": "clientSecret"}
+var credentialKeys = map[string]string{"key": "apiKey"}
 
 var destinationKeys = []string{"endpoint", "tokenUrl"}
 

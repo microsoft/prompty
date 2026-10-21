@@ -27,7 +27,8 @@ export const BUILTIN_TRUSTED_ENDPOINTS: readonly string[] = Object.freeze([
 const DEFAULT_PORTS: Record<string, number> = { http: 80, https: 443 };
 const CREDENTIAL_KEYS: Record<string, string> = {
   key: "apiKey",
-  oauth: "clientSecret",
+
+
 };
 const DESTINATION_KEYS = ["endpoint", "tokenUrl"] as const;
 

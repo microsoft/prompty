@@ -21,7 +21,7 @@ public enum EndpointTrust {
   ]
 
   private static let defaultPorts: [String: Int] = ["http": 80, "https": 443]
-  private static let credentialKeys: [String: String] = ["key": "apiKey", "oauth": "clientSecret"]
+  private static let credentialKeys: [String: String] = ["key": "apiKey"]
   private static let destinationKeys = ["endpoint", "tokenUrl"]
 
   /// Return `true` if `url`'s origin matches a built-in, host, or env trusted origin.

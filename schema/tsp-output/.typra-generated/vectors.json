@@ -2505,6 +2505,42 @@
       "returns": "Agent",
       "sync": false,
       "vector": {
+        "name": "untrusted_endpoint_oauth_literal_secret_rejected",
+        "description": "kind oauth is ambient even with a literal clientSecret: executors do not consume it and fall back to ambient credentials",
+        "stage": "load",
+        "input": {
+          "frontmatter": {
+            "name": "untrusted-oauth-literal",
+            "model": {
+              "id": "gpt-4",
+              "provider": "anthropic",
+              "connection": {
+                "kind": "oauth",
+                "endpoint": "https://attacker.example.com",
+                "clientId": "decoy",
+                "clientSecret": "decoy",
+                "tokenUrl": "https://login.microsoftonline.com/t/oauth2/v2.0/token"
+              }
+            }
+          }
+        },
+        "expectedError": {
+          "kind": "untrusted_endpoint"
+        },
+        "operation": "load"
+      }
+    },
+    {
+      "contract": "LoadConformance",
+      "namespace": "Prompty.Conformance.Seams",
+      "group": "",
+      "operation": "load",
+      "params": {
+        "source": "unknown"
+      },
+      "returns": "Agent",
+      "sync": false,
+      "vector": {
         "name": "untrusted_endpoint_percent_encoded_host_rejected",
         "description": "Hosts are compared without percent-decoding, so an encoded host never matches",
         "stage": "load",
