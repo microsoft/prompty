@@ -100,6 +100,7 @@ export function buildChatArgs(
     args.response_format = responseFormat;
   }
 
+  applyReasoningGuard(args, agent.model?.id ?? "");
   return args;
 }
 
@@ -248,6 +249,10 @@ function modelOptionsToWire(
     topP: { openai: "top_p", responses: "top_p" },
     stopSequences: { openai: "stop" },
     allowMultipleToolCalls: { openai: "parallel_tool_calls" },
+    reasoningEffort: {
+      openai: "reasoning_effort",
+      responses: "reasoning_effort",
+    },
   };
 
   for (const [key, mapping] of Object.entries(mappings)) {
@@ -512,7 +517,37 @@ export function buildResponsesArgs(
     args.text = textConfig;
   }
 
+  applyReasoningGuard(args, agent.model?.id ?? "");
   return args;
+}
+
+/** Apply Python's name-based execution policy after all option sources merge.
+ * Custom deployment aliases cannot be classified reliably by this heuristic.
+ * Keep this out of the generated, rename-only ModelOptions.toWire contract.
+ */
+function applyReasoningGuard(
+  args: Record<string, unknown>,
+  model: string,
+): void {
+  const name = model.toLowerCase().replace(/^[./]+/, "");
+  if (/^o[1-9]/.test(name) || name.startsWith("gpt-5")) {
+    for (const key of [
+      "temperature",
+      "top_p",
+      "top_k",
+      "frequency_penalty",
+      "presence_penalty",
+    ]) {
+      if (key in args) {
+        console.warn(
+          `OpenAI reasoning model '${model}' does not support '${key}'; dropping it. Use reasoningEffort instead.`,
+        );
+        delete args[key];
+      }
+    }
+  } else {
+    delete args.reasoning_effort;
+  }
 }
 
 /** Convert a Message to Responses API EasyInputMessage format. */
