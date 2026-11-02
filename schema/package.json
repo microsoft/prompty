@@ -15,9 +15,9 @@
     "build": "npm run lint:fixtures && npm run lint:vector-metadata && npm run format:tsp && npm run generate && npm run lint:vector-metadata"
   },
   "dependencies": {
-    "@typespec/compiler": "^1.16.0",
-    "@typespec/http": "^1.15.0",
-    "@typespec/json-schema": "^1.15.0",
-    "@typra/emitter": "^2.1.8"
+    "@typespec/compiler": "^1.17.0",
+    "@typespec/http": "^1.17.0",
+    "@typespec/json-schema": "^1.17.0",
+    "@typra/emitter": "^4.0.1"
   }
 }
