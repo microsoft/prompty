@@ -388,6 +388,11 @@ class TestBuildChatArgs:
         assert len(args["messages"]) == 1
         assert args["messages"][0]["role"] == "user"
 
+    def test_default_model_when_id_missing(self):
+        agent = _make_agent(model="")
+        args = _build_chat_args(agent, _make_messages())
+        assert args["model"] == "claude-sonnet-5-5"
+
     def test_default_max_tokens(self):
         agent = _make_agent()
         messages = _make_messages()

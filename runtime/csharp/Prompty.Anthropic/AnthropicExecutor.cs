@@ -74,7 +74,7 @@ public class AnthropicExecutor : IExecutor
 
     internal Dictionary<string, object?> BuildRequestBody(Core.Agent agent, List<Message> messages, bool stream)
     {
-        var model = agent.Model?.Id ?? "claude-sonnet-4-20250514";
+        var model = agent.Model?.Id ?? "claude-sonnet-5-5";
         var maxTokens = agent.Model?.Options?.MaxOutputTokens ?? DefaultMaxTokens;
 
         var systemParts = new List<string>();

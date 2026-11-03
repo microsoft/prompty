@@ -385,7 +385,7 @@ def _output_schema_to_wire(agent: Agent) -> dict[str, Any] | None:
 
 def _build_chat_args(agent: Agent, messages: list[Message]) -> dict[str, Any]:
     """Build Anthropic Messages API arguments."""
-    model = agent.model.id or "claude-sonnet-4-5-20250929"
+    model = agent.model.id or "claude-sonnet-5-5"
 
     system_parts: list[str] = []
     conversation: list[dict[str, Any]] = []
