@@ -21,7 +21,7 @@ Configure via `.prompty` frontmatter or environment variables:
 
 ```yaml
 model:
-  id: claude-sonnet-4-20250514
+  id: claude-sonnet-5-5
   provider: anthropic
   connection:
     kind: key

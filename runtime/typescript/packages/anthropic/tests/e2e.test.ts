@@ -145,6 +145,12 @@ describe("wire format", () => {
     expect(args.max_tokens).toBe(4096);
   });
 
+  it("falls back to the current default model when model.id is missing", () => {
+    const msgs = [textMsg("user", "Hi")];
+    const args = buildChatArgs({ model: {} } as any, msgs);
+    expect(args.model).toBe("claude-sonnet-5-5");
+  });
+
   it("maps model options correctly", () => {
     const msgs = [textMsg("user", "Hi")];
     const args = buildChatArgs(

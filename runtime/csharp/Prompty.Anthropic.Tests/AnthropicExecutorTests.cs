@@ -57,14 +57,20 @@ public class AnthropicExecutorTests
     }
 
     [Fact]
-    public void DefaultModel_IsClaude()
+    public void BuildRequestBody_WithoutModelId_UsesCurrentDefaultModel()
     {
+        var executor = new Anthropic.AnthropicExecutor();
         var agent = new Core.Agent
         {
             Model = new Model { Id = null! },
         };
 
-        Assert.Equal("claude-sonnet-4-20250514", agent.Model?.Id ?? "claude-sonnet-4-20250514");
+        var body = executor.BuildRequestBody(
+            agent,
+            [new Message { Role = Role.User, Parts = [new TextPart { Value = "hi" }] }],
+            stream: false);
+
+        Assert.Equal("claude-sonnet-5-5", body["model"]);
     }
 
     [Fact]

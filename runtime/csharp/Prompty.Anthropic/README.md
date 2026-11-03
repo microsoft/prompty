@@ -36,7 +36,7 @@ Console.WriteLine(result);
 ---
 name: claude-chat
 model:
-  id: claude-sonnet-4-20250514
+  id: claude-sonnet-5-5
   provider: anthropic
   apiType: chat
   connection:
@@ -58,10 +58,9 @@ user:
 
 Any model available through the Anthropic Messages API:
 
-- `claude-sonnet-4-20250514`
-- `claude-3-5-sonnet-20241022`
-- `claude-3-haiku-20240307`
-- `claude-3-opus-20240229`
+- `claude-sonnet-5-5`
+- `claude-opus-5-5`
+- `claude-haiku-5-5`
 
 ## Features
 

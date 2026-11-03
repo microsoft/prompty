@@ -125,7 +125,7 @@ export function buildChatArgs(
   agent: Agent,
   messages: Message[],
 ): Record<string, unknown> {
-  const model = agent.model?.id || "claude-sonnet-4-5-20250929";
+  const model = agent.model?.id || "claude-sonnet-5-5";
 
   // Separate system messages from conversation messages
   const systemParts: string[] = [];

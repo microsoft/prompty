@@ -29,7 +29,7 @@ Set `provider: anthropic` in your `.prompty` file:
 ---
 name: my-prompt
 model:
-  id: claude-sonnet-4-20250514
+  id: claude-sonnet-5-5
   provider: anthropic
   apiType: chat
   connection:
