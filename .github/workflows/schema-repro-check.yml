@@ -130,7 +130,7 @@ jobs:
       #   dotnet    csharp/driver.js runs `dotnet format <csproj>`
       #   gofmt     go/driver.js runs `gofmt -w` (and `goimports -w` if present)
       - name: Install Rust toolchain (provides rustfmt)
-        uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # v1
+        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
         with:
           toolchain: '1.97.1'
           components: rustfmt
@@ -145,7 +145,7 @@ jobs:
           cache: false
 
       - name: Set up .NET (provides dotnet format)
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
           dotnet-version: '9.0.317'
 
@@ -154,7 +154,7 @@ jobs:
         run: npm ci
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
       - name: Install Python dev tooling (provides ruff)
         working-directory: runtime/python/prompty
