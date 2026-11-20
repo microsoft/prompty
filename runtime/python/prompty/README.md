@@ -44,7 +44,7 @@ uv pip install "prompty[all]"
 ---
 name: greeting
 model:
-  id: gpt-4o-mini
+  id: gpt-6-luna
   provider: openai
   connection:
     kind: key

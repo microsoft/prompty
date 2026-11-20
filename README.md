@@ -23,7 +23,7 @@ Prompty is a **markdown file format** (`.prompty`) for LLM prompts. Write your p
 ---
 name: greeting
 model:
-  id: gpt-4o-mini
+  id: gpt-6-luna
   provider: openai
   connection:
     kind: key
