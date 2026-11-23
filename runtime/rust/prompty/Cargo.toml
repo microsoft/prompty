@@ -18,7 +18,7 @@ serde_yaml = "0.9"
 thiserror = "2"
 async-trait = "0.1"
 tokio = { version = "1", features = ["sync", "fs", "rt", "time", "macros"] }
-minijinja = "2"
+minijinja = "3"
 rand = "0.9"
 regex = "1"
 chrono = "0.4"
@@ -26,9 +26,9 @@ ribboncurls = "0.5"
 futures = "0.3"
 
 # OTel (optional)
-opentelemetry = { version = "0.32", optional = true }
-opentelemetry_sdk = { version = "0.32", optional = true }
-opentelemetry-stdout = { version = "0.32", features = ["trace"], optional = true }
+opentelemetry = { version = "0.33", optional = true }
+opentelemetry_sdk = { version = "0.33", optional = true }
+opentelemetry-stdout = { version = "0.33", features = ["trace"], optional = true }
 
 [features]
 default = ["serde"]
