@@ -8,7 +8,6 @@
     "node": "*"
   },
   "dependencies": {
-    "@prompty/core": "^2.0.0-beta.1",
     "jsonc-parser": "^3.3.1",
     "vscode-json-languageservice": "^5.7.2",
     "vscode-languageserver": "^10.1.1",
@@ -24,6 +23,7 @@
     "@types/node": "^26",
     "ts-loader": "^9.6.2",
     "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
     "umd-compat-loader": "^2.1.2",
     "webpack": "^5.110.3",
     "webpack-cli": "^7.2.3"

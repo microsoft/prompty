@@ -2,8 +2,8 @@
 	"compilerOptions": {
     "target": "es2020",
     "lib": ["es2020"],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "node20",
+    "moduleResolution": "node16",
     "sourceMap": true,
     "strict": true,
     "outDir": "out",

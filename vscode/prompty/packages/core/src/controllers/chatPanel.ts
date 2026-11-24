@@ -1,4 +1,4 @@
-import { ExtensionContext, ViewColumn, WebviewPanel, window, Uri, commands } from 'vscode';
+import { ExtensionContext, ViewColumn, WebviewPanel, window, workspace, Uri, commands } from 'vscode';
 import {
 	turn,
 	Tracer, PromptyTracer,
@@ -159,7 +159,7 @@ export class ChatPanel {
 		}
 
 		const fileName = path.basename(filePath, '.prompty');
-		const workspaceRoot = (await import('vscode')).workspace.workspaceFolders?.[0]?.uri.fsPath
+		const workspaceRoot = workspace.workspaceFolders?.[0]?.uri.fsPath
 			?? path.dirname(filePath);
 		const runsDir = path.join(workspaceRoot, '.runs');
 

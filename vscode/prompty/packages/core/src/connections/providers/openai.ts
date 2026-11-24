@@ -9,6 +9,7 @@ import type {
 } from "../types";
 import { ApiKeyConnection } from "@prompty/core";
 import { listModels as listOpenAIModels } from "@prompty/openai";
+import { OpenAI } from "openai";
 
 type OpenAIModelLister = typeof listOpenAIModels;
 
@@ -62,7 +63,6 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 		}
 
 		try {
-			const { default: OpenAI } = await import("openai");
 			const client = new OpenAI({
 				apiKey: secret,
 				baseURL: p.endpoint,
@@ -93,7 +93,6 @@ export class OpenAIConnectionProvider implements IConnectionProvider {
 			throw new Error("API key is required for OpenAI connections");
 		}
 
-		const { default: OpenAI } = await import("openai");
 		return new OpenAI({
 			apiKey: secret,
 			baseURL: p.endpoint,

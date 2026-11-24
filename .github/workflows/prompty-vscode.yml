@@ -1,18 +1,55 @@
 name: prompty VSCode Extension build
 
+# Release contract (see RELEASING.md, "VS Code extension"):
+#   - Release runs (tag push or workflow_dispatch) upload exactly one artifact named
+#     `prompty-vsix` that contains a single `*.vsix` file. The internal ADO pipeline
+#     downloads it with `gh run download <runId> -R microsoft/prompty -n prompty-vsix`,
+#     ESRP-signs it, and publishes it.
+#   - Channel: tag `vscode/X.Y.Z` = stable, tag `vscode/X.Y.Z-pre` = pre-release,
+#     workflow_dispatch input `pre_release`. Pre-release VSIX file names contain
+#     `-prerelease-`; stable ones contain `-release-`.
+#   - Pull request runs only validate; their artifact is `prompty-vsix-pr` so it can
+#     never be picked up as a release source.
+run-name: >-
+  ${{ github.event_name == 'pull_request' && format('VS Code extension validation (PR #{0})', github.event.pull_request.number)
+  || (github.event_name == 'workflow_dispatch' && format('VS Code extension {0} {1}', inputs.pre_release && 'pre-release' || 'release', inputs.version || 'package.json version'))
+  || format('VS Code extension {0}', github.ref_name) }}
+
 on:
   push:
     tags:
       - 'vscode/*'
 
+  pull_request:
+    paths:
+      - 'vscode/prompty/**'
+      - '.github/workflows/prompty-vscode.yml'
+
   workflow_dispatch:
+    inputs:
+      pre_release:
+        description: 'Package for the Marketplace pre-release channel (vsce --pre-release)'
+        type: boolean
+        default: false
+      version:
+        description: 'Extension version X.Y.Z (defaults to vscode/prompty/package.json version)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./vscode/prompty
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -22,43 +59,109 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Extract version from tag
+      - name: Resolve version and channel
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_PRE_RELEASE: ${{ inputs.pre_release }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/vscode/* ]]; then
-            VERSION="${GITHUB_REF#refs/tags/vscode/}"
-          else
-            VERSION=$(node -p "require('./vscode/prompty/package.json').version")
+          set -euo pipefail
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          PRE_RELEASE=false
+          case "$EVENT_NAME" in
+            push)
+              TAG="${GITHUB_REF#refs/tags/vscode/}"
+              if [[ "$TAG" == *-pre ]]; then
+                PRE_RELEASE=true
+                VERSION="${TAG%-pre}"
+              else
+                VERSION="$TAG"
+                if [[ "$VERSION" != "$PKG_VERSION" ]]; then
+                  echo "::error::Stable tag vscode/$VERSION does not match vscode/prompty/package.json version $PKG_VERSION"
+                  exit 1
+                fi
+              fi
+              ;;
+            workflow_dispatch)
+              VERSION="${INPUT_VERSION:-$PKG_VERSION}"
+              PRE_RELEASE="$INPUT_PRE_RELEASE"
+              ;;
+            *)
+              VERSION="$PKG_VERSION"
+              ;;
+          esac
+          # The Marketplace only accepts numeric major.minor.patch versions.
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version '$VERSION' must be X.Y.Z (no pre-release suffix)"
+            exit 1
           fi
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "Using version: $VERSION"
-
-      - name: Set VSIX timestamp
-        run: |
-          VSIX_TIMESTAMP=$(date -u +"%Y%m%d.%H%M%S")
-          echo "VSIX_TIMESTAMP=$VSIX_TIMESTAMP" >> "$GITHUB_ENV"
-          echo "VSIX filename timestamp: $VSIX_TIMESTAMP"
+          if [[ "$PRE_RELEASE" == "true" ]]; then CHANNEL=prerelease; else CHANNEL=release; fi
+          VSIX_NAME="prompty-${VERSION}-${CHANNEL}-$(date -u +%Y%m%d.%H%M%S).vsix"
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then ARTIFACT=prompty-vsix-pr; else ARTIFACT=prompty-vsix; fi
+          {
+            echo "VERSION=$VERSION"
+            echo "PRE_RELEASE=$PRE_RELEASE"
+            echo "CHANNEL=$CHANNEL"
+            echo "VSIX_NAME=$VSIX_NAME"
+            echo "ARTIFACT=$ARTIFACT"
+          } >> "$GITHUB_ENV"
+          echo "version=$VERSION channel=$CHANNEL vsix=$VSIX_NAME artifact=$ARTIFACT"
 
       - name: Install dependencies
-        working-directory: ./vscode/prompty
         run: npm ci
 
-      - name: Compile
-        working-directory: ./vscode/prompty
-        run: npm run compile
+      - name: Lint
+        run: npm run lint
 
-      - name: Generate Grammar
-        working-directory: ./vscode/prompty
+      - name: Generate grammar
         run: npm run generate-grammar
 
-      - name: Build
-        working-directory: ./vscode/prompty
-        run: npm run build
+      # vsce runs `vscode:prepublish` (compile + build + bundle) before packaging.
+      - name: Package VSIX
+        run: |
+          set -euo pipefail
+          ARGS=(package "$VERSION" --no-update-package-json --no-dependencies --allow-missing-repository --out "$VSIX_NAME")
+          if [[ "$PRE_RELEASE" == "true" ]]; then ARGS+=(--pre-release); fi
+          npx vsce "${ARGS[@]}"
 
-      - name: Build VSIX
-        working-directory: ./vscode/prompty
-        run: npm run package-pre -- "$VERSION" --no-update-package-json --out "prompty-${VSIX_TIMESTAMP}.vsix"
+      # Runs after packaging so the bundle-level checks see the shipped extension bundle.
+      - name: Unit tests
+        run: npm run test:unit
+
+      # MSRC 150092 regression guard on the shipped artifact, not just the source tree.
+      - name: Verify VSIX contents
+        run: |
+          set -euo pipefail
+          unzip -q "$VSIX_NAME" -d vsix-contents
+          for f in packages/core/out/extension.bundle.js packages/server/out/server.js packages/trace/dist/index.js; do
+            test -f "vsix-contents/extension/$f" || { echo "::error::VSIX is missing $f"; exit 1; }
+          done
+          if grep -REn 'createTerminal\(|\.sendText\(|prompty --source' vsix-contents/extension --include='*.js'; then
+            echo "::error::VSIX contains terminal command execution"
+            exit 1
+          fi
+          MANIFEST_PRE=false
+          if grep -q 'Microsoft.VisualStudio.Code.PreRelease" Value="true"' vsix-contents/extension.vsixmanifest; then MANIFEST_PRE=true; fi
+          if [[ "$MANIFEST_PRE" != "$PRE_RELEASE" ]]; then
+            echo "::error::VSIX manifest pre-release=$MANIFEST_PRE but requested $PRE_RELEASE"
+            exit 1
+          fi
+          SHA256=$(sha256sum "$VSIX_NAME" | cut -d' ' -f1)
+          {
+            echo "### Prompty VS Code extension"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Version | \`$VERSION\` |"
+            echo "| Channel | \`$CHANNEL\` (pre-release: \`$PRE_RELEASE\`) |"
+            echo "| Artifact | \`$ARTIFACT\` |"
+            echo "| VSIX | \`$VSIX_NAME\` |"
+            echo "| SHA-256 | \`$SHA256\` |"
+            echo "| Commit | \`$GITHUB_SHA\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: prompty-vsix-${{ env.VSIX_TIMESTAMP }}
-          path: ./vscode/prompty/prompty-${{ env.VSIX_TIMESTAMP }}.vsix
+          name: ${{ env.ARTIFACT }}
+          path: ./vscode/prompty/${{ env.VSIX_NAME }}
+          if-no-files-found: error

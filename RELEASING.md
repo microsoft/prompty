@@ -32,8 +32,8 @@ version number — `python/2.1.0` and `rust/2.0.3` can coexist. Config lives in
 > trigger the publish workflow.
 
 > **VS Code extension** (`vscode/`) is intentionally **not** managed by
-> release-please — it uses the Marketplace pre-release channel (`vscode/2.0.0-pre.N`)
-> and keeps its own pipeline.
+> release-please. It keeps its own tag-driven pipeline; see
+> [VS Code extension](#vs-code-extension).
 
 ### Flow
 
@@ -321,6 +321,78 @@ npm info @prompty/core versions --json | tail -5
 | `@prompty/openai` | OpenAI provider |
 | `@prompty/foundry` | Microsoft Foundry provider |
 | `@prompty/anthropic` | Anthropic provider |
+
+## VS Code extension
+
+The extension (`vscode/prompty`, Marketplace id `ms-toolsai.prompty`) is built by
+[`.github/workflows/prompty-vscode.yml`](.github/workflows/prompty-vscode.yml). It
+consumes the published `@prompty/*` npm packages pinned by
+`vscode/prompty/packages/core/package-lock.json`, so the VSIX build doesn't depend on
+building `runtime/typescript`. GitHub only builds the VSIX. Signing and Marketplace
+publishing happen in the internal Azure DevOps pipeline
+`devdiv/DevDiv/PromptyExtensionPublish`.
+
+### Versions and channels
+
+The Marketplace only accepts numeric `X.Y.Z` versions, and every upload (stable or
+pre-release) needs a version that hasn't been used before. Following the VS Code
+convention, use even minors for stable releases (`2.2.x`, `2.4.x`) and odd minors for
+pre-releases (`2.3.x`).
+
+| Trigger | Channel | Version |
+|---------|---------|---------|
+| Push tag `vscode/X.Y.Z` | stable | `X.Y.Z`; must equal `vscode/prompty/package.json` `version` or the run fails |
+| Push tag `vscode/X.Y.Z-pre` | pre-release (`vsce --pre-release`) | `X.Y.Z` |
+| `workflow_dispatch` | stable unless `pre_release: true` | `version` input, else `package.json` |
+| Pull request touching `vscode/prompty/**` | validation only | `package.json` |
+
+### Artifact contract (consumed by ADO)
+
+- Release runs (tag or `workflow_dispatch`) upload exactly one artifact named
+  **`prompty-vsix`**, containing a single file:
+  `prompty-<version>-<channel>-<yyyymmdd.hhmmss>.vsix`, where `<channel>` is `release`
+  or `prerelease`.
+- Pull request runs upload `prompty-vsix-pr` instead, so they can never be used as a
+  release source.
+- The run summary records the version, channel, VSIX name, SHA-256, and commit.
+- Before upload, the workflow checks that the VSIX contains the core, server, and trace
+  bundles. It also checks that the VSIX contains no terminal command execution
+  (`createTerminal(`, `.sendText(`, `prompty --source`; MSRC 150092 regression) and
+  that the manifest's pre-release flag matches the requested channel.
+
+The ADO pipeline takes the GitHub run ID and does:
+
+```bash
+gh run download <runId> -R microsoft/prompty -n prompty-vsix
+# then ESRP-sign the single *.vsix and publish it.
+# Pass --pre-release to `vsce publish` ONLY when the file name contains "-prerelease-"
+# (equivalently, the manifest has Microsoft.VisualStudio.Code.PreRelease=true).
+```
+
+### Cutting a stable release
+
+```bash
+# 1. Bump vscode/prompty/package.json "version" (and package-lock.json), update
+#    vscode/prompty/CHANGELOG.md, and merge via PR.
+# 2. Tag the merge commit and push.
+git tag -s vscode/2.2.0 -m "vscode/2.2.0"
+git push origin vscode/2.2.0
+# 3. Wait for "prompty VSCode Extension build" to pass, note its run ID, and queue
+#    PromptyExtensionPublish with that run ID.
+```
+
+For a pre-release, push `vscode/X.Y.Z-pre` (odd minor), or run the workflow manually
+with `pre_release: true` and an unused `version`.
+
+### Local build
+
+```bash
+cd vscode/prompty
+npm ci                      # postinstall runs `npm ci` in packages/core, trace, server
+npm run lint && npm run test:unit
+npm run generate-grammar
+npx vsce package --no-dependencies --allow-missing-repository   # runs vscode:prepublish
+```
 
 ## Troubleshooting
 

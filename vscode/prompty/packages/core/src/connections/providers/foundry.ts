@@ -9,6 +9,8 @@ import type {
 } from "../types";
 import { ReferenceConnection, registerConnection } from "@prompty/core";
 import { listAzureModels } from "@prompty/foundry";
+import { DefaultAzureCredential } from "@azure/identity";
+import { OpenAI } from "openai";
 
 type AzureModelLister = typeof listAzureModels;
 type RuntimeConnectionRegistrar = typeof registerConnection;
@@ -90,7 +92,6 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 	 * Returns both the token and which credential source succeeded for diagnostics.
 	 */
 	protected async getBearerToken(tenantId?: string): Promise<{ token: string; source: string }> {
-		const { DefaultAzureCredential } = await import("@azure/identity");
 		const credentialOptions = tenantId ? { tenantId } : undefined;
 		const credential = new DefaultAzureCredential(credentialOptions);
 
@@ -119,10 +120,11 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 				throw new Error(
 					`No Azure credentials found (scope: ${FoundryConnectionProvider.TOKEN_SCOPE}). ` +
 					`Tried: EnvironmentCredential, AzureCliCredential, AzurePowerShellCredential, VisualStudioCodeCredential. ` +
-					`Sign in via: az login, VS Code Azure account, or set AZURE_CLIENT_ID + AZURE_TENANT_ID + AZURE_CLIENT_SECRET`
+					`Sign in via: az login, VS Code Azure account, or set AZURE_CLIENT_ID + AZURE_TENANT_ID + AZURE_CLIENT_SECRET`,
+					{ cause: err },
 				);
 			}
-			throw new Error(`Azure credential error: ${msg}`);
+			throw new Error(`Azure credential error: ${msg}`, { cause: err });
 		}
 	}
 
@@ -194,7 +196,7 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 				} catch (error: unknown) {
 					const message = error instanceof Error ? error.message : String(error);
 					console.error(`[Foundry] Auth failed for "${p.name}": ${message}`);
-					throw new Error(`Failed to authenticate for Foundry model discovery for "${p.name}": ${message}`);
+					throw new Error(`Failed to authenticate for Foundry model discovery for "${p.name}": ${message}`, { cause: error });
 				}
 			},
 		};
@@ -217,7 +219,7 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		} catch (error: unknown) {
 			const message = error instanceof Error ? error.message : String(error);
 			console.error(`[Foundry] Model listing failed for "${p.name}": ${message}`);
-			throw new Error(`Failed to list Foundry models for "${p.name}": ${message}`);
+			throw new Error(`Failed to list Foundry models for "${p.name}": ${message}`, { cause: error });
 		}
 	}
 
@@ -225,7 +227,6 @@ export class FoundryConnectionProvider implements IConnectionProvider {
 		const p = profile as FoundryConnectionProfile;
 
 		const baseURL = toOpenAIBaseURL(p.endpoint);
-		const { OpenAI } = await import("openai");
 		const savedBaseUrl = process.env.OPENAI_BASE_URL;
 		const savedAzureApiKey = process.env.AZURE_OPENAI_API_KEY;
 		delete process.env.OPENAI_BASE_URL;
