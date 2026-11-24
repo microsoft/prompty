@@ -1,6 +1,6 @@
 import { ExtensionContext, TextEditor, ViewColumn, WebviewPanel, window, workspace, Disposable, RelativePattern } from 'vscode';
 import { load, prepare, Message, text as textPart } from '@prompty/core';
-import type { Prompty } from '@prompty/core';
+import type { PromptAgent as Prompty } from '@prompty/core';
 import { marked } from 'marked';
 import * as path from 'path';
 import { getNonce } from '../utils/nonce';

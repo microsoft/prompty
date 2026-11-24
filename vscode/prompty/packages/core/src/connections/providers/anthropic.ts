@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import {
 	IConnectionProvider,
 	ConnectionProviderType,
@@ -110,8 +111,7 @@ export class AnthropicConnectionProvider implements IConnectionProvider {
 		}
 
 		const p = profile as AnthropicConnectionProfile;
-		const AnthropicSDK = (await import("@anthropic-ai/sdk")).default;
-		return new AnthropicSDK({
+		return new Anthropic({
 			apiKey: secret,
 			baseURL: p.endpoint ?? "https://api.anthropic.com",
 		});

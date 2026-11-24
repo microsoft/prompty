@@ -73,4 +73,13 @@ export class VirtualDocument implements TextDocument, FullTextDocument {
 		const realPosition = { line: position.line + this._lineStart, character: position.character };
 		return this._document.offsetAt(realPosition) - startOffset;
 	}
+
+	getLineRange(line: number): Range {
+		const real = this._document.getLineRange(line + this._lineStart);
+		return { start: this.toVirtualPosition(real.start), end: this.toVirtualPosition(real.end) };
+	}
+
+	getEOLCharacters(line: number): string {
+		return this._document.getEOLCharacters(line + this._lineStart);
+	}
 }
