@@ -8,7 +8,7 @@ This extension provides:
 - prompt preview and run commands
 - a connections sidebar for OpenAI, Microsoft Foundry, and Anthropic endpoints
 - trace viewing for `.tracy` execution traces
-- integration with the Prompty runtime packages used by the extension
+- in-process execution with the Prompty 2.1 TypeScript runtime (`@prompty/core`, `@prompty/openai`, `@prompty/foundry`, `@prompty/anthropic`)
 
 This Visual Studio Code extension offers an intuitive prompt playground within VS Code to streamline the prompt engineering process. You can find the Prompty extension in the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.prompty).
 
